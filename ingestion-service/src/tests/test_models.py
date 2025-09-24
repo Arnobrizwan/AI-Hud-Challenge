@@ -30,6 +30,11 @@ class TestNormalizedArticle:
             source_url="https://example.com",
             published_at=datetime.utcnow(),
             content_hash="abc123",
+            ingestion_metadata={
+                "source_id": "test-source",
+                "ingestion_time": datetime.utcnow(),
+                "ingestion_method": "test",
+            }
         )
 
         assert article.id == "test-article-1"
@@ -74,6 +79,11 @@ class TestNormalizedArticle:
             source_url="https://example.com",
             published_at=datetime.utcnow(),
             content_hash="",
+            ingestion_metadata={
+                "source_id": "test-source",
+                "ingestion_time": datetime.utcnow(),
+                "ingestion_method": "test",
+            }
         )
 
         hash_value = article.calculate_content_hash()
@@ -91,6 +101,11 @@ class TestNormalizedArticle:
             published_at=datetime.utcnow(),
             content_hash="abc123",
             word_count=400,
+            ingestion_metadata={
+                "source_id": "test-source",
+                "ingestion_time": datetime.utcnow(),
+                "ingestion_method": "test",
+            }
         )
 
         reading_time = article.calculate_reading_time()
@@ -106,6 +121,11 @@ class TestNormalizedArticle:
             source_url="https://example.com",
             published_at=datetime.utcnow(),
             content_hash="abc123",
+            ingestion_metadata={
+                "source_id": "test-source",
+                "ingestion_time": datetime.utcnow(),
+                "ingestion_method": "test",
+            }
         )
 
         article2 = NormalizedArticle(

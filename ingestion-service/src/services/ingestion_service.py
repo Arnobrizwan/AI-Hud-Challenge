@@ -5,7 +5,7 @@ Core ingestion service for orchestrating content collection and processing.
 import asyncio
 import logging
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, AsyncGenerator, Dict, List, Optional
 
 from src.adapters.api_adapter import APIAdapter

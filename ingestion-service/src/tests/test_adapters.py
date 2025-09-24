@@ -29,7 +29,7 @@ class TestRSSAdapter:
     @pytest.fixture
     def rss_adapter(self, source_config):
         """Create a test RSS adapter."""
-        with patch("src.adapters.rss_adapter.HTTPClient"):
+        with patch("src.adapters.rss_adapter.get_http_client"):
             return RSSAdapter(source_config)
 
     def test_adapter_initialization(self, rss_adapter, source_config):
@@ -41,7 +41,7 @@ class TestRSSAdapter:
 
     @pytest.mark.asyncio
     async def test_test_connection(self, rss_adapter) -> Dict[str, Any]:
-    """Test connection testing."""
+        """Test connection testing."""
         with patch.object(rss_adapter.http_client, "head") as mock_head:
             mock_response = Mock()
             mock_response.status_code = 200
@@ -52,7 +52,7 @@ class TestRSSAdapter:
 
     @pytest.mark.asyncio
     async def test_test_connection_failure(self, rss_adapter) -> Dict[str, Any]:
-    """Test connection testing failure."""
+        """Test connection testing failure."""
         with patch.object(rss_adapter.http_client, "head") as mock_head:
             mock_head.side_effect = Exception("Connection failed")
 
@@ -94,7 +94,7 @@ class TestAPIAdapter:
     @pytest.fixture
     def api_adapter(self, api_source_config):
         """Create a test API adapter."""
-        with patch("src.adapters.api_adapter.HTTPClient"):
+        with patch("src.adapters.api_adapter.get_http_client"):
             return APIAdapter(api_source_config)
 
     def test_adapter_initialization(self, api_adapter, api_source_config):
@@ -150,7 +150,7 @@ class TestAPIAdapter:
 
     @pytest.mark.asyncio
     async def test_has_more_pages(self, api_adapter) -> Dict[str, Any]:
-    """Test pagination logic."""
+        """Test pagination logic."""
         # Test page-based pagination
         articles = [{"title": f"Article {i}"} for i in range(20)]
         api_adapter.pagination_config = {"type": "page_based", "page_size": 20}
@@ -181,7 +181,7 @@ class TestAdapterBase:
         """Test ingestion metadata creation."""
         from src.adapters.base import BaseAdapter
 
-        with patch("src.adapters.base.HTTPClient"):
+        with patch("src.adapters.base.get_http_client"):
             adapter = BaseAdapter(source_config)
 
             metadata = adapter._create_ingestion_metadata()
@@ -196,7 +196,7 @@ class TestAdapterBase:
         """Test article ID generation."""
         from src.adapters.base import BaseAdapter
 
-        with patch("src.adapters.base.HTTPClient"):
+        with patch("src.adapters.base.get_http_client"):
             adapter = BaseAdapter(source_config)
 
             article_id = adapter._generate_article_id("https://example.com/article", "Test Article")
@@ -208,7 +208,7 @@ class TestAdapterBase:
         """Test content hash calculation."""
         from src.adapters.base import BaseAdapter
 
-        with patch("src.adapters.base.HTTPClient"):
+        with patch("src.adapters.base.get_http_client"):
             adapter = BaseAdapter(source_config)
 
             content = "Test content for hashing"
@@ -222,7 +222,7 @@ class TestAdapterBase:
         from src.adapters.base import BaseAdapter
         from src.models.content import NormalizedArticle
 
-        with patch("src.adapters.base.HTTPClient"):
+        with patch("src.adapters.base.get_http_client"):
             adapter = BaseAdapter(source_config)
 
             # Valid article
@@ -258,7 +258,7 @@ class TestAdapterBase:
         from src.adapters.base import BaseAdapter
         from src.models.content import NormalizedArticle
 
-        with patch("src.adapters.base.HTTPClient"):
+        with patch("src.adapters.base.get_http_client"):
             adapter = BaseAdapter(source_config)
 
             # Set up filters

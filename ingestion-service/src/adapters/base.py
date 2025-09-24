@@ -53,7 +53,7 @@ class BaseAdapter(ABC):
 
     @abstractmethod
     def get_source_info(self) -> Dict[str, Any]:
-    """Get information about the source."""
+        """Get information about the source."""
         pass
 
     async def process(self) -> List[NormalizedArticle]:

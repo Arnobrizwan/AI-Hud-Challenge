@@ -38,7 +38,7 @@ class TestIngestionService:
 
     @pytest.mark.asyncio
     async def test_get_adapter(self, ingestion_service, source_config) -> Dict[str, Any]:
-    """Test getting adapter for source."""
+        """Test getting adapter for source."""
         adapter = await ingestion_service._get_adapter(source_config)
 
         assert adapter is not None
@@ -47,7 +47,7 @@ class TestIngestionService:
 
     @pytest.mark.asyncio
     async def test_get_existing_adapter(self, ingestion_service, source_config) -> Dict[str, Any]:
-    """Test getting existing adapter."""
+        """Test getting existing adapter."""
         # Create adapter first
         adapter1 = await ingestion_service._get_adapter(source_config)
 
@@ -58,11 +58,17 @@ class TestIngestionService:
 
     @pytest.mark.asyncio
     async def test_process_source(self, ingestion_service, source_config) -> Dict[str, Any]:
-    """Test processing a single source."""
+        """Test processing a single source."""
         # Mock adapter
         mock_adapter = AsyncMock()
         mock_adapter.fetch_content.return_value = []
         mock_adapter.test_connection.return_value = True
+        
+        # Mock the async generator properly
+        async def mock_fetch_content():
+            return
+            yield  # This makes it an async generator
+        mock_adapter.fetch_content = mock_fetch_content
 
         with patch.object(ingestion_service, "_get_adapter", return_value=mock_adapter):
             batch = await ingestion_service.process_source(source_config)
@@ -74,7 +80,7 @@ class TestIngestionService:
 
     @pytest.mark.asyncio
     async def test_process_sources(self, ingestion_service) -> Dict[str, Any]:
-    """Test processing multiple sources."""
+        """Test processing multiple sources."""
         source_configs = [
             SourceConfig(
                 id="source-1",
@@ -92,8 +98,13 @@ class TestIngestionService:
 
         # Mock adapters
         mock_adapter = AsyncMock()
-        mock_adapter.fetch_content.return_value = []
         mock_adapter.test_connection.return_value = True
+        
+        # Mock the async generator properly
+        async def mock_fetch_content():
+            return
+            yield  # This makes it an async generator
+        mock_adapter.fetch_content = mock_fetch_content
 
         with patch.object(ingestion_service, "_get_adapter", return_value=mock_adapter):
             batches = await ingestion_service.process_sources(source_configs)
@@ -103,6 +114,7 @@ class TestIngestionService:
 
     @pytest.mark.asyncio
     async def test_process_articles(self, ingestion_service) -> Dict[str, Any]:
+        """Test processing articles through normalization and duplicate detection."""
     """Test processing articles through normalization and duplicate detection."""
         # Create test articles
         articles = [
@@ -114,6 +126,11 @@ class TestIngestionService:
                 source_url="https://example.com",
                 published_at=datetime.utcnow(),
                 content_hash="hash1",
+                ingestion_metadata={
+                    "source_id": "test-source",
+                    "ingestion_time": datetime.utcnow(),
+                    "ingestion_method": "test",
+                }
             ),
             NormalizedArticle(
                 id="article-2",
@@ -123,6 +140,11 @@ class TestIngestionService:
                 source_url="https://example.com",
                 published_at=datetime.utcnow(),
                 content_hash="hash2",
+                ingestion_metadata={
+                    "source_id": "test-source",
+                    "ingestion_time": datetime.utcnow(),
+                    "ingestion_method": "test",
+                }
             ),
         ]
 
@@ -146,6 +168,7 @@ class TestIngestionService:
 
     @pytest.mark.asyncio
     async def test_get_source_health(self, ingestion_service, source_config) -> Dict[str, Any]:
+        """Test getting source health status."""
     """Test getting source health status."""
         # Create mock adapter
         mock_adapter = AsyncMock()
@@ -164,6 +187,7 @@ class TestIngestionService:
 
     @pytest.mark.asyncio
     async def test_get_source_health_not_found(self, ingestion_service) -> Dict[str, Any]:
+        """Test getting health for non-existent source."""
     """Test getting health for non-existent source."""
         health = await ingestion_service.get_source_health("non-existent")
 
@@ -171,6 +195,7 @@ class TestIngestionService:
 
     @pytest.mark.asyncio
     async def test_get_all_source_health(self, ingestion_service, source_config) -> Dict[str, Any]:
+        """Test getting health for all sources."""
     """Test getting health for all sources."""
         # Create mock adapter
         mock_adapter = AsyncMock()
@@ -185,6 +210,7 @@ class TestIngestionService:
 
     @pytest.mark.asyncio
     async def test_get_processing_metrics(self, ingestion_service, source_config) -> Dict[str, Any]:
+        """Test getting processing metrics."""
     """Test getting processing metrics."""
         # Add some test metrics
         from src.models.content import ContentMetrics
@@ -210,6 +236,7 @@ class TestIngestionService:
 
     @pytest.mark.asyncio
     async def test_get_batch_status(self, ingestion_service) -> Dict[str, Any]:
+        """Test getting batch status."""
     """Test getting batch status."""
         from src.models.content import ProcessingBatch
 
@@ -233,6 +260,7 @@ class TestIngestionService:
 
     @pytest.mark.asyncio
     async def test_get_active_batches(self, ingestion_service) -> Dict[str, Any]:
+        """Test getting all active batches."""
     """Test getting all active batches."""
         from src.models.content import ProcessingBatch
 
@@ -251,6 +279,7 @@ class TestIngestionService:
 
     @pytest.mark.asyncio
     async def test_cleanup_completed_batches(self, ingestion_service) -> Dict[str, Any]:
+        """Test cleaning up completed batches."""
     """Test cleaning up completed batches."""
         from src.models.content import ProcessingBatch
 
@@ -284,6 +313,7 @@ class TestIngestionService:
 
     @pytest.mark.asyncio
     async def test_test_source_connection(self, ingestion_service, source_config) -> Dict[str, Any]:
+        """Test testing source connection."""
     """Test testing source connection."""
         # Mock adapter
         mock_adapter = AsyncMock()
@@ -295,6 +325,7 @@ class TestIngestionService:
 
     @pytest.mark.asyncio
     async def test_test_source_connection_failure(self, ingestion_service, source_config) -> Dict[str, Any]:
+        """Test source connection failure."""
     """Test source connection failure."""
         with patch.object(ingestion_service, "_get_adapter", side_effect=Exception("Connection failed")):
             result = await ingestion_service.test_source_connection(source_config)
@@ -302,6 +333,7 @@ class TestIngestionService:
 
     @pytest.mark.asyncio
     async def test_get_source_info(self, ingestion_service, source_config) -> Dict[str, Any]:
+        """Test getting source information."""
     """Test getting source information."""
         # Mock adapter
         mock_adapter = AsyncMock()
@@ -320,12 +352,14 @@ class TestIngestionService:
 
     @pytest.mark.asyncio
     async def test_get_source_info_not_found(self, ingestion_service) -> Dict[str, Any]:
+        """Test getting info for non-existent source."""
     """Test getting info for non-existent source."""
         info = await ingestion_service.get_source_info("non-existent")
         assert info is None
 
     @pytest.mark.asyncio
     async def test_shutdown(self, ingestion_service) -> Dict[str, Any]:
+        """Test service shutdown."""
     """Test service shutdown."""
         # Mock HTTP client
         mock_http_client = AsyncMock()
