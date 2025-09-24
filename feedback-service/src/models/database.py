@@ -2,25 +2,11 @@
 SQLAlchemy database models
 """
 
-from datetime import datetime
-from typing import List, Optional
 from uuid import uuid4
 
-from sqlalchemy import (
-    JSON,
-    Boolean,
-    Column,
-    DateTime,
-)
+from sqlalchemy import JSON, Boolean, Column, DateTime
 from sqlalchemy import Enum as SQLEnum
-from sqlalchemy import (
-    Float,
-    ForeignKey,
-    Index,
-    Integer,
-    String,
-    Text,
-)
+from sqlalchemy import Float, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.dialects.postgresql import INET, UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -30,7 +16,6 @@ from .schemas import (
     AnnotationType,
     CampaignStatus,
     FeedbackType,
-    QualityLevel,
     ReviewDecision,
     SignalType,
     TaskPriority,
@@ -89,9 +74,7 @@ class Feedback(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), index=True)
-    content_id = Column(
-        UUID(as_uuid=True), ForeignKey("content_items.id"), nullable=False, index=True
-    )
+    content_id = Column(UUID(as_uuid=True), ForeignKey("content_items.id"), nullable=False, index=True)
     feedback_type = Column(SQLEnum(FeedbackType), nullable=False, index=True)
     signal_type = Column(SQLEnum(SignalType), index=True)
     rating = Column(Float, index=True)
@@ -110,9 +93,7 @@ class FeedbackProcessingResult(Base):
     __tablename__ = "feedback_processing_results"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    feedback_id = Column(
-        UUID(as_uuid=True), ForeignKey("feedback.id", ondelete="CASCADE"), nullable=False
-    )
+    feedback_id = Column(UUID(as_uuid=True), ForeignKey("feedback.id", ondelete="CASCADE"), nullable=False)
     quality_score = Column(Float)
     sentiment_score = Column(Float)
     confidence_score = Column(Float)
@@ -128,9 +109,7 @@ class ReviewTask(Base):
     __tablename__ = "review_tasks"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    content_id = Column(
-        UUID(as_uuid=True), ForeignKey("content_items.id"), nullable=False, index=True
-    )
+    content_id = Column(UUID(as_uuid=True), ForeignKey("content_items.id"), nullable=False, index=True)
     task_type = Column(String(100), nullable=False)
     priority = Column(SQLEnum(TaskPriority), default=TaskPriority.NORMAL, index=True)
     assigned_to = Column(UUID(as_uuid=True), ForeignKey("users.id"), index=True)
@@ -143,12 +122,8 @@ class ReviewTask(Base):
 
     # Relationships
     content = relationship("ContentItem", back_populates="review_tasks")
-    assigned_user = relationship(
-        "User", foreign_keys=[assigned_to], back_populates="review_tasks_assigned"
-    )
-    created_by_user = relationship(
-        "User", foreign_keys=[created_by], back_populates="review_tasks_created"
-    )
+    assigned_user = relationship("User", foreign_keys=[assigned_to], back_populates="review_tasks_assigned")
+    created_by_user = relationship("User", foreign_keys=[created_by], back_populates="review_tasks_created")
     review_results = relationship("ReviewResult", back_populates="task")
 
 
@@ -156,9 +131,7 @@ class ReviewResult(Base):
     __tablename__ = "review_results"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    task_id = Column(
-        UUID(as_uuid=True), ForeignKey("review_tasks.id", ondelete="CASCADE"), nullable=False
-    )
+    task_id = Column(UUID(as_uuid=True), ForeignKey("review_tasks.id", ondelete="CASCADE"), nullable=False)
     reviewer_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     decision = Column(SQLEnum(ReviewDecision), nullable=False)
     comments = Column(Text)
@@ -175,9 +148,7 @@ class AnnotationTask(Base):
     __tablename__ = "annotation_tasks"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    content_id = Column(
-        UUID(as_uuid=True), ForeignKey("content_items.id"), nullable=False, index=True
-    )
+    content_id = Column(UUID(as_uuid=True), ForeignKey("content_items.id"), nullable=False, index=True)
     annotation_type = Column(SQLEnum(AnnotationType), nullable=False)
     guidelines = Column(Text)
     deadline = Column(DateTime(timezone=True))
@@ -195,9 +166,7 @@ class AnnotationAssignment(Base):
     __tablename__ = "annotation_assignments"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    task_id = Column(
-        UUID(as_uuid=True), ForeignKey("annotation_tasks.id", ondelete="CASCADE"), nullable=False
-    )
+    task_id = Column(UUID(as_uuid=True), ForeignKey("annotation_tasks.id", ondelete="CASCADE"), nullable=False)
     annotator_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     assigned_at = Column(DateTime(timezone=True), server_default=func.now())
     completed_at = Column(DateTime(timezone=True))
@@ -232,9 +201,7 @@ class QualityAssessment(Base):
     __tablename__ = "quality_assessments"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    content_id = Column(
-        UUID(as_uuid=True), ForeignKey("content_items.id"), nullable=False, index=True
-    )
+    content_id = Column(UUID(as_uuid=True), ForeignKey("content_items.id"), nullable=False, index=True)
     overall_quality_score = Column(Float, nullable=False)
     factual_accuracy = Column(Float)
     bias_score = Column(Float)
@@ -253,9 +220,7 @@ class ModerationAction(Base):
     __tablename__ = "moderation_actions"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    content_id = Column(
-        UUID(as_uuid=True), ForeignKey("content_items.id"), nullable=False, index=True
-    )
+    content_id = Column(UUID(as_uuid=True), ForeignKey("content_items.id"), nullable=False, index=True)
     action = Column(String(50), nullable=False)
     reason = Column(Text)
     severity = Column(String(20))
@@ -297,9 +262,7 @@ class CampaignTask(Base):
         nullable=False,
         index=True,
     )
-    content_id = Column(
-        UUID(as_uuid=True), ForeignKey("content_items.id"), nullable=False, index=True
-    )
+    content_id = Column(UUID(as_uuid=True), ForeignKey("content_items.id"), nullable=False, index=True)
     task_data = Column(JSON, nullable=False)
     status = Column(SQLEnum(TaskStatus), default=TaskStatus.PENDING, index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

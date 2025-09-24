@@ -154,7 +154,9 @@ class HTMLCleaner:
 
             # Remove comments
             if self.remove_comments:
-                comments = soup.find_all(string=lambda text: isinstance(text, Comment))
+                comments = soup.find_all(
+                    string=lambda text: isinstance(
+                        text, Comment))
                 for comment in comments:
                     comment.extract()
 
@@ -170,7 +172,8 @@ class HTMLCleaner:
         except Exception as e:
             logger.warning(f"Element removal failed: {str(e)}")
 
-    async def _remove_advertisement_elements(self, soup: BeautifulSoup) -> None:
+    async def _remove_advertisement_elements(
+            self, soup: BeautifulSoup) -> None:
         """Remove advertisement and promotional elements."""
         ad_selectors = [
             '[class*="ad"]',
@@ -195,7 +198,8 @@ class HTMLCleaner:
                 for element in elements:
                     element.decompose()
             except Exception as e:
-                logger.warning(f"Failed to remove ads with selector {selector}: {str(e)}")
+                logger.warning(
+                    f"Failed to remove ads with selector {selector}: {str(e)}")
 
     async def _remove_navigation_elements(self, soup: BeautifulSoup) -> None:
         """Remove navigation and menu elements."""
@@ -219,7 +223,8 @@ class HTMLCleaner:
                 for element in elements:
                     element.decompose()
             except Exception as e:
-                logger.warning(f"Failed to remove nav with selector {selector}: {str(e)}")
+                logger.warning(
+                    f"Failed to remove nav with selector {selector}: {str(e)}")
 
     async def _remove_social_widgets(self, soup: BeautifulSoup) -> None:
         """Remove social media widgets and sharing buttons."""
@@ -271,7 +276,8 @@ class HTMLCleaner:
             if "style" in element.attrs:
                 style = element.attrs["style"]
                 # Remove dangerous CSS properties
-                dangerous_props = ["javascript:", "expression(", "eval(", "url("]
+                dangerous_props = [
+                    "javascript:", "expression(", "eval(", "url("]
                 for prop in dangerous_props:
                     if prop in style.lower():
                         del element.attrs["style"]
@@ -282,7 +288,8 @@ class HTMLCleaner:
                 classes = element.attrs["class"]
                 if isinstance(classes, list):
                     # Remove suspicious class names
-                    suspicious_classes = ["ad", "advertisement", "banner", "popup", "modal"]
+                    suspicious_classes = [
+                        "ad", "advertisement", "banner", "popup", "modal"]
                     element.attrs["class"] = [
                         cls
                         for cls in classes
@@ -298,7 +305,8 @@ class HTMLCleaner:
             # Clean src attributes
             if "src" in element.attrs:
                 src = element.attrs["src"]
-                if src.startswith("data:") and not src.startswith("data:image/"):
+                if src.startswith("data:") and not src.startswith(
+                        "data:image/"):
                     del element.attrs["src"]
 
         except Exception as e:
@@ -384,7 +392,8 @@ class HTMLCleaner:
 
         except Exception as e:
             logger.error(f"Main content extraction failed: {str(e)}")
-            raise ContentProcessingError(f"Main content extraction failed: {str(e)}")
+            raise ContentProcessingError(
+                f"Main content extraction failed: {str(e)}")
 
     async def remove_boilerplate(self, html_content: str) -> str:
         """
@@ -423,7 +432,8 @@ class HTMLCleaner:
 
         except Exception as e:
             logger.error(f"Boilerplate removal failed: {str(e)}")
-            raise ContentProcessingError(f"Boilerplate removal failed: {str(e)}")
+            raise ContentProcessingError(
+                f"Boilerplate removal failed: {str(e)}")
 
     async def validate_html(self, html_content: str) -> Dict[str, Any]:
         """

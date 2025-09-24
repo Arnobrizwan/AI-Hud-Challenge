@@ -19,7 +19,7 @@ class RetentionPolicies:
         self._initialized = False
         self._policies: List[RetentionPolicy] = []
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize retention policies"""
         self._initialized = True
 
@@ -43,7 +43,7 @@ class RetentionPolicies:
 
         logger.info("Retention Policies initialized")
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup retention policies"""
         self._initialized = False
         logger.info("Retention Policies cleanup complete")

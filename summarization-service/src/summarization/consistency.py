@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 try:
     nltk.download("punkt", quiet=True)
     nltk.download("averaged_perceptron_tagger", quiet=True)
-except:
+except BaseException:
     pass
 
 
@@ -38,7 +38,7 @@ class FactualConsistencyChecker:
         self.sentence_model = None
         self._initialized = False
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize consistency checking tools"""
         try:
             logger.info("Initializing factual consistency checker...")
@@ -56,11 +56,11 @@ class FactualConsistencyChecker:
             self._initialized = True
             logger.info("Factual consistency checker initialized successfully")
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Failed to initialize consistency checker: {str(e)}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Clean up resources"""
         try:
             if self.sentence_model:
@@ -70,7 +70,10 @@ class FactualConsistencyChecker:
         except Exception as e:
             logger.error(f"Error during cleanup: {str(e)}")
 
-    async def check_consistency(self, source_text: str, summary_text: str) -> ConsistencyScores:
+    async def check_consistency(
+            self,
+            source_text: str,
+            summary_text: str) -> ConsistencyScores:
         """Check factual consistency between source and summary"""
 
         if not self._initialized:
@@ -101,7 +104,7 @@ class FactualConsistencyChecker:
                 overall_consistency=overall_consistency,
             )
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Consistency checking failed: {str(e)}")
             return ConsistencyScores(
                 entity_consistency=0.0,
@@ -111,7 +114,8 @@ class FactualConsistencyChecker:
                 overall_consistency=0.0,
             )
 
-    async def _check_entity_consistency(self, source: str, summary: str) -> float:
+    async def _check_entity_consistency(
+            self, source: str, summary: str) -> float:
         """Check consistency of named entities"""
         try:
             if not self.nlp:
@@ -161,11 +165,12 @@ class FactualConsistencyChecker:
 
             return total_consistency / entity_types if entity_types > 0 else 0.5
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Entity consistency check failed: {str(e)}")
             return 0.5
 
-    async def _check_numerical_consistency(self, source: str, summary: str) -> float:
+    async def _check_numerical_consistency(
+            self, source: str, summary: str) -> float:
         """Check consistency of numbers between source and summary"""
         try:
             # Extract numbers from both texts
@@ -191,14 +196,15 @@ class FactualConsistencyChecker:
             if precision + recall > 0:
                 f1 = 2 * precision * recall / (precision + recall)
                 return f1
-            else:
+else:
                 return 0.0
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Numerical consistency check failed: {str(e)}")
             return 0.5
 
-    async def _check_temporal_consistency(self, source: str, summary: str) -> float:
+    async def _check_temporal_consistency(
+            self, source: str, summary: str) -> float:
         """Check temporal consistency between source and summary"""
         try:
             # Extract temporal expressions
@@ -214,8 +220,16 @@ class FactualConsistencyChecker:
             summary_temporal = []
 
             for pattern in temporal_patterns:
-                source_temporal.extend(re.findall(pattern, source, re.IGNORECASE))
-                summary_temporal.extend(re.findall(pattern, summary, re.IGNORECASE))
+                source_temporal.extend(
+                    re.findall(
+                        pattern,
+                        source,
+                        re.IGNORECASE))
+                summary_temporal.extend(
+                    re.findall(
+                        pattern,
+                        summary,
+                        re.IGNORECASE))
 
             if not source_temporal:
                 return 1.0  # No temporal expressions to check
@@ -233,7 +247,7 @@ class FactualConsistencyChecker:
 
             return len(intersection) / len(union) if union else 0.5
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Temporal consistency check failed: {str(e)}")
             return 0.5
 
@@ -252,7 +266,8 @@ class FactualConsistencyChecker:
             summary_embeddings = self.sentence_model.encode(summary_sentences)
 
             # Calculate pairwise similarities
-            similarities = cosine_similarity(summary_embeddings, source_embeddings)
+            similarities = cosine_similarity(
+                summary_embeddings, source_embeddings)
 
             # For each summary sentence, find the most similar source sentence
             max_similarities = np.max(similarities, axis=1)
@@ -262,7 +277,7 @@ class FactualConsistencyChecker:
 
             return float(entailment_score)
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Entailment check failed: {str(e)}")
             return 0.5
 

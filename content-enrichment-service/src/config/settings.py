@@ -1,6 +1,5 @@
 """Configuration settings for Content Enrichment Service."""
 
-import os
 from typing import List, Optional
 
 from pydantic import BaseSettings, Field

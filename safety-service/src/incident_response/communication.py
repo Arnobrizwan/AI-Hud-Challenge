@@ -162,7 +162,7 @@ The incident response team continues to work on resolution.
         self.communication_log: List[Dict[str, Any]] = []
         self.active_communications: Dict[str, Dict[str, Any]] = {}
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize the communication manager"""
         try:
             # Initialize communication services
@@ -176,10 +176,11 @@ The incident response team continues to work on resolution.
             logger.info("Communication manager initialized")
 
         except Exception as e:
-            logger.error(f"Failed to initialize communication manager: {str(e)}")
+            logger.error(
+                f"Failed to initialize communication manager: {str(e)}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup resources"""
         try:
             # Clear communication tracking
@@ -190,7 +191,8 @@ The incident response team continues to work on resolution.
             logger.info("Communication manager cleanup completed")
 
         except Exception as e:
-            logger.error(f"Error during communication manager cleanup: {str(e)}")
+            logger.error(
+                f"Error during communication manager cleanup: {str(e)}")
 
     async def notify_stakeholders(
         self, incident: SafetyIncident, response_plan: ResponsePlan
@@ -229,7 +231,8 @@ The incident response team continues to work on resolution.
             logger.error(f"Stakeholder notification failed: {str(e)}")
             return False
 
-    async def determine_stakeholder_groups(self, incident: SafetyIncident) -> List[str]:
+    async def determine_stakeholder_groups(
+            self, incident: SafetyIncident) -> List[str]:
         """Determine which stakeholder groups to notify"""
         try:
             groups = []
@@ -246,7 +249,8 @@ The incident response team continues to work on resolution.
                 groups.append("executive_team")
 
             # Check if external notification is needed
-            if incident.metadata and incident.metadata.get("requires_external_notification", False):
+            if incident.metadata and incident.metadata.get(
+                    "requires_external_notification", False):
                 groups.append("external_stakeholders")
 
             return groups
@@ -266,8 +270,8 @@ The incident response team continues to work on resolution.
             incident_message = self.communication_templates["incident_detected"]
             messages["incident_detected"] = {
                 "subject": incident_message["subject"].format(
-                    incident_type=incident.incident_type, incident_id=incident.id
-                ),
+                    incident_type=incident.incident_type,
+                    incident_id=incident.id),
                 "body": incident_message["body"].format(
                     incident_id=incident.id,
                     incident_type=incident.incident_type,
@@ -275,7 +279,8 @@ The incident response team continues to work on resolution.
                     status=incident.status,
                     detected_at=incident.detected_at.strftime("%Y-%m-%d %H:%M:%S UTC"),
                     description=incident.description,
-                    affected_systems=", ".join(incident.affected_systems),
+                    affected_systems=", ".join(
+                        incident.affected_systems),
                 ),
             }
 
@@ -283,7 +288,8 @@ The incident response team continues to work on resolution.
             if incident.metadata and incident.metadata.get("escalation_level"):
                 escalation_message = self.communication_templates["incident_escalated"]
                 messages["incident_escalated"] = {
-                    "subject": escalation_message["subject"].format(incident_id=incident.id),
+                    "subject": escalation_message["subject"].format(
+                        incident_id=incident.id),
                     "body": escalation_message["body"].format(
                         incident_id=incident.id,
                         incident_type=incident.incident_type,
@@ -320,7 +326,8 @@ The incident response team continues to work on resolution.
                     channel_config = self.communication_channels[channel]
                     if channel_config["enabled"]:
                         # Get appropriate message for channel
-                        message_key = self.get_message_key_for_channel(channel, incident)
+                        message_key = self.get_message_key_for_channel(
+                            channel, incident)
                         if message_key in messages:
                             message = messages[message_key]
 
@@ -333,10 +340,14 @@ The incident response team continues to work on resolution.
             return any(notification_results)
 
         except Exception as e:
-            logger.error(f"Group notification failed for {group_name}: {str(e)}")
+            logger.error(
+                f"Group notification failed for {group_name}: {str(e)}")
             return False
 
-    def get_message_key_for_channel(self, channel: str, incident: SafetyIncident) -> str:
+    def get_message_key_for_channel(
+            self,
+            channel: str,
+            incident: SafetyIncident) -> str:
         """Get appropriate message key for communication channel"""
         try:
             # Critical channels get escalation messages
@@ -364,12 +375,17 @@ The incident response team continues to work on resolution.
             # Create update message
             update_template = self.communication_templates["incident_update"]
             message = {
-                "subject": update_template["subject"].format(incident_id=incident_id),
+                "subject": update_template["subject"].format(
+                    incident_id=incident_id),
                 "body": update_template["body"].format(
                     incident_id=incident_id,
-                    incident_type=incident.get("type", "Unknown"),
+                    incident_type=incident.get(
+                        "type",
+                        "Unknown"),
                     severity=severity,
-                    status=incident.get("status", "Unknown"),
+                    status=incident.get(
+                        "status",
+                        "Unknown"),
                     updated_at=datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC"),
                     update_message=update_message,
                 ),
@@ -399,7 +415,8 @@ The incident response team continues to work on resolution.
             logger.error(f"Incident update failed: {str(e)}")
             return False
 
-    async def determine_stakeholder_groups_for_update(self, severity: str) -> List[str]:
+    async def determine_stakeholder_groups_for_update(
+            self, severity: str) -> List[str]:
         """Determine stakeholder groups for incident update"""
         try:
             groups = ["incident_response_team"]
@@ -413,7 +430,8 @@ The incident response team continues to work on resolution.
             return groups
 
         except Exception as e:
-            logger.error(f"Stakeholder group determination for update failed: {str(e)}")
+            logger.error(
+                f"Stakeholder group determination for update failed: {str(e)}")
             return ["incident_response_team"]
 
     async def send_incident_resolution(
@@ -424,17 +442,23 @@ The incident response team continues to work on resolution.
             # Get incident details
             incident = await self.get_incident_details(incident_id)
             if not incident:
-                logger.warning(f"Incident {incident_id} not found for resolution")
+                logger.warning(
+                    f"Incident {incident_id} not found for resolution")
                 return False
 
             # Create resolution message
             resolution_template = self.communication_templates["incident_resolved"]
             message = {
-                "subject": resolution_template["subject"].format(incident_id=incident_id),
+                "subject": resolution_template["subject"].format(
+                    incident_id=incident_id),
                 "body": resolution_template["body"].format(
                     incident_id=incident_id,
-                    incident_type=incident.get("type", "Unknown"),
-                    severity=incident.get("severity", "Unknown"),
+                    incident_type=incident.get(
+                        "type",
+                        "Unknown"),
+                    severity=incident.get(
+                        "severity",
+                        "Unknown"),
                     resolved_at=datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC"),
                     resolution_time=resolution_time,
                     resolution_notes=resolution_notes,
@@ -442,7 +466,8 @@ The incident response team continues to work on resolution.
             }
 
             # Get all stakeholder groups that were notified
-            stakeholder_groups = incident.get("notified_groups", ["incident_response_team"])
+            stakeholder_groups = incident.get(
+                "notified_groups", ["incident_response_team"])
 
             # Send resolution to each group
             notification_results = []
@@ -493,7 +518,8 @@ The incident response team continues to work on resolution.
         except Exception as e:
             logger.error(f"Communication logging failed: {str(e)}")
 
-    async def get_incident_details(self, incident_id: str) -> Optional[Dict[str, Any]]:
+    async def get_incident_details(
+            self, incident_id: str) -> Optional[Dict[str, Any]]:
         """Get incident details for communication"""
         try:
             # Placeholder for getting incident details
@@ -514,17 +540,18 @@ The incident response team continues to work on resolution.
         """Get communication statistics"""
         try:
             return {
-                "total_communications": len(self.communication_log),
+                "total_communications": len(
+                    self.communication_log),
                 "successful_communications": sum(
-                    1 for comm in self.communication_log if comm["success"]
-                ),
+                    1 for comm in self.communication_log if comm["success"]),
                 "communications_by_type": self.get_communications_by_type(),
                 "communications_by_group": self.get_communications_by_group(),
                 "average_response_time": self.calculate_average_response_time(),
             }
 
         except Exception as e:
-            logger.error(f"Communication statistics calculation failed: {str(e)}")
+            logger.error(
+                f"Communication statistics calculation failed: {str(e)}")
             return {"error": str(e)}
 
     def get_communications_by_type(self) -> Dict[str, int]:
@@ -557,18 +584,19 @@ The incident response team continues to work on resolution.
         """Calculate average response time in minutes"""
         try:
             # Placeholder for response time calculation
-            # In a real implementation, this would calculate actual response times
+            # In a real implementation, this would calculate actual response
+            # times
             return 15.0  # 15 minutes average
 
         except Exception as e:
             logger.error(f"Average response time calculation failed: {str(e)}")
             return 0.0
 
-    async def communication_monitoring_task(self):
+    async def communication_monitoring_task(self) -> Dict[str, Any]:
         """Background task for monitoring communications"""
         while True:
             try:
-                await asyncio.sleep(300)  # Check every 5 minutes
+    await asyncio.sleep(300)  # Check every 5 minutes
 
                 if not self.is_initialized:
                     break
@@ -576,7 +604,8 @@ The incident response team continues to work on resolution.
                 # Check for failed communications
                 failed_communications = [
                     comm
-                    for comm in self.communication_log[-100:]  # Last 100 communications
+                    # Last 100 communications
+                    for comm in self.communication_log[-100:]
                     if not comm["success"]
                 ]
 
@@ -589,11 +618,11 @@ The incident response team continues to work on resolution.
                 logger.error(f"Communication monitoring task failed: {str(e)}")
                 await asyncio.sleep(300)
 
-    async def communication_cleanup_task(self):
+    async def communication_cleanup_task(self) -> Dict[str, Any]:
         """Background task for cleaning up old communications"""
         while True:
             try:
-                await asyncio.sleep(3600)  # Run every hour
+    await asyncio.sleep(3600)  # Run every hour
 
                 if not self.is_initialized:
                     break
@@ -601,32 +630,36 @@ The incident response team continues to work on resolution.
                 # Clean up old communications (keep for 30 days)
                 cutoff_date = datetime.utcnow() - timedelta(days=30)
                 old_communications = [
-                    comm for comm in self.communication_log if comm["timestamp"] < cutoff_date
-                ]
+                    comm for comm in self.communication_log if comm["timestamp"] < cutoff_date]
 
                 for comm in old_communications:
                     self.communication_log.remove(comm)
 
                 if old_communications:
-                    logger.info(f"Cleaned up {len(old_communications)} old communications")
+                    logger.info(
+                        f"Cleaned up {len(old_communications)} old communications")
 
             except Exception as e:
                 logger.error(f"Communication cleanup task failed: {str(e)}")
                 await asyncio.sleep(3600)
 
-    async def initialize_communication_services(self):
+    async def initialize_communication_services(self) -> Dict[str, Any]:
         """Initialize communication services"""
         try:
             # Placeholder for communication service initialization
             logger.info("Communication services initialized")
 
         except Exception as e:
-            logger.error(f"Communication service initialization failed: {str(e)}")
+            logger.error(
+                f"Communication service initialization failed: {str(e)}")
             raise
 
-    async def send_email_communication(
-        self, contacts: List[str], message: Dict[str, str], incident_id: str, group_name: str
-    ) -> bool:
+    async def send_email_communication(self,
+                                       contacts: List[str],
+                                       message: Dict[str,
+                                                     str],
+                                       incident_id: str,
+                                       group_name: str) -> bool:
         """Send email communication"""
         try:
             # Simulate email sending
@@ -640,9 +673,12 @@ The incident response team continues to work on resolution.
             logger.error(f"Email communication failed: {str(e)}")
             return False
 
-    async def send_slack_communication(
-        self, contacts: List[str], message: Dict[str, str], incident_id: str, group_name: str
-    ) -> bool:
+    async def send_slack_communication(self,
+                                       contacts: List[str],
+                                       message: Dict[str,
+                                                     str],
+                                       incident_id: str,
+                                       group_name: str) -> bool:
         """Send Slack communication"""
         try:
             # Simulate Slack notification
@@ -656,9 +692,12 @@ The incident response team continues to work on resolution.
             logger.error(f"Slack communication failed: {str(e)}")
             return False
 
-    async def send_phone_communication(
-        self, contacts: List[str], message: Dict[str, str], incident_id: str, group_name: str
-    ) -> bool:
+    async def send_phone_communication(self,
+                                       contacts: List[str],
+                                       message: Dict[str,
+                                                     str],
+                                       incident_id: str,
+                                       group_name: str) -> bool:
         """Send phone communication"""
         try:
             # Simulate phone call
@@ -672,23 +711,30 @@ The incident response team continues to work on resolution.
             logger.error(f"Phone communication failed: {str(e)}")
             return False
 
-    async def send_sms_communication(
-        self, contacts: List[str], message: Dict[str, str], incident_id: str, group_name: str
-    ) -> bool:
+    async def send_sms_communication(self,
+                                     contacts: List[str],
+                                     message: Dict[str,
+                                                   str],
+                                     incident_id: str,
+                                     group_name: str) -> bool:
         """Send SMS communication"""
         try:
             # Simulate SMS sending
             await asyncio.sleep(0.1)
-            logger.info(f"SMS sent to {contacts} for incident {incident_id} (group: {group_name})")
+            logger.info(
+                f"SMS sent to {contacts} for incident {incident_id} (group: {group_name})")
             return True
 
         except Exception as e:
             logger.error(f"SMS communication failed: {str(e)}")
             return False
 
-    async def send_webhook_communication(
-        self, contacts: List[str], message: Dict[str, str], incident_id: str, group_name: str
-    ) -> bool:
+    async def send_webhook_communication(self,
+                                         contacts: List[str],
+                                         message: Dict[str,
+                                                       str],
+                                         incident_id: str,
+                                         group_name: str) -> bool:
         """Send webhook communication"""
         try:
             # Simulate webhook call

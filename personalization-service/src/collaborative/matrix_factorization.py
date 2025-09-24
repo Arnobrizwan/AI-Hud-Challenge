@@ -1,12 +1,10 @@
 """Matrix factorization for collaborative filtering."""
 
-import asyncio
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import structlog
 from implicit.als import AlternatingLeastSquares
-from implicit.nearest_neighbours import CosineRecommender
 from scipy.sparse import csr_matrix
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -48,13 +46,9 @@ class ImplicitMatrixFactorization:
         self.model.fit(self.interaction_matrix)
         self.is_trained = True
 
-        logger.info(
-            f"Trained CF model with {len(self.user_mapping)} users and {len(self.item_mapping)} items"
-        )
+        logger.info(f"Trained CF model with {len(self.user_mapping)} users and {len(self.item_mapping)} items")
 
-    async def _build_interaction_matrix(
-        self, interactions: List[UserInteraction]
-    ) -> Optional[csr_matrix]:
+    async def _build_interaction_matrix(self, interactions: List[UserInteraction]) -> Optional[csr_matrix]:
         """Build user-item interaction matrix."""
         if not interactions:
             return None
@@ -190,7 +184,8 @@ class ImplicitMatrixFactorization:
             return
 
         # This is a simplified online update
-        # In production, you might want to use more sophisticated online learning
+        # In production, you might want to use more sophisticated online
+        # learning
         if user_id in self.user_mapping and item_id in self.item_mapping:
             user_idx = self.user_mapping[user_id]
             item_idx = self.item_mapping[item_id]
@@ -203,9 +198,7 @@ class ImplicitMatrixFactorization:
             # For now, we'll just log the update
             logger.info(f"Updated interaction: user={user_id}, item={item_id}, rating={rating}")
 
-    async def get_recommendations(
-        self, user_id: str, n_recommendations: int = 10
-    ) -> List[Tuple[str, float]]:
+    async def get_recommendations(self, user_id: str, n_recommendations: int = 10) -> List[Tuple[str, float]]:
         """Get top recommendations for a user."""
         if not self.is_trained or user_id not in self.user_mapping:
             return []
@@ -213,9 +206,7 @@ class ImplicitMatrixFactorization:
         user_idx = self.user_mapping[user_id]
 
         # Get recommendations
-        recommendations = self.model.recommend(
-            user_idx, self.interaction_matrix[user_idx], N=n_recommendations
-        )
+        recommendations = self.model.recommend(user_idx, self.interaction_matrix[user_idx], N=n_recommendations)
 
         # Convert to item IDs and scores
         result = []
@@ -233,9 +224,7 @@ class ImplicitMatrixFactorization:
             "is_trained": self.is_trained,
             "n_users": len(self.user_mapping),
             "n_items": len(self.item_mapping),
-            "n_interactions": (
-                self.interaction_matrix.nnz if self.interaction_matrix is not None else 0
-            ),
+            "n_interactions": (self.interaction_matrix.nnz if self.interaction_matrix is not None else 0),
             "factors": settings.collaborative_factors,
             "regularization": settings.collaborative_regularization,
         }

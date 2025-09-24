@@ -55,7 +55,8 @@ class ObservabilityEngine:
         self.monitoring_tasks = []
         self.is_initialized = False
 
-    async def initialize_observability(self, config: ObservabilityConfig) -> ObservabilityStatus:
+    async def initialize_observability(
+            self, config: ObservabilityConfig) -> ObservabilityStatus:
         """Initialize comprehensive observability stack"""
 
         logger.info("Initializing observability components...")
@@ -75,10 +76,13 @@ class ObservabilityEngine:
         results = await asyncio.gather(*initialization_tasks, return_exceptions=True)
 
         # Check initialization success
-        failed_components = [result for result in results if isinstance(result, Exception)]
+        failed_components = [
+            result for result in results if isinstance(
+                result, Exception)]
 
         if failed_components:
-            logger.error(f"Failed to initialize components: {failed_components}")
+            logger.error(
+                f"Failed to initialize components: {failed_components}")
 
         # Start monitoring loops
         await self.start_monitoring_loops()
@@ -92,26 +96,38 @@ class ObservabilityEngine:
             initialization_timestamp=datetime.utcnow(),
         )
 
-    async def start_monitoring_loops(self):
+    async def start_monitoring_loops(self) -> Dict[str, Any]:
         """Start background monitoring tasks"""
 
         # Health monitoring loop
-        self.monitoring_tasks.append(asyncio.create_task(self._health_monitoring_loop()))
+        self.monitoring_tasks.append(
+            asyncio.create_task(
+                self._health_monitoring_loop()))
 
         # Metrics collection loop
-        self.monitoring_tasks.append(asyncio.create_task(self._metrics_collection_loop()))
+        self.monitoring_tasks.append(
+            asyncio.create_task(
+                self._metrics_collection_loop()))
 
         # Alert processing loop
-        self.monitoring_tasks.append(asyncio.create_task(self._alert_processing_loop()))
+        self.monitoring_tasks.append(
+            asyncio.create_task(
+                self._alert_processing_loop()))
 
         # SLO monitoring loop
-        self.monitoring_tasks.append(asyncio.create_task(self._slo_monitoring_loop()))
+        self.monitoring_tasks.append(
+            asyncio.create_task(
+                self._slo_monitoring_loop()))
 
         # Cost monitoring loop
-        self.monitoring_tasks.append(asyncio.create_task(self._cost_monitoring_loop()))
+        self.monitoring_tasks.append(
+            asyncio.create_task(
+                self._cost_monitoring_loop()))
 
         # Chaos engineering loop
-        self.monitoring_tasks.append(asyncio.create_task(self._chaos_engineering_loop()))
+        self.monitoring_tasks.append(
+            asyncio.create_task(
+                self._chaos_engineering_loop()))
 
         logger.info("Started monitoring loops")
 
@@ -139,11 +155,21 @@ class ObservabilityEngine:
 
         return SystemHealthReport(
             overall_health_score=overall_health,
-            service_health=service_health if not isinstance(service_health, Exception) else {},
-            infrastructure_health=infra_health if not isinstance(infra_health, Exception) else {},
-            pipeline_health=pipeline_health if not isinstance(pipeline_health, Exception) else {},
-            ml_model_health=ml_health if not isinstance(ml_health, Exception) else {},
-            dependency_health=deps_health if not isinstance(deps_health, Exception) else {},
+            service_health=service_health if not isinstance(
+                service_health,
+                Exception) else {},
+            infrastructure_health=infra_health if not isinstance(
+                infra_health,
+                Exception) else {},
+            pipeline_health=pipeline_health if not isinstance(
+                pipeline_health,
+                Exception) else {},
+            ml_model_health=ml_health if not isinstance(
+                    ml_health,
+                    Exception) else {},
+            dependency_health=deps_health if not isinstance(
+                        deps_health,
+                        Exception) else {},
             health_check_timestamp=datetime.utcnow(),
             recommendations=recommendations,
         )
@@ -168,7 +194,8 @@ class ObservabilityEngine:
         """Check external dependencies health"""
         return await self.health_checker.check_external_dependencies()
 
-    def calculate_overall_health_score(self, health_checks: List[Dict[str, Any]]) -> float:
+    def calculate_overall_health_score(
+            self, health_checks: List[Dict[str, Any]]) -> float:
         """Calculate overall system health score"""
         if not health_checks:
             return 0.0
@@ -177,18 +204,23 @@ class ObservabilityEngine:
         valid_checks = 0
 
         for health_check in health_checks:
-            if isinstance(health_check, dict) and "health_score" in health_check:
+            if isinstance(
+                    health_check,
+                    dict) and "health_score" in health_check:
                 total_score += health_check["health_score"]
                 valid_checks += 1
 
         return total_score / valid_checks if valid_checks > 0 else 0.0
 
-    async def generate_health_recommendations(self, health_checks: List[Any]) -> List[str]:
+    async def generate_health_recommendations(
+            self, health_checks: List[Any]) -> List[str]:
         """Generate health improvement recommendations"""
         recommendations = []
 
         for health_check in health_checks:
-            if isinstance(health_check, dict) and "recommendations" in health_check:
+            if isinstance(
+                    health_check,
+                    dict) and "recommendations" in health_check:
                 recommendations.extend(health_check["recommendations"])
 
         return list(set(recommendations))  # Remove duplicates
@@ -222,9 +254,12 @@ class ObservabilityEngine:
 
         except Exception as e:
             logger.error(f"Failed to get system status: {str(e)}")
-            return {"status": "error", "error": str(e), "timestamp": datetime.utcnow().isoformat()}
+            return {
+                "status": "error",
+                "error": str(e),
+                "timestamp": datetime.utcnow().isoformat()}
 
-    async def _health_monitoring_loop(self):
+    async def _health_monitoring_loop(self) -> Dict[str, Any]:
         """Background health monitoring loop"""
         while True:
             try:
@@ -232,7 +267,7 @@ class ObservabilityEngine:
 
                 # Check for critical health issues
                 if health_report.overall_health_score < 0.7:
-                    await self.alerting_system.create_alert(
+    await self.alerting_system.create_alert(
                         {
                             "type": "system_health_critical",
                             "severity": "critical",
@@ -247,62 +282,62 @@ class ObservabilityEngine:
                 logger.error(f"Health monitoring loop error: {str(e)}")
                 await asyncio.sleep(60)
 
-    async def _metrics_collection_loop(self):
+    async def _metrics_collection_loop(self) -> Dict[str, Any]:
         """Background metrics collection loop"""
         while True:
             try:
-                await self.metrics_collector.collect_real_time_metrics()
+    await self.metrics_collector.collect_real_time_metrics()
                 await asyncio.sleep(30)  # Collect every 30 seconds
 
             except Exception as e:
                 logger.error(f"Metrics collection loop error: {str(e)}")
                 await asyncio.sleep(30)
 
-    async def _alert_processing_loop(self):
+    async def _alert_processing_loop(self) -> Dict[str, Any]:
         """Background alert processing loop"""
         while True:
             try:
-                await self.alerting_system.process_pending_alerts()
+    await self.alerting_system.process_pending_alerts()
                 await asyncio.sleep(10)  # Process every 10 seconds
 
             except Exception as e:
                 logger.error(f"Alert processing loop error: {str(e)}")
                 await asyncio.sleep(10)
 
-    async def _slo_monitoring_loop(self):
+    async def _slo_monitoring_loop(self) -> Dict[str, Any]:
         """Background SLO monitoring loop"""
         while True:
             try:
-                await self.slo_monitor.monitor_all_slos()
+    await self.slo_monitor.monitor_all_slos()
                 await asyncio.sleep(300)  # Check every 5 minutes
 
             except Exception as e:
                 logger.error(f"SLO monitoring loop error: {str(e)}")
                 await asyncio.sleep(300)
 
-    async def _cost_monitoring_loop(self):
+    async def _cost_monitoring_loop(self) -> Dict[str, Any]:
         """Background cost monitoring loop"""
         while True:
             try:
-                await self.cost_monitor.collect_cost_metrics()
+    await self.cost_monitor.collect_cost_metrics()
                 await asyncio.sleep(3600)  # Check every hour
 
             except Exception as e:
                 logger.error(f"Cost monitoring loop error: {str(e)}")
                 await asyncio.sleep(3600)
 
-    async def _chaos_engineering_loop(self):
+    async def _chaos_engineering_loop(self) -> Dict[str, Any]:
         """Background chaos engineering loop"""
         while True:
             try:
-                await self.chaos_engine.run_chaos_experiments()
+    await self.chaos_engine.run_chaos_experiments()
                 await asyncio.sleep(1800)  # Run every 30 minutes
 
             except Exception as e:
                 logger.error(f"Chaos engineering loop error: {str(e)}")
                 await asyncio.sleep(1800)
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup resources"""
         logger.info("Cleaning up observability engine...")
 
@@ -315,12 +350,12 @@ class ObservabilityEngine:
 
         # Cleanup components
         if hasattr(self.metrics_collector, "cleanup"):
-            await self.metrics_collector.cleanup()
+    await self.metrics_collector.cleanup()
 
         if hasattr(self.trace_manager, "cleanup"):
-            await self.trace_manager.cleanup()
+    await self.trace_manager.cleanup()
 
         if hasattr(self.log_aggregator, "cleanup"):
-            await self.log_aggregator.cleanup()
+    await self.log_aggregator.cleanup()
 
         logger.info("Observability engine cleanup completed")

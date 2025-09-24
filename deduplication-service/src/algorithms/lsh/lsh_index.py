@@ -41,8 +41,10 @@ class LSHIndex:
 
         # Initialize LSH
         self.lsh = MinHashLSH(
-            threshold=threshold, num_perm=num_perm, num_bands=num_bands, band_size=band_size
-        )
+            threshold=threshold,
+            num_perm=num_perm,
+            num_bands=num_bands,
+            band_size=band_size)
 
         # Redis keys
         self.index_key = f"{index_name}:lsh"
@@ -100,7 +102,8 @@ class LSHIndex:
         # Update statistics
         await self._update_stats("articles_removed", 1)
 
-    async def batch_add_articles(self, articles: List[Tuple[UUID, Any]]) -> None:
+    async def batch_add_articles(
+            self, articles: List[Tuple[UUID, Any]]) -> None:
         """Add multiple articles to LSH index in batch.
 
         Args:
@@ -186,7 +189,8 @@ class LSHIndex:
 
         await self.redis.hset(self.metadata_key, str(article_id), json.dumps(metadata))
 
-    async def _batch_store_in_redis(self, articles: List[Tuple[UUID, Any]]) -> None:
+    async def _batch_store_in_redis(
+            self, articles: List[Tuple[UUID, Any]]) -> None:
         """Store multiple articles in Redis in batch.
 
         Args:
@@ -212,10 +216,10 @@ class LSHIndex:
 
         # Batch store in Redis
         if index_data:
-            await self.redis.hset(self.index_key, mapping=index_data)
+    await self.redis.hset(self.index_key, mapping=index_data)
 
         if metadata_data:
-            await self.redis.hset(self.metadata_key, mapping=metadata_data)
+    await self.redis.hset(self.metadata_key, mapping=metadata_data)
 
     async def _remove_from_redis(self, article_id: UUID) -> None:
         """Remove article from Redis.
@@ -313,7 +317,7 @@ class LSHIndexManager:
             index_name: Name of the index to remove
         """
         if index_name in self.indices:
-            await self.indices[index_name].clear_index()
+    await self.indices[index_name].clear_index()
             del self.indices[index_name]
 
     async def get_all_stats(self) -> Dict[str, Dict[str, Any]]:

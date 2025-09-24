@@ -4,7 +4,6 @@ Features API endpoints - REST API for feature store management
 
 from datetime import datetime
 from typing import Any, Dict, List, Optional
-from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from pydantic import BaseModel
@@ -12,10 +11,8 @@ from pydantic import BaseModel
 from src.feature_store.feature_store_manager import FeatureStoreManager
 from src.models.feature_models import (
     FeatureConfig,
-    FeatureDefinition,
     FeatureServingRequest,
     FeatureSet,
-    FeatureType,
     FeatureVector,
 )
 from src.utils.exceptions import FeatureStoreError, ValidationError
@@ -76,9 +73,7 @@ async def create_feature_set(
 
 
 @router.get("/feature-sets/{feature_set_id}", response_model=FeatureSet)
-async def get_feature_set(
-    feature_set_id: str, feature_store_manager: FeatureStoreManager = Depends()
-):
+async def get_feature_set(feature_set_id: str, feature_store_manager: FeatureStoreManager = Depends()):
     """Get feature set by ID"""
 
     try:
@@ -112,26 +107,20 @@ async def list_feature_sets(
         end_idx = start_idx + page_size
         paginated_feature_sets = feature_sets[start_idx:end_idx]
 
-        return FeatureSetListResponse(
-            feature_sets=paginated_feature_sets, total=total, page=page, page_size=page_size
-        )
+        return FeatureSetListResponse(feature_sets=paginated_feature_sets, total=total, page=page, page_size=page_size)
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to list feature sets: {str(e)}")
 
 
 @router.post("/serve", response_model=ServeFeaturesResponse)
-async def serve_features(
-    request: ServeFeaturesRequest, feature_store_manager: FeatureStoreManager = Depends()
-):
+async def serve_features(request: ServeFeaturesRequest, feature_store_manager: FeatureStoreManager = Depends()):
     """Serve features for online inference"""
 
     try:
         feature_vector = await feature_store_manager.serve_features(request.request)
 
-        return ServeFeaturesResponse(
-            feature_vector=feature_vector, served_at=feature_vector.served_at
-        )
+        return ServeFeaturesResponse(feature_vector=feature_vector, served_at=feature_vector.served_at)
 
     except ValidationError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -142,9 +131,7 @@ async def serve_features(
 
 
 @router.get("/feature-sets/{feature_set_id}/quality")
-async def get_feature_quality_metrics(
-    feature_set_id: str, feature_store_manager: FeatureStoreManager = Depends()
-):
+async def get_feature_quality_metrics(feature_set_id: str, feature_store_manager: FeatureStoreManager = Depends()):
     """Get feature quality metrics"""
 
     try:
@@ -186,9 +173,7 @@ async def update_feature_set(
     """Update feature set"""
 
     try:
-        updated_feature_set = await feature_store_manager.update_feature_set(
-            feature_set_id, update_config
-        )
+        updated_feature_set = await feature_store_manager.update_feature_set(feature_set_id, update_config)
 
         return {
             "feature_set_id": feature_set_id,
@@ -203,9 +188,7 @@ async def update_feature_set(
 
 
 @router.delete("/feature-sets/{feature_set_id}")
-async def delete_feature_set(
-    feature_set_id: str, feature_store_manager: FeatureStoreManager = Depends()
-):
+async def delete_feature_set(feature_set_id: str, feature_store_manager: FeatureStoreManager = Depends()):
     """Delete feature set"""
 
     try:
@@ -225,9 +208,7 @@ async def delete_feature_set(
 
 
 @router.get("/feature-sets/{feature_set_id}/statistics")
-async def get_feature_statistics(
-    feature_set_id: str, feature_store_manager: FeatureStoreManager = Depends()
-):
+async def get_feature_statistics(feature_set_id: str, feature_store_manager: FeatureStoreManager = Depends()):
     """Get feature statistics"""
 
     try:
@@ -268,9 +249,7 @@ async def trigger_feature_ingestion(
         return ingestion_job
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to trigger feature ingestion: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to trigger feature ingestion: {str(e)}")
 
 
 @router.get("/feature-sets/{feature_set_id}/ingestion/{job_id}")

@@ -16,18 +16,19 @@ class BackupManager:
     def __init__(self):
         self._initialized = False
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize backup manager"""
         self._initialized = True
         logger.info("Backup Manager initialized")
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup backup manager"""
         self._initialized = False
         logger.info("Backup Manager cleanup complete")
 
-    async def create_backup(self, backup_name: str, data_types: List[str] = None) -> Dict[str, Any]:
-        """Create comprehensive backup"""
+    async def create_backup(self, backup_name: str,
+                            data_types: List[str] = None) -> Dict[str, Any]:
+    """Create comprehensive backup"""
         # Placeholder implementation
         return {
             "backup_name": backup_name,

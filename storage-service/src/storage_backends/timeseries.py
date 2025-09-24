@@ -25,7 +25,7 @@ class TimeseriesDBManager:
         self.settings = Settings()
         self._initialized = False
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize TimescaleDB connection pool"""
         if self._initialized:
             return
@@ -57,19 +57,19 @@ class TimeseriesDBManager:
             logger.error(f"Failed to initialize TimescaleDB Manager: {e}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup connection pool"""
         if self.pool:
-            await self.pool.close()
+    await self.pool.close()
             self.pool = None
 
         self._initialized = False
         logger.info("TimescaleDB Manager cleanup complete")
 
-    async def _initialize_schema(self):
+    async def _initialize_schema(self) -> Dict[str, Any]:
         """Initialize TimescaleDB schema"""
         try:
-            async with self.pool.acquire() as conn:
+    async with self.pool.acquire() as conn:
                 # Enable TimescaleDB extension
                 await conn.execute("CREATE EXTENSION IF NOT EXISTS timescaledb")
 
@@ -95,7 +95,7 @@ class TimeseriesDBManager:
                 # Create hypertable
                 await conn.execute(
                     """
-                    SELECT create_hypertable('article_metrics', 'time', 
+                    SELECT create_hypertable('article_metrics', 'time',
                                            if_not_exists => TRUE)
                 """
                 )
@@ -103,21 +103,21 @@ class TimeseriesDBManager:
                 # Create indexes for performance
                 await conn.execute(
                     """
-                    CREATE INDEX IF NOT EXISTS idx_article_metrics_article_id 
+                    CREATE INDEX IF NOT EXISTS idx_article_metrics_article_id
                     ON article_metrics(article_id, time DESC)
                 """
                 )
 
                 await conn.execute(
                     """
-                    CREATE INDEX IF NOT EXISTS idx_article_metrics_source 
+                    CREATE INDEX IF NOT EXISTS idx_article_metrics_source
                     ON article_metrics(source, time DESC)
                 """
                 )
 
                 await conn.execute(
                     """
-                    CREATE INDEX IF NOT EXISTS idx_article_metrics_category 
+                    CREATE INDEX IF NOT EXISTS idx_article_metrics_category
                     ON article_metrics(category, time DESC)
                 """
                 )
@@ -131,16 +131,16 @@ class TimeseriesDBManager:
             logger.error(f"Failed to initialize TimescaleDB schema: {e}")
             raise
 
-    async def _create_continuous_aggregates(self):
+    async def _create_continuous_aggregates(self) -> Dict[str, Any]:
         """Create continuous aggregates for common queries"""
         try:
-            async with self.pool.acquire() as conn:
+    async with self.pool.acquire() as conn:
                 # Daily article metrics
                 await conn.execute(
                     """
                     CREATE MATERIALIZED VIEW IF NOT EXISTS daily_article_metrics
                     WITH (timescaledb.continuous) AS
-                    SELECT 
+                    SELECT
                         time_bucket('1 day', time) AS day,
                         source,
                         category,
@@ -161,7 +161,7 @@ class TimeseriesDBManager:
                     """
                     CREATE MATERIALIZED VIEW IF NOT EXISTS hourly_article_metrics
                     WITH (timescaledb.continuous) AS
-                    SELECT 
+                    SELECT
                         time_bucket('1 hour', time) AS hour,
                         source,
                         COUNT(*) as article_count,
@@ -206,10 +206,10 @@ class TimeseriesDBManager:
             metrics = self._calculate_article_metrics(article)
 
             async with self.pool.acquire() as conn:
-                await conn.execute(
+    await conn.execute(
                     """
-                    INSERT INTO article_metrics 
-                    (time, article_id, source, category, language, word_count, 
+                    INSERT INTO article_metrics
+                    (time, article_id, source, category, language, word_count,
                      reading_time, engagement_score, quality_score, sentiment_score, metadata)
                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
                 """,
@@ -235,7 +235,8 @@ class TimeseriesDBManager:
             }
 
         except Exception as e:
-            logger.error(f"Failed to record metrics for article {article.id}: {e}")
+            logger.error(
+                f"Failed to record metrics for article {article.id}: {e}")
             raise
 
     def _calculate_article_metrics(self, article: Article) -> Dict[str, Any]:
@@ -265,7 +266,8 @@ class TimeseriesDBManager:
                 (1.0 if article.author else 0.0)  # Has author
                 + (1.0 if article.summary else 0.0)  # Has summary
                 + (min(1.0, word_count / 500))  # Length factor
-                + (0.1 if len(article.categories) > 0 else 0.0),  # Has categories
+                + (0.1 if len(article.categories)
+                   > 0 else 0.0),  # Has categories
             ),
         )
 
@@ -297,7 +299,7 @@ class TimeseriesDBManager:
             raise RuntimeError("TimescaleDB Manager not initialized")
 
         try:
-            async with self.pool.acquire() as conn:
+    async with self.pool.acquire() as conn:
                 query = """
                     SELECT time, article_id, source, category, language, word_count,
                            reading_time, engagement_score, quality_score, sentiment_score, metadata
@@ -341,7 +343,8 @@ class TimeseriesDBManager:
                 return metrics
 
         except Exception as e:
-            logger.error(f"Failed to get metrics for article {article_id}: {e}")
+            logger.error(
+                f"Failed to get metrics for article {article_id}: {e}")
             raise
 
     async def get_daily_metrics(
@@ -352,7 +355,7 @@ class TimeseriesDBManager:
             raise RuntimeError("TimescaleDB Manager not initialized")
 
         try:
-            async with self.pool.acquire() as conn:
+    async with self.pool.acquire() as conn:
                 query = """
                     SELECT day, source, category, language, article_count,
                            avg_word_count, avg_reading_time, avg_engagement_score,
@@ -415,7 +418,7 @@ class TimeseriesDBManager:
             raise RuntimeError("TimescaleDB Manager not initialized")
 
         try:
-            async with self.pool.acquire() as conn:
+    async with self.pool.acquire() as conn:
                 query = """
                     SELECT hour, source, article_count, avg_engagement_score, avg_quality_score
                     FROM hourly_article_metrics
@@ -455,8 +458,9 @@ class TimeseriesDBManager:
             logger.error(f"Failed to get hourly metrics: {e}")
             raise
 
-    async def get_source_performance(self, source: str, days: int = 30) -> Dict[str, Any]:
-        """Get performance metrics for a source"""
+    async def get_source_performance(
+            self, source: str, days: int = 30) -> Dict[str, Any]:
+    """Get performance metrics for a source"""
         if not self._initialized or not self.pool:
             raise RuntimeError("TimescaleDB Manager not initialized")
 
@@ -467,7 +471,7 @@ class TimeseriesDBManager:
                 # Get aggregated metrics for the source
                 row = await conn.fetchrow(
                     """
-                    SELECT 
+                    SELECT
                         COUNT(*) as total_articles,
                         AVG(word_count) as avg_word_count,
                         AVG(reading_time) as avg_reading_time,
@@ -518,7 +522,8 @@ class TimeseriesDBManager:
             logger.error(f"Failed to get source performance for {source}: {e}")
             raise
 
-    async def get_top_sources(self, limit: int = 10, days: int = 7) -> List[Dict[str, Any]]:
+    async def get_top_sources(self, limit: int = 10,
+                              days: int = 7) -> List[Dict[str, Any]]:
         """Get top performing sources"""
         if not self._initialized or not self.pool:
             raise RuntimeError("TimescaleDB Manager not initialized")
@@ -529,7 +534,7 @@ class TimeseriesDBManager:
             async with self.pool.acquire() as conn:
                 rows = await conn.fetch(
                     """
-                    SELECT 
+                    SELECT
                         source,
                         COUNT(*) as article_count,
                         AVG(engagement_score) as avg_engagement_score,

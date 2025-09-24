@@ -1,14 +1,11 @@
 """Thompson Sampling contextual bandit algorithm."""
 
-import asyncio
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import numpy as np
 import structlog
-from scipy.stats import beta
 
 from ..config.settings import settings
-from ..models.schemas import BanditRecommendation, ContentItem, UserContext
 
 logger = structlog.get_logger()
 
@@ -81,9 +78,7 @@ class ThompsonSamplingBandit:
             }
 
         total_reward = sum(self.arm_rewards[action_id])
-        average_reward = (
-            total_reward / len(self.arm_rewards[action_id]) if self.arm_rewards[action_id] else 0.0
-        )
+        average_reward = total_reward / len(self.arm_rewards[action_id]) if self.arm_rewards[action_id] else 0.0
 
         alpha = self.alpha + self.arm_counts[action_id]
         beta = self.beta + len(self.arm_rewards[action_id]) - self.arm_counts[action_id]

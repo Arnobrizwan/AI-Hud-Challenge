@@ -26,7 +26,7 @@ class RedisManager:
         self.settings = Settings()
         self._initialized = False
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize Redis client"""
         if self._initialized:
             return
@@ -56,10 +56,10 @@ class RedisManager:
             logger.error(f"Failed to initialize Redis Manager: {e}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup Redis client"""
         if self.redis_client:
-            await self.redis_client.close()
+    await self.redis_client.close()
             self.redis_client = None
 
         self._initialized = False
@@ -88,7 +88,8 @@ class RedisManager:
             logger.error(f"Failed to cache article {article.id}: {e}")
             return False
 
-    async def get_cached_article(self, article_id: str) -> Optional[RetrievedArticle]:
+    async def get_cached_article(
+            self, article_id: str) -> Optional[RetrievedArticle]:
         """Get cached article from Redis"""
         if not self._initialized or not self.redis_client:
             raise RuntimeError("Redis Manager not initialized")
@@ -103,7 +104,8 @@ class RedisManager:
                     # Mark as cache hit
                     article.cache_hit = True
                     article.retrieval_timestamp = datetime.utcnow()
-                    logger.debug(f"Article {article_id} retrieved from Redis cache")
+                    logger.debug(
+                        f"Article {article_id} retrieved from Redis cache")
                     return article
 
             return None
@@ -112,7 +114,8 @@ class RedisManager:
             logger.error(f"Failed to get cached article {article_id}: {e}")
             return None
 
-    async def get_cached_article_by_url(self, url: str) -> Optional[RetrievedArticle]:
+    async def get_cached_article_by_url(
+            self, url: str) -> Optional[RetrievedArticle]:
         """Get cached article by URL"""
         if not self._initialized or not self.redis_client:
             raise RuntimeError("Redis Manager not initialized")
@@ -151,7 +154,8 @@ class RedisManager:
             logger.error(f"Failed to cache search results: {e}")
             return False
 
-    async def get_cached_search_results(self, query: str) -> Optional[List[Dict[str, Any]]]:
+    async def get_cached_search_results(
+            self, query: str) -> Optional[List[Dict[str, Any]]]:
         """Get cached search results"""
         if not self._initialized or not self.redis_client:
             raise RuntimeError("Redis Manager not initialized")
@@ -162,7 +166,8 @@ class RedisManager:
 
             if results_data:
                 results = json.loads(results_data.decode("utf-8"))
-                logger.debug(f"Search results retrieved from cache for query: {query[:50]}...")
+                logger.debug(
+                    f"Search results retrieved from cache for query: {query[:50]}...")
                 return results
 
             return None
@@ -230,7 +235,8 @@ class RedisManager:
             return True
 
         except Exception as e:
-            logger.error(f"Failed to invalidate article cache {article_id}: {e}")
+            logger.error(
+                f"Failed to invalidate article cache {article_id}: {e}")
             return False
 
     async def invalidate_pattern(self, pattern: str) -> int:
@@ -291,7 +297,7 @@ class RedisManager:
             raise RuntimeError("Redis Manager not initialized")
 
         try:
-            await self.redis_client.flushdb()
+    await self.redis_client.flushdb()
             logger.info("Redis cache flushed")
             return True
 
@@ -341,10 +347,8 @@ class RedisManager:
                 author=article_dict["author"],
                 source=article_dict["source"],
                 published_at=(
-                    datetime.fromisoformat(article_dict["published_at"])
-                    if article_dict["published_at"]
-                    else None
-                ),
+                    datetime.fromisoformat(
+                        article_dict["published_at"]) if article_dict["published_at"] else None),
                 categories=article_dict["categories"],
                 tags=article_dict["tags"],
                 language=article_dict["language"],
@@ -352,7 +356,8 @@ class RedisManager:
                 embeddings=article_dict["embeddings"],
                 media_files=article_dict["media_files"],
                 metadata=article_dict["metadata"],
-                retrieval_timestamp=datetime.fromisoformat(article_dict["cached_at"]),
+                retrieval_timestamp=datetime.fromisoformat(
+                    article_dict["cached_at"]),
                 cache_hit=True,
                 retrieval_sources=[],
             )
@@ -372,7 +377,7 @@ class RedisManager:
 
         return (hits / total) * 100
 
-    async def _invalidate_search_caches_containing(self, article_id: str):
+    async def _invalidate_search_caches_containing(self, article_id: str) -> Dict[str, Any]:
         """Invalidate search caches that might contain the article"""
         try:
             # This is a simplified approach - in production, you might want to
@@ -384,7 +389,7 @@ class RedisManager:
                     # Check if the search result contains this article
                     search_data = await self.redis_client.get(key)
                     if search_data and article_id.encode() in search_data:
-                        await self.redis_client.delete(key)
+    await self.redis_client.delete(key)
                         logger.debug(
                             f"Invalidated search cache {key} containing article {article_id}"
                         )
@@ -393,4 +398,5 @@ class RedisManager:
                     await self.redis_client.delete(key)
 
         except Exception as e:
-            logger.warning(f"Failed to invalidate search caches containing {article_id}: {e}")
+            logger.warning(
+                f"Failed to invalidate search caches containing {article_id}: {e}")

@@ -2,7 +2,6 @@
 Configuration management for Storage Service
 """
 
-import os
 from typing import List, Optional
 
 from pydantic import BaseSettings, Field

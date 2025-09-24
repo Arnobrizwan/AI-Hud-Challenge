@@ -59,7 +59,7 @@ class StorageOrchestrator:
         self._initialized = False
         self._storage_tasks: List[StorageTask] = []
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize all storage managers"""
         if self._initialized:
             return
@@ -100,7 +100,7 @@ class StorageOrchestrator:
             logger.error(f"Failed to initialize Storage Orchestrator: {e}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup resources"""
         logger.info("Cleaning up Storage Orchestrator...")
 
@@ -124,7 +124,7 @@ class StorageOrchestrator:
             cleanup_tasks.append(self.query_optimizer.cleanup())
 
         if cleanup_tasks:
-            await asyncio.gather(*cleanup_tasks, return_exceptions=True)
+    await asyncio.gather(*cleanup_tasks, return_exceptions=True)
 
         self._initialized = False
         logger.info("Storage Orchestrator cleanup complete")
@@ -143,13 +143,17 @@ class StorageOrchestrator:
         try:
             # Store structured data in PostgreSQL
             storage_tasks.append(
-                self._create_storage_task(StorageType.POSTGRESQL, "store_article_metadata", article)
-            )
+                self._create_storage_task(
+                    StorageType.POSTGRESQL,
+                    "store_article_metadata",
+                    article))
 
             # Store for full-text search in Elasticsearch
             storage_tasks.append(
-                self._create_storage_task(StorageType.ELASTICSEARCH, "index_article", article)
-            )
+                self._create_storage_task(
+                    StorageType.ELASTICSEARCH,
+                    "index_article",
+                    article))
 
             # Store embeddings in vector database
             if article.embeddings:
@@ -173,8 +177,10 @@ class StorageOrchestrator:
 
             # Store time-series metrics
             storage_tasks.append(
-                self._create_storage_task(StorageType.TIMESERIES, "record_article_metrics", article)
-            )
+                self._create_storage_task(
+                    StorageType.TIMESERIES,
+                    "record_article_metrics",
+                    article))
 
             # Execute all storage operations
             storage_results = await self._execute_storage_tasks(storage_tasks)
@@ -183,16 +189,19 @@ class StorageOrchestrator:
             for i, result in enumerate(storage_results):
                 task = storage_tasks[i]
                 if isinstance(result, Exception):
-                    failed_stores.append(f"{task.store_type.value}: {str(result)}")
-                    logger.warning(f"Storage failed for {task.store_type.value}: {result}")
+                    failed_stores.append(
+                        f"{task.store_type.value}: {str(result)}")
+                    logger.warning(
+                        f"Storage failed for {task.store_type.value}: {result}")
                 else:
                     stored_locations.append(task.store_type)
 
             # Update cache
             if self.cache_coordinator:
-                await self.cache_coordinator.cache_article(article)
+    await self.cache_coordinator.cache_article(article)
 
-            logger.info(f"Article {article.id} stored in {len(stored_locations)} locations")
+            logger.info(
+                f"Article {article.id} stored in {len(stored_locations)} locations")
 
             return StorageResult(
                 article_id=article.id,
@@ -252,26 +261,31 @@ class StorageOrchestrator:
                         retrieval_sources.append(StorageType.MEDIA_STORAGE)
 
                 except Exception as e:
-                    logger.warning(f"Failed to retrieve from {step['store_type']}: {e}")
+                    logger.warning(
+                        f"Failed to retrieve from {step['store_type']}: {e}")
                     continue
 
             # Combine data into complete article
-            retrieved_article = self._combine_article_data(article_id, article_data)
+            retrieved_article = self._combine_article_data(
+                article_id, article_data)
             retrieved_article.retrieval_sources = retrieval_sources
             retrieved_article.retrieval_timestamp = datetime.utcnow()
 
             # Update cache
             if retrieval_options.update_cache and self.cache_coordinator:
-                await self.cache_coordinator.update_cache(retrieved_article)
+    await self.cache_coordinator.update_cache(retrieved_article)
 
-            logger.info(f"Article {article_id} retrieved from {len(retrieval_sources)} sources")
+            logger.info(
+                f"Article {article_id} retrieved from {len(retrieval_sources)} sources")
             return retrieved_article
 
         except Exception as e:
             logger.error(f"Failed to retrieve article {article_id}: {e}")
             raise
 
-    async def search_articles(self, search_request: SearchRequest) -> SearchResult:
+    async def search_articles(
+            self,
+            search_request: SearchRequest) -> SearchResult:
         """Search articles using Elasticsearch"""
         if not self._initialized or not self.elasticsearch_manager:
             raise RuntimeError("Elasticsearch manager not available")
@@ -295,7 +309,7 @@ class StorageOrchestrator:
             logger.error(f"Similarity search failed: {e}")
             raise
 
-    async def update_search_indexes(self, article_id: str):
+    async def update_search_indexes(self, article_id: str) -> Dict[str, Any]:
         """Update search indexes for an article"""
         if not self._initialized:
             return
@@ -303,38 +317,45 @@ class StorageOrchestrator:
         try:
             # Update Elasticsearch index
             if self.elasticsearch_manager:
-                await self.elasticsearch_manager.refresh_index(article_id)
+    await self.elasticsearch_manager.refresh_index(article_id)
 
             # Update vector indexes
             if self.vector_store:
-                await self.vector_store.refresh_indexes(article_id)
+    await self.vector_store.refresh_indexes(article_id)
 
         except Exception as e:
-            logger.warning(f"Failed to update indexes for article {article_id}: {e}")
+            logger.warning(
+                f"Failed to update indexes for article {article_id}: {e}")
 
-    async def update_cache_warmup(self, article_id: str):
+    async def update_cache_warmup(self, article_id: str) -> Dict[str, Any]:
         """Warm up cache for an article"""
         if not self._initialized or not self.cache_coordinator:
             return
 
         try:
             # Pre-load article into cache
-            retrieval_options = RetrievalOptions(use_cache=False, update_cache=True)
+            retrieval_options = RetrievalOptions(
+                use_cache=False, update_cache=True)
             await self.retrieve_article(article_id, retrieval_options)
 
         except Exception as e:
-            logger.warning(f"Failed to warm up cache for article {article_id}: {e}")
+            logger.warning(
+                f"Failed to warm up cache for article {article_id}: {e}")
 
     def _create_storage_task(
         self, store_type: StorageType, operation: str, data: Any
     ) -> StorageTask:
         """Create a storage task"""
-        return StorageTask(store_type=store_type, operation=operation, data=data)
+        return StorageTask(
+            store_type=store_type,
+            operation=operation,
+            data=data)
 
-    async def _execute_storage_tasks(self, tasks: List[StorageTask]) -> List[Any]:
+    async def _execute_storage_tasks(
+            self, tasks: List[StorageTask]) -> List[Any]:
         """Execute storage tasks in parallel"""
 
-        async def execute_task(task: StorageTask):
+        async def execute_task(task: StorageTask) -> Dict[str, Any]:
             try:
                 if task.store_type == StorageType.POSTGRESQL:
                     return await self.postgres_manager.store_article_metadata(task.data)
@@ -348,8 +369,9 @@ class StorageOrchestrator:
                     return await self.media_storage.store_media_files(article_id, media_files)
                 elif task.store_type == StorageType.TIMESERIES:
                     return await self.timeseries_db.record_article_metrics(task.data)
-                else:
-                    raise ValueError(f"Unknown storage type: {task.store_type}")
+            else:
+                    raise ValueError(
+                        f"Unknown storage type: {task.store_type}")
             except Exception as e:
                 logger.error(f"Storage task failed for {task.store_type}: {e}")
                 return e
@@ -363,24 +385,28 @@ class StorageOrchestrator:
         plan = []
 
         # Always try PostgreSQL first for metadata
-        plan.append({"store_type": StorageType.POSTGRESQL, "priority": 1, "required": True})
+        plan.append({"store_type": StorageType.POSTGRESQL,
+                    "priority": 1, "required": True})
 
         # Add Elasticsearch for content
-        plan.append({"store_type": StorageType.ELASTICSEARCH, "priority": 2, "required": False})
+        plan.append({"store_type": StorageType.ELASTICSEARCH,
+                    "priority": 2, "required": False})
 
         # Add vector store if embeddings needed
         if (
             retrieval_options.preferred_sources
             and StorageType.VECTOR_STORE in retrieval_options.preferred_sources
         ):
-            plan.append({"store_type": StorageType.VECTOR_STORE, "priority": 3, "required": False})
+            plan.append({"store_type": StorageType.VECTOR_STORE,
+                        "priority": 3, "required": False})
 
         # Add media storage if media needed
         if (
             retrieval_options.preferred_sources
             and StorageType.MEDIA_STORAGE in retrieval_options.preferred_sources
         ):
-            plan.append({"store_type": StorageType.MEDIA_STORAGE, "priority": 4, "required": False})
+            plan.append({"store_type": StorageType.MEDIA_STORAGE,
+                        "priority": 4, "required": False})
 
         return sorted(plan, key=lambda x: x["priority"])
 
@@ -390,7 +416,9 @@ class StorageOrchestrator:
             return True
 
         # Consider cache stale after 1 hour
-        cache_age = (datetime.utcnow() - cached_article.retrieval_timestamp).total_seconds()
+        cache_age = (
+            datetime.utcnow() -
+            cached_article.retrieval_timestamp).total_seconds()
         return cache_age > 3600
 
     def _combine_article_data(

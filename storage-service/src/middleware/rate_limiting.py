@@ -27,9 +27,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         # Check rate limit
         if self._is_rate_limited(client_ip):
             logger.warning(f"Rate limit exceeded for client: {client_ip}")
-            raise HTTPException(
-                status_code=429, detail="Rate limit exceeded. Please try again later."
-            )
+            raise HTTPException(status_code=429, detail="Rate limit exceeded. Please try again later.")
 
         # Record request
         self._record_request(client_ip)
@@ -46,9 +44,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
         # Clean old requests
         if client_ip in self.requests:
-            self.requests[client_ip] = [
-                req_time for req_time in self.requests[client_ip] if req_time > minute_ago
-            ]
+            self.requests[client_ip] = [req_time for req_time in self.requests[client_ip] if req_time > minute_ago]
         else:
             self.requests[client_ip] = []
 

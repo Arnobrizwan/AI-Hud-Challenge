@@ -5,7 +5,7 @@ from typing import List, Set, Union
 
 import mmh3
 import numpy as np
-from datasketch import MinHash, MinHashLSH
+from datasketch import MinHash
 
 
 class MinHashGenerator:
@@ -221,15 +221,11 @@ class ContentFingerprinter:
         similarities = {}
 
         # Content hash similarity (exact match)
-        similarities["content_hash_match"] = (
-            fingerprint1["content_hash"] == fingerprint2["content_hash"]
-        )
+        similarities["content_hash_match"] = fingerprint1["content_hash"] == fingerprint2["content_hash"]
 
         # Title hash similarity (exact match)
         if "title_hash" in fingerprint1 and "title_hash" in fingerprint2:
-            similarities["title_hash_match"] = (
-                fingerprint1["title_hash"] == fingerprint2["title_hash"]
-            )
+            similarities["title_hash_match"] = fingerprint1["title_hash"] == fingerprint2["title_hash"]
 
         # MinHash similarity
         if "content_minhash" in fingerprint1 and "content_minhash" in fingerprint2:

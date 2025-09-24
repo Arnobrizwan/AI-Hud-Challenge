@@ -26,13 +26,13 @@ class SequentialTestingFramework:
             "alpha_spending": self._alpha_spending_test,
         }
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize the sequential testing framework"""
         logger.info("Initializing sequential testing framework...")
         # No specific initialization needed
         logger.info("Sequential testing framework initialized successfully")
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup sequential testing framework resources"""
         logger.info("Cleaning up sequential testing framework...")
         self.active_tests.clear()
@@ -73,7 +73,6 @@ class SequentialTestingFramework:
         self, test_id: str, control_value: float, treatment_value: float
     ) -> Dict[str, Any]:
         """Add data point to sequential test"""
-
         if test_id not in self.active_tests:
             raise ValueError(f"Sequential test {test_id} not found")
 
@@ -108,7 +107,6 @@ class SequentialTestingFramework:
 
     async def analyze_test(self, test_id: str) -> Dict[str, Any]:
         """Analyze sequential test results"""
-
         if test_id not in self.active_tests:
             raise ValueError(f"Sequential test {test_id} not found")
 
@@ -136,7 +134,8 @@ class SequentialTestingFramework:
         t_stat, p_value = stats.ttest_ind(treatment_data, control_data)
 
         # Power analysis
-        power = self._calculate_power(effect_size, len(control_data), test["alpha"])
+        power = self._calculate_power(
+            effect_size, len(control_data), test["alpha"])
 
         return {
             "test_id": test_id,
@@ -156,9 +155,9 @@ class SequentialTestingFramework:
             "analysis_timestamp": datetime.utcnow(),
         }
 
-    async def _perform_interim_analysis(self, test: Dict[str, Any]) -> Dict[str, Any]:
-        """Perform interim analysis"""
-
+    async def _perform_interim_analysis(
+            self, test: Dict[str, Any]) -> Dict[str, Any]:
+    """Perform interim analysis"""
         method = test["method"]
 
         if method not in self.sequential_methods:
@@ -166,9 +165,9 @@ class SequentialTestingFramework:
 
         return await self.sequential_methods[method](test)
 
-    async def _wald_sequential_test(self, test: Dict[str, Any]) -> Dict[str, Any]:
-        """Wald's Sequential Probability Ratio Test"""
-
+    async def _wald_sequential_test(
+            self, test: Dict[str, Any]) -> Dict[str, Any]:
+    """Wald's Sequential Probability Ratio Test"""
         control_data = np.array(test["control_data"])
         treatment_data = np.array(test["treatment_data"])
 
@@ -185,11 +184,13 @@ class SequentialTestingFramework:
         treatment_mean = np.mean(treatment_data)
 
         # Pooled variance
-        pooled_var = (np.var(control_data, ddof=1) + np.var(treatment_data, ddof=1)) / 2
+        pooled_var = (np.var(control_data, ddof=1) +
+                      np.var(treatment_data, ddof=1)) / 2
 
         # Wald statistic
         n = len(control_data)
-        wald_stat = (treatment_mean - control_mean) / math.sqrt(2 * pooled_var / n)
+        wald_stat = (treatment_mean - control_mean) / \
+            math.sqrt(2 * pooled_var / n)
 
         # Stopping boundaries
         alpha = test["alpha"]
@@ -211,9 +212,9 @@ class SequentialTestingFramework:
             "decision": "stop" if should_stop else "continue",
         }
 
-    async def _group_sequential_test(self, test: Dict[str, Any]) -> Dict[str, Any]:
-        """Group Sequential Test (O'Brien-Fleming)"""
-
+    async def _group_sequential_test(
+            self, test: Dict[str, Any]) -> Dict[str, Any]:
+    """Group Sequential Test (O'Brien-Fleming)"""
         control_data = np.array(test["control_data"])
         treatment_data = np.array(test["treatment_data"])
 
@@ -228,10 +229,18 @@ class SequentialTestingFramework:
         # Calculate test statistic
         control_mean = np.mean(control_data)
         treatment_mean = np.mean(treatment_data)
-        pooled_std = math.sqrt((np.var(control_data, ddof=1) + np.var(treatment_data, ddof=1)) / 2)
+        pooled_std = math.sqrt(
+            (np.var(
+                control_data,
+                ddof=1) +
+                np.var(
+                treatment_data,
+                ddof=1)) /
+            2)
 
         n = len(control_data)
-        t_stat = (treatment_mean - control_mean) / (pooled_std * math.sqrt(2 / n))
+        t_stat = (treatment_mean - control_mean) / \
+            (pooled_std * math.sqrt(2 / n))
 
         # O'Brien-Fleming boundaries
         alpha = test["alpha"]
@@ -266,9 +275,9 @@ class SequentialTestingFramework:
             "decision": "stop" if should_stop else "continue",
         }
 
-    async def _alpha_spending_test(self, test: Dict[str, Any]) -> Dict[str, Any]:
-        """Alpha Spending Function Test"""
-
+    async def _alpha_spending_test(
+            self, test: Dict[str, Any]) -> Dict[str, Any]:
+    """Alpha Spending Function Test"""
         control_data = np.array(test["control_data"])
         treatment_data = np.array(test["treatment_data"])
 
@@ -283,10 +292,18 @@ class SequentialTestingFramework:
         # Calculate test statistic
         control_mean = np.mean(control_data)
         treatment_mean = np.mean(treatment_data)
-        pooled_std = math.sqrt((np.var(control_data, ddof=1) + np.var(treatment_data, ddof=1)) / 2)
+        pooled_std = math.sqrt(
+            (np.var(
+                control_data,
+                ddof=1) +
+                np.var(
+                treatment_data,
+                ddof=1)) /
+            2)
 
         n = len(control_data)
-        t_stat = (treatment_mean - control_mean) / (pooled_std * math.sqrt(2 / n))
+        t_stat = (treatment_mean - control_mean) / \
+            (pooled_std * math.sqrt(2 / n))
 
         # Alpha spending function (Pocock)
         alpha = test["alpha"]
@@ -316,8 +333,7 @@ class SequentialTestingFramework:
     async def _check_stopping_conditions(
         self, test: Dict[str, Any], interim_result: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Check if test should stop"""
-
+    """Check if test should stop"""
         # Check if interim analysis suggests stopping
         if interim_result.get("should_stop", False):
             return {
@@ -328,18 +344,30 @@ class SequentialTestingFramework:
 
         # Check if maximum sample size reached
         if test["current_sample_size"] >= test["max_samples"]:
-            return {"should_stop": True, "reason": "max_samples_reached", "decision": "stop"}
+            return {
+                "should_stop": True,
+                "reason": "max_samples_reached",
+                "decision": "stop"}
 
-        return {"should_stop": False, "reason": "continue", "decision": "continue"}
+        return {
+            "should_stop": False,
+            "reason": "continue",
+            "decision": "continue"}
 
-    def _calculate_power(self, effect_size: float, sample_size: int, alpha: float) -> float:
+    def _calculate_power(
+            self,
+            effect_size: float,
+            sample_size: int,
+            alpha: float) -> float:
         """Calculate statistical power"""
 
         # Approximate power calculation for two-sample t-test
-        ncp = effect_size * math.sqrt(sample_size / 2)  # Non-centrality parameter
+        # Non-centrality parameter
+        ncp = effect_size * math.sqrt(sample_size / 2)
         critical_value = stats.norm.ppf(1 - alpha / 2)
 
-        power = 1 - stats.norm.cdf(critical_value - ncp) + stats.norm.cdf(-critical_value - ncp)
+        power = 1 - stats.norm.cdf(critical_value - ncp) + \
+            stats.norm.cdf(-critical_value - ncp)
 
         return max(0, min(1, power))
 

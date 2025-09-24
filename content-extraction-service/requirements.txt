@@ -7,7 +7,7 @@ pydantic-settings==2.1.0
 # Web scraping and automation
 playwright==1.40.0
 beautifulsoup4==4.12.2
-lxml==4.9.3
+lxml==5.2.0
 html2text==2020.1.16
 readability-lxml==0.8.1
 newspaper3k==0.2.8

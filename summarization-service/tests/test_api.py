@@ -2,7 +2,6 @@
 API Tests for Summarization Service
 """
 
-import asyncio
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -217,9 +216,7 @@ class TestErrorHandling:
 
     def test_invalid_json(self, client):
         """Test invalid JSON handling"""
-        response = client.post(
-            "/summarize", data="invalid json", headers={"Content-Type": "application/json"}
-        )
+        response = client.post("/summarize", data="invalid json", headers={"Content-Type": "application/json"})
         assert response.status_code == 422
 
     def test_missing_required_fields(self, client):
@@ -229,9 +226,7 @@ class TestErrorHandling:
 
     def test_invalid_content_type(self, client):
         """Test invalid content type"""
-        response = client.post(
-            "/summarize", json={"content": {"text": "Sample text", "content_type": "invalid_type"}}
-        )
+        response = client.post("/summarize", json={"content": {"text": "Sample text", "content_type": "invalid_type"}})
         assert response.status_code == 422
 
 

@@ -46,8 +46,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
 
             # Log error
             logger.error(
-                f"Request failed: {request.method} {request.url.path} "
-                f"error={str(e)} duration={duration:.3f}s"
+                f"Request failed: {request.method} {request.url.path} " f"error={str(e)} duration={duration:.3f}s"
             )
 
             raise

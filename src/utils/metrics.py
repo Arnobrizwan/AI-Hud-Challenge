@@ -15,19 +15,21 @@ from src.config.settings import settings
 
 # Application metrics
 REQUEST_COUNT = Counter(
-    "http_requests_total", "Total number of HTTP requests", ["method", "endpoint", "status_code"]
-)
+    "http_requests_total", "Total number of HTTP requests", [
+        "method", "endpoint", "status_code"])
 
 REQUEST_DURATION = Histogram(
-    "http_request_duration_seconds", "HTTP request duration in seconds", ["method", "endpoint"]
-)
+    "http_request_duration_seconds", "HTTP request duration in seconds", [
+        "method", "endpoint"])
 
-ACTIVE_CONNECTIONS = Gauge("http_active_connections", "Number of active HTTP connections")
+ACTIVE_CONNECTIONS = Gauge(
+    "http_active_connections",
+    "Number of active HTTP connections")
 
 # Authentication metrics
 AUTH_ATTEMPTS = Counter(
-    "auth_attempts_total", "Total authentication attempts", ["provider", "status"]
-)
+    "auth_attempts_total", "Total authentication attempts", [
+        "provider", "status"])
 
 AUTH_DURATION = Histogram(
     "auth_duration_seconds", "Authentication duration in seconds", ["provider"]
@@ -38,7 +40,10 @@ RATE_LIMIT_HITS = Counter(
     "rate_limit_hits_total", "Total rate limit hits", ["limit_type", "user_id"]
 )
 
-RATE_LIMIT_BLOCKS = Counter("rate_limit_blocks_total", "Total rate limit blocks", ["limit_type"])
+RATE_LIMIT_BLOCKS = Counter(
+    "rate_limit_blocks_total",
+    "Total rate limit blocks",
+    ["limit_type"])
 
 # System metrics
 MEMORY_USAGE = Gauge("memory_usage_bytes", "Memory usage in bytes", ["type"])
@@ -46,21 +51,25 @@ MEMORY_USAGE = Gauge("memory_usage_bytes", "Memory usage in bytes", ["type"])
 CPU_USAGE = Gauge("cpu_usage_percent", "CPU usage percentage")
 
 # Error metrics
-ERROR_COUNT = Counter("errors_total", "Total number of errors", ["error_type", "endpoint"])
+ERROR_COUNT = Counter(
+    "errors_total", "Total number of errors", [
+        "error_type", "endpoint"])
 
 # Business metrics
 CONTENT_PROCESSED = Counter(
-    "content_processed_total", "Total content items processed", ["content_type", "status"]
-)
+    "content_processed_total", "Total content items processed", [
+        "content_type", "status"])
 
 PROCESSING_DURATION = Histogram(
-    "processing_duration_seconds", "Content processing duration in seconds", ["content_type"]
-)
+    "processing_duration_seconds",
+    "Content processing duration in seconds",
+    ["content_type"])
 
 # Circuit breaker metrics
 CIRCUIT_BREAKER_STATE = Gauge(
-    "circuit_breaker_state", "Circuit breaker state (0=closed, 1=open, 2=half-open)", ["service"]
-)
+    "circuit_breaker_state",
+    "Circuit breaker state (0=closed, 1=open, 2=half-open)",
+    ["service"])
 
 CIRCUIT_BREAKER_FAILURES = Counter(
     "circuit_breaker_failures_total", "Circuit breaker failures", ["service"]
@@ -72,8 +81,9 @@ REDIS_OPERATIONS = Counter(
 )
 
 REDIS_DURATION = Histogram(
-    "redis_operation_duration_seconds", "Redis operation duration in seconds", ["operation"]
-)
+    "redis_operation_duration_seconds",
+    "Redis operation duration in seconds",
+    ["operation"])
 
 # Application info
 APP_INFO = Info("app_info", "Application information")
@@ -94,13 +104,27 @@ class MetricsCollector:
     def __init__(self):
         self.start_time = time.time()
 
-    def record_request(self, method: str, endpoint: str, status_code: int, duration: float):
+    def record_request(
+            self,
+            method: str,
+            endpoint: str,
+            status_code: int,
+            duration: float):
         """Record HTTP request metrics."""
-        REQUEST_COUNT.labels(method=method, endpoint=endpoint, status_code=status_code).inc()
+        REQUEST_COUNT.labels(
+            method=method,
+            endpoint=endpoint,
+            status_code=status_code).inc()
 
-        REQUEST_DURATION.labels(method=method, endpoint=endpoint).observe(duration)
+        REQUEST_DURATION.labels(
+            method=method,
+            endpoint=endpoint).observe(duration)
 
-    def record_auth_attempt(self, provider: str, success: bool, duration: float):
+    def record_auth_attempt(
+            self,
+            provider: str,
+            success: bool,
+            duration: float):
         """Record authentication attempt metrics."""
         status = "success" if success else "failure"
         AUTH_ATTEMPTS.labels(provider=provider, status=status).inc()
@@ -108,7 +132,9 @@ class MetricsCollector:
 
     def record_rate_limit_hit(self, limit_type: str, user_id: str = None):
         """Record rate limit hit."""
-        RATE_LIMIT_HITS.labels(limit_type=limit_type, user_id=user_id or "anonymous").inc()
+        RATE_LIMIT_HITS.labels(
+            limit_type=limit_type,
+            user_id=user_id or "anonymous").inc()
 
     def record_rate_limit_block(self, limit_type: str):
         """Record rate limit block."""
@@ -118,9 +144,15 @@ class MetricsCollector:
         """Record error occurrence."""
         ERROR_COUNT.labels(error_type=error_type, endpoint=endpoint).inc()
 
-    def record_content_processing(self, content_type: str, status: str, duration: float):
+    def record_content_processing(
+            self,
+            content_type: str,
+            status: str,
+            duration: float):
         """Record content processing metrics."""
-        CONTENT_PROCESSED.labels(content_type=content_type, status=status).inc()
+        CONTENT_PROCESSED.labels(
+            content_type=content_type,
+            status=status).inc()
         PROCESSING_DURATION.labels(content_type=content_type).observe(duration)
 
     def update_system_metrics(self):
@@ -135,7 +167,11 @@ class MetricsCollector:
         cpu_percent = psutil.cpu_percent()
         CPU_USAGE.set(cpu_percent)
 
-    def record_redis_operation(self, operation: str, success: bool, duration: float):
+    def record_redis_operation(
+            self,
+            operation: str,
+            success: bool,
+            duration: float):
         """Record Redis operation metrics."""
         status = "success" if success else "failure"
         REDIS_OPERATIONS.labels(operation=operation, status=status).inc()
@@ -163,7 +199,7 @@ def time_function(metric_name: str = None, labels: Dict[str, str] = None):
 
     def decorator(func):
         @wraps(func)
-        async def async_wrapper(*args, **kwargs):
+        async def async_wrapper(*args, **kwargs) -> Dict[str, Any]:
             start_time = time.time()
             try:
                 result = await func(*args, **kwargs)
@@ -186,7 +222,8 @@ def time_function(metric_name: str = None, labels: Dict[str, str] = None):
                     # Record custom metric if provided
                     pass  # Would need to create the metric dynamically
 
-        return async_wrapper if asyncio.iscoroutinefunction(func) else sync_wrapper
+        return async_wrapper if asyncio.iscoroutinefunction(
+            func) else sync_wrapper
 
     return decorator
 
@@ -233,7 +270,7 @@ def setup_metrics_instrumentation(app):
     return instrumentator
 
 
-async def collect_periodic_metrics():
+async def collect_periodic_metrics() -> Dict[str, Any]:
     """Collect periodic system metrics."""
     while True:
         try:

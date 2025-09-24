@@ -63,7 +63,7 @@ class ResponseOrchestrator:
             "rollback_changes": 1800,  # 30 minutes
         }
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize the response orchestrator"""
         try:
             # Initialize any required services
@@ -77,15 +77,16 @@ class ResponseOrchestrator:
             logger.info("Response orchestrator initialized")
 
         except Exception as e:
-            logger.error(f"Failed to initialize response orchestrator: {str(e)}")
+            logger.error(
+                f"Failed to initialize response orchestrator: {str(e)}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup resources"""
         try:
             # Cancel active actions
             for action_id in list(self.active_actions.keys()):
-                await self.cancel_action(action_id)
+    await self.cancel_action(action_id)
 
             # Clear action storage
             self.active_actions.clear()
@@ -96,7 +97,8 @@ class ResponseOrchestrator:
             logger.info("Response orchestrator cleanup completed")
 
         except Exception as e:
-            logger.error(f"Error during response orchestrator cleanup: {str(e)}")
+            logger.error(
+                f"Error during response orchestrator cleanup: {str(e)}")
 
     async def execute_action(self, action: ResponseAction) -> ResponseResult:
         """Execute a response action"""
@@ -116,7 +118,8 @@ class ResponseOrchestrator:
 
             # Check if action is already completed
             if action.action_id in self.completed_actions:
-                logger.warning(f"Action {action.action_id} is already completed")
+                logger.warning(
+                    f"Action {action.action_id} is already completed")
                 return self.completed_actions[action.action_id]
 
             # Check if action is already failed
@@ -140,7 +143,8 @@ class ResponseOrchestrator:
             if action.action_id in self.active_actions:
                 del self.active_actions[action.action_id]
 
-            logger.info(f"Action {action.action_id} executed with status {result.status}")
+            logger.info(
+                f"Action {action.action_id} executed with status {result.status}")
 
             return result
 
@@ -164,7 +168,8 @@ class ResponseOrchestrator:
 
             return result
 
-    async def execute_action_impl(self, action: ResponseAction) -> ResponseResult:
+    async def execute_action_impl(
+            self, action: ResponseAction) -> ResponseResult:
         """Implementation of action execution"""
         try:
             # Check if action handler exists
@@ -179,7 +184,8 @@ class ResponseOrchestrator:
             handler = self.action_handlers[action.action_type]
 
             # Set timeout for action
-            timeout = self.action_timeouts.get(action.action_type, 300)  # Default 5 minutes
+            timeout = self.action_timeouts.get(
+                action.action_type, 300)  # Default 5 minutes
 
             # Execute action with timeout
             result = await asyncio.wait_for(handler(action), timeout=timeout)
@@ -200,7 +206,8 @@ class ResponseOrchestrator:
                 error_details=str(e),
             )
 
-    async def handle_retrain_models(self, action: ResponseAction) -> ResponseResult:
+    async def handle_retrain_models(
+            self, action: ResponseAction) -> ResponseResult:
         """Handle model retraining action"""
         try:
             # Simulate model retraining
@@ -227,7 +234,8 @@ class ResponseOrchestrator:
                 error_details=str(e),
             )
 
-    async def handle_notify_data_team(self, action: ResponseAction) -> ResponseResult:
+    async def handle_notify_data_team(
+            self, action: ResponseAction) -> ResponseResult:
         """Handle data team notification action"""
         try:
             # Simulate notification
@@ -253,7 +261,8 @@ class ResponseOrchestrator:
                 error_details=str(e),
             )
 
-    async def handle_apply_mitigation(self, action: ResponseAction) -> ResponseResult:
+    async def handle_apply_mitigation(
+            self, action: ResponseAction) -> ResponseResult:
         """Handle abuse mitigation action"""
         try:
             # Simulate mitigation
@@ -280,7 +289,8 @@ class ResponseOrchestrator:
                 error_details=str(e),
             )
 
-    async def handle_review_user_activity(self, action: ResponseAction) -> ResponseResult:
+    async def handle_review_user_activity(
+            self, action: ResponseAction) -> ResponseResult:
         """Handle user activity review action"""
         try:
             # Simulate review
@@ -307,7 +317,8 @@ class ResponseOrchestrator:
                 error_details=str(e),
             )
 
-    async def handle_moderate_content(self, action: ResponseAction) -> ResponseResult:
+    async def handle_moderate_content(
+            self, action: ResponseAction) -> ResponseResult:
         """Handle content moderation action"""
         try:
             # Simulate content moderation
@@ -334,7 +345,8 @@ class ResponseOrchestrator:
                 error_details=str(e),
             )
 
-    async def handle_review_content_policy(self, action: ResponseAction) -> ResponseResult:
+    async def handle_review_content_policy(
+            self, action: ResponseAction) -> ResponseResult:
         """Handle content policy review action"""
         try:
             # Simulate policy review
@@ -361,7 +373,8 @@ class ResponseOrchestrator:
                 error_details=str(e),
             )
 
-    async def handle_escalate_incident(self, action: ResponseAction) -> ResponseResult:
+    async def handle_escalate_incident(
+            self, action: ResponseAction) -> ResponseResult:
         """Handle incident escalation action"""
         try:
             # Simulate escalation
@@ -388,7 +401,8 @@ class ResponseOrchestrator:
                 error_details=str(e),
             )
 
-    async def handle_update_monitoring(self, action: ResponseAction) -> ResponseResult:
+    async def handle_update_monitoring(
+            self, action: ResponseAction) -> ResponseResult:
         """Handle monitoring update action"""
         try:
             # Simulate monitoring update
@@ -415,7 +429,8 @@ class ResponseOrchestrator:
                 error_details=str(e),
             )
 
-    async def handle_restart_service(self, action: ResponseAction) -> ResponseResult:
+    async def handle_restart_service(
+            self, action: ResponseAction) -> ResponseResult:
         """Handle service restart action"""
         try:
             # Simulate service restart
@@ -442,7 +457,8 @@ class ResponseOrchestrator:
                 error_details=str(e),
             )
 
-    async def handle_rollback_changes(self, action: ResponseAction) -> ResponseResult:
+    async def handle_rollback_changes(
+            self, action: ResponseAction) -> ResponseResult:
         """Handle changes rollback action"""
         try:
             # Simulate rollback
@@ -473,7 +489,8 @@ class ResponseOrchestrator:
         """Cancel an active action"""
         try:
             if action_id not in self.active_actions:
-                logger.warning(f"Action {action_id} not found in active actions")
+                logger.warning(
+                    f"Action {action_id} not found in active actions")
                 return False
 
             # Remove from active actions
@@ -486,7 +503,8 @@ class ResponseOrchestrator:
             logger.error(f"Action cancellation failed: {str(e)}")
             return False
 
-    async def get_action_status(self, action_id: str) -> Optional[ResponseResult]:
+    async def get_action_status(
+            self, action_id: str) -> Optional[ResponseResult]:
         """Get status of an action"""
         try:
             # Check active actions
@@ -545,14 +563,15 @@ class ResponseOrchestrator:
             return sum(execution_times) / len(execution_times)
 
         except Exception as e:
-            logger.error(f"Average execution time calculation failed: {str(e)}")
+            logger.error(
+                f"Average execution time calculation failed: {str(e)}")
             return 0.0
 
-    async def action_monitoring_task(self):
+    async def action_monitoring_task(self) -> Dict[str, Any]:
         """Background task for monitoring active actions"""
         while True:
             try:
-                await asyncio.sleep(60)  # Check every minute
+    await asyncio.sleep(60)  # Check every minute
 
                 if not self.is_initialized:
                     break
@@ -564,23 +583,24 @@ class ResponseOrchestrator:
                 for action_id, action in self.active_actions.items():
                     # Check if action has been running too long
                     timeout = self.action_timeouts.get(action.action_type, 300)
-                    if (current_time - action.created_at).total_seconds() > timeout:
+                    if (current_time -
+                            action.created_at).total_seconds() > timeout:
                         stale_actions.append(action_id)
 
                 # Cancel stale actions
                 for action_id in stale_actions:
-                    await self.cancel_action(action_id)
+    await self.cancel_action(action_id)
                     logger.warning(f"Cancelled stale action: {action_id}")
 
             except Exception as e:
                 logger.error(f"Action monitoring task failed: {str(e)}")
                 await asyncio.sleep(60)
 
-    async def action_cleanup_task(self):
+    async def action_cleanup_task(self) -> Dict[str, Any]:
         """Background task for cleaning up old actions"""
         while True:
             try:
-                await asyncio.sleep(3600)  # Run every hour
+    await asyncio.sleep(3600)  # Run every hour
 
                 if not self.is_initialized:
                     break
@@ -614,7 +634,7 @@ class ResponseOrchestrator:
                 logger.error(f"Action cleanup task failed: {str(e)}")
                 await asyncio.sleep(3600)
 
-    async def initialize_services(self):
+    async def initialize_services(self) -> Dict[str, Any]:
         """Initialize any required services"""
         try:
             # Placeholder for service initialization

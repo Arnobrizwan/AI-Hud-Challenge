@@ -45,7 +45,7 @@ class DocumentAIService:
         extract_tables: bool = False,
         extract_metadata: bool = True,
     ) -> Dict[str, Any]:
-        """
+    """
         Process document using Document AI.
 
         Args:
@@ -65,7 +65,8 @@ class DocumentAIService:
             document = await self._prepare_document(document_path)
 
             # Configure processing request
-            request = documentai.ProcessRequest(name=self.processor_name, document=document)
+            request = documentai.ProcessRequest(
+                name=self.processor_name, document=document)
 
             # Process document
             result = self.documentai_client.process_document(request=request)
@@ -99,8 +100,10 @@ class DocumentAIService:
             return extracted_content
 
         except Exception as e:
-            logger.error(f"Document processing failed for {document_path}: {str(e)}")
-            raise DocumentProcessingError(f"Document processing failed: {str(e)}")
+            logger.error(
+                f"Document processing failed for {document_path}: {str(e)}")
+            raise DocumentProcessingError(
+                f"Document processing failed: {str(e)}")
 
     async def extract_text_from_pdf(self, pdf_path: str) -> str:
         """
@@ -122,8 +125,10 @@ class DocumentAIService:
             )
             return result.get("text", "")
         except Exception as e:
-            logger.error(f"PDF text extraction failed for {pdf_path}: {str(e)}")
-            raise DocumentProcessingError(f"PDF text extraction failed: {str(e)}")
+            logger.error(
+                f"PDF text extraction failed for {pdf_path}: {str(e)}")
+            raise DocumentProcessingError(
+                f"PDF text extraction failed: {str(e)}")
 
     async def extract_text_from_document(self, document_path: str) -> str:
         """
@@ -145,26 +150,31 @@ class DocumentAIService:
             )
             return result.get("text", "")
         except Exception as e:
-            logger.error(f"Document text extraction failed for {document_path}: {str(e)}")
-            raise DocumentProcessingError(f"Document text extraction failed: {str(e)}")
+            logger.error(
+                f"Document text extraction failed for {document_path}: {str(e)}")
+            raise DocumentProcessingError(
+                f"Document text extraction failed: {str(e)}")
 
-    async def _prepare_document(self, document_path: str) -> documentai.Document:
+    async def _prepare_document(
+            self, document_path: str) -> documentai.Document:
         """Prepare document for processing."""
         try:
             if document_path.startswith("gs://"):
                 # GCS URI
-                return documentai.Document(gcs_source=documentai.GcsSource(uri=document_path))
-            else:
+                return documentai.Document(
+                    gcs_source=documentai.GcsSource(
+                        uri=document_path))
+        else:
                 # Local file
                 with open(document_path, "rb") as f:
                     content = f.read()
 
                 return documentai.Document(
-                    content=content, mime_type=self._detect_mime_type(document_path)
-                )
+                    content=content, mime_type=self._detect_mime_type(document_path))
         except Exception as e:
             logger.error(f"Document preparation failed: {str(e)}")
-            raise DocumentProcessingError(f"Document preparation failed: {str(e)}")
+            raise DocumentProcessingError(
+                f"Document preparation failed: {str(e)}")
 
     async def _extract_text(self, document: documentai.Document) -> str:
         """Extract text from processed document."""
@@ -174,7 +184,8 @@ class DocumentAIService:
             for page in document.pages:
                 for block in page.blocks:
                     for paragraph in block.paragraphs:
-                        paragraph_text = self._get_text_from_layout(paragraph.layout, document.text)
+                        paragraph_text = self._get_text_from_layout(
+                            paragraph.layout, document.text)
                         if paragraph_text.strip():
                             text_parts.append(paragraph_text)
 
@@ -183,7 +194,8 @@ class DocumentAIService:
             logger.warning(f"Text extraction failed: {str(e)}")
             return ""
 
-    async def _extract_images(self, document: documentai.Document) -> List[Dict[str, Any]]:
+    async def _extract_images(
+            self, document: documentai.Document) -> List[Dict[str, Any]]:
         """Extract images from processed document."""
         try:
             images = []
@@ -199,16 +211,15 @@ class DocumentAIService:
                                     "bbox": {
                                         "x": element.bounding_poly.vertices[0].x,
                                         "y": element.bounding_poly.vertices[0].y,
-                                        "width": element.bounding_poly.vertices[2].x
-                                        - element.bounding_poly.vertices[0].x,
-                                        "height": element.bounding_poly.vertices[2].y
-                                        - element.bounding_poly.vertices[0].y,
+                                        "width": element.bounding_poly.vertices[2].x -
+                                        element.bounding_poly.vertices[0].x,
+                                        "height": element.bounding_poly.vertices[2].y -
+                                        element.bounding_poly.vertices[0].y,
                                     },
                                     "confidence": (
-                                        element.confidence
-                                        if hasattr(element, "confidence")
-                                        else 0.0
-                                    ),
+                                        element.confidence if hasattr(
+                                            element,
+                                            "confidence") else 0.0),
                                 }
                                 images.append(image_data)
 
@@ -217,7 +228,8 @@ class DocumentAIService:
             logger.warning(f"Image extraction failed: {str(e)}")
             return []
 
-    async def _extract_tables(self, document: documentai.Document) -> List[Dict[str, Any]]:
+    async def _extract_tables(
+            self, document: documentai.Document) -> List[Dict[str, Any]]:
         """Extract tables from processed document."""
         try:
             tables = []
@@ -228,14 +240,16 @@ class DocumentAIService:
                         "page": page.page_number,
                         "headers": [],
                         "rows": [],
-                        "confidence": table.confidence if hasattr(table, "confidence") else 0.0,
+                        "confidence": table.confidence if hasattr(
+                            table,
+                            "confidence") else 0.0,
                         "bbox": {
                             "x": table.bounding_poly.vertices[0].x,
                             "y": table.bounding_poly.vertices[0].y,
-                            "width": table.bounding_poly.vertices[2].x
-                            - table.bounding_poly.vertices[0].x,
-                            "height": table.bounding_poly.vertices[2].y
-                            - table.bounding_poly.vertices[0].y,
+                            "width": table.bounding_poly.vertices[2].x -
+                            table.bounding_poly.vertices[0].x,
+                            "height": table.bounding_poly.vertices[2].y -
+                            table.bounding_poly.vertices[0].y,
                         },
                     }
 
@@ -243,7 +257,8 @@ class DocumentAIService:
                     for row in table.body_rows:
                         row_data = []
                         for cell in row.cells:
-                            cell_text = self._get_text_from_layout(cell.layout, document.text)
+                            cell_text = self._get_text_from_layout(
+                                cell.layout, document.text)
                             row_data.append(cell_text.strip())
                         table_data["rows"].append(row_data)
 
@@ -251,7 +266,8 @@ class DocumentAIService:
                     for row in table.header_rows:
                         header_data = []
                         for cell in row.cells:
-                            cell_text = self._get_text_from_layout(cell.layout, document.text)
+                            cell_text = self._get_text_from_layout(
+                                cell.layout, document.text)
                             header_data.append(cell_text.strip())
                         table_data["headers"].append(header_data)
 
@@ -262,15 +278,16 @@ class DocumentAIService:
             logger.warning(f"Table extraction failed: {str(e)}")
             return []
 
-    async def _extract_metadata(self, document: documentai.Document) -> Dict[str, Any]:
-        """Extract metadata from processed document."""
+    async def _extract_metadata(
+            self, document: documentai.Document) -> Dict[str, Any]:
+    """Extract metadata from processed document."""
         try:
             metadata = {
-                "page_count": len(document.pages),
-                "text_length": len(document.text) if document.text else 0,
-                "language": document.language if hasattr(document, "language") else "en",
-                "mime_type": document.mime_type if hasattr(document, "mime_type") else "unknown",
-            }
+                "page_count": len(
+                    document.pages), "text_length": len(
+                    document.text) if document.text else 0, "language": document.language if hasattr(
+                    document, "language") else "en", "mime_type": document.mime_type if hasattr(
+                    document, "mime_type") else "unknown", }
 
             # Extract entity information if available
             if hasattr(document, "entities") and document.entities:
@@ -278,11 +295,10 @@ class DocumentAIService:
                 for entity in document.entities:
                     entity_data = {
                         "text": (
-                            entity.text_anchor.content if hasattr(entity, "text_anchor") else ""
-                        ),
-                        "type": entity.type_ if hasattr(entity, "type_") else "unknown",
-                        "confidence": entity.confidence if hasattr(entity, "confidence") else 0.0,
-                    }
+                            entity.text_anchor.content if hasattr(
+                                entity, "text_anchor") else ""), "type": entity.type_ if hasattr(
+                            entity, "type_") else "unknown", "confidence": entity.confidence if hasattr(
+                            entity, "confidence") else 0.0, }
                     entities.append(entity_data)
                 metadata["entities"] = entities
 
@@ -291,7 +307,8 @@ class DocumentAIService:
             logger.warning(f"Metadata extraction failed: {str(e)}")
             return {}
 
-    async def _calculate_confidence(self, document: documentai.Document) -> float:
+    async def _calculate_confidence(
+            self, document: documentai.Document) -> float:
         """Calculate overall confidence score for the document."""
         try:
             total_confidence = 0.0
@@ -330,12 +347,14 @@ class DocumentAIService:
             text_parts = []
 
             for segment in text_segments:
-                start_index = segment.start_index if hasattr(segment, "start_index") else 0
+                start_index = segment.start_index if hasattr(
+                    segment, "start_index") else 0
                 end_index = (
-                    segment.end_index if hasattr(segment, "end_index") else len(document_text)
-                )
+                    segment.end_index if hasattr(
+                        segment, "end_index") else len(document_text))
 
-                if start_index < len(document_text) and end_index <= len(document_text):
+                if start_index < len(
+                        document_text) and end_index <= len(document_text):
                     text_parts.append(document_text[start_index:end_index])
 
             return "".join(text_parts)
@@ -382,7 +401,8 @@ class DocumentAIService:
                 if isinstance(result, dict):
                     processed_documents.append(result)
                 elif isinstance(result, Exception):
-                    logger.warning(f"Document processing failed: {str(result)}")
+                    logger.warning(
+                        f"Document processing failed: {str(result)}")
                     processed_documents.append({"error": str(result)})
 
             return processed_documents
@@ -391,7 +411,10 @@ class DocumentAIService:
             logger.error(f"Batch document processing failed: {str(e)}")
             return []
 
-    async def upload_document_to_gcs(self, local_file_path: str, gcs_path: str) -> str:
+    async def upload_document_to_gcs(
+            self,
+            local_file_path: str,
+            gcs_path: str) -> str:
         """Upload document to Google Cloud Storage."""
         try:
             bucket = self.storage_client.bucket(self.bucket_name)
@@ -409,7 +432,8 @@ class DocumentAIService:
             logger.error(f"Document upload to GCS failed: {str(e)}")
             raise DocumentProcessingError(f"Document upload failed: {str(e)}")
 
-    async def download_document_from_gcs(self, gcs_uri: str, local_file_path: str) -> str:
+    async def download_document_from_gcs(
+            self, gcs_uri: str, local_file_path: str) -> str:
         """Download document from Google Cloud Storage."""
         try:
             # Parse GCS URI
@@ -424,10 +448,12 @@ class DocumentAIService:
             blob = bucket.blob(blob_name)
 
             blob.download_to_filename(local_file_path)
-            logger.info(f"Document downloaded from {gcs_uri} to {local_file_path}")
+            logger.info(
+                f"Document downloaded from {gcs_uri} to {local_file_path}")
 
             return local_file_path
 
         except Exception as e:
             logger.error(f"Document download from GCS failed: {str(e)}")
-            raise DocumentProcessingError(f"Document download failed: {str(e)}")
+            raise DocumentProcessingError(
+                f"Document download failed: {str(e)}")

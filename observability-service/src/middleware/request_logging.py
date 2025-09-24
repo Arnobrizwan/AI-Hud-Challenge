@@ -22,7 +22,7 @@ class RequestLoggingMiddleware:
         self.app = app
         self.settings = get_settings()
 
-    async def __call__(self, scope, receive, send):
+    async def __call__(self, scope, receive, send) -> Dict[str, Any]:
         if scope["type"] == "http":
             request = Request(scope, receive)
 
@@ -36,7 +36,7 @@ class RequestLoggingMiddleware:
             response_data = {}
             status_code = 200
 
-            async def send_wrapper(message):
+            async def send_wrapper(message) -> Dict[str, Any]:
                 nonlocal status_code
                 if message["type"] == "http.response.start":
                     status_code = message["status"]
@@ -53,9 +53,9 @@ class RequestLoggingMiddleware:
             await self._log_response(request, status_code, duration, response_data)
 
         else:
-            await self.app(scope, receive, send)
+    await self.app(scope, receive, send)
 
-    async def _log_request(self, request: Request):
+    async def _log_request(self, request: Request) -> Dict[str, Any]:
         """Log incoming request"""
 
         try:
@@ -74,7 +74,8 @@ class RequestLoggingMiddleware:
             # Add user information if available
             if hasattr(request.state, "user_id"):
                 request_data["user_id"] = request.state.user_id
-                request_data["user_roles"] = getattr(request.state, "user_roles", [])
+                request_data["user_roles"] = getattr(
+                    request.state, "user_roles", [])
 
             # Log request
             logger.info(
@@ -85,10 +86,13 @@ class RequestLoggingMiddleware:
         except Exception as e:
             logger.error(f"Failed to log request: {str(e)}")
 
-    async def _log_response(
-        self, request: Request, status_code: int, duration: float, response_data: Dict[str, Any]
-    ):
-        """Log response"""
+    async def _log_response(self,
+                            request: Request,
+                            status_code: int,
+                            duration: float,
+                            response_data: Dict[str,
+                                                Any]):
+         -> Dict[str, Any]:"""Log response"""
 
         try:
             # Extract response information
@@ -115,9 +119,13 @@ class RequestLoggingMiddleware:
                 log_level = "info"
 
             # Log response
-            getattr(logger, log_level)(
+            getattr(
+                logger,
+                log_level)(
                 f"Response: {request.method} {request.url.path} -> {status_code} ({duration:.3f}s)",
-                extra={"response_data": response_log_data, "event_type": "request_complete"},
+                extra={
+                    "response_data": response_log_data,
+                    "event_type": "request_complete"},
             )
 
             # Log slow requests
@@ -158,17 +166,24 @@ class RequestLoggingMiddleware:
         # Skip logging for health checks and metrics
         skip_paths = ["/health", "/metrics", "/favicon.ico"]
 
-        return not any(request.url.path.startswith(path) for path in skip_paths)
+        return not any(request.url.path.startswith(path)
+                       for path in skip_paths)
 
     def _mask_sensitive_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Mask sensitive data in logs"""
-
-        sensitive_keys = ["authorization", "x-api-key", "password", "token", "secret", "key"]
+        sensitive_keys = [
+            "authorization",
+            "x-api-key",
+            "password",
+            "token",
+            "secret",
+            "key"]
 
         masked_data = data.copy()
 
         for key, value in masked_data.items():
-            if any(sensitive_key in key.lower() for sensitive_key in sensitive_keys):
+            if any(sensitive_key in key.lower()
+                   for sensitive_key in sensitive_keys):
                 masked_data[key] = "***MASKED***"
 
         return masked_data
@@ -177,7 +192,7 @@ class RequestLoggingMiddleware:
 class StructuredRequestLoggingMiddleware(RequestLoggingMiddleware):
     """Structured request logging middleware with JSON output"""
 
-    async def _log_request(self, request: Request):
+    async def _log_request(self, request: Request) -> Dict[str, Any]:
         """Log incoming request with structured data"""
 
         try:
@@ -187,12 +202,18 @@ class StructuredRequestLoggingMiddleware(RequestLoggingMiddleware):
                 "timestamp": time.time(),
                 "request": {
                     "method": request.method,
-                    "url": str(request.url),
+                    "url": str(
+                        request.url),
                     "path": request.url.path,
-                    "query_params": dict(request.query_params),
-                    "headers": self._mask_sensitive_data(dict(request.headers)),
+                    "query_params": dict(
+                        request.query_params),
+                    "headers": self._mask_sensitive_data(
+                        dict(
+                            request.headers)),
                     "client_ip": self._get_client_ip(request),
-                    "user_agent": request.headers.get("user-agent", ""),
+                    "user_agent": request.headers.get(
+                        "user-agent",
+                        ""),
                 },
             }
 
@@ -204,15 +225,20 @@ class StructuredRequestLoggingMiddleware(RequestLoggingMiddleware):
                 }
 
             # Log as structured JSON
-            logger.info("Request started", extra={"structured_data": request_data})
+            logger.info(
+                "Request started", extra={
+                    "structured_data": request_data})
 
         except Exception as e:
             logger.error(f"Failed to log structured request: {str(e)}")
 
-    async def _log_response(
-        self, request: Request, status_code: int, duration: float, response_data: Dict[str, Any]
-    ):
-        """Log response with structured data"""
+    async def _log_response(self,
+                            request: Request,
+                            status_code: int,
+                            duration: float,
+                            response_data: Dict[str,
+                                                Any]):
+         -> Dict[str, Any]:"""Log response with structured data"""
 
         try:
             # Extract response information
@@ -221,13 +247,19 @@ class StructuredRequestLoggingMiddleware(RequestLoggingMiddleware):
                 "timestamp": time.time(),
                 "request": {
                     "method": request.method,
-                    "url": str(request.url),
+                    "url": str(
+                        request.url),
                     "path": request.url.path,
                 },
                 "response": {
                     "status_code": status_code,
-                    "duration_ms": round(duration * 1000, 2),
-                    "headers": self._mask_sensitive_data(response_data.get("headers", {})),
+                    "duration_ms": round(
+                        duration * 1000,
+                        2),
+                    "headers": self._mask_sensitive_data(
+                        response_data.get(
+                            "headers",
+                            {})),
                 },
             }
 
@@ -246,9 +278,10 @@ class StructuredRequestLoggingMiddleware(RequestLoggingMiddleware):
             log_level = self._get_log_level(status_code, duration)
 
             # Log as structured JSON
-            getattr(logger, log_level)(
-                "Request completed", extra={"structured_data": response_log_data}
-            )
+            getattr(
+                logger, log_level)(
+                "Request completed", extra={
+                    "structured_data": response_log_data})
 
         except Exception as e:
             logger.error(f"Failed to log structured response: {str(e)}")

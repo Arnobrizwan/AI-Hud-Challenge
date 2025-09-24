@@ -70,10 +70,12 @@ class FeatureStoreManager:
             logger.info("Feature Store Manager initialized successfully")
 
         except Exception as e:
-            logger.error(f"Failed to initialize Feature Store Manager: {str(e)}")
+            logger.error(
+                f"Failed to initialize Feature Store Manager: {str(e)}")
             raise
 
-    async def register_feature_set(self, feature_config: FeatureConfig) -> FeatureSet:
+    async def register_feature_set(
+            self, feature_config: FeatureConfig) -> FeatureSet:
         """Register new feature set in feature store"""
 
         try:
@@ -85,7 +87,8 @@ class FeatureStoreManager:
             )
 
             if not validation_result.is_valid:
-                raise FeatureStoreError(f"Feature validation failed: {validation_result.errors}")
+                raise FeatureStoreError(
+                    f"Feature validation failed: {validation_result.errors}")
 
             # Create feature set
             feature_set = FeatureSet(
@@ -117,28 +120,36 @@ class FeatureStoreManager:
             self._feature_sets[feature_set.id] = feature_set
             await self._store_feature_set(feature_set)
 
-            logger.info(f"Feature set registered successfully: {feature_set.id}")
+            logger.info(
+                f"Feature set registered successfully: {feature_set.id}")
             return feature_set
 
         except Exception as e:
             logger.error(f"Failed to register feature set: {str(e)}")
-            raise FeatureStoreError(f"Feature set registration failed: {str(e)}")
+            raise FeatureStoreError(
+                f"Feature set registration failed: {str(e)}")
 
-    async def serve_features(self, serving_request: FeatureServingRequest) -> FeatureVector:
+    async def serve_features(
+            self,
+            serving_request: FeatureServingRequest) -> FeatureVector:
         """Serve features for online inference"""
 
         try:
-            logger.info(f"Serving features for entities: {len(serving_request.entity_ids)}")
+            logger.info(
+                f"Serving features for entities: {len(serving_request.entity_ids)}")
 
             # Validate serving request
             if not serving_request.entity_ids:
-                raise ValidationError("Entity IDs are required for feature serving")
+                raise ValidationError(
+                    "Entity IDs are required for feature serving")
 
             # Check cache first
             cache_key = self._generate_cache_key(serving_request)
             if cache_key in self._feature_cache:
                 cached_features = self._feature_cache[cache_key]
-                if self._is_cache_valid(cached_features, serving_request.cache_ttl):
+                if self._is_cache_valid(
+                        cached_features,
+                        serving_request.cache_ttl):
                     logger.info("Returning cached features")
                     return cached_features
 
@@ -178,7 +189,8 @@ class FeatureStoreManager:
             logger.error(f"Failed to serve features: {str(e)}")
             raise FeatureStoreError(f"Feature serving failed: {str(e)}")
 
-    async def get_training_features(self, feature_config: Dict[str, Any]) -> pd.DataFrame:
+    async def get_training_features(
+            self, feature_config: Dict[str, Any]) -> pd.DataFrame:
         """Get features for training data preparation"""
 
         try:
@@ -220,7 +232,8 @@ class FeatureStoreManager:
 
         except Exception as e:
             logger.error(f"Failed to get training features: {str(e)}")
-            raise FeatureStoreError(f"Training feature retrieval failed: {str(e)}")
+            raise FeatureStoreError(
+                f"Training feature retrieval failed: {str(e)}")
 
     async def update_feature_set(
         self, feature_set_id: str, update_config: Dict[str, Any]
@@ -230,7 +243,8 @@ class FeatureStoreManager:
         try:
             feature_set = self._feature_sets.get(feature_set_id)
             if not feature_set:
-                raise FeatureStoreError(f"Feature set not found: {feature_set_id}")
+                raise FeatureStoreError(
+                    f"Feature set not found: {feature_set_id}")
 
             logger.info(f"Updating feature set: {feature_set_id}")
 
@@ -260,7 +274,7 @@ class FeatureStoreManager:
 
             # Update ingestion pipeline if needed
             if "source_config" in update_config:
-                await self._update_ingestion_pipeline(feature_set, update_config["source_config"])
+    await self._update_ingestion_pipeline(feature_set, update_config["source_config"])
 
             feature_set.updated_at = datetime.utcnow()
 
@@ -286,7 +300,7 @@ class FeatureStoreManager:
 
             # Stop ingestion pipeline
             if feature_set.ingestion_pipeline_id:
-                await self._stop_ingestion_pipeline(feature_set.ingestion_pipeline_id)
+    await self._stop_ingestion_pipeline(feature_set.ingestion_pipeline_id)
 
             # Delete from Vertex AI
             await self.vertex_ai_feature_store.delete_feature_set(feature_set_id)
@@ -305,24 +319,28 @@ class FeatureStoreManager:
             logger.error(f"Failed to delete feature set: {str(e)}")
             return False
 
-    async def get_feature_quality_metrics(self, feature_set_id: str) -> FeatureQualityMetrics:
+    async def get_feature_quality_metrics(
+            self, feature_set_id: str) -> FeatureQualityMetrics:
         """Get feature quality metrics"""
 
         try:
             feature_set = self._feature_sets.get(feature_set_id)
             if not feature_set:
-                raise FeatureStoreError(f"Feature set not found: {feature_set_id}")
+                raise FeatureStoreError(
+                    f"Feature set not found: {feature_set_id}")
 
             # Calculate quality metrics
             metrics = await self._calculate_feature_quality_metrics(feature_set)
 
             return FeatureQualityMetrics(
-                feature_set_id=feature_set_id, metrics=metrics, calculated_at=datetime.utcnow()
-            )
+                feature_set_id=feature_set_id,
+                metrics=metrics,
+                calculated_at=datetime.utcnow())
 
         except Exception as e:
             logger.error(f"Failed to get feature quality metrics: {str(e)}")
-            raise FeatureStoreError(f"Quality metrics calculation failed: {str(e)}")
+            raise FeatureStoreError(
+                f"Quality metrics calculation failed: {str(e)}")
 
     async def get_feature_lineage(self, feature_name: str) -> FeatureLineage:
         """Get feature lineage information"""
@@ -333,9 +351,11 @@ class FeatureStoreManager:
 
         except Exception as e:
             logger.error(f"Failed to get feature lineage: {str(e)}")
-            raise FeatureStoreError(f"Feature lineage retrieval failed: {str(e)}")
+            raise FeatureStoreError(
+                f"Feature lineage retrieval failed: {str(e)}")
 
-    async def list_feature_sets(self, status: Optional[str] = None) -> List[FeatureSet]:
+    async def list_feature_sets(
+            self, status: Optional[str] = None) -> List[FeatureSet]:
         """List feature sets with optional filtering"""
 
         feature_sets = list(self._feature_sets.values())
@@ -345,9 +365,9 @@ class FeatureStoreManager:
 
         return feature_sets
 
-    async def _create_feature_ingestion_pipeline(self, feature_set: FeatureSet) -> Dict[str, Any]:
-        """Create feature ingestion pipeline"""
-
+    async def _create_feature_ingestion_pipeline(
+            self, feature_set: FeatureSet) -> Dict[str, Any]:
+    """Create feature ingestion pipeline"""
         pipeline_config = {
             "feature_set_id": feature_set.id,
             "source_config": feature_set.source_config,
@@ -363,8 +383,7 @@ class FeatureStoreManager:
     async def _apply_feature_transformations(
         self, feature_values: Dict[str, Any], transformations: List[FeatureTransformation]
     ) -> Dict[str, Any]:
-        """Apply feature transformations"""
-
+    """Apply feature transformations"""
         transformed_values = feature_values.copy()
 
         for transformation in transformations:
@@ -386,8 +405,7 @@ class FeatureStoreManager:
     async def _apply_normalization(
         self, feature_values: Dict[str, Any], config: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Apply normalization transformation"""
-
+    """Apply normalization transformation"""
         method = config.get("method", "z_score")
 
         for feature_name, values in feature_values.items():
@@ -395,7 +413,8 @@ class FeatureStoreManager:
                 if method == "z_score":
                     mean = np.mean(values)
                     std = np.std(values)
-                    feature_values[feature_name] = [(x - mean) / std for x in values]
+                    feature_values[feature_name] = [
+                        (x - mean) / std for x in values]
                 elif method == "min_max":
                     min_val = np.min(values)
                     max_val = np.max(values)
@@ -408,21 +427,20 @@ class FeatureStoreManager:
     async def _apply_scaling(
         self, feature_values: Dict[str, Any], config: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Apply scaling transformation"""
-
+    """Apply scaling transformation"""
         scale_factor = config.get("scale_factor", 1.0)
 
         for feature_name, values in feature_values.items():
             if isinstance(values, (list, np.ndarray)):
-                feature_values[feature_name] = [x * scale_factor for x in values]
+                feature_values[feature_name] = [
+                    x * scale_factor for x in values]
 
         return feature_values
 
     async def _apply_encoding(
         self, feature_values: Dict[str, Any], config: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Apply encoding transformation"""
-
+    """Apply encoding transformation"""
         encoding_type = config.get("type", "one_hot")
 
         if encoding_type == "one_hot":
@@ -448,7 +466,9 @@ class FeatureStoreManager:
 
         return features
 
-    def _generate_cache_key(self, serving_request: FeatureServingRequest) -> str:
+    def _generate_cache_key(
+            self,
+            serving_request: FeatureServingRequest) -> str:
         """Generate cache key for feature serving request"""
 
         key_parts = [
@@ -459,18 +479,23 @@ class FeatureStoreManager:
 
         return "|".join(key_parts)
 
-    def _is_cache_valid(self, cached_features: FeatureVector, cache_ttl: int) -> bool:
+    def _is_cache_valid(
+            self,
+            cached_features: FeatureVector,
+            cache_ttl: int) -> bool:
         """Check if cached features are still valid"""
 
         if not cached_features:
             return False
 
-        age_seconds = (datetime.utcnow() - cached_features.served_at).total_seconds()
+        age_seconds = (
+            datetime.utcnow() -
+            cached_features.served_at).total_seconds()
         return age_seconds < cache_ttl
 
-    async def _log_feature_serving(
-        self, serving_request: FeatureServingRequest, feature_vector: FeatureVector
-    ) -> None:
+    async def _log_feature_serving(self,
+                                   serving_request: FeatureServingRequest,
+                                   feature_vector: FeatureVector) -> None:
         """Log feature serving for monitoring"""
 
         serving_metrics = {
@@ -483,9 +508,9 @@ class FeatureStoreManager:
 
         await self.monitoring_service.log_feature_serving_metrics(serving_metrics)
 
-    async def _calculate_feature_quality_metrics(self, feature_set: FeatureSet) -> Dict[str, Any]:
-        """Calculate feature quality metrics"""
-
+    async def _calculate_feature_quality_metrics(
+            self, feature_set: FeatureSet) -> Dict[str, Any]:
+    """Calculate feature quality metrics"""
         # This would implement actual quality metrics calculation
         # For now, return dummy metrics
         return {
@@ -522,7 +547,8 @@ class FeatureStoreManager:
     def _cleanup_feature_cache(self, feature_set_id: str) -> None:
         """Cleanup feature cache for deleted feature set"""
 
-        keys_to_remove = [key for key in self._feature_cache.keys() if feature_set_id in key]
+        keys_to_remove = [
+            key for key in self._feature_cache.keys() if feature_set_id in key]
 
         for key in keys_to_remove:
             del self._feature_cache[key]
@@ -533,7 +559,7 @@ class FeatureValidator:
     def __init__(self):
         self.validation_rules = {}
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         pass
 
     async def validate_features(
@@ -548,26 +574,29 @@ class FeatureValidator:
                 errors.append(f"Feature name is required")
 
             if not feature.data_type:
-                errors.append(f"Data type is required for feature {feature.name}")
+                errors.append(
+                    f"Data type is required for feature {feature.name}")
 
             if feature.is_required and not feature.default_value:
-                errors.append(f"Default value is required for required feature {feature.name}")
+                errors.append(
+                    f"Default value is required for required feature {feature.name}")
 
-        return FeatureValidationResult(is_valid=len(errors) == 0, errors=errors)
+        return FeatureValidationResult(
+            is_valid=len(errors) == 0, errors=errors)
 
 
 class FeatureServingClient:
     def __init__(self):
         self.vertex_ai_client = None
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         pass
 
-    async def get_online_features(
-        self, feature_store_name: str, feature_set_names: List[str], entity_ids: List[str]
-    ) -> Dict[str, Any]:
-        """Get features for online serving"""
-
+    async def get_online_features(self,
+                                  feature_store_name: str,
+                                  feature_set_names: List[str],
+                                  entity_ids: List[str]) -> Dict[str, Any]:
+    """Get features for online serving"""
         # Implement actual feature serving logic
         # This would connect to Vertex AI Feature Store
         return {"dummy_features": "dummy_values"}
@@ -589,10 +618,10 @@ class LineageTracker:
     def __init__(self):
         self.lineage_data = {}
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         pass
 
-    async def track_feature_set_creation(self, feature_set: FeatureSet):
+    async def track_feature_set_creation(self, feature_set: FeatureSet) -> Dict[str, Any]:
         """Track feature set creation in lineage"""
         pass
 

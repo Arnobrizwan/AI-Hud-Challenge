@@ -1,7 +1,7 @@
 """Content-based filtering implementation."""
 
 import asyncio
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 import structlog
 
@@ -33,9 +33,7 @@ class ContentBasedFilter:
 
         if content_items:
             # Fit both models
-            await asyncio.gather(
-                self.tfidf_filter.fit(content_items), self.embedding_filter.fit(content_items)
-            )
+            await asyncio.gather(self.tfidf_filter.fit(content_items), self.embedding_filter.fit(content_items))
             logger.info("Content-based filtering models trained successfully")
         else:
             logger.warning("No content items found for training")
@@ -44,9 +42,9 @@ class ContentBasedFilter:
         """Load content items for training."""
         query = """
         SELECT item_id, title, content, topics, source, author, published_at, content_features
-        FROM content_items 
+        FROM content_items
         WHERE content IS NOT NULL AND title IS NOT NULL
-        ORDER BY published_at DESC 
+        ORDER BY published_at DESC
         LIMIT $1
         """
 
@@ -68,14 +66,10 @@ class ContentBasedFilter:
 
         return content_items
 
-    async def compute_similarities(
-        self, user_profile: UserProfile, candidates: List[ContentItem]
-    ) -> List[float]:
+    async def compute_similarities(self, user_profile: UserProfile, candidates: List[ContentItem]) -> List[float]:
         """Compute content-based similarity scores for candidates."""
         # Try cache first
-        cache_key = (
-            f"cb_similarities:{user_profile.user_id}:{hash(tuple(c.id for c in candidates))}"
-        )
+        cache_key = f"cb_similarities:{user_profile.user_id}:{hash(tuple(c.id for c in candidates))}"
         cached_scores = await self.redis.get(cache_key)
 
         if cached_scores:
@@ -83,9 +77,7 @@ class ContentBasedFilter:
 
         # Compute similarities using both methods
         tfidf_scores = await self.tfidf_filter.compute_similarities(user_profile, candidates)
-        embedding_scores = await self.embedding_filter.compute_similarities(
-            user_profile, candidates
-        )
+        embedding_scores = await self.embedding_filter.compute_similarities(user_profile, candidates)
 
         # Combine scores (weighted average)
         combined_scores = []
@@ -102,9 +94,7 @@ class ContentBasedFilter:
 
         return combined_scores
 
-    async def get_recommendations(
-        self, user_profile: UserProfile, n_recommendations: int = 10
-    ) -> List[Recommendation]:
+    async def get_recommendations(self, user_profile: UserProfile, n_recommendations: int = 10) -> List[Recommendation]:
         """Get content-based recommendations."""
         cache_key = f"cb_recommendations:{user_profile.user_id}:{n_recommendations}"
         cached_recs = await self.redis.get(cache_key)
@@ -113,9 +103,7 @@ class ContentBasedFilter:
             return [Recommendation(**rec) for rec in cached_recs]
 
         # Get content items for recommendation
-        content_items = await self._get_recommendation_candidates(
-            user_profile, n_recommendations * 2
-        )
+        content_items = await self._get_recommendation_candidates(user_profile, n_recommendations * 2)
 
         if not content_items:
             return []
@@ -142,22 +130,18 @@ class ContentBasedFilter:
         top_recommendations = recommendations[:n_recommendations]
 
         # Cache results
-        await self.redis.setex(
-            cache_key, self.cache_ttl, [rec.dict() for rec in top_recommendations]
-        )
+        await self.redis.setex(cache_key, self.cache_ttl, [rec.dict() for rec in top_recommendations])
 
         return top_recommendations
 
-    async def _get_recommendation_candidates(
-        self, user_profile: UserProfile, limit: int
-    ) -> List[ContentItem]:
+    async def _get_recommendation_candidates(self, user_profile: UserProfile, limit: int) -> List[ContentItem]:
         """Get candidate content items for recommendation."""
         # Get content based on user preferences
         query = """
         SELECT item_id, title, content, topics, source, author, published_at, content_features
-        FROM content_items 
+        FROM content_items
         WHERE content IS NOT NULL AND title IS NOT NULL
-        ORDER BY published_at DESC 
+        ORDER BY published_at DESC
         LIMIT $1
         """
 
@@ -194,9 +178,7 @@ class ContentBasedFilter:
         features.update(embedding_features)
 
         # Topic similarity
-        topic_similarity = await self.embedding_filter.compute_topic_similarity(
-            user_profile, content_item
-        )
+        topic_similarity = await self.embedding_filter.compute_topic_similarity(user_profile, content_item)
         features["topic_similarity"] = topic_similarity
 
         # Source preference
@@ -205,9 +187,7 @@ class ContentBasedFilter:
 
         return features
 
-    async def get_similar_content(
-        self, content_id: str, n_similar: int = 10
-    ) -> List[Recommendation]:
+    async def get_similar_content(self, content_id: str, n_similar: int = 10) -> List[Recommendation]:
         """Get similar content based on content similarity."""
         cache_key = f"similar_content:{content_id}:{n_similar}"
         cached_recs = await self.redis.get(cache_key)
@@ -253,9 +233,7 @@ class ContentBasedFilter:
 
         if content_items:
             # Retrain both models
-            await asyncio.gather(
-                self.tfidf_filter.fit(content_items), self.embedding_filter.fit(content_items)
-            )
+            await asyncio.gather(self.tfidf_filter.fit(content_items), self.embedding_filter.fit(content_items))
             logger.info("Content-based filtering models retrained successfully")
 
             # Clear caches
@@ -272,7 +250,8 @@ class ContentBasedFilter:
         return {
             "tfidf_model": tfidf_info,
             "embedding_model": embedding_info,
-            "cache_hit_rate": await self._get_cache_hit_rate(),
+            "cache_hit_rate":
+    await self._get_cache_hit_rate(),
         }
 
     async def _get_cache_hit_rate(self) -> float:

@@ -66,7 +66,7 @@ cache_manager: CacheManager = None
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> Dict[str, Any]:
     """Application lifespan manager."""
     global deduplication_service, event_grouping_engine, metrics_collector
     global database_manager, cache_manager
@@ -99,10 +99,11 @@ async def lifespan(app: FastAPI):
 
         # Initialize similarity calculators
         semantic_calc = SemanticSimilarityCalculator(
-            model_name=settings.embedding_model, embedding_dimension=settings.embedding_dimension
-        )
+            model_name=settings.embedding_model,
+            embedding_dimension=settings.embedding_dimension)
 
-        content_calc = ContentSimilarityCalculator(MinHashGenerator(num_perm=settings.lsh_num_perm))
+        content_calc = ContentSimilarityCalculator(
+            MinHashGenerator(num_perm=settings.lsh_num_perm))
 
         combined_calc = CombinedSimilarityCalculator(
             semantic_calc,
@@ -161,9 +162,9 @@ async def lifespan(app: FastAPI):
         # Cleanup
         logger.info("Shutting down deduplication service")
         if database_manager:
-            await database_manager.close()
+    await database_manager.close()
         if cache_manager:
-            await cache_manager.close()
+    await cache_manager.close()
         logger.info("Deduplication service shut down")
 
 
@@ -191,21 +192,24 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 async def get_deduplication_service() -> DeduplicationService:
     """Get deduplication service dependency."""
     if deduplication_service is None:
-        raise HTTPException(status_code=503, detail="Deduplication service not available")
+        raise HTTPException(status_code=503,
+                            detail="Deduplication service not available")
     return deduplication_service
 
 
 async def get_event_grouping_engine() -> EventGroupingEngine:
     """Get event grouping engine dependency."""
     if event_grouping_engine is None:
-        raise HTTPException(status_code=503, detail="Event grouping engine not available")
+        raise HTTPException(status_code=503,
+                            detail="Event grouping engine not available")
     return event_grouping_engine
 
 
 async def get_metrics_collector() -> MetricsCollector:
     """Get metrics collector dependency."""
     if metrics_collector is None:
-        raise HTTPException(status_code=503, detail="Metrics collector not available")
+        raise HTTPException(status_code=503,
+                            detail="Metrics collector not available")
     return metrics_collector
 
 
@@ -213,13 +217,16 @@ async def get_metrics_collector() -> MetricsCollector:
 
 
 @app.get("/", response_model=Dict[str, str])
-async def root():
+async def root() -> Dict[str, Any]:
     """Root endpoint."""
-    return {"service": settings.app_name, "version": settings.app_version, "status": "running"}
+    return {
+        "service": settings.app_name,
+        "version": settings.app_version,
+        "status": "running"}
 
 
 @app.get("/health", response_model=HealthCheck)
-async def health_check():
+async def health_check() -> Dict[str, Any]:
     """Health check endpoint."""
     try:
         # Check service health
@@ -237,7 +244,8 @@ async def health_check():
                 "redis": "healthy" if service_health.get("redis_connected") else "unhealthy",
                 "database": "healthy",  # Would check actual DB connection
                 "lsh_index": (
-                    "healthy" if service_health.get("lsh_index_size", 0) > 0 else "unhealthy"
+                    "healthy" if service_health.get(
+                        "lsh_index_size", 0) > 0 else "unhealthy"
                 ),
             },
             metrics=metrics,
@@ -266,7 +274,7 @@ async def deduplicate_articles(
         # Process articles
         if len(request.articles) == 1:
             results = [await service.deduplicate_article(request.articles[0])]
-        else:
+    else:
             results = await service.deduplicate_batch(request.articles)
 
         # Update metrics
@@ -287,9 +295,13 @@ async def deduplicate_articles(
         )
 
     except Exception as e:
-        logger.error("Deduplication failed", error=str(e), batch_id=request.batch_id)
+        logger.error(
+            "Deduplication failed",
+            error=str(e),
+            batch_id=request.batch_id)
         await metrics.increment_counter("deduplication_errors")
-        raise HTTPException(status_code=500, detail=f"Deduplication failed: {str(e)}")
+        raise HTTPException(status_code=500,
+                            detail=f"Deduplication failed: {str(e)}")
 
 
 @app.post("/group-events", response_model=EventGroupingResponse)
@@ -308,11 +320,11 @@ async def group_articles_into_events(
         # Separate clustered and unclustered articles
         clustered_article_ids = set()
         for event in events:
-            clustered_article_ids.update(article.id for article in event.articles)
+            clustered_article_ids.update(
+                article.id for article in event.articles)
 
         unclustered_articles = [
-            article for article in request.articles if article.id not in clustered_article_ids
-        ]
+            article for article in request.articles if article.id not in clustered_article_ids]
 
         # Update metrics
         processing_time = time.time() - start_time
@@ -327,13 +339,16 @@ async def group_articles_into_events(
             unclustered_articles=unclustered_articles,
             processing_time=processing_time,
             events_created=len(events),
-            articles_clustered=len(request.articles) - len(unclustered_articles),
+            articles_clustered=len(
+                request.articles) -
+            len(unclustered_articles),
         )
 
     except Exception as e:
         logger.error("Event grouping failed", error=str(e))
         await metrics.increment_counter("event_grouping_errors")
-        raise HTTPException(status_code=500, detail=f"Event grouping failed: {str(e)}")
+        raise HTTPException(status_code=500,
+                            detail=f"Event grouping failed: {str(e)}")
 
 
 @app.get("/similarity/{article_id}")
@@ -354,28 +369,36 @@ async def find_similar_articles(
             "max_results": max_results,
         }
     except Exception as e:
-        logger.error("Similarity search failed", error=str(e), article_id=article_id)
-        raise HTTPException(status_code=500, detail=f"Similarity search failed: {str(e)}")
+        logger.error(
+            "Similarity search failed",
+            error=str(e),
+            article_id=article_id)
+        raise HTTPException(status_code=500,
+                            detail=f"Similarity search failed: {str(e)}")
 
 
 @app.get("/metrics", response_model=SystemMetrics)
-async def get_metrics(metrics: MetricsCollector = Depends(get_metrics_collector)):
+async def get_metrics(
+        metrics: MetricsCollector = Depends(get_metrics_collector)):
     """Get system metrics."""
     try:
         return await metrics.get_system_metrics()
     except Exception as e:
         logger.error("Failed to get metrics", error=str(e))
-        raise HTTPException(status_code=500, detail=f"Failed to get metrics: {str(e)}")
+        raise HTTPException(status_code=500,
+                            detail=f"Failed to get metrics: {str(e)}")
 
 
 @app.get("/stats")
-async def get_stats(service: DeduplicationService = Depends(get_deduplication_service)):
+async def get_stats(service: DeduplicationService = Depends(
+        get_deduplication_service)):
     """Get service statistics."""
     try:
         return await service.get_service_stats()
     except Exception as e:
         logger.error("Failed to get stats", error=str(e))
-        raise HTTPException(status_code=500, detail=f"Failed to get stats: {str(e)}")
+        raise HTTPException(status_code=500,
+                            detail=f"Failed to get stats: {str(e)}")
 
 
 @app.post("/reindex")
@@ -390,21 +413,25 @@ async def rebuild_indexes(
         return {"message": "Index rebuild started"}
     except Exception as e:
         logger.error("Index rebuild failed", error=str(e))
-        raise HTTPException(status_code=500, detail=f"Index rebuild failed: {str(e)}")
+        raise HTTPException(status_code=500,
+                            detail=f"Index rebuild failed: {str(e)}")
 
 
 # Error handlers
 @app.exception_handler(HTTPException)
-async def http_exception_handler(request, exc):
+async def http_exception_handler(request, exc) -> Dict[str, Any]:
     """Handle HTTP exceptions."""
     return JSONResponse(
         status_code=exc.status_code,
-        content=APIError(error=exc.detail, message=exc.detail, timestamp=time.time()).dict(),
+        content=APIError(
+            error=exc.detail,
+            message=exc.detail,
+            timestamp=time.time()).dict(),
     )
 
 
 @app.exception_handler(Exception)
-async def general_exception_handler(request, exc):
+async def general_exception_handler(request, exc) -> Dict[str, Any]:
     """Handle general exceptions."""
     logger.error("Unhandled exception", error=str(exc), path=request.url.path)
     return JSONResponse(

@@ -55,21 +55,24 @@ class MetricsCollector:
 
         # Cache metrics
         self.cache_hits_total = Counter(
-            "content_cache_hits_total", "Total number of cache hits", ["cache_type"]
-        )
+            "content_cache_hits_total",
+            "Total number of cache hits",
+            ["cache_type"])
 
         self.cache_misses_total = Counter(
-            "content_cache_misses_total", "Total number of cache misses", ["cache_type"]
-        )
+            "content_cache_misses_total",
+            "Total number of cache misses",
+            ["cache_type"])
 
         self.cache_size_bytes = Gauge(
-            "content_cache_size_bytes", "Current cache size in bytes", ["cache_type"]
-        )
+            "content_cache_size_bytes",
+            "Current cache size in bytes",
+            ["cache_type"])
 
         # Image processing metrics
         self.images_processed_total = Counter(
-            "images_processed_total", "Total number of images processed", ["status", "format"]
-        )
+            "images_processed_total", "Total number of images processed", [
+                "status", "format"])
 
         self.image_processing_duration = Histogram(
             "image_processing_duration_seconds",
@@ -80,35 +83,45 @@ class MetricsCollector:
 
         # Error metrics
         self.errors_total = Counter(
-            "content_extraction_errors_total", "Total number of errors", ["error_type", "component"]
-        )
+            "content_extraction_errors_total", "Total number of errors", [
+                "error_type", "component"])
 
         # System metrics
         self.active_extractions = Gauge(
-            "content_extraction_active_extractions", "Number of currently active extractions"
-        )
+            "content_extraction_active_extractions",
+            "Number of currently active extractions")
 
-        self.queue_size = Gauge("content_extraction_queue_size", "Current queue size")
+        self.queue_size = Gauge(
+            "content_extraction_queue_size",
+            "Current queue size")
 
         self.memory_usage_bytes = Gauge(
-            "content_extraction_memory_usage_bytes", "Current memory usage in bytes"
-        )
+            "content_extraction_memory_usage_bytes",
+            "Current memory usage in bytes")
 
         # Service info
-        self.service_info = Info("content_extraction_service_info", "Service information")
+        self.service_info = Info(
+            "content_extraction_service_info",
+            "Service information")
 
         # Set service info
-        self.service_info.info(
-            {"version": "1.0.0", "environment": "production", "service": "content-extraction"}
-        )
+        self.service_info.info({"version": "1.0.0",
+                                "environment": "production",
+                                "service": "content-extraction"})
 
-    def record_request(self, method: str, endpoint: str, status_code: int, duration: float):
+    def record_request(
+            self,
+            method: str,
+            endpoint: str,
+            status_code: int,
+            duration: float):
         """Record HTTP request metrics."""
         self.requests_total.labels(
             method=method, endpoint=endpoint, status_code=str(status_code)
         ).inc()
 
-        self.request_duration.labels(method=method, endpoint=endpoint).observe(duration)
+        self.request_duration.labels(
+            method=method, endpoint=endpoint).observe(duration)
 
     def record_extraction(
         self,
@@ -120,15 +133,17 @@ class MetricsCollector:
     ):
         """Record content extraction metrics."""
         self.extractions_total.labels(
-            content_type=content_type, extraction_method=extraction_method, status=status
-        ).inc()
+            content_type=content_type,
+            extraction_method=extraction_method,
+            status=status).inc()
 
         self.extraction_duration.labels(
             content_type=content_type, extraction_method=extraction_method
         ).observe(duration)
 
         if quality_score is not None:
-            self.content_quality_score.labels(content_type=content_type).observe(quality_score)
+            self.content_quality_score.labels(
+                content_type=content_type).observe(quality_score)
 
     def record_cache_hit(self, cache_type: str = "content"):
         """Record cache hit."""
@@ -142,15 +157,23 @@ class MetricsCollector:
         """Update cache size."""
         self.cache_size_bytes.labels(cache_type=cache_type).set(size_bytes)
 
-    def record_image_processing(self, status: str, image_format: str, duration: float):
+    def record_image_processing(
+            self,
+            status: str,
+            image_format: str,
+            duration: float):
         """Record image processing metrics."""
-        self.images_processed_total.labels(status=status, format=image_format).inc()
+        self.images_processed_total.labels(
+            status=status, format=image_format).inc()
 
-        self.image_processing_duration.labels(format=image_format).observe(duration)
+        self.image_processing_duration.labels(
+            format=image_format).observe(duration)
 
     def record_error(self, error_type: str, component: str):
         """Record error metrics."""
-        self.errors_total.labels(error_type=error_type, component=component).inc()
+        self.errors_total.labels(
+            error_type=error_type,
+            component=component).inc()
 
     def update_active_extractions(self, count: int):
         """Update active extractions count."""
@@ -167,7 +190,8 @@ class MetricsCollector:
     def get_cache_hit_rate(self, cache_type: str = "content") -> float:
         """Calculate cache hit rate."""
         hits = self.cache_hits_total.labels(cache_type=cache_type)._value.get()
-        misses = self.cache_misses_total.labels(cache_type=cache_type)._value.get()
+        misses = self.cache_misses_total.labels(
+            cache_type=cache_type)._value.get()
 
         total = hits + misses
         if total == 0:
@@ -178,14 +202,15 @@ class MetricsCollector:
     def get_error_rate(self, component: str = None) -> float:
         """Calculate error rate."""
         if component:
-            errors = self.errors_total.labels(error_type="all", component=component)._value.get()
+            errors = self.errors_total.labels(
+                error_type="all", component=component)._value.get()
         else:
             # Sum all errors
-            errors = sum(metric._value.get() for metric in self.errors_total._metrics.values())
+            errors = sum(metric._value.get()
+                         for metric in self.errors_total._metrics.values())
 
-        total_requests = sum(
-            metric._value.get() for metric in self.requests_total._metrics.values()
-        )
+        total_requests = sum(metric._value.get()
+                             for metric in self.requests_total._metrics.values())
 
         if total_requests == 0:
             return 0.0
@@ -211,12 +236,10 @@ class MetricsCollector:
             )
         else:
             # Calculate overall average
-            total_sum = sum(
-                metric._sum.get() for metric in self.extraction_duration._metrics.values()
-            )
-            total_count = sum(
-                metric._count.get() for metric in self.extraction_duration._metrics.values()
-            )
+            total_sum = sum(metric._sum.get()
+                            for metric in self.extraction_duration._metrics.values())
+            total_count = sum(metric._count.get()
+                              for metric in self.extraction_duration._metrics.values())
 
             return total_sum / max(total_count, 1)
 
@@ -224,11 +247,9 @@ class MetricsCollector:
         """Get comprehensive metrics summary."""
         return {
             "requests_total": sum(
-                metric._value.get() for metric in self.requests_total._metrics.values()
-            ),
+                metric._value.get() for metric in self.requests_total._metrics.values()),
             "extractions_total": sum(
-                metric._value.get() for metric in self.extractions_total._metrics.values()
-            ),
+                metric._value.get() for metric in self.extractions_total._metrics.values()),
             "cache_hit_rate": self.get_cache_hit_rate(),
             "error_rate": self.get_error_rate(),
             "active_extractions": self.active_extractions._value.get(),

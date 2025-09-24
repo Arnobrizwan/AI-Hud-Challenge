@@ -3,7 +3,7 @@ Role-based access control engine
 """
 
 import logging
-from typing import List, Optional
+from typing import List
 from uuid import UUID
 
 from sqlalchemy import select
@@ -31,9 +31,7 @@ class RoleBasedAccessControl:
 
         try:
             # Get users with appropriate roles
-            result = await self.db.execute(
-                select(User).where(User.role.in_(["admin", "editor"])).where(User.is_active == True)
-            )
+            result = await self.db.execute(select(User).where(User.role.in_(["admin", "editor"])).where(User.is_active))
 
             users = result.scalars().all()
 

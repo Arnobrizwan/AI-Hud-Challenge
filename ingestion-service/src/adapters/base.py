@@ -59,14 +59,16 @@ class BaseAdapter(ABC):
     async def process(self) -> List[NormalizedArticle]:
         """Process content from the source."""
         if self.is_processing:
-            logger.warning(f"Source {self.source_config.id} is already being processed")
+            logger.warning(
+                f"Source {self.source_config.id} is already being processed")
             return []
 
         self.is_processing = True
         articles = []
 
         try:
-            logger.info(f"Starting processing for source {self.source_config.id}")
+            logger.info(
+                f"Starting processing for source {self.source_config.id}")
 
             async for article in self.fetch_content():
                 if article:
@@ -85,7 +87,8 @@ class BaseAdapter(ABC):
 
         except Exception as e:
             self.error_count += 1
-            logger.error(f"Error processing source {self.source_config.id}: {e}")
+            logger.error(
+                f"Error processing source {self.source_config.id}: {e}")
             raise
 
         finally:
@@ -99,8 +102,9 @@ class BaseAdapter(ABC):
             delay = 60.0 / self.source_config.rate_limit  # Convert to seconds per request
             await asyncio.sleep(delay)
 
-    def _create_ingestion_metadata(self, response: HTTPResponse = None) -> Dict[str, Any]:
-        """Create ingestion metadata for articles."""
+    def _create_ingestion_metadata(
+            self, response: HTTPResponse = None) -> Dict[str, Any]:
+    """Create ingestion metadata for articles."""
         metadata = {
             "source_id": self.source_config.id,
             "source_type": self.source_config.type,
@@ -157,7 +161,8 @@ class BaseAdapter(ABC):
                 content = self.content_parser.extract_text_from_html(content)
 
             # Calculate reading metrics
-            reading_metrics = self.content_parser.calculate_reading_metrics(content)
+            reading_metrics = self.content_parser.calculate_reading_metrics(
+                content)
             word_count = reading_metrics["word_count"]
             reading_time = reading_metrics["reading_time_minutes"]
         else:
@@ -166,9 +171,8 @@ class BaseAdapter(ABC):
 
         # Detect language
         text_for_language = content or summary or title
-        language = (
-            self.content_parser.detect_language(text_for_language) if text_for_language else "en"
-        )
+        language = (self.content_parser.detect_language(
+            text_for_language) if text_for_language else "en")
 
         # Normalize published date
         if published_at:
@@ -261,19 +265,22 @@ class BaseAdapter(ABC):
         # Title filter
         if "title_keywords" in filters:
             title_lower = article.title.lower()
-            if not any(keyword.lower() in title_lower for keyword in filters["title_keywords"]):
+            if not any(
+                    keyword.lower() in title_lower for keyword in filters["title_keywords"]):
                 return False
 
         # Content filter
         if "content_keywords" in filters and article.content:
             content_lower = article.content.lower()
-            if not any(keyword.lower() in content_lower for keyword in filters["content_keywords"]):
+            if not any(
+                    keyword.lower() in content_lower for keyword in filters["content_keywords"]):
                 return False
 
         # Exclude keywords
         if "exclude_keywords" in filters:
             text_to_check = f"{article.title} {article.content or ''}".lower()
-            if any(keyword.lower() in text_to_check for keyword in filters["exclude_keywords"]):
+            if any(
+                    keyword.lower() in text_to_check for keyword in filters["exclude_keywords"]):
                 return False
 
         return True
@@ -295,7 +302,8 @@ class BaseAdapter(ABC):
                 "enabled": self.source_config.enabled,
             }
         except Exception as e:
-            logger.error(f"Health check failed for adapter {self.source_config.id}: {e}")
+            logger.error(
+                f"Health check failed for adapter {self.source_config.id}: {e}")
             return {
                 "adapter_type": self.__class__.__name__,
                 "source_id": self.source_config.id,

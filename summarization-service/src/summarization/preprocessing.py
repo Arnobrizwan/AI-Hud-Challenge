@@ -27,7 +27,7 @@ try:
     nltk.download("stopwords", quiet=True)
     nltk.download("wordnet", quiet=True)
     nltk.download("averaged_perceptron_tagger", quiet=True)
-except:
+except BaseException:
     pass
 
 
@@ -41,7 +41,7 @@ class ContentPreprocessor:
         self.stop_words = None
         self._initialized = False
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize preprocessing tools"""
         try:
             logger.info("Initializing content preprocessor...")
@@ -64,11 +64,12 @@ class ContentPreprocessor:
             self._initialized = True
             logger.info("Content preprocessor initialized successfully")
 
-        except Exception as e:
-            logger.error(f"Failed to initialize content preprocessor: {str(e)}")
+except Exception as e:
+            logger.error(
+                f"Failed to initialize content preprocessor: {str(e)}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Clean up resources"""
         try:
             if self.nlp:
@@ -111,7 +112,7 @@ class ContentPreprocessor:
 
             return processed
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Content preprocessing failed: {str(e)}")
             return content  # Return original if preprocessing fails
 
@@ -141,7 +142,7 @@ class ContentPreprocessor:
 
             return text.strip()
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Text cleaning failed: {str(e)}")
             return text
 
@@ -228,11 +229,16 @@ class ContentPreprocessor:
             ]
 
             # Count indicators
-            news_count = sum(1 for indicator in news_indicators if indicator in text_lower)
-            blog_count = sum(1 for indicator in blog_indicators if indicator in text_lower)
-            academic_count = sum(1 for indicator in academic_indicators if indicator in text_lower)
-            social_count = sum(1 for indicator in social_indicators if indicator in text_lower)
-            product_count = sum(1 for indicator in product_indicators if indicator in text_lower)
+            news_count = sum(
+                1 for indicator in news_indicators if indicator in text_lower)
+            blog_count = sum(
+                1 for indicator in blog_indicators if indicator in text_lower)
+            academic_count = sum(
+                1 for indicator in academic_indicators if indicator in text_lower)
+            social_count = sum(
+                1 for indicator in social_indicators if indicator in text_lower)
+            product_count = sum(
+                1 for indicator in product_indicators if indicator in text_lower)
 
             # Determine content type
             counts = {
@@ -249,10 +255,10 @@ class ContentPreprocessor:
             # Return detected type if confidence is high enough
             if max_count >= 2:
                 return max_type
-            else:
+else:
                 return ContentType.GENERAL
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Content type detection failed: {str(e)}")
             return ContentType.GENERAL
 
@@ -271,7 +277,7 @@ class ContentPreprocessor:
                 metadata["avg_sentence_length"] = (
                     metadata["word_count"] / metadata["sentence_count"]
                 )
-            else:
+else:
                 metadata["avg_sentence_length"] = 0
 
             # Extract reading time estimate (assuming 200 WPM)
@@ -294,11 +300,13 @@ class ContentPreprocessor:
                 metadata["named_entities"] = entities
 
                 # Calculate lexical diversity
-                unique_words = set(token.lemma_.lower() for token in doc if token.is_alpha)
+                unique_words = set(token.lemma_.lower()
+                                   for token in doc if token.is_alpha)
                 total_words = len([token for token in doc if token.is_alpha])
                 if total_words > 0:
-                    metadata["lexical_diversity"] = len(unique_words) / total_words
-                else:
+                    metadata["lexical_diversity"] = len(
+                        unique_words) / total_words
+else:
                     metadata["lexical_diversity"] = 0
 
             # Extract key phrases (simple approach)
@@ -307,7 +315,7 @@ class ContentPreprocessor:
 
             return metadata
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Metadata extraction failed: {str(e)}")
             return {}
 
@@ -327,8 +335,8 @@ class ContentPreprocessor:
 
             # Extract named entities
             entities = [
-                ent.text for ent in doc.ents if ent.label_ in ["PERSON", "ORG", "GPE", "EVENT"]
-            ]
+                ent.text for ent in doc.ents if ent.label_ in [
+                    "PERSON", "ORG", "GPE", "EVENT"]]
 
             # Combine and deduplicate
             key_phrases = list(set(noun_phrases + entities))
@@ -338,11 +346,15 @@ class ContentPreprocessor:
             for phrase in key_phrases:
                 phrase_counts[phrase] = text.lower().count(phrase.lower())
 
-            sorted_phrases = sorted(phrase_counts.items(), key=lambda x: x[1], reverse=True)
+            sorted_phrases = sorted(
+                phrase_counts.items(),
+                key=lambda x: x[1],
+                reverse=True)
 
-            return [phrase for phrase, count in sorted_phrases[:10]]  # Top 10 phrases
+            return [phrase for phrase,
+                    count in sorted_phrases[:10]]  # Top 10 phrases
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Key phrase extraction failed: {str(e)}")
             return []
 

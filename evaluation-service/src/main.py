@@ -37,8 +37,8 @@ from fastapi.responses import JSONResponse
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 # Global variables for services
@@ -47,7 +47,7 @@ monitoring_service: EvaluationMonitoring = None
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> Dict[str, Any]:
     """Application lifespan manager for startup and shutdown events"""
     global evaluation_engine, monitoring_service
 
@@ -80,7 +80,8 @@ async def lifespan(app: FastAPI):
         logger.info("Evaluation Suite Microservice started successfully")
 
     except Exception as e:
-        logger.error(f"Failed to start Evaluation Suite Microservice: {str(e)}")
+        logger.error(
+            f"Failed to start Evaluation Suite Microservice: {str(e)}")
         raise
 
     yield
@@ -90,11 +91,11 @@ async def lifespan(app: FastAPI):
 
     try:
         if monitoring_service:
-            await monitoring_service.stop_monitoring()
+    await monitoring_service.stop_monitoring()
             logger.info("Monitoring service stopped")
 
         if evaluation_engine:
-            await evaluation_engine.cleanup()
+    await evaluation_engine.cleanup()
             logger.info("Evaluation engine cleaned up")
 
         logger.info("Evaluation Suite Microservice shutdown complete")
@@ -128,38 +129,53 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.ALLOWED_HOSTS)
+    app.add_middleware(
+        TrustedHostMiddleware,
+        allowed_hosts=settings.ALLOWED_HOSTS)
 
     app.add_middleware(RequestLoggingMiddleware)
     app.add_middleware(PerformanceMonitoringMiddleware)
     app.add_middleware(ErrorHandlingMiddleware)
 
     # Include routers
-    app.include_router(evaluation_router, prefix="/api/v1/evaluation", tags=["evaluation"])
+    app.include_router(
+        evaluation_router,
+        prefix="/api/v1/evaluation",
+        tags=["evaluation"])
 
     app.include_router(
-        offline_evaluation_router, prefix="/api/v1/offline-evaluation", tags=["offline-evaluation"]
-    )
+        offline_evaluation_router,
+        prefix="/api/v1/offline-evaluation",
+        tags=["offline-evaluation"])
 
     app.include_router(
-        online_evaluation_router, prefix="/api/v1/online-evaluation", tags=["online-evaluation"]
-    )
+        online_evaluation_router,
+        prefix="/api/v1/online-evaluation",
+        tags=["online-evaluation"])
 
     app.include_router(
-        business_impact_router, prefix="/api/v1/business-impact", tags=["business-impact"]
-    )
+        business_impact_router,
+        prefix="/api/v1/business-impact",
+        tags=["business-impact"])
 
     app.include_router(
-        drift_detection_router, prefix="/api/v1/drift-detection", tags=["drift-detection"]
-    )
+        drift_detection_router,
+        prefix="/api/v1/drift-detection",
+        tags=["drift-detection"])
 
-    app.include_router(monitoring_router, prefix="/api/v1/monitoring", tags=["monitoring"])
+    app.include_router(
+        monitoring_router,
+        prefix="/api/v1/monitoring",
+        tags=["monitoring"])
 
-    app.include_router(dashboard_router, prefix="/api/v1/dashboard", tags=["dashboard"])
+    app.include_router(
+        dashboard_router,
+        prefix="/api/v1/dashboard",
+        tags=["dashboard"])
 
     # Health check endpoint
     @app.get("/health", tags=["health"])
-    async def health_check():
+    async def health_check() -> Dict[str, Any]:
         """Health check endpoint"""
         return {
             "status": "healthy",
@@ -170,7 +186,7 @@ def create_app() -> FastAPI:
 
     # Root endpoint
     @app.get("/", tags=["root"])
-    async def root():
+    async def root() -> Dict[str, Any]:
         """Root endpoint with service information"""
         return {
             "service": "Evaluation Suite Microservice",
@@ -191,7 +207,8 @@ app = create_app()
 async def get_evaluation_engine_dependency() -> EvaluationEngine:
     """Get evaluation engine instance"""
     if evaluation_engine is None:
-        raise HTTPException(status_code=503, detail="Evaluation engine not initialized")
+        raise HTTPException(status_code=503,
+                            detail="Evaluation engine not initialized")
     return evaluation_engine
 
 

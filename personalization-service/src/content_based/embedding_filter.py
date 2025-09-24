@@ -1,7 +1,5 @@
 """Content-based filtering using embeddings."""
 
-import asyncio
-from collections import Counter
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
@@ -10,7 +8,7 @@ from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
 from ..config.settings import settings
-from ..models.schemas import ContentItem, Recommendation, UserProfile
+from ..models.schemas import ContentItem, UserProfile
 
 logger = structlog.get_logger()
 
@@ -47,9 +45,7 @@ class EmbeddingContentFilter:
 
         logger.info(f"Embedding model fitted on {len(content_items)} content items")
 
-    async def compute_similarities(
-        self, user_profile: UserProfile, candidates: List[ContentItem]
-    ) -> List[float]:
+    async def compute_similarities(self, user_profile: UserProfile, candidates: List[ContentItem]) -> List[float]:
         """Compute content-based similarity scores for candidates."""
         if not self.is_fitted:
             logger.warning("Embedding model not fitted")
@@ -81,9 +77,7 @@ class EmbeddingContentFilter:
 
         return similarities
 
-    async def _build_user_profile_embedding(
-        self, user_profile: UserProfile
-    ) -> Optional[np.ndarray]:
+    async def _build_user_profile_embedding(self, user_profile: UserProfile) -> Optional[np.ndarray]:
         """Build user profile embedding from preferences."""
         if not user_profile.topic_preferences:
             return None
@@ -121,9 +115,7 @@ class EmbeddingContentFilter:
         text = f"{content_item.title} {content_item.content or ''}"
         return self.model.encode([text])[0]
 
-    async def get_similar_content(
-        self, content_id: str, n_similar: int = 10
-    ) -> List[Tuple[str, float]]:
+    async def get_similar_content(self, content_id: str, n_similar: int = 10) -> List[Tuple[str, float]]:
         """Get similar content based on embedding similarity."""
         if not self.is_fitted or content_id not in self.content_ids:
             return []
@@ -157,9 +149,7 @@ class EmbeddingContentFilter:
 
         return features
 
-    async def compute_topic_similarity(
-        self, user_profile: UserProfile, candidate: ContentItem
-    ) -> float:
+    async def compute_topic_similarity(self, user_profile: UserProfile, candidate: ContentItem) -> float:
         """Compute topic-based similarity using embeddings."""
         if not user_profile.topic_preferences or not candidate.topics:
             return 0.5

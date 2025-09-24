@@ -36,7 +36,7 @@ class VectorStoreManager:
         self.index_optimizer: Optional[VectorIndexOptimizer] = None
         self._initialized = False
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize vector store components"""
         if self._initialized:
             return
@@ -60,7 +60,7 @@ class VectorStoreManager:
             logger.error(f"Failed to initialize Vector Store Manager: {e}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup resources"""
         logger.info("Cleaning up Vector Store Manager...")
 
@@ -74,7 +74,7 @@ class VectorStoreManager:
             cleanup_tasks.append(self.index_optimizer.cleanup())
 
         if cleanup_tasks:
-            await asyncio.gather(*cleanup_tasks, return_exceptions=True)
+    await asyncio.gather(*cleanup_tasks, return_exceptions=True)
 
         self._initialized = False
         logger.info("Vector Store Manager cleanup complete")
@@ -112,7 +112,8 @@ class VectorStoreManager:
 
                 storage_results.append(result)
 
-            logger.info(f"Stored {len(embeddings)} embeddings for content {content_id}")
+            logger.info(
+                f"Stored {len(embeddings)} embeddings for content {content_id}")
 
             return VectorStorageResult(
                 content_id=content_id,
@@ -121,7 +122,8 @@ class VectorStoreManager:
             )
 
         except Exception as e:
-            logger.error(f"Failed to store embeddings for content {content_id}: {e}")
+            logger.error(
+                f"Failed to store embeddings for content {content_id}: {e}")
             raise
 
     async def similarity_search(
@@ -131,13 +133,16 @@ class VectorStoreManager:
         if not self._initialized or not self.postgres_vector:
             raise RuntimeError("Vector Store Manager not initialized")
 
-        logger.info(f"Performing similarity search for {search_params.embedding_type}")
+        logger.info(
+            f"Performing similarity search for {search_params.embedding_type}")
 
         start_time = time.time()
 
         try:
             # Convert query vector to numpy array
-            query_vector = np.array(search_params.query_vector, dtype=np.float32)
+            query_vector = np.array(
+                search_params.query_vector,
+                dtype=np.float32)
 
             # Normalize query vector
             normalized_query = query_vector / np.linalg.norm(query_vector)
@@ -160,7 +165,8 @@ class VectorStoreManager:
                     normalized_query.tolist(), results, search_params
                 )
 
-            search_duration = int((time.time() - start_time) * 1000)  # Convert to milliseconds
+            # Convert to milliseconds
+            search_duration = int((time.time() - start_time) * 1000)
 
             logger.info(
                 f"Similarity search completed in {search_duration}ms, found {len(results)} results"
@@ -178,7 +184,8 @@ class VectorStoreManager:
             logger.error(f"Similarity search failed: {e}")
             raise
 
-    async def get_article_embeddings(self, article_id: str) -> Dict[str, List[float]]:
+    async def get_article_embeddings(
+            self, article_id: str) -> Dict[str, List[float]]:
         """Get embeddings for an article"""
         if not self._initialized or not self.postgres_vector:
             raise RuntimeError("Vector Store Manager not initialized")
@@ -186,10 +193,12 @@ class VectorStoreManager:
         try:
             return await self.postgres_vector.get_embeddings(article_id)
         except Exception as e:
-            logger.error(f"Failed to get embeddings for article {article_id}: {e}")
+            logger.error(
+                f"Failed to get embeddings for article {article_id}: {e}")
             raise
 
-    async def build_vector_index(self, index_config: VectorIndexConfig) -> IndexBuildResult:
+    async def build_vector_index(
+            self, index_config: VectorIndexConfig) -> IndexBuildResult:
         """Build optimized vector index"""
         if not self._initialized or not self.postgres_vector:
             raise RuntimeError("Vector Store Manager not initialized")
@@ -202,7 +211,7 @@ class VectorStoreManager:
             # Create HNSW index for approximate similarity
             index_sql = f"""
             CREATE INDEX CONCURRENTLY IF NOT EXISTS {index_config.index_name}
-            ON vector_embeddings 
+            ON vector_embeddings
             USING hnsw (vector vector_cosine_ops)
             WITH (m = {index_config.hnsw_m}, ef_construction = {index_config.ef_construction})
             WHERE embedding_type = '{index_config.embedding_type}'
@@ -215,7 +224,8 @@ class VectorStoreManager:
             # Analyze index performance
             index_stats = await self._analyze_index_performance(index_config.index_name)
 
-            logger.info(f"Vector index {index_config.index_name} built in {build_duration}ms")
+            logger.info(
+                f"Vector index {index_config.index_name} built in {build_duration}ms")
 
             return IndexBuildResult(
                 index_name=index_config.index_name,
@@ -225,18 +235,20 @@ class VectorStoreManager:
             )
 
         except Exception as e:
-            logger.error(f"Failed to build vector index {index_config.index_name}: {e}")
+            logger.error(
+                f"Failed to build vector index {index_config.index_name}: {e}")
             raise
 
-    async def refresh_indexes(self, content_id: str):
+    async def refresh_indexes(self, content_id: str) -> Dict[str, Any]:
         """Refresh vector indexes for content"""
         if not self._initialized or not self.postgres_vector:
             return
 
         try:
-            await self.postgres_vector.refresh_indexes(content_id)
+    await self.postgres_vector.refresh_indexes(content_id)
         except Exception as e:
-            logger.warning(f"Failed to refresh indexes for content {content_id}: {e}")
+            logger.warning(
+                f"Failed to refresh indexes for content {content_id}: {e}")
 
     async def _exact_similarity_search(
         self, query_vector: np.ndarray, params: SimilaritySearchParams
@@ -245,13 +257,13 @@ class VectorStoreManager:
         try:
             # Use pgvector's cosine similarity operator
             query = """
-            SELECT 
+            SELECT
                 content_id,
                 embedding_type,
                 vector,
                 1 - (vector <=> $1) as similarity_score,
                 metadata
-            FROM vector_embeddings 
+            FROM vector_embeddings
             WHERE embedding_type = $2
             AND ($3::text IS NULL OR metadata->>'category' = $3)
             ORDER BY vector <=> $1
@@ -291,13 +303,13 @@ class VectorStoreManager:
         try:
             # Use HNSW index for approximate search
             query = """
-            SELECT 
+            SELECT
                 content_id,
                 embedding_type,
                 vector,
                 1 - (vector <=> $1) as similarity_score,
                 metadata
-            FROM vector_embeddings 
+            FROM vector_embeddings
             WHERE embedding_type = $2
             AND ($3::text IS NULL OR metadata->>'category' = $3)
             ORDER BY vector <=> $1
@@ -396,8 +408,9 @@ class VectorStoreManager:
 
         return filtered_results
 
-    async def _analyze_index_performance(self, index_name: str) -> Dict[str, Any]:
-        """Analyze index performance metrics"""
+    async def _analyze_index_performance(
+            self, index_name: str) -> Dict[str, Any]:
+    """Analyze index performance metrics"""
         try:
             # Get index size
             size_query = """
@@ -407,14 +420,14 @@ class VectorStoreManager:
 
             # Get query performance (simplified)
             performance_query = """
-            SELECT 
+            SELECT
                 schemaname,
                 tablename,
                 indexname,
                 idx_scan,
                 idx_tup_read,
                 idx_tup_fetch
-            FROM pg_stat_user_indexes 
+            FROM pg_stat_user_indexes
             WHERE indexname = $1
             """
             perf_result = await self.postgres_vector.execute_query(performance_query, index_name)

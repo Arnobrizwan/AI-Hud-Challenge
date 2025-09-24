@@ -36,7 +36,7 @@ class PersonalizationEngine:
         # Initialize models
         asyncio.create_task(self._initialize_models())
 
-    async def _initialize_models(self):
+    async def _initialize_models(self) -> Dict[str, Any]:
         """Initialize ML models for personalization."""
         try:
             # Load pre-trained models or train on historical data
@@ -44,14 +44,16 @@ class PersonalizationEngine:
             await self._train_collaborative_filter()
             logger.info("Personalization models initialized")
         except Exception as e:
-            logger.error("Failed to initialize personalization models", error=str(e))
+            logger.error(
+                "Failed to initialize personalization models",
+                error=str(e))
 
-    async def _load_user_profiles(self):
+    async def _load_user_profiles(self) -> Dict[str, Any]:
         """Load user profiles from cache or database."""
         # In production, this would load from a database
         pass
 
-    async def _train_collaborative_filter(self):
+    async def _train_collaborative_filter(self) -> Dict[str, Any]:
         """Train collaborative filtering model."""
         # In production, this would train on historical interaction data
         pass
@@ -64,7 +66,10 @@ class PersonalizationEngine:
             user_profile = await self.user_profiles.get_profile(user_id)
             if not user_profile:
                 # Return neutral scores for new users
-                return [PersonalizedScore(article_id=a.id, score=0.5) for a in articles]
+                return [
+                    PersonalizedScore(
+                        article_id=a.id,
+                        score=0.5) for a in articles]
 
             scores = []
 
@@ -107,8 +112,7 @@ class PersonalizationEngine:
 
                 # Generate explanation
                 explanation = self._generate_explanation(
-                    topic_score, source_score, cf_score, cb_score, time_score, geo_score
-                )
+                    topic_score, source_score, cf_score, cb_score, time_score, geo_score)
 
                 scores.append(
                     PersonalizedScore(
@@ -129,9 +133,15 @@ class PersonalizationEngine:
             return scores
 
         except Exception as e:
-            logger.error("Personalization failed", error=str(e), user_id=user_id)
+            logger.error(
+                "Personalization failed",
+                error=str(e),
+                user_id=user_id)
             # Return neutral scores on error
-            return [PersonalizedScore(article_id=a.id, score=0.5) for a in articles]
+            return [
+                PersonalizedScore(
+                    article_id=a.id,
+                    score=0.5) for a in articles]
 
     async def _compute_topic_affinity(
         self, article_topics: List, user_preferences: Dict[str, float]
@@ -227,7 +237,8 @@ class PersonalizationEngine:
         if time_score > 0.7:
             explanations.append("published when you're active")
 
-        return ", ".join(explanations) if explanations else "personalized for you"
+        return ", ".join(
+            explanations) if explanations else "personalized for you"
 
 
 class UserProfileManager:
@@ -257,12 +268,14 @@ class UserProfileManager:
 
         # Cache the profile
         await self.cache_manager.set(
-            f"user_profile:{user_id}", default_profile.dict(), ttl=3600  # 1 hour
+            # 1 hour
+            f"user_profile:{user_id}", default_profile.dict(), ttl=3600
         )
 
         return default_profile
 
-    async def update_profile(self, user_id: str, interaction_data: Dict[str, Any]) -> None:
+    async def update_profile(
+            self, user_id: str, interaction_data: Dict[str, Any]) -> None:
         """Update user profile based on interactions."""
         profile = await self.get_profile(user_id)
         if not profile:
@@ -270,22 +283,23 @@ class UserProfileManager:
 
         # Update topic preferences based on article topics
         if "article_topics" in interaction_data:
-            await self._update_topic_preferences(profile, interaction_data["article_topics"])
+    await self._update_topic_preferences(profile, interaction_data["article_topics"])
 
         # Update source preferences
         if "source_id" in interaction_data:
-            await self._update_source_preferences(profile, interaction_data["source_id"])
+    await self._update_source_preferences(profile, interaction_data["source_id"])
 
         # Update reading patterns
         if "reading_time" in interaction_data:
-            await self._update_reading_patterns(profile, interaction_data)
+    await self._update_reading_patterns(profile, interaction_data)
 
         profile.updated_at = datetime.utcnow()
 
         # Cache updated profile
         await self.cache_manager.set(f"user_profile:{user_id}", profile.dict(), ttl=3600)
 
-    async def _update_topic_preferences(self, profile: UserProfile, topics: List) -> None:
+    async def _update_topic_preferences(
+            self, profile: UserProfile, topics: List) -> None:
         """Update topic preferences based on user interactions."""
         for topic in topics:
             topic_name = topic.name.lower()
@@ -295,7 +309,10 @@ class UserProfileManager:
             new_score = 0.7 * current_score + 0.3 * topic.confidence
             profile.topic_preferences[topic_name] = min(new_score, 1.0)
 
-    async def _update_source_preferences(self, profile: UserProfile, source_id: str) -> None:
+    async def _update_source_preferences(
+            self,
+            profile: UserProfile,
+            source_id: str) -> None:
         """Update source preferences based on user interactions."""
         current_score = profile.source_preferences.get(source_id, 0.5)
         new_score = 0.8 * current_score + 0.2  # Boost for interaction
@@ -338,7 +355,9 @@ class CollaborativeFilter:
             hash_value = hash(f"{user_id}_{article_id}")
             return (hash_value % 100) / 100.0
         except Exception as e:
-            logger.warning("Collaborative filtering prediction failed", error=str(e))
+            logger.warning(
+                "Collaborative filtering prediction failed",
+                error=str(e))
             return 0.5
 
     async def train(self, interactions: List[Dict[str, Any]]) -> None:
@@ -356,7 +375,8 @@ class ContentBasedFilter:
         self.article_vectors = {}
         self.user_content_preferences = {}
 
-    async def compute_similarity(self, article: Article, user_preferences: Dict[str, Any]) -> float:
+    async def compute_similarity(
+            self, article: Article, user_preferences: Dict[str, Any]) -> float:
         """Compute content similarity between article and user preferences."""
         try:
             # In production, this would use TF-IDF vectors and cosine similarity
@@ -376,7 +396,8 @@ class ContentBasedFilter:
 
             if "preferred_quality" in user_preferences:
                 preferred_quality = user_preferences["preferred_quality"]
-                quality_similarity = 1.0 - abs(preferred_quality - article.quality_score)
+                quality_similarity = 1.0 - \
+                    abs(preferred_quality - article.quality_score)
                 content_score += quality_similarity * 0.5
 
             return min(content_score, 1.0)
@@ -401,7 +422,8 @@ class TopicAnalyzer:
             {"name": "artificial intelligence", "confidence": 0.6},
         ]
 
-    async def compute_topic_similarity(self, topics1: List, topics2: List) -> float:
+    async def compute_topic_similarity(
+            self, topics1: List, topics2: List) -> float:
         """Compute similarity between two sets of topics."""
         if not topics1 or not topics2:
             return 0.0

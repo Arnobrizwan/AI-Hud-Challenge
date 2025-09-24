@@ -75,7 +75,7 @@ class StructuredLogger:
         self.logger = None
         self.is_initialized = False
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize structured logging"""
 
         # Configure structlog
@@ -99,10 +99,10 @@ class StructuredLogger:
 
         # Initialize outputs
         if self.config.elasticsearch_enabled:
-            await self._initialize_elasticsearch()
+    await self._initialize_elasticsearch()
 
         if self.config.redis_enabled:
-            await self._initialize_redis()
+    await self._initialize_redis()
 
         # Set up file logging
         self._setup_file_logging()
@@ -110,7 +110,7 @@ class StructuredLogger:
         self.is_initialized = True
         logger.info("Structured logging initialized")
 
-    async def _initialize_elasticsearch(self):
+    async def _initialize_elasticsearch(self) -> Dict[str, Any]:
         """Initialize Elasticsearch connection"""
         try:
             self.elasticsearch = Elasticsearch(
@@ -128,7 +128,7 @@ class StructuredLogger:
             logger.error(f"Failed to initialize Elasticsearch: {str(e)}")
             self.elasticsearch = None
 
-    async def _initialize_redis(self):
+    async def _initialize_redis(self) -> Dict[str, Any]:
         """Initialize Redis connection"""
         try:
             self.redis = redis.Redis(
@@ -154,7 +154,8 @@ class StructuredLogger:
         self.logger.setLevel(getattr(logging, self.config.log_level))
 
         # Create formatter
-        formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+        formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
         # File handler with rotation
         if self.config.log_rotation:
@@ -174,7 +175,7 @@ class StructuredLogger:
         console_handler.setFormatter(formatter)
         self.logger.addHandler(console_handler)
 
-    async def log(self, log_entry: LogEntry):
+    async def log(self, log_entry: LogEntry) -> Dict[str, Any]:
         """Log a structured entry"""
 
         if not self.is_initialized:
@@ -190,20 +191,24 @@ class StructuredLogger:
             # Log to file
             if self.logger:
                 log_message = json.dumps(log_data)
-                self.logger.log(getattr(logging, log_entry.level.value), log_message)
+                self.logger.log(
+                    getattr(
+                        logging,
+                        log_entry.level.value),
+                    log_message)
 
             # Send to Elasticsearch
             if self.elasticsearch:
-                await self._send_to_elasticsearch(log_data)
+    await self._send_to_elasticsearch(log_data)
 
             # Send to Redis
             if self.redis:
-                await self._send_to_redis(log_data)
+    await self._send_to_redis(log_data)
 
         except Exception as e:
             logger.error(f"Failed to log entry: {str(e)}")
 
-    async def _send_to_elasticsearch(self, log_data: Dict[str, Any]):
+    async def _send_to_elasticsearch(self, log_data: Dict[str, Any]) -> Dict[str, Any]:
         """Send log data to Elasticsearch"""
         try:
             index_name = (
@@ -217,7 +222,7 @@ class StructuredLogger:
         except Exception as e:
             logger.error(f"Failed to send to Elasticsearch: {str(e)}")
 
-    async def _send_to_redis(self, log_data: Dict[str, Any]):
+    async def _send_to_redis(self, log_data: Dict[str, Any]) -> Dict[str, Any]:
         """Send log data to Redis"""
         try:
             # Store in Redis list for real-time access
@@ -247,7 +252,8 @@ class StructuredLogger:
 
             # Add query conditions
             for field, value in query.items():
-                search_body["query"]["bool"]["must"].append({"match": {field: value}})
+                search_body["query"]["bool"]["must"].append(
+                    {"match": {field: value}})
 
             # Add time range
             if time_range:
@@ -264,7 +270,8 @@ class StructuredLogger:
 
             # Search across all indices
             index_pattern = f"{self.config.elasticsearch_index_prefix}-*"
-            response = self.elasticsearch.search(index=index_pattern, body=search_body)
+            response = self.elasticsearch.search(
+                index=index_pattern, body=search_body)
 
             return [hit["_source"] for hit in response["hits"]["hits"]]
 
@@ -272,34 +279,34 @@ class StructuredLogger:
             logger.error(f"Failed to search logs: {str(e)}")
             return []
 
-    async def get_log_statistics(self, time_window: int = 3600) -> Dict[str, Any]:
-        """Get log statistics for a time window"""
-
+    async def get_log_statistics(
+            self, time_window: int = 3600) -> Dict[str, Any]:
+    """Get log statistics for a time window"""
         if not self.elasticsearch:
             return {}
 
         try:
             # Calculate time range
             to_time = datetime.utcnow()
-            from_time = datetime.utcnow().replace(second=0, microsecond=0) - timedelta(
-                seconds=time_window
-            )
+            from_time = datetime.utcnow().replace(second=0, microsecond=0) - \
+                timedelta(seconds=time_window)
 
             search_body = {
                 "query": {
                     "range": {
-                        "timestamp": {"gte": from_time.isoformat(), "lte": to_time.isoformat()}
-                    }
-                },
-                "aggs": {
-                    "by_level": {"terms": {"field": "level.keyword"}},
-                    "by_service": {"terms": {"field": "service.keyword"}},
-                    "by_component": {"terms": {"field": "component.keyword"}},
-                },
-            }
+                        "timestamp": {
+                            "gte": from_time.isoformat(), "lte": to_time.isoformat()}}}, "aggs": {
+                    "by_level": {
+                        "terms": {
+                            "field": "level.keyword"}}, "by_service": {
+                                "terms": {
+                                    "field": "service.keyword"}}, "by_component": {
+                                        "terms": {
+                                            "field": "component.keyword"}}, }, }
 
             index_pattern = f"{self.config.elasticsearch_index_prefix}-*"
-            response = self.elasticsearch.search(index=index_pattern, body=search_body, size=0)
+            response = self.elasticsearch.search(
+                index=index_pattern, body=search_body, size=0)
 
             return {
                 "total_logs": response["hits"]["total"]["value"],
@@ -331,24 +338,50 @@ class LogAggregator:
         self.is_initialized = True
         logger.info("Log aggregator initialized")
 
-    async def log_info(self, service: str, component: str, message: str, **kwargs):
-        """Log info message"""
+    async def log_info(
+            self,
+            service: str,
+            component: str,
+            message: str,
+            **kwargs):
+         -> Dict[str, Any]:"""Log info message"""
         await self._log(LogLevel.INFO, service, component, message, **kwargs)
 
-    async def log_warning(self, service: str, component: str, message: str, **kwargs):
-        """Log warning message"""
+    async def log_warning(
+            self,
+            service: str,
+            component: str,
+            message: str,
+            **kwargs):
+         -> Dict[str, Any]:"""Log warning message"""
         await self._log(LogLevel.WARNING, service, component, message, **kwargs)
 
-    async def log_error(self, service: str, component: str, message: str, **kwargs):
-        """Log error message"""
+    async def log_error(
+            self,
+            service: str,
+            component: str,
+            message: str,
+            **kwargs):
+         -> Dict[str, Any]:"""Log error message"""
         await self._log(LogLevel.ERROR, service, component, message, **kwargs)
 
-    async def log_critical(self, service: str, component: str, message: str, **kwargs):
-        """Log critical message"""
+    async def log_critical(
+            self,
+            service: str,
+            component: str,
+            message: str,
+            **kwargs):
+         -> Dict[str, Any]:"""Log critical message"""
         await self._log(LogLevel.CRITICAL, service, component, message, **kwargs)
 
-    async def _log(self, level: LogLevel, service: str, component: str, message: str, **kwargs):
-        """Log a message with structured data"""
+    async def _log(
+            self,
+            level: LogLevel,
+            service: str,
+            component: str,
+            message: str,
+            **kwargs):
+         -> Dict[str, Any]:"""Log a message with structured data"""
 
         if not self.is_initialized or not self.structured_logger:
             logger.warning("Log aggregator not initialized")
@@ -380,15 +413,15 @@ class LogAggregator:
 
         return await self.structured_logger.search_logs(query, time_range, limit)
 
-    async def get_log_statistics(self, time_window: int = 3600) -> Dict[str, Any]:
-        """Get log statistics"""
-
+    async def get_log_statistics(
+            self, time_window: int = 3600) -> Dict[str, Any]:
+    """Get log statistics"""
         if not self.is_initialized or not self.structured_logger:
             return {}
 
         return await self.structured_logger.get_log_statistics(time_window)
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup log aggregator"""
         self.is_initialized = False
         logger.info("Log aggregator cleaned up")

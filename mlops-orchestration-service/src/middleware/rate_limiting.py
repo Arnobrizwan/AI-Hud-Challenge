@@ -23,7 +23,7 @@ class RateLimitMiddleware:
         self.window_seconds = settings.rate_limit_window
         self.requests: Dict[str, list] = {}
 
-    async def __call__(self, request: Request, call_next):
+    async def __call__(self, request: Request, call_next) -> Dict[str, Any]:
         """Process rate limiting for each request"""
 
         # Skip rate limiting for health checks
@@ -57,8 +57,10 @@ class RateLimitMiddleware:
         # Add rate limit headers to response
         response = await call_next(request)
         response.headers["X-RateLimit-Limit"] = str(self.requests_per_window)
-        response.headers["X-RateLimit-Remaining"] = str(self.get_remaining_requests(client_id))
-        response.headers["X-RateLimit-Reset"] = str(int(time.time()) + self.window_seconds)
+        response.headers["X-RateLimit-Remaining"] = str(
+            self.get_remaining_requests(client_id))
+        response.headers["X-RateLimit-Reset"] = str(
+            int(time.time()) + self.window_seconds)
 
         return response
 
@@ -86,8 +88,7 @@ class RateLimitMiddleware:
         # Clean old requests
         if client_id in self.requests:
             self.requests[client_id] = [
-                req_time for req_time in self.requests[client_id] if req_time > window_start
-            ]
+                req_time for req_time in self.requests[client_id] if req_time > window_start]
         else:
             self.requests[client_id] = []
 
@@ -115,8 +116,7 @@ class RateLimitMiddleware:
 
         # Count requests in current window
         recent_requests = [
-            req_time for req_time in self.requests[client_id] if req_time > window_start
-        ]
+            req_time for req_time in self.requests[client_id] if req_time > window_start]
 
         return max(0, self.requests_per_window - len(recent_requests))
 
@@ -131,8 +131,7 @@ class RateLimitMiddleware:
         window_start = current_time - self.window_seconds
 
         recent_requests = [
-            req_time for req_time in self.requests[client_id] if req_time > window_start
-        ]
+            req_time for req_time in self.requests[client_id] if req_time > window_start]
 
         if not recent_requests:
             return self.window_seconds
@@ -158,7 +157,7 @@ class AdvancedRateLimitMiddleware:
         }
         self.requests: Dict[str, Dict[str, list]] = {}
 
-    async def __call__(self, request: Request, call_next):
+    async def __call__(self, request: Request, call_next) -> Dict[str, Any]:
         """Process advanced rate limiting for each request"""
 
         # Skip rate limiting for health checks
@@ -184,8 +183,9 @@ class AdvancedRateLimitMiddleware:
                     "error": "Rate limit exceeded",
                     "message": f"Too many requests for endpoint. Limit: {endpoint_limits['requests']} per {endpoint_limits['window']} seconds",
                     "retry_after": self.get_retry_after(
-                        client_id, request.url.path, endpoint_limits
-                    ),
+                        client_id,
+                        request.url.path,
+                        endpoint_limits),
                 },
             )
 
@@ -194,11 +194,13 @@ class AdvancedRateLimitMiddleware:
 
         # Add rate limit headers to response
         response = await call_next(request)
-        response.headers["X-RateLimit-Limit"] = str(endpoint_limits["requests"])
+        response.headers["X-RateLimit-Limit"] = str(
+            endpoint_limits["requests"])
         response.headers["X-RateLimit-Remaining"] = str(
-            self.get_remaining_requests(client_id, request.url.path, endpoint_limits)
-        )
-        response.headers["X-RateLimit-Reset"] = str(int(time.time()) + endpoint_limits["window"])
+            self.get_remaining_requests(
+                client_id, request.url.path, endpoint_limits))
+        response.headers["X-RateLimit-Reset"] = str(
+            int(time.time()) + endpoint_limits["window"])
 
         return response
 
@@ -226,7 +228,8 @@ class AdvancedRateLimitMiddleware:
         client_ip = request.client.host if request.client else "unknown"
         return f"ip:{client_ip}"
 
-    def is_allowed(self, client_id: str, endpoint: str, limits: Dict[str, int]) -> bool:
+    def is_allowed(self, client_id: str, endpoint: str,
+                   limits: Dict[str, int]) -> bool:
         """Check if request is allowed for client and endpoint"""
 
         current_time = time.time()
@@ -259,7 +262,8 @@ class AdvancedRateLimitMiddleware:
 
         self.requests[client_id][endpoint].append(current_time)
 
-    def get_remaining_requests(self, client_id: str, endpoint: str, limits: Dict[str, int]) -> int:
+    def get_remaining_requests(
+            self, client_id: str, endpoint: str, limits: Dict[str, int]) -> int:
         """Get remaining requests for client and endpoint"""
 
         if client_id not in self.requests or endpoint not in self.requests[client_id]:
@@ -270,12 +274,12 @@ class AdvancedRateLimitMiddleware:
 
         # Count requests in current window
         recent_requests = [
-            req_time for req_time in self.requests[client_id][endpoint] if req_time > window_start
-        ]
+            req_time for req_time in self.requests[client_id][endpoint] if req_time > window_start]
 
         return max(0, limits["requests"] - len(recent_requests))
 
-    def get_retry_after(self, client_id: str, endpoint: str, limits: Dict[str, int]) -> int:
+    def get_retry_after(self, client_id: str, endpoint: str,
+                        limits: Dict[str, int]) -> int:
         """Get retry after seconds for client and endpoint"""
 
         if client_id not in self.requests or endpoint not in self.requests[client_id]:
@@ -286,8 +290,7 @@ class AdvancedRateLimitMiddleware:
         window_start = current_time - limits["window"]
 
         recent_requests = [
-            req_time for req_time in self.requests[client_id][endpoint] if req_time > window_start
-        ]
+            req_time for req_time in self.requests[client_id][endpoint] if req_time > window_start]
 
         if not recent_requests:
             return limits["window"]

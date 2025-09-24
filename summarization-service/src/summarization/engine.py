@@ -55,7 +55,7 @@ class ContentSummarizationEngine:
         self._initialized = False
         self._model_status = {}
 
-    async def warm_up(self):
+    async def warm_up(self) -> Dict[str, Any]:
         """Warm up all models for faster inference"""
         logger.info("Warming up summarization models...")
 
@@ -92,7 +92,7 @@ class ContentSummarizationEngine:
             logger.error(f"Failed to warm up models: {str(e)}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Clean up resources"""
         logger.info("Cleaning up summarization engine...")
 
@@ -116,7 +116,9 @@ class ContentSummarizationEngine:
         except Exception as e:
             logger.error(f"Error during cleanup: {str(e)}")
 
-    async def generate_summary(self, request: SummarizationRequest) -> SummaryResult:
+    async def generate_summary(
+            self,
+            request: SummarizationRequest) -> SummaryResult:
         """Main summarization pipeline with quality validation"""
 
         if not self._initialized:
@@ -178,7 +180,8 @@ class ContentSummarizationEngine:
 
             # Step 9: Select best variants
             best_summary = self.select_best_summary(summaries, quality_metrics)
-            best_headline = self.select_best_headline(headlines, quality_metrics)
+            best_headline = self.select_best_headline(
+                headlines, quality_metrics)
 
             # Step 10: Generate source attribution
             source_attribution = await self.generate_source_attribution(
@@ -187,7 +190,8 @@ class ContentSummarizationEngine:
 
             # Calculate final stats
             processing_stats.total_time = time.time() - start_time
-            processing_stats.tokens_processed = len(processed_content.text.split())
+            processing_stats.tokens_processed = len(
+                processed_content.text.split())
             processing_stats.models_used = list(self._model_status.keys())
 
             # Calculate confidence score
@@ -212,7 +216,8 @@ class ContentSummarizationEngine:
             logger.error(f"Summarization failed: {str(e)}")
             return await self.generate_fallback_summary(request, processing_stats)
 
-    async def preprocess_content(self, content: ProcessedContent) -> ProcessedContent:
+    async def preprocess_content(
+            self, content: ProcessedContent) -> ProcessedContent:
         """Preprocess content for summarization"""
         try:
             return await self.preprocessor.preprocess(content)
@@ -229,7 +234,8 @@ class ContentSummarizationEngine:
             logger.warning(f"Language detection failed: {str(e)}")
             return Language.ENGLISH
 
-    async def translate_content(self, content: ProcessedContent) -> ProcessedContent:
+    async def translate_content(
+            self, content: ProcessedContent) -> ProcessedContent:
         """Translate content to English if needed"""
         try:
             if content.language != Language.ENGLISH:
@@ -268,7 +274,7 @@ class ContentSummarizationEngine:
                         summary_text = await self.hybrid_summarizer.summarize(
                             content, target_length=target_length
                         )
-                    else:
+                else:
                         continue
 
                     # Create summary object
@@ -282,7 +288,8 @@ class ContentSummarizationEngine:
                     variants.append(summary)
 
                 except Exception as e:
-                    logger.error(f"Failed to generate {method} summary: {str(e)}")
+                    logger.error(
+                        f"Failed to generate {method} summary: {str(e)}")
                     continue
 
         return variants
@@ -301,8 +308,10 @@ class ContentSummarizationEngine:
             return []
 
     async def validate_quality(
-        self, content: ProcessedContent, summaries: List[Summary], headlines: List[Any]
-    ) -> QualityMetrics:
+            self,
+            content: ProcessedContent,
+            summaries: List[Summary],
+            headlines: List[Any]) -> QualityMetrics:
         """Validate quality of generated content"""
         try:
             # Use the best summary for quality validation
@@ -328,9 +337,8 @@ class ContentSummarizationEngine:
         """Analyze bias in generated content"""
         try:
             # Combine all text for bias analysis
-            all_text = " ".join(
-                [getattr(variant, "text", str(variant)) for variant in content_variants]
-            )
+            all_text = " ".join([getattr(variant, "text", str(variant))
+                                 for variant in content_variants])
 
             return await self.bias_detector.analyze_bias(all_text)
         except Exception as e:
@@ -352,8 +360,13 @@ class ContentSummarizationEngine:
         try:
             # Use the first summary for consistency checking
             summary_text = next(
-                (getattr(v, "text", str(v)) for v in variants if hasattr(v, "text")), content.text
-            )
+                (getattr(
+                    v,
+                    "text",
+                    str(v)) for v in variants if hasattr(
+                    v,
+                    "text")),
+                content.text)
 
             return await self.consistency_checker.check_consistency(content.text, summary_text)
         except Exception as e:
@@ -386,7 +399,10 @@ class ContentSummarizationEngine:
 
         return best_summary or summaries[0]
 
-    def select_best_headline(self, headlines: List[Any], quality_metrics: QualityMetrics) -> Any:
+    def select_best_headline(
+            self,
+            headlines: List[Any],
+            quality_metrics: QualityMetrics) -> Any:
         """Select the best headline based on quality metrics"""
         if not headlines:
             return None
@@ -394,10 +410,14 @@ class ContentSummarizationEngine:
         # Return headline with highest score
         return max(headlines, key=lambda h: getattr(h, "score", 0))
 
-    def calculate_summary_score(self, summary: Summary, quality_metrics: QualityMetrics) -> float:
+    def calculate_summary_score(
+            self,
+            summary: Summary,
+            quality_metrics: QualityMetrics) -> float:
         """Calculate composite score for summary selection"""
         # Weighted combination of factors
-        length_score = 1.0 - abs(summary.word_count - summary.length) / summary.length
+        length_score = 1.0 - abs(summary.word_count -
+                                 summary.length) / summary.length
         quality_score = summary.quality_score or quality_metrics.overall_score
 
         return length_score * 0.3 + quality_score * 0.7
@@ -430,10 +450,12 @@ class ContentSummarizationEngine:
         if content.author:
             attribution.append(f"Author: {content.author}")
         if content.published_at:
-            attribution.append(f"Published: {content.published_at.strftime('%Y-%m-%d')}")
+            attribution.append(
+                f"Published: {content.published_at.strftime('%Y-%m-%d')}")
 
         attribution.append(f"Summarization method: {summary.method.value}")
-        attribution.append(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        attribution.append(
+            f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
         return attribution
 

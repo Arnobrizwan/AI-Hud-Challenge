@@ -27,7 +27,7 @@ class AuthMiddleware:
         self.algorithm = settings.jwt_algorithm
         self.expiration_hours = settings.jwt_expiration_hours
 
-    async def __call__(self, request: Request, call_next):
+    async def __call__(self, request: Request, call_next) -> Dict[str, Any]:
         """Process authentication for each request"""
 
         # Skip authentication for health checks and docs
@@ -71,9 +71,10 @@ class AuthMiddleware:
 
     def validate_token(self, token: str) -> Dict[str, Any]:
         """Validate JWT token"""
-
         try:
-            payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
+            payload = jwt.decode(
+                token, self.secret_key, algorithms=[
+                    self.algorithm])
 
             # Check expiration
             if "exp" in payload:
@@ -115,7 +116,6 @@ class AuthMiddleware:
 
 def get_current_user(request: Request) -> Dict[str, Any]:
     """Get current user from request state"""
-
     if not hasattr(request.state, "user"):
         raise HTTPException(status_code=401, detail="User not authenticated")
 
@@ -126,7 +126,7 @@ def require_permission(permission: str):
     """Decorator to require specific permission"""
 
     def decorator(func):
-        async def wrapper(*args, **kwargs):
+        async def wrapper(*args, **kwargs) -> Dict[str, Any]:
             # This would check user permissions
             # For now, just pass through
             return await func(*args, **kwargs)
@@ -140,7 +140,7 @@ def require_role(role: str):
     """Decorator to require specific role"""
 
     def decorator(func):
-        async def wrapper(*args, **kwargs):
+        async def wrapper(*args, **kwargs) -> Dict[str, Any]:
             # This would check user roles
             # For now, just pass through
             return await func(*args, **kwargs)

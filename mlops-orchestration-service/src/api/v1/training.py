@@ -3,15 +3,12 @@ Training API endpoints - REST API for model training management
 """
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
-from uuid import UUID
+from typing import List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from pydantic import BaseModel
 
 from src.models.training_models import (
-    OptimizationMetric,
-    TaskType,
     TrainingConfig,
     TrainingResult,
     TrainingStatus,
@@ -66,9 +63,7 @@ async def create_training_job(
 
 
 @router.get("/{training_id}", response_model=TrainingResult)
-async def get_training_job(
-    training_id: str, training_orchestrator: ModelTrainingOrchestrator = Depends()
-):
+async def get_training_job(training_id: str, training_orchestrator: ModelTrainingOrchestrator = Depends()):
     """Get training job by ID"""
 
     # This would need to be implemented in the orchestrator
@@ -90,9 +85,7 @@ async def list_training_jobs(
 
 
 @router.post("/{training_id}/cancel")
-async def cancel_training_job(
-    training_id: str, training_orchestrator: ModelTrainingOrchestrator = Depends()
-):
+async def cancel_training_job(training_id: str, training_orchestrator: ModelTrainingOrchestrator = Depends()):
     """Cancel a running training job"""
 
     # This would need to be implemented in the orchestrator
@@ -125,9 +118,7 @@ async def get_training_logs(
 
 
 @router.get("/{training_id}/metrics")
-async def get_training_metrics(
-    training_id: str, training_orchestrator: ModelTrainingOrchestrator = Depends()
-):
+async def get_training_metrics(training_id: str, training_orchestrator: ModelTrainingOrchestrator = Depends()):
     """Get training job metrics"""
 
     # This would integrate with actual metrics system

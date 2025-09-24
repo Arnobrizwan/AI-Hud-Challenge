@@ -47,8 +47,9 @@ class IngestionService:
 
         # Initialize processors
         self.content_normalizer = ContentNormalizer(
-            content_parser=self.content_parser, url_utils=self.url_utils, date_utils=self.date_utils
-        )
+            content_parser=self.content_parser,
+            url_utils=self.url_utils,
+            date_utils=self.date_utils)
         self.duplicate_detector = DuplicateDetector(self.content_normalizer)
 
         # Adapter registry
@@ -65,7 +66,9 @@ class IngestionService:
         self.source_adapters: Dict[str, BaseAdapter] = {}
         self.processing_metrics: Dict[str, ContentMetrics] = {}
 
-    async def process_source(self, source_config: SourceConfig) -> ProcessingBatch:
+    async def process_source(
+            self,
+            source_config: SourceConfig) -> ProcessingBatch:
         """Process a single content source."""
         batch_id = str(uuid.uuid4())
 
@@ -137,7 +140,9 @@ class IngestionService:
 
         return batch
 
-    async def process_sources(self, source_configs: List[SourceConfig]) -> List[ProcessingBatch]:
+    async def process_sources(
+            self,
+            source_configs: List[SourceConfig]) -> List[ProcessingBatch]:
         """Process multiple content sources concurrently."""
         # Filter enabled sources
         enabled_sources = [s for s in source_configs if s.enabled]
@@ -181,7 +186,9 @@ class IngestionService:
         self.source_adapters[source_config.id] = adapter
         return adapter
 
-    async def _process_articles(self, articles: List[NormalizedArticle]) -> List[NormalizedArticle]:
+    async def _process_articles(
+            self,
+            articles: List[NormalizedArticle]) -> List[NormalizedArticle]:
         """Process articles through normalization and duplicate detection."""
         processed_articles = []
 
@@ -216,7 +223,7 @@ class IngestionService:
 
         return processed_articles
 
-    async def _update_metrics(self, source_id: str, batch: ProcessingBatch):
+    async def _update_metrics(self, source_id: str, batch: ProcessingBatch) -> Dict[str, Any]:
         """Update processing metrics for source."""
         if source_id not in self.processing_metrics:
             self.processing_metrics[source_id] = ContentMetrics(
@@ -279,14 +286,16 @@ class IngestionService:
 
         return health_status
 
-    async def get_processing_metrics(self, source_id: str = None) -> Dict[str, Any]:
-        """Get processing metrics."""
+    async def get_processing_metrics(
+            self, source_id: str = None) -> Dict[str, Any]:
+    """Get processing metrics."""
         if source_id:
             return self.processing_metrics.get(source_id, {})
 
         return self.processing_metrics
 
-    async def get_batch_status(self, batch_id: str) -> Optional[ProcessingBatch]:
+    async def get_batch_status(
+            self, batch_id: str) -> Optional[ProcessingBatch]:
         """Get status of a processing batch."""
         return self.active_batches.get(batch_id)
 
@@ -294,7 +303,7 @@ class IngestionService:
         """Get all active processing batches."""
         return list(self.active_batches.values())
 
-    async def cleanup_completed_batches(self, max_age_hours: int = 24):
+    async def cleanup_completed_batches(self, max_age_hours: int = 24) -> Dict[str, Any]:
         """Clean up completed batches older than specified age."""
         cutoff_time = datetime.utcnow() - timedelta(hours=max_age_hours)
 
@@ -308,7 +317,8 @@ class IngestionService:
 
         logger.info(f"Cleaned up {len(to_remove)} completed batches")
 
-    async def test_source_connection(self, source_config: SourceConfig) -> bool:
+    async def test_source_connection(
+            self, source_config: SourceConfig) -> bool:
         """Test connection to a source."""
         try:
             adapter = await self._get_adapter(source_config)
@@ -317,7 +327,8 @@ class IngestionService:
             logger.error(f"Error testing source connection: {e}")
             return False
 
-    async def get_source_info(self, source_id: str) -> Optional[Dict[str, Any]]:
+    async def get_source_info(
+            self, source_id: str) -> Optional[Dict[str, Any]]:
         """Get information about a source."""
         if source_id not in self.source_adapters:
             return None
@@ -325,7 +336,7 @@ class IngestionService:
         adapter = self.source_adapters[source_id]
         return adapter.get_source_info()
 
-    async def shutdown(self):
+    async def shutdown(self) -> Dict[str, Any]:
         """Shutdown the ingestion service."""
         # Close HTTP client
         await self.http_client.close()
@@ -333,7 +344,7 @@ class IngestionService:
         # Clean up adapters
         for adapter in self.source_adapters.values():
             if hasattr(adapter, "close"):
-                await adapter.close()
+    await adapter.close()
 
         # Clear state
         self.source_adapters.clear()

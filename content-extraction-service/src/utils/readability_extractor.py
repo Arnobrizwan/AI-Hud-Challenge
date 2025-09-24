@@ -16,14 +16,19 @@ class ReadabilityExtractor:
     """Content extraction using readability algorithms."""
 
     def __init__(
-        self, min_text_length: int = 250, min_image_width: int = 100, min_image_height: int = 100
-    ):
+            self,
+            min_text_length: int = 250,
+            min_image_width: int = 100,
+            min_image_height: int = 100):
         """Initialize readability extractor."""
         self.min_text_length = min_text_length
         self.min_image_width = min_image_width
         self.min_image_height = min_image_height
 
-    async def extract_main_content(self, html_content: str, url: Optional[str] = None) -> str:
+    async def extract_main_content(
+            self,
+            html_content: str,
+            url: Optional[str] = None) -> str:
         """
         Extract main content using readability algorithm.
 
@@ -35,7 +40,8 @@ class ReadabilityExtractor:
             Extracted main content text
         """
         try:
-            logger.info(f"Extracting main content using readability for {url or 'unknown'}")
+            logger.info(
+                f"Extracting main content using readability for {url or 'unknown'}")
 
             # Create readability document
             doc = Document(html_content)
@@ -74,13 +80,16 @@ class ReadabilityExtractor:
                 element.decompose()
 
             # Remove comments
-            comments = soup.find_all(string=lambda text: isinstance(text, Comment))
+            comments = soup.find_all(
+                string=lambda text: isinstance(
+                    text, Comment))
             for comment in comments:
                 comment.extract()
 
             # Remove empty elements
             for element in soup.find_all():
-                if not element.get_text(strip=True) and not element.find(["img", "br", "hr"]):
+                if not element.get_text(strip=True) and not element.find(
+                        ["img", "br", "hr"]):
                     element.decompose()
 
             # Clean up whitespace
@@ -100,7 +109,8 @@ class ReadabilityExtractor:
             soup = BeautifulSoup(html_content, "html.parser")
 
             # Remove unwanted elements
-            for element in soup(["script", "style", "nav", "header", "footer", "aside"]):
+            for element in soup(
+                    ["script", "style", "nav", "header", "footer", "aside"]):
                 element.decompose()
 
             # Try to find main content areas
@@ -139,7 +149,7 @@ class ReadabilityExtractor:
     async def extract_with_metadata(
         self, html_content: str, url: Optional[str] = None
     ) -> Dict[str, Any]:
-        """
+    """
         Extract content with additional metadata.
 
         Args:
@@ -227,13 +237,16 @@ class ReadabilityExtractor:
             readability_score = 0
             if sentence_count > 0 and word_count > 0:
                 # Count syllables (simplified)
-                syllables = sum(self._count_syllables(word) for word in content.split())
+                syllables = sum(self._count_syllables(word)
+                                for word in content.split())
                 avg_syllables = syllables / word_count
-                readability_score = 206.835 - (1.015 * avg_sentence_length) - (84.6 * avg_syllables)
+                readability_score = 206.835 - \
+                    (1.015 * avg_sentence_length) - (84.6 * avg_syllables)
                 readability_score = max(0, min(100, readability_score))
 
             # Content length score
-            length_score = min(100, (word_count / 500) * 100)  # Optimal around 500 words
+            # Optimal around 500 words
+            length_score = min(100, (word_count / 500) * 100)
 
             # Structure score
             structure_score = 0
@@ -244,13 +257,19 @@ class ReadabilityExtractor:
                     structure_score += 30
 
                 # Check for headings
-                if any(
-                    word in content.lower() for word in ["introduction", "conclusion", "summary"]
-                ):
+                if any(word in content.lower()
+                        for word in ["introduction", "conclusion", "summary"]):
                     structure_score += 20
 
                 # Check for lists
-                if any(char in content for char in ["•", "-", "*", "1.", "2.", "3."]):
+                if any(
+                    char in content for char in [
+                        "•",
+                        "-",
+                        "*",
+                        "1.",
+                        "2.",
+                        "3."]):
                     structure_score += 20
 
                 structure_score = min(100, structure_score)
@@ -302,7 +321,7 @@ class ReadabilityExtractor:
     async def extract_structured_content(
         self, html_content: str, url: Optional[str] = None
     ) -> Dict[str, Any]:
-        """
+    """
         Extract structured content with headings, paragraphs, and lists.
 
         Args:
@@ -325,7 +344,8 @@ class ReadabilityExtractor:
                 for heading in soup.find_all(f"h{i}"):
                     text = heading.get_text(strip=True)
                     if text:
-                        headings.append({"level": i, "text": text, "id": heading.get("id", "")})
+                        headings.append(
+                            {"level": i, "text": text, "id": heading.get("id", "")})
 
             # Extract paragraphs
             paragraphs = []
@@ -362,4 +382,9 @@ class ReadabilityExtractor:
 
         except Exception as e:
             logger.error(f"Structured content extraction failed: {str(e)}")
-            return {"headings": [], "paragraphs": [], "lists": [], "quotes": [], "full_text": ""}
+            return {
+                "headings": [],
+                "paragraphs": [],
+                "lists": [],
+                "quotes": [],
+                "full_text": ""}

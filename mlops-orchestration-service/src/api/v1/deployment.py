@@ -3,8 +3,7 @@ Deployment API endpoints - REST API for model deployment management
 """
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
-from uuid import UUID
+from typing import List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from pydantic import BaseModel
@@ -12,10 +11,7 @@ from pydantic import BaseModel
 from src.deployment.deployment_manager import ModelDeploymentManager
 from src.models.deployment_models import (
     DeploymentConfig,
-    DeploymentResult,
     DeploymentStatus,
-    DeploymentStrategy,
-    Environment,
     ModelDeployment,
 )
 from src.utils.exceptions import DeploymentError, ValidationError
@@ -67,9 +63,7 @@ async def deploy_model(
 
 
 @router.get("/{deployment_id}", response_model=ModelDeployment)
-async def get_deployment(
-    deployment_id: str, deployment_manager: ModelDeploymentManager = Depends()
-):
+async def get_deployment(deployment_id: str, deployment_manager: ModelDeploymentManager = Depends()):
     """Get deployment by ID"""
 
     deployment = await deployment_manager.get_deployment_status(deployment_id)
@@ -90,9 +84,7 @@ async def list_deployments(
     """List deployments with optional filtering"""
 
     try:
-        deployments = await deployment_manager.list_deployments(
-            model_name=model_name, status=status
-        )
+        deployments = await deployment_manager.list_deployments(model_name=model_name, status=status)
 
         # Pagination
         total = len(deployments)
@@ -100,18 +92,14 @@ async def list_deployments(
         end_idx = start_idx + page_size
         paginated_deployments = deployments[start_idx:end_idx]
 
-        return DeploymentListResponse(
-            deployments=paginated_deployments, total=total, page=page, page_size=page_size
-        )
+        return DeploymentListResponse(deployments=paginated_deployments, total=total, page=page, page_size=page_size)
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to list deployments: {str(e)}")
 
 
 @router.post("/{deployment_id}/rollback")
-async def rollback_deployment(
-    deployment_id: str, deployment_manager: ModelDeploymentManager = Depends()
-):
+async def rollback_deployment(deployment_id: str, deployment_manager: ModelDeploymentManager = Depends()):
     """Rollback deployment to previous version"""
 
     try:
@@ -127,9 +115,7 @@ async def rollback_deployment(
 
 
 @router.get("/{deployment_id}/health")
-async def get_deployment_health(
-    deployment_id: str, deployment_manager: ModelDeploymentManager = Depends()
-):
+async def get_deployment_health(deployment_id: str, deployment_manager: ModelDeploymentManager = Depends()):
     """Get deployment health status"""
 
     try:
@@ -188,9 +174,7 @@ async def get_deployment_metrics(
 
 
 @router.delete("/{deployment_id}")
-async def delete_deployment(
-    deployment_id: str, deployment_manager: ModelDeploymentManager = Depends()
-):
+async def delete_deployment(deployment_id: str, deployment_manager: ModelDeploymentManager = Depends()):
     """Delete deployment"""
 
     try:

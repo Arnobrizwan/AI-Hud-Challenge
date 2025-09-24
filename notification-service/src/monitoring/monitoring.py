@@ -72,16 +72,26 @@ AB_TEST_ASSIGNMENTS_TOTAL = Counter(
 )
 
 # System metrics
-ACTIVE_CONNECTIONS = Gauge("active_connections", "Number of active connections", registry=registry)
+ACTIVE_CONNECTIONS = Gauge(
+    "active_connections",
+    "Number of active connections",
+    registry=registry)
 
-MEMORY_USAGE = Gauge("memory_usage_bytes", "Memory usage in bytes", registry=registry)
+MEMORY_USAGE = Gauge(
+    "memory_usage_bytes",
+    "Memory usage in bytes",
+    registry=registry)
 
 # Performance metrics
-QUEUE_SIZE = Gauge("notification_queue_size", "Number of notifications in queue", registry=registry)
+QUEUE_SIZE = Gauge(
+    "notification_queue_size",
+    "Number of notifications in queue",
+    registry=registry)
 
 PROCESSING_RATE = Gauge(
-    "notifications_processed_per_second", "Rate of notification processing", registry=registry
-)
+    "notifications_processed_per_second",
+    "Rate of notification processing",
+    registry=registry)
 
 
 class NotificationAnalytics:
@@ -93,8 +103,11 @@ class NotificationAnalytics:
         self.cache_ttl = 300  # 5 minutes
 
     async def record_decision(
-        self, user_id: str, notification_type: str, decision: str, duration_seconds: float
-    ) -> None:
+            self,
+            user_id: str,
+            notification_type: str,
+            decision: str,
+            duration_seconds: float) -> None:
         """Record notification decision metrics."""
 
         try:
@@ -103,12 +116,12 @@ class NotificationAnalytics:
 
             # Record metrics
             NOTIFICATION_DECISIONS_TOTAL.labels(
-                decision=decision, notification_type=notification_type, user_id_hash=user_hash
-            ).inc()
+                decision=decision,
+                notification_type=notification_type,
+                user_id_hash=user_hash).inc()
 
-            NOTIFICATION_DECISION_DURATION.labels(notification_type=notification_type).observe(
-                duration_seconds
-            )
+            NOTIFICATION_DECISION_DURATION.labels(
+                notification_type=notification_type).observe(duration_seconds)
 
             logger.debug(
                 "Recorded decision metrics",
@@ -135,7 +148,8 @@ class NotificationAnalytics:
                 channel=channel, status=status, user_id_hash=user_hash
             ).inc()
 
-            NOTIFICATION_DELIVERY_DURATION.labels(channel=channel).observe(duration_seconds)
+            NOTIFICATION_DELIVERY_DURATION.labels(
+                channel=channel).observe(duration_seconds)
 
             logger.debug(
                 "Recorded delivery metrics",
@@ -148,7 +162,11 @@ class NotificationAnalytics:
         except Exception as e:
             logger.error(f"Error recording delivery metrics: {e}")
 
-    async def record_engagement(self, user_id: str, engagement_type: str, channel: str) -> None:
+    async def record_engagement(
+            self,
+            user_id: str,
+            engagement_type: str,
+            channel: str) -> None:
         """Record notification engagement metrics."""
 
         try:
@@ -157,8 +175,9 @@ class NotificationAnalytics:
 
             # Record metrics
             NOTIFICATION_ENGAGEMENT_TOTAL.labels(
-                engagement_type=engagement_type, channel=channel, user_id_hash=user_hash
-            ).inc()
+                engagement_type=engagement_type,
+                channel=channel,
+                user_id_hash=user_hash).inc()
 
             logger.debug(
                 "Recorded engagement metrics",
@@ -170,7 +189,8 @@ class NotificationAnalytics:
         except Exception as e:
             logger.error(f"Error recording engagement metrics: {e}")
 
-    async def record_fatigue_detection(self, user_id: str, fatigue_type: str) -> None:
+    async def record_fatigue_detection(
+            self, user_id: str, fatigue_type: str) -> None:
         """Record fatigue detection metrics."""
 
         try:
@@ -178,7 +198,9 @@ class NotificationAnalytics:
             user_hash = self._hash_user_id(user_id)
 
             # Record metrics
-            FATIGUE_DETECTIONS_TOTAL.labels(fatigue_type=fatigue_type, user_id_hash=user_hash).inc()
+            FATIGUE_DETECTIONS_TOTAL.labels(
+                fatigue_type=fatigue_type,
+                user_id_hash=user_hash).inc()
 
             logger.debug(
                 "Recorded fatigue detection metrics",
@@ -189,7 +211,11 @@ class NotificationAnalytics:
         except Exception as e:
             logger.error(f"Error recording fatigue detection metrics: {e}")
 
-    async def record_ab_test_assignment(self, user_id: str, experiment: str, variant: str) -> None:
+    async def record_ab_test_assignment(
+            self,
+            user_id: str,
+            experiment: str,
+            variant: str) -> None:
         """Record A/B test assignment metrics."""
 
         try:
@@ -235,7 +261,6 @@ class NotificationAnalytics:
 
     async def get_analytics_summary(self) -> Dict[str, Any]:
         """Get analytics summary."""
-
         try:
             summary = {
                 "timestamp": datetime.utcnow().isoformat(),
@@ -270,7 +295,7 @@ class NotificationAnalytics:
         """Get counter value."""
         try:
             return int(counter._value._value)
-        except:
+        except BaseException:
             return 0
 
 
@@ -357,7 +382,6 @@ class PerformanceMonitor:
 
     async def get_performance_summary(self) -> Dict[str, Any]:
         """Get performance summary."""
-
         try:
             summary = {
                 "timestamp": datetime.utcnow().isoformat(),
@@ -371,11 +395,13 @@ class PerformanceMonitor:
                     continue
 
                 # Calculate average latency
-                avg_latency = sum(record["duration_ms"] for record in data) / len(data)
+                avg_latency = sum(record["duration_ms"]
+                                  for record in data) / len(data)
 
                 # Calculate success rate
                 if "success" in data[0]:
-                    success_rate = sum(1 for record in data if record["success"]) / len(data) * 100
+                    success_rate = sum(
+                        1 for record in data if record["success"]) / len(data) * 100
                 else:
                     success_rate = 100.0
 
@@ -393,18 +419,18 @@ class PerformanceMonitor:
                             "metric": key,
                             "value": avg_latency,
                             "threshold": self.alert_thresholds["decision_latency_ms"],
-                        }
-                    )
+                        })
 
-                if success_rate < (100 - self.alert_thresholds["error_rate_percent"]):
+                if success_rate < (
+                        100 - self.alert_thresholds["error_rate_percent"]):
                     summary["alerts"].append(
                         {
                             "type": "low_success_rate",
                             "metric": key,
                             "value": success_rate,
-                            "threshold": 100 - self.alert_thresholds["error_rate_percent"],
-                        }
-                    )
+                            "threshold": 100 -
+                            self.alert_thresholds["error_rate_percent"],
+                        })
 
             return summary
 

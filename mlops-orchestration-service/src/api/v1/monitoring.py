@@ -3,14 +3,12 @@ Monitoring API endpoints - REST API for model monitoring management
 """
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
-from uuid import UUID
+from typing import Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from pydantic import BaseModel
 
 from src.models.monitoring_models import (
-    AlertRule,
     AlertSeverity,
     ModelHealth,
     MonitoringConfig,
@@ -47,7 +45,7 @@ async def setup_model_monitoring(
     """Setup monitoring for a model"""
 
     try:
-        await monitoring_service.setup_model_monitoring(
+    await monitoring_service.setup_model_monitoring(
             model_name=request.config.model_name, monitoring_config=request.config
         )
 
@@ -105,9 +103,7 @@ async def get_performance_report(
     except MonitoringError as e:
         raise HTTPException(status_code=500, detail=str(e))
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to generate performance report: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to generate performance report: {str(e)}")
 
 
 @router.post("/drift/{model_name}/detect")
@@ -262,9 +258,7 @@ async def get_model_metrics(
 
 
 @router.get("/dashboard/{model_name}")
-async def get_monitoring_dashboard(
-    model_name: str, monitoring_service: ModelMonitoringService = Depends()
-):
+async def get_monitoring_dashboard(model_name: str, monitoring_service: ModelMonitoringService = Depends()):
     """Get monitoring dashboard for a model"""
 
     try:

@@ -25,7 +25,7 @@ class ElasticsearchManager:
         self._initialized = False
         self._index_templates = {}
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize Elasticsearch client and indexes"""
         if self._initialized:
             return
@@ -38,7 +38,9 @@ class ElasticsearchManager:
 
             self.es_client = AsyncElasticsearch(
                 hosts=es_config.hosts,
-                basic_auth=(es_config.username, es_config.password) if es_config.username else None,
+                basic_auth=(
+                    es_config.username,
+                    es_config.password) if es_config.username else None,
                 verify_certs=es_config.verify_certs,
                 timeout=es_config.timeout,
             )
@@ -59,16 +61,16 @@ class ElasticsearchManager:
             logger.error(f"Failed to initialize Elasticsearch Manager: {e}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup Elasticsearch client"""
         if self.es_client:
-            await self.es_client.close()
+    await self.es_client.close()
             self.es_client = None
 
         self._initialized = False
         logger.info("Elasticsearch Manager cleanup complete")
 
-    async def _initialize_index_templates(self):
+    async def _initialize_index_templates(self) -> Dict[str, Any]:
         """Initialize Elasticsearch index templates"""
         try:
             # Article index template
@@ -132,7 +134,7 @@ class ElasticsearchManager:
             logger.error(f"Failed to initialize index templates: {e}")
             raise
 
-    async def _create_default_indexes(self):
+    async def _create_default_indexes(self) -> Dict[str, Any]:
         """Create default indexes"""
         try:
             # Create current month index
@@ -140,7 +142,7 @@ class ElasticsearchManager:
             index_name = f"articles-{current_date.strftime('%Y-%m')}"
 
             if not await self.es_client.indices.exists(index=index_name):
-                await self.es_client.indices.create(index=index_name)
+    await self.es_client.indices.create(index=index_name)
                 logger.info(f"Created index: {index_name}")
 
         except Exception as e:
@@ -197,7 +199,9 @@ class ElasticsearchManager:
             logger.error(f"Failed to index article {article.id}: {e}")
             raise
 
-    async def search_articles(self, search_request: SearchRequest) -> SearchResult:
+    async def search_articles(
+            self,
+            search_request: SearchRequest) -> SearchResult:
         """Advanced full-text search with ranking"""
         if not self._initialized or not self.es_client:
             raise RuntimeError("Elasticsearch Manager not initialized")
@@ -217,10 +221,12 @@ class ElasticsearchManager:
                 "aggs": aggregations,
                 "highlight": {
                     "fields": {
-                        "title": {"number_of_fragments": 1},
-                        "content": {"number_of_fragments": 3, "fragment_size": 150},
-                    }
-                },
+                        "title": {
+                            "number_of_fragments": 1},
+                        "content": {
+                            "number_of_fragments": 3,
+                            "fragment_size": 150},
+                    }},
                 "sort": self._build_sort_criteria(search_request),
                 "from": search_request.offset,
                 "size": search_request.limit,
@@ -240,20 +246,26 @@ class ElasticsearchManager:
                         score=hit["_score"],
                         title=hit["_source"]["title"],
                         summary=hit["_source"].get("summary"),
-                        highlights=hit.get("highlight", {}),
+                        highlights=hit.get(
+                            "highlight",
+                            {}),
                         source=hit["_source"]["source"],
                         published_at=datetime.fromisoformat(
-                            hit["_source"]["published_at"].replace("Z", "+00:00")
-                        ),
-                    )
-                )
+                            hit["_source"]["published_at"].replace(
+                                "Z",
+                                "+00:00")),
+                    ))
 
-            logger.info(f"Search completed, found {len(search_results)} results")
+            logger.info(
+                f"Search completed, found {len(search_results)} results")
 
             return SearchResult(
                 results=search_results,
                 total_hits=response["hits"]["total"]["value"],
-                aggregations=self._process_aggregations(response.get("aggregations", {})),
+                aggregations=self._process_aggregations(
+                    response.get(
+                        "aggregations",
+                        {})),
                 search_duration=response["took"],
                 query_explanation=self._explain_query(query) if search_request.explain else None,
             )
@@ -282,7 +294,7 @@ class ElasticsearchManager:
             logger.error(f"Failed to get article content {article_id}: {e}")
             raise
 
-    async def refresh_index(self, article_id: str):
+    async def refresh_index(self, article_id: str) -> Dict[str, Any]:
         """Refresh index for an article"""
         if not self._initialized or not self.es_client:
             return
@@ -292,9 +304,10 @@ class ElasticsearchManager:
             await self.es_client.indices.refresh(index="articles-*")
 
         except Exception as e:
-            logger.warning(f"Failed to refresh index for article {article_id}: {e}")
+            logger.warning(
+                f"Failed to refresh index for article {article_id}: {e}")
 
-    async def delete_article(self, article_id: str):
+    async def delete_article(self, article_id: str) -> Dict[str, Any]:
         """Delete article from all indices"""
         if not self._initialized or not self.es_client:
             raise RuntimeError("Elasticsearch Manager not initialized")
@@ -318,7 +331,8 @@ class ElasticsearchManager:
         else:
             return f"articles-{datetime.utcnow().strftime('%Y-%m')}"
 
-    def _get_search_indices(self, date_range: Optional[Dict[str, datetime]]) -> str:
+    def _get_search_indices(
+            self, date_range: Optional[Dict[str, datetime]]) -> str:
         """Get indices to search based on date range"""
         if not date_range:
             return "articles-*"
@@ -343,8 +357,9 @@ class ElasticsearchManager:
 
         return "articles-*"
 
-    async def _build_search_query(self, search_request: SearchRequest) -> Dict[str, Any]:
-        """Build complex search query"""
+    async def _build_search_query(
+            self, search_request: SearchRequest) -> Dict[str, Any]:
+    """Build complex search query"""
         # Base query
         query_parts = []
 
@@ -365,7 +380,8 @@ class ElasticsearchManager:
         filters = []
 
         if search_request.categories:
-            filters.append({"terms": {"categories": search_request.categories}})
+            filters.append(
+                {"terms": {"categories": search_request.categories}})
 
         if search_request.sources:
             filters.append({"terms": {"source": search_request.sources}})
@@ -389,7 +405,8 @@ class ElasticsearchManager:
         if query_parts and filters:
             query = {"bool": {"must": query_parts, "filter": filters}}
         elif query_parts:
-            query = query_parts[0] if len(query_parts) == 1 else {"bool": {"must": query_parts}}
+            query = query_parts[0] if len(query_parts) == 1 else {
+                "bool": {"must": query_parts}}
         elif filters:
             query = {"bool": {"filter": filters}}
         else:
@@ -397,8 +414,9 @@ class ElasticsearchManager:
 
         return query
 
-    async def _build_aggregations(self, search_request: SearchRequest) -> Dict[str, Any]:
-        """Build aggregations for faceted search"""
+    async def _build_aggregations(
+            self, search_request: SearchRequest) -> Dict[str, Any]:
+    """Build aggregations for faceted search"""
         aggs = {
             "categories": {"terms": {"field": "categories", "size": 20}},
             "sources": {"terms": {"field": "source", "size": 20}},
@@ -414,7 +432,8 @@ class ElasticsearchManager:
 
         return aggs
 
-    def _build_sort_criteria(self, search_request: SearchRequest) -> List[Dict[str, Any]]:
+    def _build_sort_criteria(
+            self, search_request: SearchRequest) -> List[Dict[str, Any]]:
         """Build sort criteria"""
         if search_request.sort_by == "published_at":
             return [{"published_at": {"order": search_request.sort_order}}]
@@ -424,8 +443,9 @@ class ElasticsearchManager:
             # Default: relevance with recency boost
             return ["_score", {"published_at": {"order": "desc"}}]
 
-    def _process_aggregations(self, aggregations: Dict[str, Any]) -> Dict[str, Any]:
-        """Process aggregation results"""
+    def _process_aggregations(
+            self, aggregations: Dict[str, Any]) -> Dict[str, Any]:
+    """Process aggregation results"""
         processed = {}
 
         for agg_name, agg_data in aggregations.items():

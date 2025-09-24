@@ -26,13 +26,13 @@ class ModelDriftDetector:
         self.performance_tracker = PerformanceTracker()
         self.alerting_system = AlertingSystem()
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize the drift detector"""
         logger.info("Initializing drift detector...")
         # Initialize components
         logger.info("Drift detector initialized successfully")
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup drift detector resources"""
         logger.info("Cleaning up drift detector...")
         logger.info("Drift detector cleanup completed")
@@ -86,12 +86,16 @@ class ModelDriftDetector:
         self, model: Dict[str, Any], drift_config: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Detect drift in input feature distributions"""
-
         # Mock data drift detection
         feature_drift_results = {}
 
         # Simulate feature drift analysis
-        features = ["feature_1", "feature_2", "feature_3", "feature_4", "feature_5"]
+        features = [
+            "feature_1",
+            "feature_2",
+            "feature_3",
+            "feature_4",
+            "feature_5"]
 
         for feature in features:
             # Mock KS test result
@@ -115,14 +119,15 @@ class ModelDriftDetector:
         return {
             "feature_results": feature_drift_results,
             "overall_drift_score": overall_drift_score,
-            "drifted_features": [f for f, r in feature_drift_results.items() if r["is_drifted"]],
+            "drifted_features": [
+                f for f,
+                r in feature_drift_results.items() if r["is_drifted"]],
         }
 
     async def _detect_prediction_drift(
         self, model: Dict[str, Any], drift_config: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Detect drift in model predictions"""
-
         # Mock prediction drift detection
         ks_statistic = np.random.uniform(0.1, 0.4)
         p_value = np.random.uniform(0.01, 0.05)
@@ -138,11 +143,11 @@ class ModelDriftDetector:
     async def _detect_performance_drift(
         self, model: Dict[str, Any], drift_config: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Detect drift in model performance metrics"""
-
+    """Detect drift in model performance metrics"""
         # Mock performance drift detection
         reference_performance = np.random.uniform(0.7, 0.9)
-        current_performance = reference_performance + np.random.uniform(-0.1, 0.1)
+        current_performance = reference_performance + \
+            np.random.uniform(-0.1, 0.1)
         performance_change = current_performance - reference_performance
 
         # Statistical test for performance change
@@ -165,8 +170,7 @@ class ModelDriftDetector:
     async def _detect_concept_drift(
         self, model: Dict[str, Any], drift_config: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Detect concept drift (relationship changes)"""
-
+    """Detect concept drift (relationship changes)"""
         # Mock concept drift detection
         test_statistic = np.random.uniform(0.1, 0.5)
         p_value = np.random.uniform(0.01, 0.1)
@@ -179,7 +183,8 @@ class ModelDriftDetector:
             "drift_magnitude": np.random.uniform(0.1, 0.7),
         }
 
-    def _calculate_drift_severity(self, drift_results: Dict[str, Any]) -> float:
+    def _calculate_drift_severity(
+            self, drift_results: Dict[str, Any]) -> float:
         """Calculate overall drift severity score"""
 
         if not drift_results:
@@ -219,8 +224,7 @@ class ModelDriftDetector:
                     "title": "High drift severity detected",
                     "description": f"Overall drift severity: {overall_severity:.3f}",
                     "action": "Consider retraining model or investigating data changes",
-                }
-            )
+                })
 
         # Check for specific drift types
         for result_name, result in drift_results.items():
@@ -232,8 +236,7 @@ class ModelDriftDetector:
                         "title": f"Drift detected in {result_name}",
                         "description": f"Statistical significance detected in {result_name}",
                         "action": "Investigate and potentially retrain model",
-                    }
-                )
+                    })
 
         return recommendations
 
@@ -244,8 +247,7 @@ class StatisticalDriftTests:
     async def kolmogorov_smirnov_test(
         self, reference_data: np.ndarray, current_data: np.ndarray
     ) -> Dict[str, Any]:
-        """Kolmogorov-Smirnov test for distribution drift"""
-
+    """Kolmogorov-Smirnov test for distribution drift"""
         statistic, p_value = ks_2samp(reference_data, current_data)
 
         return {
@@ -258,16 +260,17 @@ class StatisticalDriftTests:
     async def chi_square_test(
         self, reference_data: np.ndarray, current_data: np.ndarray
     ) -> Dict[str, Any]:
-        """Chi-square test for categorical drift"""
-
+    """Chi-square test for categorical drift"""
         # Create contingency table
         reference_counts = np.bincount(reference_data.astype(int))
         current_counts = np.bincount(current_data.astype(int))
 
         # Pad arrays to same length
         max_len = max(len(reference_counts), len(current_counts))
-        reference_counts = np.pad(reference_counts, (0, max_len - len(reference_counts)))
-        current_counts = np.pad(current_counts, (0, max_len - len(current_counts)))
+        reference_counts = np.pad(
+            reference_counts, (0, max_len - len(reference_counts)))
+        current_counts = np.pad(
+            current_counts, (0, max_len - len(current_counts)))
 
         observed = np.array([reference_counts, current_counts])
         statistic, p_value, dof, expected = chi2_contingency(observed)
@@ -287,8 +290,7 @@ class DistributionAnalyzer:
     async def analyze_distribution_changes(
         self, reference_data: np.ndarray, current_data: np.ndarray
     ) -> Dict[str, Any]:
-        """Analyze changes in data distributions"""
-
+    """Analyze changes in data distributions"""
         # Calculate distribution statistics
         ref_mean = np.mean(reference_data)
         ref_std = np.std(reference_data)
@@ -328,8 +330,7 @@ class PerformanceTracker:
     async def track_performance_metrics(
         self, model_name: str, metrics: Dict[str, float]
     ) -> Dict[str, Any]:
-        """Track performance metrics for drift detection"""
-
+    """Track performance metrics for drift detection"""
         # Mock performance tracking
         return {
             "model_name": model_name,
@@ -342,7 +343,8 @@ class PerformanceTracker:
 class AlertingSystem:
     """Alert system for drift detection"""
 
-    async def send_drift_alert(self, model_name: str, drift_info: Dict[str, Any]) -> bool:
+    async def send_drift_alert(
+            self, model_name: str, drift_info: Dict[str, Any]) -> bool:
         """Send alert for detected drift"""
 
         logger.warning(f"Drift alert for model {model_name}: {drift_info}")

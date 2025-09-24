@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, validator
 
@@ -152,7 +152,8 @@ class SentimentAnalysis(BaseModel):
     sentiment: SentimentLabel
     confidence: float = Field(ge=0.0, le=1.0)
     emotions: Dict[EmotionLabel, float] = Field(default_factory=dict)
-    subjectivity: float = Field(ge=0.0, le=1.0)  # 0 = objective, 1 = subjective
+    # 0 = objective, 1 = subjective
+    subjectivity: float = Field(ge=0.0, le=1.0)
     polarity: float = Field(ge=-1.0, le=1.0)  # -1 = negative, 1 = positive
 
 
@@ -162,7 +163,8 @@ class ContentSignal(BaseModel):
     readability_score: float = Field(ge=0.0, le=1.0)
     factual_claims: int = Field(ge=0)
     citations_count: int = Field(ge=0)
-    bias_score: float = Field(ge=-1.0, le=1.0)  # -1 = left bias, 1 = right bias
+    # -1 = left bias, 1 = right bias
+    bias_score: float = Field(ge=-1.0, le=1.0)
     political_leaning: Optional[str] = None
     engagement_prediction: float = Field(ge=0.0, le=1.0)
     virality_potential: float = Field(ge=0.0, le=1.0)

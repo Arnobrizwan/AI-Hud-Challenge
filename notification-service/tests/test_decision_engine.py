@@ -51,7 +51,7 @@ def sample_candidate(sample_news_item):
 
 
 @pytest.fixture
-async def decision_engine(mock_redis):
+async def decision_engine(mock_redis) -> Dict[str, Any]:
     """Decision engine instance for testing."""
     engine = NotificationDecisionEngine(mock_redis)
     await engine.initialize()
@@ -59,15 +59,15 @@ async def decision_engine(mock_redis):
 
 
 @pytest.mark.asyncio
-async def test_process_notification_candidate_should_send(decision_engine, sample_candidate):
-    """Test processing notification candidate that should be sent."""
+async def test_process_notification_candidate_should_send(
+        decision_engine, sample_candidate):
+     -> Dict[str, Any]:"""Test processing notification candidate that should be sent."""
 
     # Mock preference manager to return enabled preferences
     decision_engine.preference_manager.get_preferences = AsyncMock(
         return_value=MagicMock(
-            is_notification_type_enabled=lambda x: True, get_threshold=lambda x: 0.3
-        )
-    )
+            is_notification_type_enabled=lambda x: True,
+            get_threshold=lambda x: 0.3))
 
     # Mock fatigue detector to return no fatigue
     decision_engine.fatigue_detector.check_fatigue = AsyncMock(
@@ -75,17 +75,20 @@ async def test_process_notification_candidate_should_send(decision_engine, sampl
     )
 
     # Mock relevance scorer to return high relevance
-    decision_engine.relevance_scorer.score_relevance = AsyncMock(return_value=0.8)
+    decision_engine.relevance_scorer.score_relevance = AsyncMock(
+        return_value=0.8)
 
     # Mock timing predictor
     decision_engine.timing_predictor.predict_optimal_time = AsyncMock(
         return_value=MagicMock(
-            scheduled_time=datetime.utcnow() + timedelta(minutes=5), predicted_engagement=0.8
-        )
-    )
+            scheduled_time=datetime.utcnow() +
+            timedelta(
+                minutes=5),
+            predicted_engagement=0.8))
 
     # Mock delivery manager
-    decision_engine.delivery_manager.select_optimal_channel = AsyncMock(return_value="push")
+    decision_engine.delivery_manager.select_optimal_channel = AsyncMock(
+        return_value="push")
 
     # Mock content optimizer
     decision_engine.content_optimizer.optimize_notification_content = AsyncMock(
@@ -94,8 +97,7 @@ async def test_process_notification_candidate_should_send(decision_engine, sampl
             body="This is important news content",
             category="breaking_news",
             priority=Priority.URGENT,
-        )
-    )
+        ))
 
     # Mock A/B tester
     decision_engine.ab_tester.get_variant = AsyncMock(return_value="engaging")
@@ -111,22 +113,23 @@ async def test_process_notification_candidate_should_send(decision_engine, sampl
 
 
 @pytest.mark.asyncio
-async def test_process_notification_candidate_fatigue_detected(decision_engine, sample_candidate):
-    """Test processing notification candidate when fatigue is detected."""
+async def test_process_notification_candidate_fatigue_detected(
+        decision_engine, sample_candidate):
+     -> Dict[str, Any]:"""Test processing notification candidate when fatigue is detected."""
 
     # Mock preference manager
     decision_engine.preference_manager.get_preferences = AsyncMock(
         return_value=MagicMock(
-            is_notification_type_enabled=lambda x: True, get_threshold=lambda x: 0.3
-        )
-    )
+            is_notification_type_enabled=lambda x: True,
+            get_threshold=lambda x: 0.3))
 
     # Mock fatigue detector to return fatigue
     decision_engine.fatigue_detector.check_fatigue = AsyncMock(
         return_value=MagicMock(
-            is_fatigued=True, next_eligible_time=datetime.utcnow() + timedelta(hours=1)
-        )
-    )
+            is_fatigued=True,
+            next_eligible_time=datetime.utcnow() +
+            timedelta(
+                hours=1)))
 
     # Process candidate
     decision = await decision_engine.process_notification_candidate(sample_candidate)
@@ -138,8 +141,9 @@ async def test_process_notification_candidate_fatigue_detected(decision_engine, 
 
 
 @pytest.mark.asyncio
-async def test_process_notification_candidate_below_threshold(decision_engine, sample_candidate):
-    """Test processing notification candidate below relevance threshold."""
+async def test_process_notification_candidate_below_threshold(
+        decision_engine, sample_candidate):
+     -> Dict[str, Any]:"""Test processing notification candidate below relevance threshold."""
 
     # Mock preference manager
     decision_engine.preference_manager.get_preferences = AsyncMock(
@@ -155,7 +159,8 @@ async def test_process_notification_candidate_below_threshold(decision_engine, s
     )
 
     # Mock relevance scorer to return low relevance
-    decision_engine.relevance_scorer.score_relevance = AsyncMock(return_value=0.2)
+    decision_engine.relevance_scorer.score_relevance = AsyncMock(
+        return_value=0.2)
 
     # Process candidate
     decision = await decision_engine.process_notification_candidate(sample_candidate)
@@ -167,7 +172,7 @@ async def test_process_notification_candidate_below_threshold(decision_engine, s
 
 
 @pytest.mark.asyncio
-async def test_process_batch_notifications(decision_engine, sample_candidate):
+async def test_process_batch_notifications(decision_engine, sample_candidate) -> Dict[str, Any]:
     """Test processing batch notifications."""
 
     # Create multiple candidates
@@ -176,26 +181,29 @@ async def test_process_batch_notifications(decision_engine, sample_candidate):
     # Mock all dependencies
     decision_engine.preference_manager.get_preferences = AsyncMock(
         return_value=MagicMock(
-            is_notification_type_enabled=lambda x: True, get_threshold=lambda x: 0.3
-        )
-    )
+            is_notification_type_enabled=lambda x: True,
+            get_threshold=lambda x: 0.3))
 
     decision_engine.fatigue_detector.check_fatigue = AsyncMock(
         return_value=MagicMock(is_fatigued=False)
     )
 
-    decision_engine.relevance_scorer.score_relevance = AsyncMock(return_value=0.8)
+    decision_engine.relevance_scorer.score_relevance = AsyncMock(
+        return_value=0.8)
     decision_engine.timing_predictor.predict_optimal_time = AsyncMock(
         return_value=MagicMock(
-            scheduled_time=datetime.utcnow() + timedelta(minutes=5), predicted_engagement=0.8
-        )
-    )
-    decision_engine.delivery_manager.select_optimal_channel = AsyncMock(return_value="push")
+            scheduled_time=datetime.utcnow() +
+            timedelta(
+                minutes=5),
+            predicted_engagement=0.8))
+    decision_engine.delivery_manager.select_optimal_channel = AsyncMock(
+        return_value="push")
     decision_engine.content_optimizer.optimize_notification_content = AsyncMock(
         return_value=MagicMock(
-            title="Test Title", body="Test Body", category="test", priority=Priority.MEDIUM
-        )
-    )
+            title="Test Title",
+            body="Test Body",
+            category="test",
+            priority=Priority.MEDIUM))
     decision_engine.ab_tester.get_variant = AsyncMock(return_value="engaging")
 
     # Process batch
@@ -207,7 +215,7 @@ async def test_process_batch_notifications(decision_engine, sample_candidate):
 
 
 @pytest.mark.asyncio
-async def test_execute_notification_delivery_success(decision_engine):
+async def test_execute_notification_delivery_success(decision_engine) -> Dict[str, Any]:
     """Test successful notification delivery."""
 
     # Create decision
@@ -241,7 +249,7 @@ async def test_execute_notification_delivery_success(decision_engine):
 
 
 @pytest.mark.asyncio
-async def test_execute_notification_delivery_retry_logic(decision_engine):
+async def test_execute_notification_delivery_retry_logic(decision_engine) -> Dict[str, Any]:
     """Test notification delivery with retry logic."""
 
     # Create decision
@@ -279,8 +287,9 @@ async def test_execute_notification_delivery_retry_logic(decision_engine):
 
 
 @pytest.mark.asyncio
-async def test_execute_notification_delivery_max_retries_exceeded(decision_engine):
-    """Test notification delivery when max retries are exceeded."""
+async def test_execute_notification_delivery_max_retries_exceeded(
+        decision_engine):
+     -> Dict[str, Any]:"""Test notification delivery when max retries are exceeded."""
 
     # Create decision
     decision = MagicMock()
@@ -299,7 +308,7 @@ async def test_execute_notification_delivery_max_retries_exceeded(decision_engin
 
     # Execute delivery and expect exception
     with pytest.raises(Exception):
-        await decision_engine.execute_notification_delivery(decision)
+    await decision_engine.execute_notification_delivery(decision)
 
     # Assertions
     assert decision_engine.delivery_manager.deliver_notification.call_count == 3

@@ -97,14 +97,14 @@ class TraceManager:
         self.is_initialized = True
         logger.info("Distributed tracing initialized successfully")
 
-    async def _setup_exporters(self, config: TracingConfig):
+    async def _setup_exporters(self, config: TracingConfig) -> Dict[str, Any]:
         """Set up trace exporters"""
 
         if config.jaeger_enabled:
             try:
                 jaeger_exporter = JaegerExporter(
-                    agent_host_name=config.jaeger_host, agent_port=config.jaeger_port
-                )
+                    agent_host_name=config.jaeger_host,
+                    agent_port=config.jaeger_port)
                 self.span_processor.add_span_exporter(jaeger_exporter)
                 self.exporters.append(jaeger_exporter)
                 logger.info("Jaeger exporter configured")
@@ -113,7 +113,8 @@ class TraceManager:
 
         if config.zipkin_enabled:
             try:
-                zipkin_exporter = ZipkinExporter(endpoint=config.zipkin_endpoint)
+                zipkin_exporter = ZipkinExporter(
+                    endpoint=config.zipkin_endpoint)
                 self.span_processor.add_span_exporter(zipkin_exporter)
                 self.exporters.append(zipkin_exporter)
                 logger.info("Zipkin exporter configured")
@@ -129,7 +130,7 @@ class TraceManager:
             except Exception as e:
                 logger.error(f"Failed to configure OTLP exporter: {str(e)}")
 
-    async def _instrument_libraries(self):
+    async def _instrument_libraries(self) -> Dict[str, Any]:
         """Instrument third-party libraries"""
 
         try:
@@ -177,10 +178,12 @@ class TraceManager:
                     span.set_status(Status(StatusCode.ERROR, str(e)))
                 raise
 
-    async def trace_async_operation(
-        self, operation_name: str, attributes: Dict[str, Any] = None, operation_func=None
-    ):
-        """Trace an async operation"""
+    async def trace_async_operation(self,
+                                    operation_name: str,
+                                    attributes: Dict[str,
+                                                     Any] = None,
+                                    operation_func=None):
+         -> Dict[str, Any]:"""Trace an async operation"""
 
         if not self.is_initialized or not self.tracer:
             return await operation_func() if operation_func else None
@@ -221,7 +224,8 @@ class TraceManager:
             bottlenecks = self._identify_bottlenecks(span_durations)
 
             # Generate recommendations
-            recommendations = self._generate_performance_recommendations(bottlenecks)
+            recommendations = self._generate_performance_recommendations(
+                bottlenecks)
 
             return TraceAnalysis(
                 trace_id=trace_id,
@@ -244,35 +248,34 @@ class TraceManager:
         # In practice, you would query your trace store (Jaeger, Zipkin, etc.)
 
         # For now, return mock data
-        return {
-            "trace_id": trace_id,
-            "total_duration": 1.5,
-            "spans": [
-                {
-                    "span_id": "span1",
-                    "operation_name": "http_request",
-                    "duration": 0.2,
-                    "start_time": datetime.utcnow(),
-                    "tags": {"http.method": "GET", "http.status_code": 200},
-                },
-                {
-                    "span_id": "span2",
-                    "operation_name": "database_query",
-                    "duration": 0.8,
-                    "start_time": datetime.utcnow(),
-                    "tags": {"db.operation": "SELECT", "db.table": "articles"},
-                },
-                {
-                    "span_id": "span3",
-                    "operation_name": "ml_inference",
-                    "duration": 0.5,
-                    "start_time": datetime.utcnow(),
-                    "tags": {"ml.model": "sentiment_analysis", "ml.version": "v1.0"},
-                },
-            ],
-        }
+        return {"trace_id": trace_id,
+                "total_duration": 1.5,
+                "spans": [{"span_id": "span1",
+                           "operation_name": "http_request",
+                           "duration": 0.2,
+                           "start_time": datetime.utcnow(),
+                           "tags": {"http.method": "GET",
+                                    "http.status_code": 200},
+                           },
+                          {"span_id": "span2",
+                           "operation_name": "database_query",
+                           "duration": 0.8,
+                           "start_time": datetime.utcnow(),
+                           "tags": {"db.operation": "SELECT",
+                                    "db.table": "articles"},
+                           },
+                          {"span_id": "span3",
+                           "operation_name": "ml_inference",
+                           "duration": 0.5,
+                           "start_time": datetime.utcnow(),
+                           "tags": {"ml.model": "sentiment_analysis",
+                                    "ml.version": "v1.0"},
+                           },
+                          ],
+                }
 
-    def _calculate_span_durations(self, trace_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _calculate_span_durations(
+            self, trace_data: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Calculate span durations and identify slow operations"""
 
         spans = trace_data.get("spans", [])
@@ -289,7 +292,10 @@ class TraceManager:
                 }
             )
 
-        return sorted(span_durations, key=lambda x: x["duration"], reverse=True)
+        return sorted(
+            span_durations,
+            key=lambda x: x["duration"],
+            reverse=True)
 
     def _identify_critical_path(self, trace_data: Dict[str, Any]) -> List[str]:
         """Identify the critical path through the trace"""
@@ -299,7 +305,9 @@ class TraceManager:
             return []
 
         # Sort spans by duration to find the critical path
-        sorted_spans = sorted(spans, key=lambda x: x.get("duration", 0), reverse=True)
+        sorted_spans = sorted(
+            spans, key=lambda x: x.get(
+                "duration", 0), reverse=True)
 
         critical_path = []
         for span in sorted_spans[:3]:  # Top 3 slowest operations
@@ -307,7 +315,8 @@ class TraceManager:
 
         return critical_path
 
-    def _identify_bottlenecks(self, span_durations: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _identify_bottlenecks(
+            self, span_durations: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Identify performance bottlenecks"""
 
         bottlenecks = []
@@ -320,8 +329,7 @@ class TraceManager:
                         "duration": span["duration"],
                         "severity": "high" if span["duration"] > 2.0 else "medium",
                         "recommendation": self._get_bottleneck_recommendation(span),
-                    }
-                )
+                    })
 
         return bottlenecks
 
@@ -340,7 +348,8 @@ class TraceManager:
         else:
             return f"Investigate {operation} performance - duration: {duration}s"
 
-    def _generate_performance_recommendations(self, bottlenecks: List[Dict[str, Any]]) -> List[str]:
+    def _generate_performance_recommendations(
+            self, bottlenecks: List[Dict[str, Any]]) -> List[str]:
         """Generate performance improvement recommendations"""
 
         recommendations = []
@@ -350,13 +359,15 @@ class TraceManager:
             return recommendations
 
         # Group bottlenecks by type
-        db_bottlenecks = [b for b in bottlenecks if "database" in b["operation"].lower()]
+        db_bottlenecks = [
+            b for b in bottlenecks if "database" in b["operation"].lower()]
         ml_bottlenecks = [
             b
             for b in bottlenecks
             if "ml" in b["operation"].lower() or "inference" in b["operation"].lower()
         ]
-        http_bottlenecks = [b for b in bottlenecks if "http" in b["operation"].lower()]
+        http_bottlenecks = [
+            b for b in bottlenecks if "http" in b["operation"].lower()]
 
         if db_bottlenecks:
             recommendations.append(
@@ -384,8 +395,7 @@ class TraceManager:
     async def get_trace_statistics(
         self, time_window: timedelta = timedelta(hours=1)
     ) -> Dict[str, Any]:
-        """Get trace statistics for a time window"""
-
+    """Get trace statistics for a time window"""
         try:
             # This would typically query your trace store
             # For now, return mock statistics
@@ -409,7 +419,7 @@ class TraceManager:
             logger.error(f"Failed to get trace statistics: {str(e)}")
             return {"error": str(e)}
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup tracing resources"""
 
         if self.span_processor:

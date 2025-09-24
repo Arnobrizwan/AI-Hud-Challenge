@@ -151,12 +151,13 @@ class RunbookExecutionEngine:
         self.execution_environment = {}
         self.active_executions = {}
 
-    async def setup_environment(self, config: Dict[str, Any]):
+    async def setup_environment(self, config: Dict[str, Any]) -> Dict[str, Any]:
         """Set up execution environment"""
         self.execution_environment = config
         logger.info("Runbook execution environment configured")
 
-    async def execute_step(self, step: RunbookStep, context: Dict[str, Any]) -> StepResult:
+    async def execute_step(self, step: RunbookStep,
+                           context: Dict[str, Any]) -> StepResult:
         """Execute a single runbook step"""
 
         start_time = datetime.utcnow()
@@ -180,7 +181,7 @@ class RunbookExecutionEngine:
                 result = await self._execute_loop(step, context)
             elif step.step_type == StepType.MANUAL:
                 result = await self._execute_manual(step, context)
-            else:
+        else:
                 result = StepResult(
                     step_id=step.id,
                     success=False,
@@ -203,7 +204,8 @@ class RunbookExecutionEngine:
                 execution_time=execution_time,
             )
 
-    async def _execute_command(self, step: RunbookStep, context: Dict[str, Any]) -> StepResult:
+    async def _execute_command(
+            self, step: RunbookStep, context: Dict[str, Any]) -> StepResult:
         """Execute shell command"""
 
         try:
@@ -240,9 +242,14 @@ class RunbookExecutionEngine:
                 error_message=f"Command timed out after {step.timeout_seconds} seconds",
             )
         except Exception as e:
-            return StepResult(step_id=step.id, success=False, output="", error_message=str(e))
+            return StepResult(
+                step_id=step.id,
+                success=False,
+                output="",
+                error_message=str(e))
 
-    async def _execute_http_request(self, step: RunbookStep, context: Dict[str, Any]) -> StepResult:
+    async def _execute_http_request(
+            self, step: RunbookStep, context: Dict[str, Any]) -> StepResult:
         """Execute HTTP request"""
 
         try:
@@ -253,14 +260,21 @@ class RunbookExecutionEngine:
             data = config.get("data")
 
             # Substitute variables in headers and data
-            headers = {k: self._substitute_variables(v, context) for k, v in headers.items()}
+            headers = {
+                k: self._substitute_variables(
+                    v,
+                    context) for k,
+                v in headers.items()}
             if data:
                 data = self._substitute_variables(data, context)
 
             # Make request
             response = requests.request(
-                method=method, url=url, headers=headers, data=data, timeout=step.timeout_seconds
-            )
+                method=method,
+                url=url,
+                headers=headers,
+                data=data,
+                timeout=step.timeout_seconds)
 
             success = 200 <= response.status_code < 300
 
@@ -269,11 +283,18 @@ class RunbookExecutionEngine:
                 success=success,
                 output=response.text,
                 error_message=f"HTTP {response.status_code}" if not success else None,
-                metadata={"status_code": response.status_code, "headers": dict(response.headers)},
+                metadata={
+                    "status_code": response.status_code,
+                    "headers": dict(
+                        response.headers)},
             )
 
         except Exception as e:
-            return StepResult(step_id=step.id, success=False, output="", error_message=str(e))
+            return StepResult(
+                step_id=step.id,
+                success=False,
+                output="",
+                error_message=str(e))
 
     async def _execute_database_query(
         self, step: RunbookStep, context: Dict[str, Any]
@@ -295,7 +316,11 @@ class RunbookExecutionEngine:
             )
 
         except Exception as e:
-            return StepResult(step_id=step.id, success=False, output="", error_message=str(e))
+            return StepResult(
+                step_id=step.id,
+                success=False,
+                output="",
+                error_message=str(e))
 
     async def _execute_kubernetes_action(
         self, step: RunbookStep, context: Dict[str, Any]
@@ -319,9 +344,14 @@ class RunbookExecutionEngine:
             )
 
         except Exception as e:
-            return StepResult(step_id=step.id, success=False, output="", error_message=str(e))
+            return StepResult(
+                step_id=step.id,
+                success=False,
+                output="",
+                error_message=str(e))
 
-    async def _execute_notification(self, step: RunbookStep, context: Dict[str, Any]) -> StepResult:
+    async def _execute_notification(
+            self, step: RunbookStep, context: Dict[str, Any]) -> StepResult:
         """Execute notification step"""
 
         try:
@@ -342,9 +372,14 @@ class RunbookExecutionEngine:
             )
 
         except Exception as e:
-            return StepResult(step_id=step.id, success=False, output="", error_message=str(e))
+            return StepResult(
+                step_id=step.id,
+                success=False,
+                output="",
+                error_message=str(e))
 
-    async def _execute_wait(self, step: RunbookStep, context: Dict[str, Any]) -> StepResult:
+    async def _execute_wait(self, step: RunbookStep,
+                            context: Dict[str, Any]) -> StepResult:
         """Execute wait step"""
 
         try:
@@ -352,13 +387,19 @@ class RunbookExecutionEngine:
             await asyncio.sleep(duration)
 
             return StepResult(
-                step_id=step.id, success=True, output=f"Waited for {duration} seconds"
-            )
+                step_id=step.id,
+                success=True,
+                output=f"Waited for {duration} seconds")
 
         except Exception as e:
-            return StepResult(step_id=step.id, success=False, output="", error_message=str(e))
+            return StepResult(
+                step_id=step.id,
+                success=False,
+                output="",
+                error_message=str(e))
 
-    async def _execute_conditional(self, step: RunbookStep, context: Dict[str, Any]) -> StepResult:
+    async def _execute_conditional(
+            self, step: RunbookStep, context: Dict[str, Any]) -> StepResult:
         """Execute conditional step"""
 
         try:
@@ -382,9 +423,14 @@ class RunbookExecutionEngine:
             )
 
         except Exception as e:
-            return StepResult(step_id=step.id, success=False, output="", error_message=str(e))
+            return StepResult(
+                step_id=step.id,
+                success=False,
+                output="",
+                error_message=str(e))
 
-    async def _execute_loop(self, step: RunbookStep, context: Dict[str, Any]) -> StepResult:
+    async def _execute_loop(self, step: RunbookStep,
+                            context: Dict[str, Any]) -> StepResult:
         """Execute loop step"""
 
         try:
@@ -414,9 +460,14 @@ class RunbookExecutionEngine:
             )
 
         except Exception as e:
-            return StepResult(step_id=step.id, success=False, output="", error_message=str(e))
+            return StepResult(
+                step_id=step.id,
+                success=False,
+                output="",
+                error_message=str(e))
 
-    async def _execute_manual(self, step: RunbookStep, context: Dict[str, Any]) -> StepResult:
+    async def _execute_manual(self, step: RunbookStep,
+                              context: Dict[str, Any]) -> StepResult:
         """Execute manual step (requires human intervention)"""
 
         # This would trigger a manual intervention workflow
@@ -443,7 +494,8 @@ class RunbookExecutionEngine:
 
         return text
 
-    def _evaluate_condition(self, condition: str, context: Dict[str, Any]) -> bool:
+    def _evaluate_condition(self, condition: str,
+                            context: Dict[str, Any]) -> bool:
         """Evaluate condition string (simplified)"""
 
         # This is a simplified condition evaluator
@@ -455,7 +507,7 @@ class RunbookExecutionEngine:
 
             # Simple evaluation (not safe for production)
             return eval(condition)
-        except:
+        except BaseException:
             return False
 
 
@@ -466,17 +518,19 @@ class ApprovalManager:
         self.approval_policies = {}
         self.pending_approvals = {}
 
-    async def configure_approval_policies(self, policies: List[Dict[str, Any]]):
-        """Configure approval policies"""
+    async def configure_approval_policies(
+            self, policies: List[Dict[str, Any]]):
+         -> Dict[str, Any]:"""Configure approval policies"""
 
         for policy in policies:
             self.approval_policies[policy["id"]] = policy
 
-    async def request_approval(
-        self, runbook: Runbook, incident: Optional[Any], execution_params: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        """Request approval for runbook execution"""
-
+    async def request_approval(self,
+                               runbook: Runbook,
+                               incident: Optional[Any],
+                               execution_params: Dict[str,
+                                                      Any]) -> Dict[str, Any]:
+    """Request approval for runbook execution"""
         # Find applicable approval policy
         policy = self._find_approval_policy(runbook, incident)
 
@@ -485,14 +539,24 @@ class ApprovalManager:
 
         # Create approval request
         approval_request = ApprovalRequest(
-            id=str(uuid.uuid4()),
+            id=str(
+                uuid.uuid4()),
             runbook_id=runbook.id,
-            execution_id=str(uuid.uuid4()),
+            execution_id=str(
+                uuid.uuid4()),
             incident_id=incident.id if incident else None,
-            requested_by=execution_params.get("requested_by", "system"),
+            requested_by=execution_params.get(
+                "requested_by",
+                "system"),
             requested_at=datetime.utcnow(),
-            approvers=policy.get("approvers", []),
-            expires_at=datetime.utcnow() + timedelta(minutes=policy.get("timeout_minutes", 30)),
+            approvers=policy.get(
+                "approvers",
+                []),
+            expires_at=datetime.utcnow() +
+            timedelta(
+                minutes=policy.get(
+                    "timeout_minutes",
+                    30)),
         )
 
         self.pending_approvals[approval_request.id] = approval_request
@@ -513,7 +577,8 @@ class ApprovalManager:
         """Find applicable approval policy"""
 
         for policy in self.approval_policies.values():
-            if policy.get("runbook_ids") and runbook.id in policy["runbook_ids"]:
+            if policy.get(
+                    "runbook_ids") and runbook.id in policy["runbook_ids"]:
                 return policy
             if (
                 policy.get("incident_types")
@@ -526,19 +591,21 @@ class ApprovalManager:
 
         return None
 
-    async def _send_approval_notifications(self, approval_request: ApprovalRequest):
-        """Send approval notifications to approvers"""
+    async def _send_approval_notifications(
+            self, approval_request: ApprovalRequest):
+         -> Dict[str, Any]:"""Send approval notifications to approvers"""
 
         # This would integrate with notification system
         logger.info(
             f"Approval requested for runbook {approval_request.runbook_id} from {approval_request.requested_by}"
         )
 
-    async def process_approval(
-        self, approval_id: str, approver: str, approved: bool, notes: Optional[str] = None
-    ) -> Dict[str, Any]:
-        """Process approval decision"""
-
+    async def process_approval(self,
+                               approval_id: str,
+                               approver: str,
+                               approved: bool,
+                               notes: Optional[str] = None) -> Dict[str, Any]:
+    """Process approval decision"""
         approval = self.pending_approvals.get(approval_id)
         if not approval:
             return {"success": False, "error": "Approval not found"}
@@ -569,7 +636,7 @@ class RunbookRegistry:
     def __init__(self):
         self.runbooks = {}
 
-    async def store_runbook(self, runbook: Runbook):
+    async def store_runbook(self, runbook: Runbook) -> Dict[str, Any]:
         """Store runbook definition"""
         self.runbooks[runbook.id] = runbook
         logger.info(f"Stored runbook: {runbook.name}")
@@ -578,13 +645,16 @@ class RunbookRegistry:
         """Get runbook by ID"""
         return self.runbooks.get(runbook_id)
 
-    async def list_runbooks(self, tags: Optional[List[str]] = None) -> List[Runbook]:
+    async def list_runbooks(self,
+                            tags: Optional[List[str]] = None) -> List[Runbook]:
         """List runbooks, optionally filtered by tags"""
 
         runbooks = list(self.runbooks.values())
 
         if tags:
-            runbooks = [r for r in runbooks if any(tag in r.tags for tag in tags)]
+            runbooks = [
+                r for r in runbooks if any(
+                    tag in r.tags for tag in tags)]
 
         return runbooks
 
@@ -624,7 +694,7 @@ class RunbookEngine:
         self.is_initialized = True
         logger.info("Runbook engine initialized")
 
-    async def load_runbook_definitions(self, runbooks_path: str):
+    async def load_runbook_definitions(self, runbooks_path: str) -> Dict[str, Any]:
         """Load runbook definitions from configuration"""
 
         try:
@@ -678,9 +748,11 @@ class RunbookEngine:
             tags=config.get("tags", []),
         )
 
-    async def execute_runbook(
-        self, runbook_id: str, incident: Optional[Any], execution_params: Dict[str, Any]
-    ) -> RunbookExecution:
+    async def execute_runbook(self,
+                              runbook_id: str,
+                              incident: Optional[Any],
+                              execution_params: Dict[str,
+                                                     Any]) -> RunbookExecution:
         """Execute runbook for incident response"""
 
         runbook = await self.runbook_registry.get_runbook(runbook_id)
@@ -745,7 +817,8 @@ class RunbookEngine:
 
         return execution
 
-    async def create_runbook(self, runbook_definition: Dict[str, Any]) -> Runbook:
+    async def create_runbook(
+            self, runbook_definition: Dict[str, Any]) -> Runbook:
         """Create new automated runbook"""
 
         runbook = self._create_runbook_from_config(runbook_definition)
@@ -762,7 +835,6 @@ class RunbookEngine:
 
     async def validate_runbook(self, runbook: Runbook) -> Dict[str, Any]:
         """Validate runbook definition"""
-
         errors = []
 
         # Check required fields
@@ -778,14 +850,16 @@ class RunbookEngine:
                 errors.append(f"Step {i+1} name is required")
 
             if step.step_type == StepType.COMMAND and not step.command:
-                errors.append(f"Step {i+1} command is required for command type")
+                errors.append(
+                    f"Step {i+1} command is required for command type")
 
             if step.step_type == StepType.HTTP_REQUEST and not step.http_config:
-                errors.append(f"Step {i+1} http_config is required for http_request type")
+                errors.append(
+                    f"Step {i+1} http_config is required for http_request type")
 
         return {"is_valid": len(errors) == 0, "errors": errors}
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup runbook engine"""
         self.is_initialized = False
         logger.info("Runbook engine cleaned up")
@@ -797,7 +871,7 @@ class AuditLogger:
     def __init__(self):
         self.audit_logs = []
 
-    async def log_runbook_execution(self, execution: RunbookExecution):
+    async def log_runbook_execution(self, execution: RunbookExecution) -> Dict[str, Any]:
         """Log runbook execution for audit"""
 
         audit_entry = {

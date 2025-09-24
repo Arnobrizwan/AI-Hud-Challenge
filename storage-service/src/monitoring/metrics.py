@@ -13,28 +13,39 @@ logger = logging.getLogger(__name__)
 
 # Prometheus metrics
 REQUEST_COUNT = Counter(
-    "storage_requests_total", "Total number of requests", ["method", "endpoint", "status"]
-)
+    "storage_requests_total", "Total number of requests", [
+        "method", "endpoint", "status"])
 
 REQUEST_DURATION = Histogram(
-    "storage_request_duration_seconds", "Request duration in seconds", ["method", "endpoint"]
-)
+    "storage_request_duration_seconds", "Request duration in seconds", [
+        "method", "endpoint"])
 
-CACHE_HITS = Counter("storage_cache_hits_total", "Total cache hits", ["cache_level"])
+CACHE_HITS = Counter(
+    "storage_cache_hits_total",
+    "Total cache hits",
+    ["cache_level"])
 
-CACHE_MISSES = Counter("storage_cache_misses_total", "Total cache misses", ["cache_level"])
+CACHE_MISSES = Counter(
+    "storage_cache_misses_total",
+    "Total cache misses",
+    ["cache_level"])
 
 VECTOR_SEARCH_DURATION = Histogram(
-    "storage_vector_search_duration_seconds", "Vector search duration in seconds"
-)
+    "storage_vector_search_duration_seconds",
+    "Vector search duration in seconds")
 
 FULLTEXT_SEARCH_DURATION = Histogram(
-    "storage_fulltext_search_duration_seconds", "Full-text search duration in seconds"
-)
+    "storage_fulltext_search_duration_seconds",
+    "Full-text search duration in seconds")
 
-ACTIVE_CONNECTIONS = Gauge("storage_active_connections", "Number of active database connections")
+ACTIVE_CONNECTIONS = Gauge(
+    "storage_active_connections",
+    "Number of active database connections")
 
-STORAGE_SIZE = Gauge("storage_data_size_bytes", "Total storage size in bytes", ["storage_type"])
+STORAGE_SIZE = Gauge(
+    "storage_data_size_bytes",
+    "Total storage size in bytes",
+    ["storage_type"])
 
 
 class MetricsCollector:
@@ -44,7 +55,7 @@ class MetricsCollector:
         self._initialized = False
         self._metrics_task: asyncio.Task = None
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize metrics collection"""
         if self._initialized:
             return
@@ -56,7 +67,8 @@ class MetricsCollector:
             start_http_server(9090)
 
             # Start background metrics collection
-            self._metrics_task = asyncio.create_task(self._collect_metrics_loop())
+            self._metrics_task = asyncio.create_task(
+                self._collect_metrics_loop())
 
             self._initialized = True
             logger.info("Metrics Collector initialized successfully")
@@ -65,19 +77,19 @@ class MetricsCollector:
             logger.error(f"Failed to initialize Metrics Collector: {e}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup metrics collection"""
         if self._metrics_task:
             self._metrics_task.cancel()
             try:
-                await self._metrics_task
+    await self._metrics_task
             except asyncio.CancelledError:
                 pass
 
         self._initialized = False
         logger.info("Metrics Collector cleanup complete")
 
-    async def start_metrics_collection(self):
+    async def start_metrics_collection(self) -> Dict[str, Any]:
         """Start background metrics collection"""
         if not self._initialized:
             return
@@ -88,11 +100,11 @@ class MetricsCollector:
         self._metrics_task = asyncio.create_task(self._collect_metrics_loop())
         logger.info("Metrics collection started")
 
-    async def _collect_metrics_loop(self):
+    async def _collect_metrics_loop(self) -> Dict[str, Any]:
         """Background loop for collecting metrics"""
         while True:
             try:
-                await asyncio.sleep(60)  # Collect every minute
+    await asyncio.sleep(60)  # Collect every minute
 
                 if not self._initialized:
                     break
@@ -107,7 +119,7 @@ class MetricsCollector:
             except Exception as e:
                 logger.error(f"Error in metrics collection: {e}")
 
-    async def _collect_database_metrics(self):
+    async def _collect_database_metrics(self) -> Dict[str, Any]:
         """Collect database-related metrics"""
         try:
             # This would typically query database connection pools
@@ -117,7 +129,7 @@ class MetricsCollector:
         except Exception as e:
             logger.error(f"Failed to collect database metrics: {e}")
 
-    async def _collect_cache_metrics(self):
+    async def _collect_cache_metrics(self) -> Dict[str, Any]:
         """Collect cache-related metrics"""
         try:
             # This would typically query cache statistics
@@ -127,23 +139,39 @@ class MetricsCollector:
         except Exception as e:
             logger.error(f"Failed to collect cache metrics: {e}")
 
-    async def _collect_storage_metrics(self):
+    async def _collect_storage_metrics(self) -> Dict[str, Any]:
         """Collect storage-related metrics"""
         try:
             # This would typically query storage backends
             # For now, we'll use placeholder values
-            STORAGE_SIZE.labels(storage_type="postgresql").set(1024 * 1024 * 100)  # 100MB
-            STORAGE_SIZE.labels(storage_type="elasticsearch").set(1024 * 1024 * 200)  # 200MB
-            STORAGE_SIZE.labels(storage_type="redis").set(1024 * 1024 * 50)  # 50MB
+            STORAGE_SIZE.labels(
+                storage_type="postgresql").set(
+                1024 * 1024 * 100)  # 100MB
+            STORAGE_SIZE.labels(
+                storage_type="elasticsearch").set(
+                1024 * 1024 * 200)  # 200MB
+            STORAGE_SIZE.labels(
+                storage_type="redis").set(
+                1024 * 1024 * 50)  # 50MB
 
         except Exception as e:
             logger.error(f"Failed to collect storage metrics: {e}")
 
-    def record_request(self, method: str, endpoint: str, status_code: int, duration: float):
+    def record_request(
+            self,
+            method: str,
+            endpoint: str,
+            status_code: int,
+            duration: float):
         """Record a request metric"""
-        REQUEST_COUNT.labels(method=method, endpoint=endpoint, status=str(status_code)).inc()
+        REQUEST_COUNT.labels(
+            method=method,
+            endpoint=endpoint,
+            status=str(status_code)).inc()
 
-        REQUEST_DURATION.labels(method=method, endpoint=endpoint).observe(duration)
+        REQUEST_DURATION.labels(
+            method=method,
+            endpoint=endpoint).observe(duration)
 
     def record_cache_hit(self, cache_level: str):
         """Record a cache hit"""
@@ -171,9 +199,12 @@ class MetricsCollector:
                 "cache_misses": CACHE_MISSES._value.sum(),
                 "active_connections": ACTIVE_CONNECTIONS._value,
                 "storage_size": {
-                    "postgresql": STORAGE_SIZE.labels(storage_type="postgresql")._value,
-                    "elasticsearch": STORAGE_SIZE.labels(storage_type="elasticsearch")._value,
-                    "redis": STORAGE_SIZE.labels(storage_type="redis")._value,
+                    "postgresql": STORAGE_SIZE.labels(
+                        storage_type="postgresql")._value,
+                    "elasticsearch": STORAGE_SIZE.labels(
+                        storage_type="elasticsearch")._value,
+                    "redis": STORAGE_SIZE.labels(
+                        storage_type="redis")._value,
                 },
             }
 

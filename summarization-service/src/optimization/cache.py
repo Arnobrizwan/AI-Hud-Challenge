@@ -39,10 +39,15 @@ class SummaryCache:
         """Initialize the cache system"""
         self.redis_client = None
         self.local_cache = {}  # In-memory cache for hot data
-        self.cache_stats = {"hits": 0, "misses": 0, "sets": 0, "deletes": 0, "evictions": 0}
+        self.cache_stats = {
+            "hits": 0,
+            "misses": 0,
+            "sets": 0,
+            "deletes": 0,
+            "evictions": 0}
         self._initialized = False
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize cache system"""
         try:
             logger.info("Initializing summary cache...")
@@ -69,11 +74,11 @@ class SummaryCache:
             self._initialized = True
             logger.warning("Using local cache only (Redis unavailable)")
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Clean up cache resources"""
         try:
             if self.redis_client:
-                await self.redis_client.close()
+    await self.redis_client.close()
         except Exception as e:
             logger.error(f"Error during cache cleanup: {str(e)}")
 
@@ -145,7 +150,11 @@ class SummaryCache:
             self.cache_stats["misses"] += 1
             return None
 
-    async def set(self, key: str, value: SummaryResult, ttl: int = None) -> bool:
+    async def set(
+            self,
+            key: str,
+            value: SummaryResult,
+            ttl: int = None) -> bool:
         """Set cached result"""
         try:
             if not self._initialized:
@@ -177,7 +186,8 @@ class SummaryCache:
             if self.redis_client:
                 try:
                     entry_data = asdict(entry)
-                    # Convert datetime objects to strings for JSON serialization
+                    # Convert datetime objects to strings for JSON
+                    # serialization
                     entry_data["created_at"] = entry.created_at.isoformat()
                     entry_data["expires_at"] = entry.expires_at.isoformat()
                     entry_data["last_accessed"] = entry.last_accessed.isoformat()
@@ -203,7 +213,7 @@ class SummaryCache:
             # Remove from Redis cache
             if self.redis_client:
                 try:
-                    await self.redis_client.delete(key)
+    await self.redis_client.delete(key)
                 except Exception as e:
                     logger.error(f"Redis delete failed: {str(e)}")
 
@@ -226,12 +236,17 @@ class SummaryCache:
                     # Get all summary keys
                     keys = await self.redis_client.keys("summary:*")
                     if keys:
-                        await self.redis_client.delete(*keys)
+    await self.redis_client.delete(*keys)
                 except Exception as e:
                     logger.error(f"Redis clear failed: {str(e)}")
 
             # Reset stats
-            self.cache_stats = {"hits": 0, "misses": 0, "sets": 0, "deletes": 0, "evictions": 0}
+            self.cache_stats = {
+                "hits": 0,
+                "misses": 0,
+                "sets": 0,
+                "deletes": 0,
+                "evictions": 0}
 
             return True
 
@@ -282,7 +297,8 @@ class SummaryCache:
 
             # Convert datetime objects to strings
             if result.processing_stats:
-                result_dict["processing_stats"]["created_at"] = datetime.now().isoformat()
+                result_dict["processing_stats"]["created_at"] = datetime.now(
+                ).isoformat()
 
             return result_dict
 
@@ -297,8 +313,7 @@ class SummaryCache:
             if "processing_stats" in data and data["processing_stats"]:
                 if "created_at" in data["processing_stats"]:
                     data["processing_stats"]["created_at"] = datetime.fromisoformat(
-                        data["processing_stats"]["created_at"]
-                    )
+                        data["processing_stats"]["created_at"])
 
             return SummaryResult(**data)
 
@@ -309,8 +324,10 @@ class SummaryCache:
     async def get_stats(self) -> Dict[str, Any]:
         """Get cache statistics"""
         try:
-            total_requests = self.cache_stats["hits"] + self.cache_stats["misses"]
-            hit_rate = self.cache_stats["hits"] / total_requests if total_requests > 0 else 0
+            total_requests = self.cache_stats["hits"] + \
+                self.cache_stats["misses"]
+            hit_rate = self.cache_stats["hits"] / \
+                total_requests if total_requests > 0 else 0
 
             return {
                 "hits": self.cache_stats["hits"],
@@ -333,5 +350,6 @@ class SummaryCache:
             "initialized": self._initialized,
             "redis_available": self.redis_client is not None,
             "local_cache_size": len(self.local_cache),
-            "stats": await self.get_stats(),
+            "stats":
+    await self.get_stats(),
         }

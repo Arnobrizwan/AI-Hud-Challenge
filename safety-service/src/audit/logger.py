@@ -35,7 +35,7 @@ class AuditLogger:
         self.compression_enabled = True
         self.encryption_enabled = True
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize the audit logger"""
         try:
             # Initialize storage and services
@@ -52,7 +52,7 @@ class AuditLogger:
             logger.error(f"Failed to initialize audit logger: {str(e)}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup resources"""
         try:
             self.audit_events.clear()
@@ -65,7 +65,9 @@ class AuditLogger:
         except Exception as e:
             logger.error(f"Error during audit logger cleanup: {str(e)}")
 
-    async def log_safety_check(self, request: SafetyMonitoringRequest, status: SafetyStatus) -> str:
+    async def log_safety_check(self,
+                               request: SafetyMonitoringRequest,
+                               status: SafetyStatus) -> str:
         """Log safety check audit event"""
         try:
             event = AuditEvent(
@@ -97,7 +99,10 @@ class AuditLogger:
             logger.error(f"Safety check audit logging failed: {str(e)}")
             return ""
 
-    async def log_drift_detection(self, drift_request: Any, drift_result: Any) -> str:
+    async def log_drift_detection(
+            self,
+            drift_request: Any,
+            drift_result: Any) -> str:
         """Log drift detection audit event"""
         try:
             event = AuditEvent(
@@ -112,10 +117,12 @@ class AuditLogger:
                     "overall_severity": drift_result.overall_severity,
                     "requires_action": drift_result.requires_action,
                     "drifted_features": (
-                        drift_result.data_drift.drifted_features if drift_result.data_drift else []
-                    ),
+                        drift_result.data_drift.drifted_features if drift_result.data_drift else []),
                 },
-                tags=["drift", "ml", "monitoring"],
+                tags=[
+                    "drift",
+                    "ml",
+                    "monitoring"],
             )
 
             await self.store_audit_event(event)
@@ -125,7 +132,10 @@ class AuditLogger:
             logger.error(f"Drift detection audit logging failed: {str(e)}")
             return ""
 
-    async def log_abuse_detection(self, abuse_request: Any, abuse_result: Any) -> str:
+    async def log_abuse_detection(
+            self,
+            abuse_request: Any,
+            abuse_result: Any) -> str:
         """Log abuse detection audit event"""
         try:
             event = AuditEvent(
@@ -155,7 +165,10 @@ class AuditLogger:
             logger.error(f"Abuse detection audit logging failed: {str(e)}")
             return ""
 
-    async def log_content_moderation(self, content: Any, moderation_result: Any) -> str:
+    async def log_content_moderation(
+            self,
+            content: Any,
+            moderation_result: Any) -> str:
         """Log content moderation audit event"""
         try:
             event = AuditEvent(
@@ -184,7 +197,10 @@ class AuditLogger:
             logger.error(f"Content moderation audit logging failed: {str(e)}")
             return ""
 
-    async def log_rate_limiting(self, rate_limit_request: Any, rate_limit_result: Any) -> str:
+    async def log_rate_limiting(
+            self,
+            rate_limit_request: Any,
+            rate_limit_result: Any) -> str:
         """Log rate limiting audit event"""
         try:
             event = AuditEvent(
@@ -213,7 +229,10 @@ class AuditLogger:
             logger.error(f"Rate limiting audit logging failed: {str(e)}")
             return ""
 
-    async def log_compliance_check(self, compliance_request: Any, compliance_result: Any) -> str:
+    async def log_compliance_check(
+            self,
+            compliance_request: Any,
+            compliance_result: Any) -> str:
         """Log compliance check audit event"""
         try:
             event = AuditEvent(
@@ -258,7 +277,10 @@ class AuditLogger:
                     "severity": incident.severity,
                     "response_plan_id": response.plan_id if response else None,
                 },
-                tags=["incident", "response", "emergency"],
+                tags=[
+                    "incident",
+                    "response",
+                    "emergency"],
             )
 
             await self.store_audit_event(event)
@@ -275,7 +297,7 @@ class AuditLogger:
 
             # Check if we need to create a new audit log
             if len(self.audit_events) >= self.max_events_per_log:
-                await self.create_audit_log()
+    await self.create_audit_log()
 
         except Exception as e:
             logger.error(f"Audit event storage failed: {str(e)}")
@@ -293,10 +315,14 @@ class AuditLogger:
 
             # Calculate summary
             total_events = len(self.audit_events)
-            success_count = sum(1 for event in self.audit_events if event.status == "success")
-            failure_count = sum(1 for event in self.audit_events if event.status == "failure")
-            warning_count = sum(1 for event in self.audit_events if event.status == "warning")
-            info_count = sum(1 for event in self.audit_events if event.status == "info")
+            success_count = sum(
+                1 for event in self.audit_events if event.status == "success")
+            failure_count = sum(
+                1 for event in self.audit_events if event.status == "failure")
+            warning_count = sum(
+                1 for event in self.audit_events if event.status == "warning")
+            info_count = sum(
+                1 for event in self.audit_events if event.status == "info")
 
             audit_log = AuditLog(
                 log_id=log_id,
@@ -306,8 +332,10 @@ class AuditLogger:
                 events=self.audit_events.copy(),
                 summary={
                     "total_events": total_events,
-                    "success_rate": success_count / total_events if total_events > 0 else 0,
-                    "failure_rate": failure_count / total_events if total_events > 0 else 0,
+                    "success_rate": success_count /
+                    total_events if total_events > 0 else 0,
+                    "failure_rate": failure_count /
+                    total_events if total_events > 0 else 0,
                 },
                 total_events=total_events,
                 success_count=success_count,
@@ -322,7 +350,8 @@ class AuditLogger:
             # Clear events
             self.audit_events.clear()
 
-            logger.info(f"Created audit log {log_id} with {total_events} events")
+            logger.info(
+                f"Created audit log {log_id} with {total_events} events")
             return log_id
 
         except Exception as e:
@@ -342,7 +371,8 @@ class AuditLogger:
                 events = [e for e in events if e.timestamp <= query.end_time]
 
             if query.event_types:
-                events = [e for e in events if e.event_type in query.event_types]
+                events = [
+                    e for e in events if e.event_type in query.event_types]
 
             if query.severities:
                 events = [e for e in events if e.severity in query.severities]
@@ -360,16 +390,22 @@ class AuditLogger:
                 events = [e for e in events if e.action in query.actions]
 
             if query.tags:
-                events = [e for e in events if any(tag in e.tags for tag in query.tags)]
+                events = [
+                    e for e in events if any(
+                        tag in e.tags for tag in query.tags)]
 
             if query.correlation_id:
-                events = [e for e in events if e.correlation_id == query.correlation_id]
+                events = [
+                    e for e in events if e.correlation_id == query.correlation_id]
 
             # Apply sorting
             if query.sort_by == "timestamp":
-                events.sort(key=lambda x: x.timestamp, reverse=(query.sort_order == "desc"))
+                events.sort(
+                    key=lambda x: x.timestamp, reverse=(
+                        query.sort_order == "desc"))
             elif query.sort_by == "severity":
-                severity_order = {"critical": 4, "high": 3, "medium": 2, "low": 1}
+                severity_order = {
+                    "critical": 4, "high": 3, "medium": 2, "low": 1}
                 events.sort(
                     key=lambda x: severity_order.get(x.severity, 0),
                     reverse=(query.sort_order == "desc"),
@@ -386,11 +422,15 @@ class AuditLogger:
             logger.error(f"Audit event query failed: {str(e)}")
             return []
 
-    async def generate_audit_report(self, start_time: datetime, end_time: datetime) -> AuditReport:
+    async def generate_audit_report(
+            self,
+            start_time: datetime,
+            end_time: datetime) -> AuditReport:
         """Generate comprehensive audit report"""
         try:
             # Get events in time range
-            events = [e for e in self.audit_events if start_time <= e.timestamp <= end_time]
+            events = [e for e in self.audit_events if start_time <=
+                      e.timestamp <= end_time]
 
             # Calculate statistics
             total_events = len(events)
@@ -399,15 +439,19 @@ class AuditLogger:
             events_by_status = {}
 
             for event in events:
-                events_by_type[event.event_type] = events_by_type.get(event.event_type, 0) + 1
-                events_by_severity[event.severity] = events_by_severity.get(event.severity, 0) + 1
-                events_by_status[event.status] = events_by_status.get(event.status, 0) + 1
+                events_by_type[event.event_type] = events_by_type.get(
+                    event.event_type, 0) + 1
+                events_by_severity[event.severity] = events_by_severity.get(
+                    event.severity, 0) + 1
+                events_by_status[event.status] = events_by_status.get(
+                    event.status, 0) + 1
 
             # Get top users
             user_counts = {}
             for event in events:
                 if event.user_id:
-                    user_counts[event.user_id] = user_counts.get(event.user_id, 0) + 1
+                    user_counts[event.user_id] = user_counts.get(
+                        event.user_id, 0) + 1
 
             top_users = [
                 {"user_id": user, "count": count}
@@ -420,7 +464,8 @@ class AuditLogger:
             resource_counts = {}
             for event in events:
                 if event.resource:
-                    resource_counts[event.resource] = resource_counts.get(event.resource, 0) + 1
+                    resource_counts[event.resource] = resource_counts.get(
+                        event.resource, 0) + 1
 
             top_resources = [
                 {"resource": resource, "count": count}
@@ -432,7 +477,8 @@ class AuditLogger:
             # Get top actions
             action_counts = {}
             for event in events:
-                action_counts[event.action] = action_counts.get(event.action, 0) + 1
+                action_counts[event.action] = action_counts.get(
+                    event.action, 0) + 1
 
             top_actions = [
                 {"action": action, "count": count}
@@ -448,8 +494,8 @@ class AuditLogger:
                 if e.event_type in ["abuse_detection", "rate_limiting", "system_access"]
             ]
             compliance_events = [
-                e for e in events if e.event_type in ["compliance_check", "data_access"]
-            ]
+                e for e in events if e.event_type in [
+                    "compliance_check", "data_access"]]
 
             # Generate report
             report = AuditReport(
@@ -487,28 +533,37 @@ class AuditLogger:
 
             # Calculate time-based metrics
             now = datetime.utcnow()
-            today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            today_start = now.replace(
+                hour=0, minute=0, second=0, microsecond=0)
             week_start = today_start - timedelta(days=7)
             month_start = today_start - timedelta(days=30)
 
-            events_today = len([e for e in self.audit_events if e.timestamp >= today_start])
-            events_this_week = len([e for e in self.audit_events if e.timestamp >= week_start])
-            events_this_month = len([e for e in self.audit_events if e.timestamp >= month_start])
+            events_today = len(
+                [e for e in self.audit_events if e.timestamp >= today_start])
+            events_this_week = len(
+                [e for e in self.audit_events if e.timestamp >= week_start])
+            events_this_month = len(
+                [e for e in self.audit_events if e.timestamp >= month_start])
 
             # Calculate success/failure rates
-            success_count = sum(1 for e in self.audit_events if e.status == "success")
-            failure_count = sum(1 for e in self.audit_events if e.status == "failure")
+            success_count = sum(
+                1 for e in self.audit_events if e.status == "success")
+            failure_count = sum(
+                1 for e in self.audit_events if e.status == "failure")
             success_rate = success_count / total_events if total_events > 0 else 0
             failure_rate = failure_count / total_events if total_events > 0 else 0
 
             # Calculate average duration
-            durations = [e.duration_ms for e in self.audit_events if e.duration_ms is not None]
-            average_duration = sum(durations) / len(durations) if durations else 0
+            durations = [
+                e.duration_ms for e in self.audit_events if e.duration_ms is not None]
+            average_duration = sum(durations) / \
+                len(durations) if durations else 0
 
             # Get top event types
             event_type_counts = {}
             for event in self.audit_events:
-                event_type_counts[event.event_type] = event_type_counts.get(event.event_type, 0) + 1
+                event_type_counts[event.event_type] = event_type_counts.get(
+                    event.event_type, 0) + 1
 
             top_event_types = [
                 {"type": event_type, "count": count}
@@ -521,7 +576,8 @@ class AuditLogger:
             user_counts = {}
             for event in self.audit_events:
                 if event.user_id:
-                    user_counts[event.user_id] = user_counts.get(event.user_id, 0) + 1
+                    user_counts[event.user_id] = user_counts.get(
+                        event.user_id, 0) + 1
 
             top_users = [
                 {"user_id": user, "count": count}
@@ -566,24 +622,26 @@ class AuditLogger:
             logger.error(f"Audit metrics calculation failed: {str(e)}")
             raise
 
-    async def audit_cleanup_task(self):
+    async def audit_cleanup_task(self) -> Dict[str, Any]:
         """Background task for cleaning up old audit data"""
         while True:
             try:
-                await asyncio.sleep(3600)  # Run every hour
+    await asyncio.sleep(3600)  # Run every hour
 
                 if not self.is_initialized:
                     break
 
                 # Clean up old events
                 cutoff_date = datetime.utcnow() - timedelta(days=self.retention_days)
-                old_events = [e for e in self.audit_events if e.timestamp < cutoff_date]
+                old_events = [
+                    e for e in self.audit_events if e.timestamp < cutoff_date]
 
                 for event in old_events:
                     self.audit_events.remove(event)
 
                 # Clean up old logs
-                old_logs = [l for l in self.audit_logs if l.end_time < cutoff_date]
+                old_logs = [
+                    l for l in self.audit_logs if l.end_time < cutoff_date]
 
                 for log in old_logs:
                     self.audit_logs.remove(log)
@@ -597,11 +655,11 @@ class AuditLogger:
                 logger.error(f"Audit cleanup task failed: {str(e)}")
                 await asyncio.sleep(3600)
 
-    async def audit_compression_task(self):
+    async def audit_compression_task(self) -> Dict[str, Any]:
         """Background task for compressing audit data"""
         while True:
             try:
-                await asyncio.sleep(3600)  # Run every hour
+    await asyncio.sleep(3600)  # Run every hour
 
                 if not self.is_initialized:
                     break
@@ -614,7 +672,7 @@ class AuditLogger:
                 logger.error(f"Audit compression task failed: {str(e)}")
                 await asyncio.sleep(3600)
 
-    async def initialize_storage(self):
+    async def initialize_storage(self) -> Dict[str, Any]:
         """Initialize audit storage"""
         try:
             # Placeholder for storage initialization

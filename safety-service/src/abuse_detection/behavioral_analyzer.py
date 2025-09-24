@@ -34,7 +34,7 @@ class BehavioralAnomalyDetector:
         self.normal_patterns = {}
         self.user_histories = {}
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize the behavioral analyzer"""
         try:
             # Initialize models
@@ -51,7 +51,7 @@ class BehavioralAnomalyDetector:
             logger.error(f"Failed to initialize behavioral analyzer: {str(e)}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup resources"""
         try:
             self.isolation_forest = None
@@ -76,7 +76,8 @@ class BehavioralAnomalyDetector:
 
         try:
             # Extract behavioral features
-            features = self.extract_behavioral_features(recent_activities, time_window)
+            features = self.extract_behavioral_features(
+                recent_activities, time_window)
 
             # Check velocity anomalies
             velocity_anomaly = await self.check_velocity_anomaly(user_id, features)
@@ -92,8 +93,7 @@ class BehavioralAnomalyDetector:
 
             # Calculate overall anomaly score
             anomaly_score = self.calculate_anomaly_score(
-                velocity_anomaly, pattern_anomaly, frequency_anomaly, time_anomaly
-            )
+                velocity_anomaly, pattern_anomaly, frequency_anomaly, time_anomaly)
 
             return BehavioralSignals(
                 anomaly_score=anomaly_score,
@@ -137,7 +137,8 @@ class BehavioralAnomalyDetector:
 
             # Activity frequency
             features["activity_count"] = len(df)
-            features["activities_per_hour"] = len(df) / max(time_window.total_seconds() / 3600, 1)
+            features["activities_per_hour"] = len(
+                df) / max(time_window.total_seconds() / 3600, 1)
 
             # Time-based features
             if len(df) > 1:
@@ -156,7 +157,8 @@ class BehavioralAnomalyDetector:
             if "activity_type" in df.columns:
                 type_counts = df["activity_type"].value_counts()
                 features["activity_diversity"] = len(type_counts)
-                features["most_common_activity_ratio"] = type_counts.max() / len(df)
+                features["most_common_activity_ratio"] = type_counts.max() / \
+                    len(df)
             else:
                 features["activity_diversity"] = 1
                 features["most_common_activity_ratio"] = 1.0
@@ -213,7 +215,8 @@ class BehavioralAnomalyDetector:
             "response_time_variance": 0,
         }
 
-    async def check_velocity_anomaly(self, user_id: str, features: Dict[str, float]) -> bool:
+    async def check_velocity_anomaly(
+            self, user_id: str, features: Dict[str, float]) -> bool:
         """Check for velocity anomalies (unusual activity speed)"""
         try:
             # Get user's historical patterns
@@ -227,15 +230,18 @@ class BehavioralAnomalyDetector:
             current_request_size = features.get("avg_request_size", 0)
 
             # Calculate historical averages
-            historical_velocities = [h.get("activities_per_hour", 0) for h in user_history[-10:]]
-            historical_request_sizes = [h.get("avg_request_size", 0) for h in user_history[-10:]]
+            historical_velocities = [
+                h.get("activities_per_hour", 0) for h in user_history[-10:]]
+            historical_request_sizes = [
+                h.get("avg_request_size", 0) for h in user_history[-10:]]
 
             avg_velocity = np.mean(historical_velocities)
             avg_request_size = np.mean(historical_request_sizes)
 
             # Check for velocity anomalies
             velocity_ratio = current_velocity / max(avg_velocity, 1e-6)
-            request_size_ratio = current_request_size / max(avg_request_size, 1e-6)
+            request_size_ratio = current_request_size / \
+                max(avg_request_size, 1e-6)
 
             # Anomaly if velocity is significantly higher than normal
             velocity_anomaly = velocity_ratio > self.config.velocity_threshold
@@ -249,7 +255,8 @@ class BehavioralAnomalyDetector:
             logger.error(f"Velocity anomaly check failed: {str(e)}")
             return False
 
-    async def check_pattern_anomaly(self, user_id: str, features: Dict[str, float]) -> bool:
+    async def check_pattern_anomaly(
+            self, user_id: str, features: Dict[str, float]) -> bool:
         """Check for pattern anomalies (unusual activity patterns)"""
         try:
             # Get user's historical patterns
@@ -259,7 +266,8 @@ class BehavioralAnomalyDetector:
                 return False
 
             # Prepare feature vectors
-            historical_features = np.array([list(h.values()) for h in user_history[-20:]])
+            historical_features = np.array(
+                [list(h.values()) for h in user_history[-20:]])
             current_features = np.array([list(features.values())])
 
             # Normalize features
@@ -271,7 +279,8 @@ class BehavioralAnomalyDetector:
 
             # Use isolation forest to detect anomalies
             self.isolation_forest.fit(historical_normalized)
-            anomaly_score = self.isolation_forest.decision_function(current_normalized)[0]
+            anomaly_score = self.isolation_forest.decision_function(current_normalized)[
+                0]
 
             # Anomaly if score is below threshold
             pattern_anomaly = anomaly_score < -0.1  # Isolation forest threshold
@@ -282,7 +291,8 @@ class BehavioralAnomalyDetector:
             logger.error(f"Pattern anomaly check failed: {str(e)}")
             return False
 
-    async def check_frequency_anomaly(self, user_id: str, features: Dict[str, float]) -> bool:
+    async def check_frequency_anomaly(
+            self, user_id: str, features: Dict[str, float]) -> bool:
         """Check for frequency anomalies (unusual activity frequency)"""
         try:
             # Get user's historical patterns
@@ -296,8 +306,10 @@ class BehavioralAnomalyDetector:
             current_diversity = features.get("activity_diversity", 1)
 
             # Calculate historical averages
-            historical_counts = [h.get("activity_count", 0) for h in user_history[-10:]]
-            historical_diversities = [h.get("activity_diversity", 1) for h in user_history[-10:]]
+            historical_counts = [h.get("activity_count", 0)
+                                 for h in user_history[-10:]]
+            historical_diversities = [
+                h.get("activity_diversity", 1) for h in user_history[-10:]]
 
             avg_count = np.mean(historical_counts)
             avg_diversity = np.mean(historical_diversities)
@@ -308,9 +320,10 @@ class BehavioralAnomalyDetector:
 
             # Anomaly if frequency is significantly different from normal
             count_anomaly = count_ratio > self.config.frequency_threshold or count_ratio < (
-                1 / self.config.frequency_threshold
-            )
-            diversity_anomaly = abs(diversity_ratio - 1.0) > 0.5  # 50% change in diversity
+                1 / self.config.frequency_threshold)
+            diversity_anomaly = abs(
+                diversity_ratio -
+                1.0) > 0.5  # 50% change in diversity
 
             return count_anomaly or diversity_anomaly
 
@@ -318,7 +331,8 @@ class BehavioralAnomalyDetector:
             logger.error(f"Frequency anomaly check failed: {str(e)}")
             return False
 
-    async def check_time_anomaly(self, user_id: str, features: Dict[str, float]) -> bool:
+    async def check_time_anomaly(
+            self, user_id: str, features: Dict[str, float]) -> bool:
         """Check for time anomalies (unusual timing patterns)"""
         try:
             # Get user's historical patterns
@@ -332,7 +346,8 @@ class BehavioralAnomalyDetector:
             current_avg_time = features.get("avg_time_between_activities", 0)
 
             # Calculate historical averages
-            historical_variances = [h.get("time_variance", 0) for h in user_history[-10:]]
+            historical_variances = [h.get("time_variance", 0)
+                                    for h in user_history[-10:]]
             historical_avg_times = [
                 h.get("avg_time_between_activities", 0) for h in user_history[-10:]
             ]
@@ -346,11 +361,9 @@ class BehavioralAnomalyDetector:
 
             # Anomaly if timing patterns are significantly different
             variance_anomaly = variance_ratio > self.config.time_threshold or variance_ratio < (
-                1 / self.config.time_threshold
-            )
+                1 / self.config.time_threshold)
             time_anomaly = time_ratio > self.config.time_threshold or time_ratio < (
-                1 / self.config.time_threshold
-            )
+                1 / self.config.time_threshold)
 
             return variance_anomaly or time_anomaly
 
@@ -368,7 +381,11 @@ class BehavioralAnomalyDetector:
         """Calculate overall anomaly score"""
         try:
             # Weight different types of anomalies
-            weights = {"velocity": 0.3, "pattern": 0.4, "frequency": 0.2, "time": 0.1}
+            weights = {
+                "velocity": 0.3,
+                "pattern": 0.4,
+                "frequency": 0.2,
+                "time": 0.1}
 
             # Calculate weighted score
             score = 0.0
@@ -387,7 +404,8 @@ class BehavioralAnomalyDetector:
             logger.error(f"Anomaly score calculation failed: {str(e)}")
             return 0.0
 
-    async def update_user_history(self, user_id: str, features: Dict[str, float]) -> None:
+    async def update_user_history(
+            self, user_id: str, features: Dict[str, float]) -> None:
         """Update user's behavioral history"""
         try:
             if user_id not in self.user_histories:
@@ -433,24 +451,30 @@ class BehavioralAnomalyDetector:
             logger.error(f"Behavioral summary calculation failed: {str(e)}")
             return {"error": str(e)}
 
-    def calculate_behavioral_consistency(self, history: List[Dict[str, float]]) -> float:
+    def calculate_behavioral_consistency(
+            self, history: List[Dict[str, float]]) -> float:
         """Calculate behavioral consistency score"""
         try:
             if len(history) < 2:
                 return 1.0
 
             # Calculate coefficient of variation for key metrics
-            key_metrics = ["activities_per_hour", "activity_diversity", "error_rate"]
+            key_metrics = [
+                "activities_per_hour",
+                "activity_diversity",
+                "error_rate"]
             consistency_scores = []
 
             for metric in key_metrics:
                 values = [h.get(metric, 0) for h in history if metric in h]
                 if len(values) > 1 and np.mean(values) > 0:
                     cv = np.std(values) / np.mean(values)
-                    consistency_scores.append(1.0 - min(cv, 1.0))  # Convert to consistency score
+                    # Convert to consistency score
+                    consistency_scores.append(1.0 - min(cv, 1.0))
 
             return np.mean(consistency_scores) if consistency_scores else 1.0
 
         except Exception as e:
-            logger.error(f"Behavioral consistency calculation failed: {str(e)}")
+            logger.error(
+                f"Behavioral consistency calculation failed: {str(e)}")
             return 0.0

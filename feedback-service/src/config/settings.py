@@ -2,7 +2,6 @@
 Application settings and configuration
 """
 
-import os
 from typing import List, Optional
 
 from pydantic import BaseSettings, validator

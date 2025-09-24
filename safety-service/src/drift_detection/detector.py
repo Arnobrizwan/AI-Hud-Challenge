@@ -57,12 +57,12 @@ class MultidimensionalDriftDetector:
         # State
         self.is_initialized = False
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize the drift detector"""
         try:
             # Initialize all detectors
             for detector in self.statistical_detectors.values():
-                await detector.initialize()
+    await detector.initialize()
 
             await self.concept_drift_detector.initialize()
             await self.prediction_drift_detector.initialize()
@@ -75,11 +75,11 @@ class MultidimensionalDriftDetector:
             logger.error(f"Failed to initialize drift detector: {str(e)}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup resources"""
         try:
             for detector in self.statistical_detectors.values():
-                await detector.cleanup()
+    await detector.cleanup()
 
             await self.concept_drift_detector.cleanup()
             await self.prediction_drift_detector.cleanup()
@@ -119,8 +119,7 @@ class MultidimensionalDriftDetector:
                 )
             else:
                 concept_drift_results = ConceptDriftResult(
-                    drift_detected=False, drift_score=0.0, affected_features=[], confidence=1.0
-                )
+                    drift_detected=False, drift_score=0.0, affected_features=[], confidence=1.0)
 
             # Prediction drift detection
             prediction_drift_results = None
@@ -187,8 +186,10 @@ class MultidimensionalDriftDetector:
             raise
 
     async def detect_data_drift(
-        self, reference_data: pd.DataFrame, current_data: pd.DataFrame, features: List[str]
-    ) -> DataDriftResult:
+            self,
+            reference_data: pd.DataFrame,
+            current_data: pd.DataFrame,
+            features: List[str]) -> DataDriftResult:
         """Detect drift in data distributions"""
 
         try:
@@ -214,35 +215,43 @@ class MultidimensionalDriftDetector:
                 if pd.api.types.is_numeric_dtype(ref_values):
                     # Numeric feature - use multiple tests
                     test_results = {
-                        "ks_test": await self.statistical_detectors["ks_test"].test(
+                        "ks_test":
+    await self.statistical_detectors["ks_test"].test(
                             ref_values, curr_values
                         ),
-                        "wasserstein": await self.statistical_detectors["wasserstein"].test(
+                        "wasserstein":
+    await self.statistical_detectors["wasserstein"].test(
                             ref_values, curr_values
                         ),
-                        "psi": await self.statistical_detectors["psi"].test(
+                        "psi":
+    await self.statistical_detectors["psi"].test(
                             ref_values, curr_values
                         ),
                     }
                 else:
                     # Categorical feature
                     test_results = {
-                        "chi_square": await self.statistical_detectors["chi_square"].test(
+                        "chi_square":
+    await self.statistical_detectors["chi_square"].test(
                             ref_values, curr_values
                         ),
-                        "psi": await self.statistical_detectors["psi"].test(
+                        "psi":
+    await self.statistical_detectors["psi"].test(
                             ref_values, curr_values
                         ),
                     }
 
                 # Calculate drift magnitude
-                drift_magnitude = self.calculate_drift_magnitude(ref_values, curr_values)
+                drift_magnitude = self.calculate_drift_magnitude(
+                    ref_values, curr_values)
 
                 # Determine if feature has drifted
-                is_drifted = any(result.is_significant for result in test_results.values())
+                is_drifted = any(
+                    result.is_significant for result in test_results.values())
 
                 # Calculate drift score
-                drift_score = max(result.drift_score for result in test_results.values())
+                drift_score = max(
+                    result.drift_score for result in test_results.values())
 
                 feature_drift_results[feature] = FeatureDriftResult(
                     feature_name=feature,
@@ -253,19 +262,25 @@ class MultidimensionalDriftDetector:
                 )
 
             # Calculate overall data drift score
-            overall_data_drift = self.calculate_overall_data_drift(feature_drift_results)
+            overall_data_drift = self.calculate_overall_data_drift(
+                feature_drift_results)
 
             return DataDriftResult(
                 feature_results=feature_drift_results,
                 overall_drift_score=overall_data_drift,
-                drifted_features=[f for f, r in feature_drift_results.items() if r.is_drifted],
+                drifted_features=[
+                    f for f,
+                    r in feature_drift_results.items() if r.is_drifted],
             )
 
         except Exception as e:
             logger.error(f"Data drift detection failed: {str(e)}")
             raise
 
-    def calculate_drift_magnitude(self, ref_values: pd.Series, curr_values: pd.Series) -> float:
+    def calculate_drift_magnitude(
+            self,
+            ref_values: pd.Series,
+            curr_values: pd.Series) -> float:
         """Calculate drift magnitude between reference and current data"""
         try:
             if pd.api.types.is_numeric_dtype(ref_values):
@@ -289,7 +304,8 @@ class MultidimensionalDriftDetector:
             logger.error(f"Failed to calculate drift magnitude: {str(e)}")
             return 0.0
 
-    def calculate_overall_data_drift(self, feature_results: Dict[str, FeatureDriftResult]) -> float:
+    def calculate_overall_data_drift(
+            self, feature_results: Dict[str, FeatureDriftResult]) -> float:
         """Calculate overall data drift score from feature results"""
         if not feature_results:
             return 0.0
@@ -300,13 +316,15 @@ class MultidimensionalDriftDetector:
 
         for feature_result in feature_results.values():
             # Weight by drift magnitude
-            weight = feature_result.drift_magnitude + 0.1  # Add small constant to avoid zero weight
+            # Add small constant to avoid zero weight
+            weight = feature_result.drift_magnitude + 0.1
             weighted_score += feature_result.drift_score * weight
             total_weight += weight
 
         return weighted_score / total_weight if total_weight > 0 else 0.0
 
-    def calculate_overall_drift_severity(self, drift_results: List[Any]) -> float:
+    def calculate_overall_drift_severity(
+            self, drift_results: List[Any]) -> float:
         """Calculate overall drift severity from all drift types"""
         scores = []
 
@@ -325,8 +343,9 @@ class MultidimensionalDriftDetector:
         # Use maximum drift score as overall severity
         return max(scores)
 
-    async def get_drift_summary(self, drift_result: DriftAnalysisResult) -> Dict[str, Any]:
-        """Get a summary of drift detection results"""
+    async def get_drift_summary(
+            self, drift_result: DriftAnalysisResult) -> Dict[str, Any]:
+    """Get a summary of drift detection results"""
         return {
             "overall_severity": drift_result.overall_severity,
             "requires_action": drift_result.requires_action,

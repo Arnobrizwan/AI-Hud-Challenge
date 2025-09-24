@@ -39,7 +39,7 @@ class TestRSSAdapter:
         assert rss_adapter.success_count == 0
 
     @pytest.mark.asyncio
-    async def test_test_connection(self, rss_adapter):
+    async def test_test_connection(self, rss_adapter) -> Dict[str, Any]:
         """Test connection testing."""
         with patch.object(rss_adapter.http_client, "head") as mock_head:
             mock_response = Mock()
@@ -50,7 +50,7 @@ class TestRSSAdapter:
             assert result is True
 
     @pytest.mark.asyncio
-    async def test_test_connection_failure(self, rss_adapter):
+    async def test_test_connection_failure(self, rss_adapter) -> Dict[str, Any]:
         """Test connection testing failure."""
         with patch.object(rss_adapter.http_client, "head") as mock_head:
             mock_head.side_effect = Exception("Connection failed")
@@ -81,13 +81,17 @@ class TestAPIAdapter:
             filters={
                 "api_config": {
                     "articles_path": "data",
-                    "field_mapping": {"title": "title", "url": "url", "content": "content"},
+                    "field_mapping": {
+                        "title": "title",
+                        "url": "url",
+                        "content": "content"},
                     "pagination": {
                         "type": "page_based",
-                        "params": {"page": "{page}", "pageSize": 20},
+                        "params": {
+                            "page": "{page}",
+                            "pageSize": 20},
                     },
-                }
-            },
+                }},
         )
 
     @pytest.fixture
@@ -113,7 +117,8 @@ class TestAPIAdapter:
 
     def test_prepare_headers(self, api_adapter):
         """Test header preparation."""
-        api_adapter.source_config.auth = {"type": "bearer", "token": "test-token"}
+        api_adapter.source_config.auth = {
+            "type": "bearer", "token": "test-token"}
 
         headers = api_adapter._prepare_headers()
 
@@ -148,7 +153,7 @@ class TestAPIAdapter:
         assert name == "John Doe"
 
     @pytest.mark.asyncio
-    async def test_has_more_pages(self, api_adapter):
+    async def test_has_more_pages(self, api_adapter) -> Dict[str, Any]:
         """Test pagination logic."""
         # Test page-based pagination
         articles = [{"title": f"Article {i}"} for i in range(20)]
@@ -198,7 +203,8 @@ class TestAdapterBase:
         with patch("src.adapters.base.HTTPClient"):
             adapter = BaseAdapter(source_config)
 
-            article_id = adapter._generate_article_id("https://example.com/article", "Test Article")
+            article_id = adapter._generate_article_id(
+                "https://example.com/article", "Test Article")
 
             assert len(article_id) == 16
             assert article_id.isalnum()

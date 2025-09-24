@@ -2,9 +2,9 @@
 Dependency injection for Evaluation Suite Microservice
 """
 
-from typing import Generator, Optional
+from typing import Generator
 
-from fastapi import Depends, HTTPException
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from .cache import get_cache_client

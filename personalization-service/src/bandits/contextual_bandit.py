@@ -1,7 +1,6 @@
 """Contextual bandit implementation."""
 
-import asyncio
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import numpy as np
 import structlog
@@ -59,9 +58,7 @@ class ContextualBandit:
             combined_features = np.concatenate([context_features, content_features])
 
             # Get bandit recommendation
-            action_value, uncertainty = await algorithm.predict(
-                features=combined_features, candidate_id=candidate.id
-            )
+            action_value, uncertainty = await algorithm.predict(features=combined_features, candidate_id=candidate.id)
 
             # Compute confidence
             confidence = max(0.0, min(1.0, 1.0 - uncertainty))
@@ -190,7 +187,8 @@ class ContextualBandit:
         # Author features (simplified)
         author_features = [
             1.0 if content_item.author else 0.0,  # Has author
-            1.0 if len(content_item.author or "") > 10 else 0.0,  # Long author name
+            1.0 if len(content_item.author or "") > 10 else 0.0,
+            # Long author name
         ]
         features.extend(author_features)
 
@@ -203,9 +201,7 @@ class ContextualBandit:
 
         return np.array(features)
 
-    async def update_from_feedback(
-        self, recommendation: BanditRecommendation, reward: float
-    ) -> None:
+    async def update_from_feedback(self, recommendation: BanditRecommendation, reward: float) -> None:
         """Update bandit model from user feedback."""
         algorithm = self.algorithms[self.current_algorithm]
 
@@ -267,5 +263,6 @@ class ContextualBandit:
         return {
             "current_algorithm": self.current_algorithm,
             "available_algorithms": list(self.algorithms.keys()),
-            "algorithms": await self.get_algorithm_statistics(),
+            "algorithms":
+    await self.get_algorithm_statistics(),
         }

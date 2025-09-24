@@ -89,7 +89,7 @@ cold_start_handler: Optional[ColdStartHandler] = None
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> Dict[str, Any]:
     """Application lifespan manager."""
     global redis_client, postgres_client, collaborative_filter, content_based_filter
     global contextual_bandit, user_profile_manager, diversity_optimizer, cold_start_handler
@@ -106,10 +106,13 @@ async def lifespan(app: FastAPI):
         await postgres_client.connect()
 
         # Initialize services
-        collaborative_filter = CollaborativeFilter(redis_client, postgres_client)
-        content_based_filter = ContentBasedFilter(redis_client, postgres_client)
+        collaborative_filter = CollaborativeFilter(
+            redis_client, postgres_client)
+        content_based_filter = ContentBasedFilter(
+            redis_client, postgres_client)
         contextual_bandit = ContextualBandit(redis_client, postgres_client)
-        user_profile_manager = UserProfileManager(redis_client, postgres_client)
+        user_profile_manager = UserProfileManager(
+            redis_client, postgres_client)
         diversity_optimizer = DiversityOptimizer()
         cold_start_handler = ColdStartHandler(redis_client, postgres_client)
 
@@ -130,9 +133,9 @@ async def lifespan(app: FastAPI):
         logger.info("Shutting down personalization service")
 
         if redis_client:
-            await redis_client.disconnect()
+    await redis_client.disconnect()
         if postgres_client:
-            await postgres_client.disconnect()
+    await postgres_client.disconnect()
 
         logger.info("Personalization service shut down")
 
@@ -174,7 +177,7 @@ def get_services():
 
 # Health check endpoint
 @app.get("/health")
-async def health_check():
+async def health_check() -> Dict[str, Any]:
     """Health check endpoint."""
     try:
         # Check database connections
@@ -186,9 +189,8 @@ async def health_check():
         )
 
         # Check service status
-        services_healthy = all(
-            [redis_health.get("status") == "connected", postgres_health.get("status") == "healthy"]
-        )
+        services_healthy = all([redis_health.get(
+            "status") == "connected", postgres_health.get("status") == "healthy"])
 
         return {
             "status": "healthy" if services_healthy else "unhealthy",
@@ -197,12 +199,15 @@ async def health_check():
         }
     except Exception as e:
         logger.error(f"Health check failed: {e}")
-        return {"status": "unhealthy", "timestamp": time.time(), "error": str(e)}
+        return {
+            "status": "unhealthy",
+            "timestamp": time.time(),
+            "error": str(e)}
 
 
 # Metrics endpoint
 @app.get("/metrics")
-async def metrics():
+async def metrics() -> Dict[str, Any]:
     """Prometheus metrics endpoint."""
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
@@ -267,20 +272,29 @@ async def personalize_content(
         )
 
         # Log recommendation
-        background_tasks.add_task(_log_recommendation, request, response, services)
+        background_tasks.add_task(
+            _log_recommendation, request, response, services)
 
         # Update metrics
-        REQUEST_COUNT.labels(method="POST", endpoint="/personalize", status="success").inc()
+        REQUEST_COUNT.labels(
+            method="POST",
+            endpoint="/personalize",
+            status="success").inc()
         REQUEST_DURATION.labels(method="POST", endpoint="/personalize").observe(
             time.time() - start_time
         )
-        RECOMMENDATION_COUNT.labels(algorithm=algorithm_used).inc(len(recommendations))
+        RECOMMENDATION_COUNT.labels(
+            algorithm=algorithm_used).inc(
+            len(recommendations))
 
         return response
 
     except Exception as e:
         logger.error(f"Personalization failed: {e}")
-        REQUEST_COUNT.labels(method="POST", endpoint="/personalize", status="error").inc()
+        REQUEST_COUNT.labels(
+            method="POST",
+            endpoint="/personalize",
+            status="error").inc()
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -316,8 +330,12 @@ async def _hybrid_personalization(
 
     for i, candidate in enumerate(request.candidates):
         combined_score = (
-            cf_scores[i] * cf_weight + cb_scores[i] * cb_weight + bandit_scores[i] * bandit_weight
-        )
+            cf_scores[i] *
+            cf_weight +
+            cb_scores[i] *
+            cb_weight +
+            bandit_scores[i] *
+            bandit_weight)
 
         recommendations.append(
             Recommendation(
@@ -338,14 +356,17 @@ async def _hybrid_personalization(
     return sorted(recommendations, key=lambda x: x.score, reverse=True)
 
 
-async def _compute_personalization_strength(user_profile: UserProfile) -> float:
+async def _compute_personalization_strength(
+        user_profile: UserProfile) -> float:
     """Compute personalization strength based on user profile."""
     # Base strength on interaction count and preference diversity
     interaction_strength = min(1.0, user_profile.total_interactions / 100.0)
 
     # Preference diversity
-    topic_diversity = len(user_profile.topic_preferences) / 10.0  # Normalize by 10 topics
-    source_diversity = len(user_profile.source_preferences) / 5.0  # Normalize by 5 sources
+    topic_diversity = len(user_profile.topic_preferences) / \
+        10.0  # Normalize by 10 topics
+    source_diversity = len(user_profile.source_preferences) / \
+        5.0  # Normalize by 5 sources
 
     diversity_strength = (topic_diversity + source_diversity) / 2.0
 
@@ -356,8 +377,9 @@ async def _compute_personalization_strength(user_profile: UserProfile) -> float:
 
 
 async def _generate_explanation(
-    recommendations: List[Recommendation], user_profile: UserProfile, algorithm_used: str
-) -> str:
+        recommendations: List[Recommendation],
+        user_profile: UserProfile,
+        algorithm_used: str) -> str:
     """Generate explanation for recommendations."""
     if not recommendations:
         return "No recommendations available at this time."
@@ -374,16 +396,15 @@ async def _generate_explanation(
         return f"We recommend '{top_rec.item_id}' based on your preferences."
 
 
-async def _log_recommendation(
-    request: PersonalizationRequest, response: PersonalizedResponse, services: Dict[str, Any]
-):
-    """Log recommendation for analytics."""
+async def _log_recommendation(request: PersonalizationRequest,
+                              response: PersonalizedResponse, services: Dict[str, Any]):
+     -> Dict[str, Any]:"""Log recommendation for analytics."""
     try:
         postgres_client = services["postgres"]
 
         query = """
         INSERT INTO recommendation_logs (
-            user_id, request_id, algorithm_used, recommendations, 
+            user_id, request_id, algorithm_used, recommendations,
             context, response_time_ms
         ) VALUES ($1, $2, $3, $4, $5, $6)
         """
@@ -436,8 +457,9 @@ async def record_interaction(
 
         # Update user profile
         background_tasks.add_task(
-            user_profile_manager.update_profile_from_interaction, interaction.user_id, interaction
-        )
+            user_profile_manager.update_profile_from_interaction,
+            interaction.user_id,
+            interaction)
 
         return {"status": "success", "message": "Interaction recorded"}
 
@@ -448,7 +470,8 @@ async def record_interaction(
 
 # User profile endpoint
 @app.get("/profile/{user_id}", response_model=UserProfile)
-async def get_user_profile(user_id: str, services: Dict[str, Any] = Depends(get_services)):
+async def get_user_profile(
+        user_id: str, services: Dict[str, Any] = Depends(get_services)):
     """Get user profile."""
     try:
         user_profile_manager = services["user_profile_manager"]
@@ -469,8 +492,10 @@ async def get_model_metrics(services: Dict[str, Any] = Depends(get_services)):
         contextual_bandit = services["contextual_bandit"]
 
         metrics = {
-            "collaborative_filter": await collaborative_filter.get_model_metrics(),
-            "content_based_filter": await content_based_filter.get_model_metrics(),
+            "collaborative_filter":
+    await collaborative_filter.get_model_metrics(),
+            "content_based_filter":
+    await content_based_filter.get_model_metrics(),
             "contextual_bandit": contextual_bandit.get_model_info(),
         }
 
@@ -482,9 +507,8 @@ async def get_model_metrics(services: Dict[str, Any] = Depends(get_services)):
 
 # Retrain models endpoint
 @app.post("/retrain")
-async def retrain_models(
-    background_tasks: BackgroundTasks, services: Dict[str, Any] = Depends(get_services)
-):
+async def retrain_models(background_tasks: BackgroundTasks,
+                         services: Dict[str, Any] = Depends(get_services)):
     """Retrain all models."""
     try:
         collaborative_filter = services["collaborative_filter"]
@@ -505,4 +529,9 @@ async def retrain_models(
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("src.main:app", host="0.0.0.0", port=8000, reload=settings.debug, log_level="info")
+    uvicorn.run(
+        "src.main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=settings.debug,
+        log_level="info")

@@ -12,7 +12,7 @@ from starlette.responses import Response
 from starlette.types import ASGIApp
 
 from src.config.settings import settings
-from src.utils.logging import get_correlation_id, get_logger, set_correlation_id
+from src.utils.logging import get_logger, set_correlation_id
 
 logger = get_logger(__name__)
 
@@ -278,18 +278,12 @@ class SecurityMiddlewareStack:
         )
 
         # 4. Request size limiting
-        app = RequestSizeLimitMiddleware(
-            app, max_size=config.get("max_request_size", settings.MAX_REQUEST_SIZE)
-        )
+        app = RequestSizeLimitMiddleware(app, max_size=config.get("max_request_size", settings.MAX_REQUEST_SIZE))
 
         # 5. Request timeout
-        app = RequestTimeoutMiddleware(
-            app, timeout_seconds=config.get("request_timeout", settings.REQUEST_TIMEOUT)
-        )
+        app = RequestTimeoutMiddleware(app, timeout_seconds=config.get("request_timeout", settings.REQUEST_TIMEOUT))
 
         # 6. Correlation ID (innermost)
-        app = CorrelationIdMiddleware(
-            app, header_name=config.get("correlation_header", "X-Correlation-ID")
-        )
+        app = CorrelationIdMiddleware(app, header_name=config.get("correlation_header", "X-Correlation-ID"))
 
         return app

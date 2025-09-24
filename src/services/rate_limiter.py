@@ -21,7 +21,12 @@ logger = get_logger(__name__)
 class RateLimitExceeded(Exception):
     """Raised when rate limit is exceeded."""
 
-    def __init__(self, limit_type: str, limit: int, window_seconds: int, reset_time: datetime):
+    def __init__(
+            self,
+            limit_type: str,
+            limit: int,
+            window_seconds: int,
+            reset_time: datetime):
         self.limit_type = limit_type
         self.limit = limit
         self.window_seconds = window_seconds
@@ -42,7 +47,7 @@ class SlidingWindowRateLimiter:
     async def _get_redis(self) -> aioredis.Redis:
         """Get Redis connection with connection pooling."""
         if self.redis_pool is None:
-            async with self._lock:
+    async with self._lock:
                 if self.redis_pool is None:
                     self.redis_pool = aioredis.from_url(
                         self.redis_url,
@@ -90,7 +95,8 @@ class SlidingWindowRateLimiter:
                 # Check if limit exceeded
                 if current_count >= limit:
                     # Calculate reset time
-                    reset_time = datetime.fromtimestamp(current_time + window_seconds)
+                    reset_time = datetime.fromtimestamp(
+                        current_time + window_seconds)
 
                     rate_limit_info = RateLimitInfo(
                         limit=limit,
@@ -120,7 +126,8 @@ class SlidingWindowRateLimiter:
 
                 # Calculate remaining requests and reset time
                 remaining = max(0, limit - current_count - 1)
-                reset_time = datetime.fromtimestamp(current_time + window_seconds)
+                reset_time = datetime.fromtimestamp(
+                    current_time + window_seconds)
 
                 rate_limit_info = RateLimitInfo(
                     limit=limit,
@@ -173,7 +180,7 @@ class SlidingWindowRateLimiter:
         try:
             # Remove expired entries and count current
             async with redis.pipeline() as pipe:
-                await pipe.zremrangebyscore(redis_key, 0, window_start)
+    await pipe.zremrangebyscore(redis_key, 0, window_start)
                 await pipe.zcard(redis_key)
                 results = await pipe.execute()
                 current_count = results[1]
@@ -189,17 +196,22 @@ class SlidingWindowRateLimiter:
             )
 
         except Exception as e:
-            logger.error("Failed to get rate limit info", key=key, error=str(e))
+            logger.error(
+                "Failed to get rate limit info",
+                key=key,
+                error=str(e))
             # Return safe defaults on error
             reset_time = datetime.fromtimestamp(current_time + window_seconds)
             return RateLimitInfo(
-                limit=limit, remaining=limit, reset_time=reset_time, window_seconds=window_seconds
-            )
+                limit=limit,
+                remaining=limit,
+                reset_time=reset_time,
+                window_seconds=window_seconds)
 
-    async def close(self):
+    async def close(self) -> Dict[str, Any]:
         """Close Redis connection."""
         if self.redis_pool:
-            await self.redis_pool.close()
+    await self.redis_pool.close()
             logger.info("Redis connection closed")
 
 
@@ -231,9 +243,11 @@ class DistributedRateLimiter:
         key = f"user:{user_id}"
         return await self.limiter.check_rate_limit(key, limit, window_seconds)
 
-    async def check_ip_rate_limit(
-        self, ip_address: str, limit: Optional[int] = None, window_seconds: Optional[int] = None
-    ) -> Tuple[bool, RateLimitInfo]:
+    async def check_ip_rate_limit(self,
+                                  ip_address: str,
+                                  limit: Optional[int] = None,
+                                  window_seconds: Optional[int] = None) -> Tuple[bool,
+                                                                                 RateLimitInfo]:
         """Check rate limit for an IP address."""
         limit = limit or self.default_limits["per_ip"]["limit"]
         window_seconds = window_seconds or self.default_limits["per_ip"]["window"]
@@ -255,7 +269,8 @@ class DistributedRateLimiter:
         key = "global"
         return await self.limiter.check_rate_limit(key, limit, window_seconds)
 
-    async def check_multiple_limits(self, checks: list) -> Dict[str, Tuple[bool, RateLimitInfo]]:
+    async def check_multiple_limits(
+            self, checks: list) -> Dict[str, Tuple[bool, RateLimitInfo]]:
         """Check multiple rate limits concurrently."""
         tasks = []
         check_names = []
@@ -263,12 +278,14 @@ class DistributedRateLimiter:
         for check in checks:
             if check["type"] == "user":
                 task = self.check_user_rate_limit(
-                    check["identifier"], check.get("limit"), check.get("window_seconds")
-                )
+                    check["identifier"],
+                    check.get("limit"),
+                    check.get("window_seconds"))
             elif check["type"] == "ip":
                 task = self.check_ip_rate_limit(
-                    check["identifier"], check.get("limit"), check.get("window_seconds")
-                )
+                    check["identifier"],
+                    check.get("limit"),
+                    check.get("window_seconds"))
             elif check["type"] == "endpoint":
                 task = self.check_endpoint_rate_limit(
                     check["endpoint"],
@@ -289,9 +306,10 @@ class DistributedRateLimiter:
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
         return {
-            name: result if not isinstance(result, Exception) else (False, None)
-            for name, result in zip(check_names, results)
-        }
+            name: result if not isinstance(
+                result, Exception) else (
+                False, None) for name, result in zip(
+                check_names, results)}
 
     async def reset_user_rate_limit(self, user_id: str) -> bool:
         """Reset rate limit for a user."""
@@ -304,8 +322,10 @@ class DistributedRateLimiter:
         return await self.limiter.reset_rate_limit(key)
 
     async def get_user_rate_limit_info(
-        self, user_id: str, limit: Optional[int] = None, window_seconds: Optional[int] = None
-    ) -> RateLimitInfo:
+            self,
+            user_id: str,
+            limit: Optional[int] = None,
+            window_seconds: Optional[int] = None) -> RateLimitInfo:
         """Get rate limit information for a user."""
         limit = limit or self.default_limits["per_user"]["limit"]
         window_seconds = window_seconds or self.default_limits["per_user"]["window"]
@@ -314,8 +334,10 @@ class DistributedRateLimiter:
         return await self.limiter.get_rate_limit_info(key, limit, window_seconds)
 
     async def get_ip_rate_limit_info(
-        self, ip_address: str, limit: Optional[int] = None, window_seconds: Optional[int] = None
-    ) -> RateLimitInfo:
+            self,
+            ip_address: str,
+            limit: Optional[int] = None,
+            window_seconds: Optional[int] = None) -> RateLimitInfo:
         """Get rate limit information for an IP address."""
         limit = limit or self.default_limits["per_ip"]["limit"]
         window_seconds = window_seconds or self.default_limits["per_ip"]["window"]
@@ -332,7 +354,7 @@ class DistributedRateLimiter:
         except Exception:
             return False
 
-    async def close(self):
+    async def close(self) -> Dict[str, Any]:
         """Close rate limiter connections."""
         await self.limiter.close()
 

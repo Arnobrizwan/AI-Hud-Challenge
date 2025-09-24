@@ -123,11 +123,12 @@ class SLICalculator:
                 value = await self._calculate_error_rate_sli(sli_definition, time_window)
             elif sli_definition.sli_type == SLIType.THROUGHPUT:
                 value = await self._calculate_throughput_sli(sli_definition, time_window)
-            else:
+        else:
                 value = await self._calculate_custom_sli(sli_definition, time_window)
 
             # Determine status
-            status = self._determine_sli_status(value, sli_definition.target_percentage)
+            status = self._determine_sli_status(
+                value, sli_definition.target_percentage)
 
             return SLIResult(
                 sli_id=sli_definition.id,
@@ -139,7 +140,8 @@ class SLICalculator:
             )
 
         except Exception as e:
-            logger.error(f"Failed to calculate SLI {sli_definition.id}: {str(e)}")
+            logger.error(
+                f"Failed to calculate SLI {sli_definition.id}: {str(e)}")
             return SLIResult(
                 sli_id=sli_definition.id,
                 value=0.0,
@@ -243,14 +245,19 @@ class ErrorBudgetManager:
 
         # Calculate error budget
         total_budget = 100.0 - slo_definition.target_percentage
-        consumed_budget = max(0, slo_definition.target_percentage - overall_performance)
+        consumed_budget = max(
+            0,
+            slo_definition.target_percentage -
+            overall_performance)
         remaining_budget = max(0, total_budget - consumed_budget)
 
         # Calculate burn rate
-        burn_rate = self._calculate_burn_rate(consumed_budget, slo_definition.evaluation_window)
+        burn_rate = self._calculate_burn_rate(
+            consumed_budget, slo_definition.evaluation_window)
 
         # Calculate time to exhaustion
-        time_to_exhaustion = self._calculate_time_to_exhaustion(remaining_budget, burn_rate)
+        time_to_exhaustion = self._calculate_time_to_exhaustion(
+            remaining_budget, burn_rate)
 
         error_budget = ErrorBudget(
             slo_id=slo_definition.id,
@@ -265,7 +272,8 @@ class ErrorBudgetManager:
         self.error_budgets[slo_definition.id] = error_budget
         return error_budget
 
-    def _calculate_overall_performance(self, sli_results: List[SLIResult]) -> float:
+    def _calculate_overall_performance(
+            self, sli_results: List[SLIResult]) -> float:
         """Calculate overall SLO performance from SLI results"""
 
         if not sli_results:
@@ -274,7 +282,10 @@ class ErrorBudgetManager:
         # Simple average - in practice, you might weight different SLIs
         return sum(result.value for result in sli_results) / len(sli_results)
 
-    def _calculate_burn_rate(self, consumed_budget: float, evaluation_window: int) -> float:
+    def _calculate_burn_rate(
+            self,
+            consumed_budget: float,
+            evaluation_window: int) -> float:
         """Calculate error budget burn rate"""
 
         # Burn rate as percentage per hour
@@ -307,7 +318,8 @@ class BurnRateAlerting:
         alerts = []
 
         # Check burn rate thresholds
-        burn_rate_thresholds = slo_definition.alerting_thresholds.get("burn_rate", {})
+        burn_rate_thresholds = slo_definition.alerting_thresholds.get(
+            "burn_rate", {})
 
         for threshold_name, threshold_value in burn_rate_thresholds.items():
             if error_budget.burn_rate >= threshold_value:
@@ -320,8 +332,7 @@ class BurnRateAlerting:
                         "burn_rate": error_budget.burn_rate,
                         "threshold": threshold_value,
                         "time_to_exhaustion": error_budget.time_to_exhaustion,
-                    }
-                )
+                    })
 
         return alerts
 
@@ -348,15 +359,18 @@ class SLODashboard:
         sli_results: List[SLIResult],
         error_budgets: List[ErrorBudget],
     ) -> Dict[str, Any]:
-        """Generate dashboard data for SLOs"""
-
+    """Generate dashboard data for SLOs"""
         dashboard = {
-            "overview": await self._generate_overview(slo_definitions, sli_results, error_budgets),
-            "slo_details": await self._generate_slo_details(
+            "overview":
+    await self._generate_overview(slo_definitions, sli_results, error_budgets),
+            "slo_details":
+    await self._generate_slo_details(
                 slo_definitions, sli_results, error_budgets
             ),
-            "trends": await self._generate_trends(slo_definitions),
-            "recommendations": await self._generate_recommendations(
+            "trends":
+    await self._generate_trends(slo_definitions),
+            "recommendations":
+    await self._generate_recommendations(
                 slo_definitions, sli_results, error_budgets
             ),
             "generated_at": datetime.utcnow().isoformat(),
@@ -370,8 +384,7 @@ class SLODashboard:
         sli_results: List[SLIResult],
         error_budgets: List[ErrorBudget],
     ) -> Dict[str, Any]:
-        """Generate overview data"""
-
+    """Generate overview data"""
         total_slos = len(slo_definitions)
         healthy_slos = len(
             [slo for slo in slo_definitions if self._is_slo_healthy(slo, sli_results)]
@@ -386,7 +399,10 @@ class SLODashboard:
             "healthy_slos": healthy_slos,
             "warning_slos": warning_slos,
             "breached_slos": breached_slos,
-            "health_percentage": (healthy_slos / total_slos * 100) if total_slos > 0 else 0,
+            "health_percentage": (
+                healthy_slos /
+                total_slos *
+                100) if total_slos > 0 else 0,
         }
 
     async def _generate_slo_details(
@@ -401,9 +417,10 @@ class SLODashboard:
 
         for slo in slo_definitions:
             slo_sli_results = [
-                r for r in sli_results if r.sli_id in [sli.id for sli in slo.sli_definitions]
-            ]
-            slo_error_budget = next((eb for eb in error_budgets if eb.slo_id == slo.id), None)
+                r for r in sli_results if r.sli_id in [
+                    sli.id for sli in slo.sli_definitions]]
+            slo_error_budget = next(
+                (eb for eb in error_budgets if eb.slo_id == slo.id), None)
 
             details.append(
                 {
@@ -426,9 +443,9 @@ class SLODashboard:
 
         return details
 
-    async def _generate_trends(self, slo_definitions: List[SLODefinition]) -> Dict[str, Any]:
-        """Generate trend data"""
-
+    async def _generate_trends(
+            self, slo_definitions: List[SLODefinition]) -> Dict[str, Any]:
+    """Generate trend data"""
         # This would query historical data
         # For now, return mock trends
 
@@ -450,9 +467,10 @@ class SLODashboard:
 
         for slo in slo_definitions:
             slo_sli_results = [
-                r for r in sli_results if r.sli_id in [sli.id for sli in slo.sli_definitions]
-            ]
-            slo_error_budget = next((eb for eb in error_budgets if eb.slo_id == slo.id), None)
+                r for r in sli_results if r.sli_id in [
+                    sli.id for sli in slo.sli_definitions]]
+            slo_error_budget = next(
+                (eb for eb in error_budgets if eb.slo_id == slo.id), None)
 
             if slo_error_budget and slo_error_budget.burn_rate > 10:
                 recommendations.append(
@@ -468,33 +486,47 @@ class SLODashboard:
                     f"Error budget for {slo.name} will be exhausted in {slo_error_budget.time_to_exhaustion}"
                 )
 
-            failed_slis = [r for r in slo_sli_results if r.status == SLOStatus.BREACHED]
+            failed_slis = [
+                r for r in slo_sli_results if r.status == SLOStatus.BREACHED]
             if failed_slis:
-                recommendations.append(f"SLO {slo.name} has {len(failed_slis)} failed SLIs")
+                recommendations.append(
+                    f"SLO {slo.name} has {len(failed_slis)} failed SLIs")
 
         return recommendations
 
-    def _is_slo_healthy(self, slo: SLODefinition, sli_results: List[SLIResult]) -> bool:
+    def _is_slo_healthy(
+            self,
+            slo: SLODefinition,
+            sli_results: List[SLIResult]) -> bool:
         """Check if SLO is healthy"""
         slo_sli_results = [
-            r for r in sli_results if r.sli_id in [sli.id for sli in slo.sli_definitions]
-        ]
-        return all(result.status == SLOStatus.HEALTHY for result in slo_sli_results)
+            r for r in sli_results if r.sli_id in [
+                sli.id for sli in slo.sli_definitions]]
+        return all(
+            result.status == SLOStatus.HEALTHY for result in slo_sli_results)
 
-    def _is_slo_warning(self, slo: SLODefinition, sli_results: List[SLIResult]) -> bool:
+    def _is_slo_warning(
+            self,
+            slo: SLODefinition,
+            sli_results: List[SLIResult]) -> bool:
         """Check if SLO is in warning state"""
         slo_sli_results = [
-            r for r in sli_results if r.sli_id in [sli.id for sli in slo.sli_definitions]
-        ]
-        return any(result.status == SLOStatus.WARNING for result in slo_sli_results)
+            r for r in sli_results if r.sli_id in [
+                sli.id for sli in slo.sli_definitions]]
+        return any(
+            result.status == SLOStatus.WARNING for result in slo_sli_results)
 
-    def _calculate_overall_performance(self, sli_results: List[SLIResult]) -> float:
+    def _calculate_overall_performance(
+            self, sli_results: List[SLIResult]) -> float:
         """Calculate overall performance from SLI results"""
         if not sli_results:
             return 0.0
         return sum(result.value for result in sli_results) / len(sli_results)
 
-    def _determine_slo_status(self, slo: SLODefinition, sli_results: List[SLIResult]) -> str:
+    def _determine_slo_status(
+            self,
+            slo: SLODefinition,
+            sli_results: List[SLIResult]) -> str:
         """Determine SLO status"""
         if not sli_results:
             return "unknown"
@@ -536,7 +568,7 @@ class SLOMonitor:
         self.is_initialized = True
         logger.info("SLO monitor initialized")
 
-    async def load_slo_definitions(self, definitions: List[Dict[str, Any]]):
+    async def load_slo_definitions(self, definitions: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Load SLO definitions from configuration"""
 
         for slo_config in definitions:
@@ -566,12 +598,12 @@ class SLOMonitor:
 
             self.slo_definitions[slo.id] = slo
 
-    async def setup_sli_collection(self):
+    async def setup_sli_collection(self) -> Dict[str, Any]:
         """Set up SLI data collection"""
         # This would set up metrics collection for SLIs
         logger.info("SLI collection setup completed")
 
-    async def initialize_error_budgets(self):
+    async def initialize_error_budgets(self) -> Dict[str, Any]:
         """Initialize error budgets for all SLOs"""
         for slo in self.slo_definitions.values():
             error_budget = ErrorBudget(
@@ -585,30 +617,30 @@ class SLOMonitor:
             )
             self.error_budget_manager.error_budgets[slo.id] = error_budget
 
-    async def start_slo_monitoring(self):
+    async def start_slo_monitoring(self) -> Dict[str, Any]:
         """Start SLO monitoring loops"""
         asyncio.create_task(self._slo_monitoring_loop())
 
-    async def _slo_monitoring_loop(self):
+    async def _slo_monitoring_loop(self) -> Dict[str, Any]:
         """Background SLO monitoring loop"""
         while True:
             try:
-                await self.monitor_all_slos()
+    await self.monitor_all_slos()
                 await asyncio.sleep(300)  # Check every 5 minutes
             except Exception as e:
                 logger.error(f"SLO monitoring loop error: {str(e)}")
                 await asyncio.sleep(300)
 
-    async def monitor_all_slos(self):
+    async def monitor_all_slos(self) -> Dict[str, Any]:
         """Monitor all SLOs"""
 
         for slo in self.slo_definitions.values():
             try:
-                await self.monitor_slo(slo)
+    await self.monitor_slo(slo)
             except Exception as e:
                 logger.error(f"Failed to monitor SLO {slo.id}: {str(e)}")
 
-    async def monitor_slo(self, slo: SLODefinition):
+    async def monitor_slo(self, slo: SLODefinition) -> Dict[str, Any]:
         """Monitor individual SLO"""
 
         # Calculate SLI results
@@ -628,7 +660,10 @@ class SLOMonitor:
         for alert in alerts:
             logger.warning(f"SLO Alert: {alert['message']}")
 
-    async def calculate_slo_status(self, slo_id: str, time_window: timedelta) -> SLOStatus:
+    async def calculate_slo_status(
+            self,
+            slo_id: str,
+            time_window: timedelta) -> SLOStatus:
         """Calculate current SLO status"""
 
         slo = self.slo_definitions.get(slo_id)
@@ -645,7 +680,8 @@ class SLOMonitor:
         error_budget = await self.error_budget_manager.calculate_error_budget(slo, sli_results)
 
         # Determine overall status
-        overall_status = self._determine_overall_status(sli_results, error_budget)
+        overall_status = self._determine_overall_status(
+            sli_results, error_budget)
 
         # Generate recommendations
         recommendations = await self._generate_slo_recommendations(slo, sli_results, error_budget)
@@ -685,8 +721,10 @@ class SLOMonitor:
         return SLOStatus.HEALTHY
 
     async def _generate_slo_recommendations(
-        self, slo: SLODefinition, sli_results: List[SLIResult], error_budget: ErrorBudget
-    ) -> List[str]:
+            self,
+            slo: SLODefinition,
+            sli_results: List[SLIResult],
+            error_budget: ErrorBudget) -> List[str]:
         """Generate recommendations for SLO improvement"""
 
         recommendations = []
@@ -699,8 +737,7 @@ class SLOMonitor:
 
         # Check time to exhaustion
         if error_budget.time_to_exhaustion and error_budget.time_to_exhaustion < timedelta(
-            hours=24
-        ):
+                hours=24):
             recommendations.append(
                 f"Error budget will be exhausted in {error_budget.time_to_exhaustion}. Take immediate action."
             )
@@ -720,28 +757,32 @@ class SLOMonitor:
 
     async def get_overall_slo_status(self) -> Dict[str, Any]:
         """Get overall SLO status across all SLOs"""
-
         slo_statuses = []
         for slo_id in self.slo_definitions.keys():
             try:
                 status = await self.calculate_slo_status(slo_id, timedelta(hours=1))
                 slo_statuses.append(status)
             except Exception as e:
-                logger.error(f"Failed to get status for SLO {slo_id}: {str(e)}")
+                logger.error(
+                    f"Failed to get status for SLO {slo_id}: {str(e)}")
 
         # Calculate overall health
-        healthy_count = len([s for s in slo_statuses if s.overall_status == SLOStatus.HEALTHY])
+        healthy_count = len(
+            [s for s in slo_statuses if s.overall_status == SLOStatus.HEALTHY])
         total_count = len(slo_statuses)
 
         return {
             "total_slos": total_count,
             "healthy_slos": healthy_count,
-            "health_percentage": (healthy_count / total_count * 100) if total_count > 0 else 0,
+            "health_percentage": (
+                healthy_count /
+                total_count *
+                100) if total_count > 0 else 0,
             "slo_statuses": slo_statuses,
             "generated_at": datetime.utcnow().isoformat(),
         }
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup SLO monitor"""
         self.is_initialized = False
         logger.info("SLO monitor cleaned up")

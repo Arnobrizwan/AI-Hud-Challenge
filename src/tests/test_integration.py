@@ -54,7 +54,10 @@ class TestHealthEndpoints:
 class TestAuthenticationEndpoints:
     """Test authentication endpoints."""
 
-    def test_login_firebase_success(self, client: TestClient, mock_firebase_auth):
+    def test_login_firebase_success(
+            self,
+            client: TestClient,
+            mock_firebase_auth):
         """Test successful Firebase login."""
         login_data = {"token": "valid-firebase-token", "provider": "firebase"}
 
@@ -63,7 +66,10 @@ class TestAuthenticationEndpoints:
                 access_token="firebase-token",
                 token_type="bearer",
                 expires_in=3600,
-                user=Mock(uid="test-user-123", email="test@example.com", name="Test User"),
+                user=Mock(
+                    uid="test-user-123",
+                    email="test@example.com",
+                    name="Test User"),
             )
 
             response = client.post("/auth/login", json=login_data)
@@ -91,8 +97,7 @@ class TestAuthenticationEndpoints:
 
             assert data["status"] == "error"
             assert "Authentication failed" in data["message"] or "Authentication failed" in str(
-                data
-            )
+                data)
 
     def test_login_missing_fields(self, client: TestClient):
         """Test login with missing required fields."""
@@ -131,7 +136,10 @@ class TestAuthenticationEndpoints:
         headers = {"Authorization": f"Bearer {valid_jwt_token}"}
 
         with patch("src.middleware.auth_middleware.get_current_user") as mock_get_user:
-            mock_user = Mock(uid="test-user-123", email="test@example.com", name="Test User")
+            mock_user = Mock(
+                uid="test-user-123",
+                email="test@example.com",
+                name="Test User")
             mock_get_user.return_value = mock_user
 
             response = client.get("/auth/me", headers=headers)
@@ -151,7 +159,8 @@ class TestMiddlewareIntegration:
         """Test CORS headers are properly set."""
         response = client.options("/health")
 
-        assert "access-control-allow-origin" in [h.lower() for h in response.headers]
+        assert "access-control-allow-origin" in [h.lower()
+                                                 for h in response.headers]
 
     def test_security_headers(self, client: TestClient):
         """Test security headers are present."""
@@ -168,12 +177,14 @@ class TestMiddlewareIntegration:
         response = client.get("/health")
 
         # Should have correlation ID in response headers
-        correlation_headers = [h for h in response.headers if "correlation" in h.lower()]
+        correlation_headers = [
+            h for h in response.headers if "correlation" in h.lower()]
         assert len(correlation_headers) > 0
 
     def test_request_size_limit(self, client: TestClient):
         """Test request size limiting."""
-        # Create a large payload (mock - in real test you'd send actual large data)
+        # Create a large payload (mock - in real test you'd send actual large
+        # data)
         large_payload = {"data": "x" * 1000000}  # 1MB of data
 
         response = client.post("/auth/login", json=large_payload)
@@ -182,7 +193,8 @@ class TestMiddlewareIntegration:
         # In this case, it would likely fail validation before size check
         assert response.status_code in [400, 413, 422]
 
-    def test_authentication_middleware_excluded_paths(self, client: TestClient):
+    def test_authentication_middleware_excluded_paths(
+            self, client: TestClient):
         """Test that authentication middleware excludes certain paths."""
         excluded_paths = ["/health", "/docs", "/openapi.json"]
 
@@ -192,8 +204,9 @@ class TestMiddlewareIntegration:
             assert response.status_code != 401
 
     @pytest.mark.asyncio
-    async def test_rate_limiting_middleware(self, client: TestClient, mock_rate_limiter):
-        """Test rate limiting middleware."""
+    async def test_rate_limiting_middleware(
+            self, client: TestClient, mock_rate_limiter):
+         -> Dict[str, Any]:"""Test rate limiting middleware."""
         # Mock rate limiter to allow requests
         mock_rate_limiter["ip_limit"].return_value = (True, Mock())
 
@@ -296,23 +309,26 @@ class TestServiceIntegration:
     """Test service integration points."""
 
     @pytest.mark.asyncio
-    async def test_auth_service_integration(self, mock_firebase_auth):
+    async def test_auth_service_integration(self, mock_firebase_auth) -> Dict[str, Any]:
         """Test authentication service integration."""
         from src.models.auth import AuthProvider, LoginRequest
         from src.services.auth_service import auth_service
 
-        request = LoginRequest(token="test-token", provider=AuthProvider.FIREBASE)
+        request = LoginRequest(
+            token="test-token",
+            provider=AuthProvider.FIREBASE)
 
         # This would test the actual service integration
         # but requires proper mocking of Firebase
         with patch.object(auth_service.firebase_auth, "validate_token") as mock_validate:
-            mock_validate.return_value = Mock(uid="test-user", email="test@example.com")
+            mock_validate.return_value = Mock(
+                uid="test-user", email="test@example.com")
 
             # Test would go here
             pass
 
     @pytest.mark.asyncio
-    async def test_rate_limiter_integration(self, mock_redis):
+    async def test_rate_limiter_integration(self, mock_redis) -> Dict[str, Any]:
         """Test rate limiter service integration."""
         from src.services.rate_limiter import rate_limiter
 
@@ -321,7 +337,8 @@ class TestServiceIntegration:
             # Mock Redis operations
             mock_redis.pipeline.return_value.__aenter__ = AsyncMock()
             mock_redis.pipeline.return_value.__aexit__ = AsyncMock()
-            mock_redis.pipeline.return_value.execute = AsyncMock(return_value=[None, 1])
+            mock_redis.pipeline.return_value.execute = AsyncMock(return_value=[
+                                                                 None, 1])
             mock_redis.zadd = AsyncMock()
             mock_redis.expire = AsyncMock()
 
@@ -378,7 +395,10 @@ class TestEndToEndScenarios:
             logout_response = client.post("/auth/logout", headers=headers)
             assert logout_response.status_code == 200
 
-    def test_rate_limiting_scenario(self, client: TestClient, mock_rate_limiter):
+    def test_rate_limiting_scenario(
+            self,
+            client: TestClient,
+            mock_rate_limiter):
         """Test rate limiting scenario."""
         # Configure rate limiter to allow first few requests
         mock_rate_limiter["ip_limit"].return_value = (True, Mock())

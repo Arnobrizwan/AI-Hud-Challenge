@@ -12,7 +12,7 @@ from datetime import datetime
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
 
-async def test_imports():
+async def test_imports() -> Dict[str, Any]:
     """Test that all modules can be imported"""
     print("Testing imports...")
 
@@ -91,7 +91,7 @@ async def test_imports():
     return True
 
 
-async def test_basic_functionality():
+async def test_basic_functionality() -> Dict[str, Any]:
     """Test basic functionality of the safety service"""
     print("\nTesting basic functionality...")
 
@@ -111,8 +111,13 @@ async def test_basic_functionality():
         request = SafetyMonitoringRequest(
             user_id="test_user_123",
             content="This is a test message for safety monitoring",
-            features={"text_length": 45, "sentiment": 0.2, "toxicity_score": 0.1},
-            metadata={"source": "test", "timestamp": datetime.utcnow().isoformat()},
+            features={
+                "text_length": 45,
+                "sentiment": 0.2,
+                "toxicity_score": 0.1},
+            metadata={
+                "source": "test",
+                "timestamp": datetime.utcnow().isoformat()},
         )
         print("✓ SafetyMonitoringRequest created successfully")
 
@@ -123,7 +128,8 @@ async def test_basic_functionality():
             print(f"  - Overall Score: {result.overall_score}")
             print(f"  - Requires Intervention: {result.requires_intervention}")
         except Exception as e:
-            print(f"⚠ Safety monitoring failed (expected due to missing dependencies): {e}")
+            print(
+                f"⚠ Safety monitoring failed (expected due to missing dependencies): {e}")
 
         # Cleanup
         await safety_engine.cleanup()
@@ -136,7 +142,7 @@ async def test_basic_functionality():
         return False
 
 
-async def test_configuration():
+async def test_configuration() -> Dict[str, Any]:
     """Test configuration loading"""
     print("\nTesting configuration...")
 
@@ -157,7 +163,7 @@ async def test_configuration():
         return False
 
 
-async def test_models():
+async def test_models() -> Dict[str, Any]:
     """Test data models"""
     print("\nTesting data models...")
 
@@ -178,8 +184,9 @@ async def test_models():
 
         # Test SafetyStatus
         status = SafetyStatus(
-            overall_score=0.8, requires_intervention=False, timestamp=datetime.utcnow()
-        )
+            overall_score=0.8,
+            requires_intervention=False,
+            timestamp=datetime.utcnow())
         print("✓ SafetyStatus model works")
 
         # Test other models
@@ -208,7 +215,7 @@ async def test_models():
         return False
 
 
-async def main():
+async def main() -> Dict[str, Any]:
     """Main test function"""
     print("Safety Service Installation Test")
     print("=" * 40)

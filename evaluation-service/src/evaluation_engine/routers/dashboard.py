@@ -3,7 +3,7 @@ Dashboard Router - Dashboard and visualization endpoints
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 

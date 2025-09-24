@@ -2,10 +2,8 @@
 Notification fatigue detection and prevention system.
 """
 
-import asyncio
-import logging
 from datetime import datetime, timedelta
-from typing import Dict, Optional
+from typing import Dict
 
 import structlog
 from redis.asyncio import Redis
@@ -31,7 +29,8 @@ class FatigueDetector:
         }
 
         # Advanced fatigue detection parameters
-        self.engagement_decay_factor = 0.1  # How much engagement drops with each notification
+        # How much engagement drops with each notification
+        self.engagement_decay_factor = 0.1
         self.fatigue_recovery_time = 2  # Hours to wait before fatigue starts recovering
         self.max_fatigue_score = 1.0
 
@@ -41,7 +40,7 @@ class FatigueDetector:
 
         # Test Redis connection
         try:
-            await self.redis_client.ping()
+    await self.redis_client.ping()
             logger.info("Fatigue detector initialized successfully")
         except Exception as e:
             logger.error(f"Failed to initialize fatigue detector: {e}")
@@ -52,9 +51,7 @@ class FatigueDetector:
         logger.info("Cleaning up fatigue detector")
         # No specific cleanup needed for Redis client
 
-    async def check_fatigue(
-        self, user_id: str, notification_type: NotificationType
-    ) -> FatigueCheck:
+    async def check_fatigue(self, user_id: str, notification_type: NotificationType) -> FatigueCheck:
         """Check if user is experiencing notification fatigue."""
 
         try:
@@ -77,11 +74,7 @@ class FatigueDetector:
             daily_threshold = thresholds.get("daily", 10)
 
             # Determine if user is fatigued
-            is_fatigued = (
-                hourly_count >= hourly_threshold
-                or daily_count >= daily_threshold
-                or fatigue_score >= 0.8
-            )
+            is_fatigued = hourly_count >= hourly_threshold or daily_count >= daily_threshold or fatigue_score >= 0.8
 
             # Calculate next eligible time
             next_eligible_time = None
@@ -91,9 +84,7 @@ class FatigueDetector:
                 )
 
             # Calculate overall fatigue score
-            overall_fatigue_score = self._compute_fatigue_score(
-                hourly_count, daily_count, fatigue_score, thresholds
-            )
+            overall_fatigue_score = self._compute_fatigue_score(hourly_count, daily_count, fatigue_score, thresholds)
 
             result = FatigueCheck(
                 is_fatigued=is_fatigued,
@@ -116,16 +107,16 @@ class FatigueDetector:
             logger.error("Error checking fatigue", user_id=user_id, error=str(e), exc_info=True)
             raise FatigueDetectionError(f"Failed to check fatigue: {str(e)}")
 
-    async def record_notification_sent(
-        self, user_id: str, notification_type: NotificationType
-    ) -> None:
+    async def record_notification_sent(self, user_id: str, notification_type: NotificationType) -> None:
         """Record notification for fatigue tracking."""
 
         try:
             current_time = datetime.utcnow()
 
             # Record in Redis with TTL
-            hourly_key = f"notif_count:hourly:{user_id}:{notification_type.value}:{current_time.strftime('%Y-%m-%d-%H')}"
+            hourly_key = (
+                f"notif_count:hourly:{user_id}:{notification_type.value}:{current_time.strftime('%Y-%m-%d-%H')}"
+            )
             daily_key = f"notif_count:daily:{user_id}:{notification_type.value}:{current_time.strftime('%Y-%m-%d')}"
 
             # Increment counters
@@ -148,9 +139,7 @@ class FatigueDetector:
             )
 
         except Exception as e:
-            logger.error(
-                "Error recording notification sent", user_id=user_id, error=str(e), exc_info=True
-            )
+            logger.error("Error recording notification sent", user_id=user_id, error=str(e), exc_info=True)
             raise FatigueDetectionError(f"Failed to record notification: {str(e)}")
 
     async def get_user_fatigue_analytics(self, user_id: str) -> Dict:
@@ -159,7 +148,8 @@ class FatigueDetector:
         try:
             analytics = {
                 "user_id": user_id,
-                "overall_fatigue_score": await self._get_user_fatigue_score(user_id),
+                "overall_fatigue_score":
+    await self._get_user_fatigue_score(user_id),
                 "notification_counts": {},
                 "fatigue_patterns": {},
                 "recommendations": [],
@@ -167,12 +157,8 @@ class FatigueDetector:
 
             # Get counts for each notification type
             for notification_type in NotificationType:
-                hourly_count = await self._get_notification_count(
-                    user_id, notification_type, hours=1
-                )
-                daily_count = await self._get_notification_count(
-                    user_id, notification_type, hours=24
-                )
+                hourly_count = await self._get_notification_count(user_id, notification_type, hours=1)
+                daily_count = await self._get_notification_count(user_id, notification_type, hours=24)
 
                 analytics["notification_counts"][notification_type.value] = {
                     "hourly": hourly_count,
@@ -183,21 +169,15 @@ class FatigueDetector:
             analytics["fatigue_patterns"] = await self._analyze_fatigue_patterns(user_id)
 
             # Generate recommendations
-            analytics["recommendations"] = await self._generate_fatigue_recommendations(
-                user_id, analytics
-            )
+            analytics["recommendations"] = await self._generate_fatigue_recommendations(user_id, analytics)
 
             return analytics
 
         except Exception as e:
-            logger.error(
-                "Error getting fatigue analytics", user_id=user_id, error=str(e), exc_info=True
-            )
+            logger.error("Error getting fatigue analytics", user_id=user_id, error=str(e), exc_info=True)
             raise FatigueDetectionError(f"Failed to get fatigue analytics: {str(e)}")
 
-    async def _get_notification_count(
-        self, user_id: str, notification_type: NotificationType, hours: int
-    ) -> int:
+    async def _get_notification_count(self, user_id: str, notification_type: NotificationType, hours: int) -> int:
         """Get notification count for user and type within time window."""
 
         try:
@@ -265,9 +245,7 @@ class FatigueDetector:
             logger.error(f"Error getting fatigue score: {e}")
             return 0.0
 
-    async def _update_user_fatigue_score(
-        self, user_id: str, notification_type: NotificationType
-    ) -> None:
+    async def _update_user_fatigue_score(self, user_id: str, notification_type: NotificationType) -> None:
         """Update user's fatigue score based on notification sent."""
 
         try:
@@ -279,7 +257,8 @@ class FatigueDetector:
             new_score = min(current_score + fatigue_increase, self.max_fatigue_score)
 
             # Set with expiration (fatigue decays over time)
-            await self.redis_client.setex(fatigue_key, 86400, new_score)  # 24 hour TTL
+            # 24 hour TTL
+            await self.redis_client.setex(fatigue_key, 86400, new_score)
 
             logger.debug(
                 "Updated fatigue score",
@@ -320,7 +299,8 @@ class FatigueDetector:
             await self.redis_client.ltrim(timestamp_key, 0, 99)
 
             # Set expiration
-            await self.redis_client.expire(timestamp_key, 86400 * 7)  # 7 days TTL
+            # 7 days TTL
+            await self.redis_client.expire(timestamp_key, 86400 * 7)
 
         except Exception as e:
             logger.error(f"Error recording timestamp: {e}")
@@ -350,7 +330,8 @@ class FatigueDetector:
         # If fatigue score is high, wait for recovery
         fatigue_score = await self._get_user_fatigue_score(user_id)
         if fatigue_score >= 0.8:
-            recovery_hours = int((fatigue_score - 0.5) * 4)  # 0-2 hours based on score
+            # 0-2 hours based on score
+            recovery_hours = int((fatigue_score - 0.5) * 4)
             return current_time + timedelta(hours=recovery_hours)
 
         # Default: wait 30 minutes

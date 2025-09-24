@@ -48,7 +48,7 @@ class ContentModerationEngine:
         # External APIs
         self.external_apis = ExternalModerationAPIs()
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize the content moderation engine"""
         try:
             # Initialize all detectors
@@ -64,13 +64,14 @@ class ContentModerationEngine:
             logger.info("Content moderation engine initialized")
 
         except Exception as e:
-            logger.error(f"Failed to initialize content moderation engine: {str(e)}")
+            logger.error(
+                f"Failed to initialize content moderation engine: {str(e)}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup resources"""
         try:
-            await self.toxicity_detector.cleanup()
+    await self.toxicity_detector.cleanup()
             await self.hate_speech_detector.cleanup()
             await self.spam_detector.cleanup()
             await self.misinformation_detector.cleanup()
@@ -82,7 +83,8 @@ class ContentModerationEngine:
             logger.info("Content moderation engine cleanup completed")
 
         except Exception as e:
-            logger.error(f"Error during content moderation engine cleanup: {str(e)}")
+            logger.error(
+                f"Error during content moderation engine cleanup: {str(e)}")
 
     async def moderate_content(self, content: Any) -> ModerationResult:
         """Comprehensive content moderation"""
@@ -114,7 +116,8 @@ class ContentModerationEngine:
                 moderation_results["urls"] = url_results
 
             # Calculate overall safety score
-            overall_safety_score = self.calculate_content_safety_score(moderation_results)
+            overall_safety_score = self.calculate_content_safety_score(
+                moderation_results)
 
             # Determine moderation action
             moderation_action = self.determine_moderation_action(
@@ -150,8 +153,7 @@ class ContentModerationEngine:
             )
 
             toxicity_result, hate_speech_result, spam_result, misinformation_result = (
-                moderation_checks
-            )
+                moderation_checks)
 
             # External API checks (if enabled)
             external_results = None
@@ -169,7 +171,8 @@ class ContentModerationEngine:
                 if not isinstance(hate_speech_result, Exception)
                 else 0.0
             )
-            spam_score = spam_result.spam_score if not isinstance(spam_result, Exception) else 0.0
+            spam_score = spam_result.spam_score if not isinstance(
+                spam_result, Exception) else 0.0
             misinformation_score = (
                 misinformation_result.misinformation_score
                 if not isinstance(misinformation_result, Exception)
@@ -201,8 +204,9 @@ class ContentModerationEngine:
                 detected_issues=[],
             )
 
-    async def moderate_image_content(self, image_urls: List[str]) -> Dict[str, Any]:
-        """Moderate image content for safety issues"""
+    async def moderate_image_content(
+            self, image_urls: List[str]) -> Dict[str, Any]:
+    """Moderate image content for safety issues"""
         try:
             image_results = {}
 
@@ -218,8 +222,8 @@ class ContentModerationEngine:
 
                 # Extract scores
                 adult_score = (
-                    adult_result.adult_score if not isinstance(adult_result, Exception) else 0.0
-                )
+                    adult_result.adult_score if not isinstance(
+                        adult_result, Exception) else 0.0)
                 violence_score = (
                     violence_result.violence_score
                     if not isinstance(violence_result, Exception)
@@ -240,8 +244,9 @@ class ContentModerationEngine:
             logger.error(f"Image content moderation failed: {str(e)}")
             return {}
 
-    async def moderate_video_content(self, video_urls: List[str]) -> Dict[str, Any]:
-        """Moderate video content for safety issues"""
+    async def moderate_video_content(
+            self, video_urls: List[str]) -> Dict[str, Any]:
+    """Moderate video content for safety issues"""
         try:
             video_results = {}
 
@@ -257,8 +262,8 @@ class ContentModerationEngine:
 
                 # Extract scores
                 adult_score = (
-                    adult_result.adult_score if not isinstance(adult_result, Exception) else 0.0
-                )
+                    adult_result.adult_score if not isinstance(
+                        adult_result, Exception) else 0.0)
                 violence_score = (
                     violence_result.violence_score
                     if not isinstance(violence_result, Exception)
@@ -327,7 +332,8 @@ class ContentModerationEngine:
             logger.error(f"URL safety check failed for {url}: {str(e)}")
             return False
 
-    def calculate_content_safety_score(self, moderation_results: Dict[str, Any]) -> float:
+    def calculate_content_safety_score(
+            self, moderation_results: Dict[str, Any]) -> float:
         """Calculate overall content safety score"""
         try:
             if not moderation_results:
@@ -343,17 +349,20 @@ class ContentModerationEngine:
 
             # Image moderation score
             if "images" in moderation_results:
-                image_score = self.calculate_media_safety_score(moderation_results["images"])
+                image_score = self.calculate_media_safety_score(
+                    moderation_results["images"])
                 scores.append(image_score)
 
             # Video moderation score
             if "videos" in moderation_results:
-                video_score = self.calculate_media_safety_score(moderation_results["videos"])
+                video_score = self.calculate_media_safety_score(
+                    moderation_results["videos"])
                 scores.append(video_score)
 
             # URL safety score
             if "urls" in moderation_results:
-                url_score = self.calculate_url_safety_score(moderation_results["urls"])
+                url_score = self.calculate_url_safety_score(
+                    moderation_results["urls"])
                 scores.append(url_score)
 
             if not scores:
@@ -366,7 +375,8 @@ class ContentModerationEngine:
             logger.error(f"Content safety score calculation failed: {str(e)}")
             return 0.0
 
-    def calculate_text_safety_score(self, text_result: TextModerationResult) -> float:
+    def calculate_text_safety_score(
+            self, text_result: TextModerationResult) -> float:
         """Calculate safety score for text content"""
         try:
             # Get individual scores
@@ -376,7 +386,11 @@ class ContentModerationEngine:
             misinformation_score = text_result.misinformation_score
 
             # Calculate weighted safety score
-            weights = {"toxicity": 0.3, "hate_speech": 0.3, "spam": 0.2, "misinformation": 0.2}
+            weights = {
+                "toxicity": 0.3,
+                "hate_speech": 0.3,
+                "spam": 0.2,
+                "misinformation": 0.2}
 
             safety_score = 1.0
             safety_score -= toxicity_score * weights["toxicity"]
@@ -390,7 +404,8 @@ class ContentModerationEngine:
             logger.error(f"Text safety score calculation failed: {str(e)}")
             return 0.0
 
-    def calculate_media_safety_score(self, media_results: Dict[str, Any]) -> float:
+    def calculate_media_safety_score(
+            self, media_results: Dict[str, Any]) -> float:
         """Calculate safety score for media content"""
         try:
             if not media_results:
@@ -437,14 +452,16 @@ class ContentModerationEngine:
                 return ModerationAction.FLAG
             elif safety_score >= 0.2:
                 return ModerationAction.BLOCK
-            else:
+        else:
                 return ModerationAction.REMOVE
 
         except Exception as e:
             logger.error(f"Moderation action determination failed: {str(e)}")
             return ModerationAction.FLAG
 
-    def extract_violations(self, moderation_results: Dict[str, Any]) -> List[ContentViolation]:
+    def extract_violations(self,
+                           moderation_results: Dict[str,
+                                                    Any]) -> List[ContentViolation]:
         """Extract content violations from moderation results"""
         try:
             violations = []
@@ -457,17 +474,19 @@ class ContentModerationEngine:
             # Media violations
             if "images" in moderation_results:
                 violations.extend(
-                    self.extract_media_violations(moderation_results["images"], "image")
-                )
+                    self.extract_media_violations(
+                        moderation_results["images"], "image"))
 
             if "videos" in moderation_results:
                 violations.extend(
-                    self.extract_media_violations(moderation_results["videos"], "video")
-                )
+                    self.extract_media_violations(
+                        moderation_results["videos"], "video"))
 
             # URL violations
             if "urls" in moderation_results:
-                violations.extend(self.extract_url_violations(moderation_results["urls"]))
+                violations.extend(
+                    self.extract_url_violations(
+                        moderation_results["urls"]))
 
             return violations
 
@@ -475,7 +494,9 @@ class ContentModerationEngine:
             logger.error(f"Violation extraction failed: {str(e)}")
             return []
 
-    def extract_text_violations(self, text_result: TextModerationResult) -> List[ContentViolation]:
+    def extract_text_violations(
+            self,
+            text_result: TextModerationResult) -> List[ContentViolation]:
         """Extract violations from text moderation results"""
         try:
             violations = []
@@ -562,28 +583,34 @@ class ContentModerationEngine:
                     continue
 
                 # Adult content violation
-                if item.get("adult_content_score", 0) > self.config.adult_content_threshold:
+                if item.get(
+                    "adult_content_score",
+                        0) > self.config.adult_content_threshold:
                     violations.append(
                         ContentViolation(
                             violation_type="adult_content",
                             severity="high" if item["adult_content_score"] > 0.8 else "medium",
                             confidence=item["adult_content_score"],
                             description=f'Adult content detected in {media_type} (score: {item["adult_content_score"]:.2f})',
-                            affected_content=item.get("url", "Unknown URL"),
-                        )
-                    )
+                            affected_content=item.get(
+                                "url",
+                                "Unknown URL"),
+                        ))
 
                 # Violence violation
-                if item.get("violence_score", 0) > self.config.violence_threshold:
+                if item.get(
+                    "violence_score",
+                        0) > self.config.violence_threshold:
                     violations.append(
                         ContentViolation(
                             violation_type="violence",
                             severity="high" if item["violence_score"] > 0.8 else "medium",
                             confidence=item["violence_score"],
                             description=f'Violent content detected in {media_type} (score: {item["violence_score"]:.2f})',
-                            affected_content=item.get("url", "Unknown URL"),
-                        )
-                    )
+                            affected_content=item.get(
+                                "url",
+                                "Unknown URL"),
+                        ))
 
             return violations
 
@@ -591,7 +618,8 @@ class ContentModerationEngine:
             logger.error(f"Media violation extraction failed: {str(e)}")
             return []
 
-    def extract_url_violations(self, url_results: Dict[str, Any]) -> List[ContentViolation]:
+    def extract_url_violations(
+            self, url_results: Dict[str, Any]) -> List[ContentViolation]:
         """Extract violations from URL safety results"""
         try:
             violations = []
@@ -607,9 +635,10 @@ class ContentModerationEngine:
                             severity="medium",
                             confidence=0.8,
                             description=f'Unsafe URL detected: {item.get("risk_level", "unknown")} risk',
-                            affected_content=item.get("url", "Unknown URL"),
-                        )
-                    )
+                            affected_content=item.get(
+                                "url",
+                                "Unknown URL"),
+                        ))
 
             return violations
 
@@ -617,7 +646,8 @@ class ContentModerationEngine:
             logger.error(f"URL violation extraction failed: {str(e)}")
             return []
 
-    def extract_detected_issues(self, moderation_checks: List[Any]) -> List[str]:
+    def extract_detected_issues(
+            self, moderation_checks: List[Any]) -> List[str]:
         """Extract detected issues from moderation checks"""
         try:
             issues = []

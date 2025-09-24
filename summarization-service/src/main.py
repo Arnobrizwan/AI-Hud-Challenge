@@ -41,7 +41,7 @@ summary_cache = None
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> Dict[str, Any]:
     """Application lifespan management"""
     global summarization_engine, headline_generator, quality_validator, metrics_collector, summary_cache
 
@@ -70,9 +70,9 @@ async def lifespan(app: FastAPI):
     # Cleanup
     logger.info("Shutting down Summarization Service...")
     if summarization_engine:
-        await summarization_engine.cleanup()
+    await summarization_engine.cleanup()
     if headline_generator:
-        await headline_generator.cleanup()
+    await headline_generator.cleanup()
 
 
 # Create FastAPI application
@@ -96,13 +96,16 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # Health check endpoints
 @app.get("/health")
-async def health_check():
+async def health_check() -> Dict[str, Any]:
     """Health check endpoint"""
-    return {"status": "healthy", "service": "summarization-service", "version": "1.0.0"}
+    return {
+        "status": "healthy",
+        "service": "summarization-service",
+        "version": "1.0.0"}
 
 
 @app.get("/health/ready")
-async def readiness_check():
+async def readiness_check() -> Dict[str, Any]:
     """Readiness check endpoint"""
     if not all([summarization_engine, headline_generator, quality_validator]):
         raise HTTPException(status_code=503, detail="Service not ready")
@@ -112,8 +115,10 @@ async def readiness_check():
 
 # Main summarization endpoint
 @app.post("/summarize", response_model=SummarizationResponse)
-async def summarize_content(request: SummarizationRequest, background_tasks: BackgroundTasks):
-    """
+async def summarize_content(
+        request: SummarizationRequest,
+        background_tasks: BackgroundTasks):
+     -> Dict[str, Any]:"""
     Generate AI-powered summary and headlines for content
 
     Supports:
@@ -156,12 +161,15 @@ async def summarize_content(request: SummarizationRequest, background_tasks: Bac
     except Exception as e:
         logger.error(f"Summarization failed: {str(e)}")
         metrics_collector.increment_error()
-        raise HTTPException(status_code=500, detail=f"Summarization failed: {str(e)}")
+        raise HTTPException(status_code=500,
+                            detail=f"Summarization failed: {str(e)}")
 
 
 @app.post("/summarize/batch", response_model=List[SummarizationResponse])
-async def batch_summarize(request: BatchSummarizationRequest, background_tasks: BackgroundTasks):
-    """
+async def batch_summarize(
+        request: BatchSummarizationRequest,
+        background_tasks: BackgroundTasks):
+     -> Dict[str, Any]:"""
     Batch summarization for multiple content pieces
 
     Optimized for processing multiple articles simultaneously
@@ -181,9 +189,14 @@ async def batch_summarize(request: BatchSummarizationRequest, background_tasks: 
         for i, result in enumerate(results):
             if isinstance(result, Exception):
                 logger.error(f"Batch item {i} failed: {str(result)}")
-                responses.append(SummarizationResponse(success=False, error=str(result)))
+                responses.append(
+                    SummarizationResponse(
+                        success=False,
+                        error=str(result)))
             else:
-                responses.append(SummarizationResponse(success=True, result=result))
+                responses.append(
+                    SummarizationResponse(
+                        success=True, result=result))
 
         # Background metrics collection
         background_tasks.add_task(
@@ -196,14 +209,19 @@ async def batch_summarize(request: BatchSummarizationRequest, background_tasks: 
 
     except Exception as e:
         logger.error(f"Batch summarization failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Batch processing failed: {str(e)}")
+        raise HTTPException(status_code=500,
+                            detail=f"Batch processing failed: {str(e)}")
 
 
 @app.post("/headlines/generate")
 async def generate_headlines(
-    content: str, styles: List[str] = ["news", "engaging", "neutral"], num_variants: int = 5
-):
-    """
+        content: str,
+        styles: List[str] = [
+            "news",
+            "engaging",
+            "neutral"],
+        num_variants: int = 5):
+     -> Dict[str, Any]:"""
     Generate multiple headline variants with different styles
 
     Styles: news, engaging, question, neutral, urgent
@@ -219,11 +237,12 @@ async def generate_headlines(
 
     except Exception as e:
         logger.error(f"Headline generation failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Headline generation failed: {str(e)}")
+        raise HTTPException(status_code=500,
+                            detail=f"Headline generation failed: {str(e)}")
 
 
 @app.post("/quality/validate")
-async def validate_quality(original: str, summary: str):
+async def validate_quality(original: str, summary: str) -> Dict[str, Any]:
     """
     Validate summary quality with comprehensive metrics
 
@@ -232,15 +251,17 @@ async def validate_quality(original: str, summary: str):
     try:
         quality_metrics = await quality_validator.validate_summary_quality(original, summary)
 
-        return {"quality_metrics": quality_metrics, "overall_score": quality_metrics.overall_score}
+        return {"quality_metrics": quality_metrics,
+                "overall_score": quality_metrics.overall_score}
 
     except Exception as e:
         logger.error(f"Quality validation failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Quality validation failed: {str(e)}")
+        raise HTTPException(status_code=500,
+                            detail=f"Quality validation failed: {str(e)}")
 
 
 @app.get("/metrics")
-async def get_metrics():
+async def get_metrics() -> Dict[str, Any]:
     """Get service metrics and performance statistics"""
     try:
         metrics = await metrics_collector.get_metrics()
@@ -248,24 +269,36 @@ async def get_metrics():
 
     except Exception as e:
         logger.error(f"Failed to retrieve metrics: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to retrieve metrics")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to retrieve metrics")
 
 
 @app.get("/models/status")
-async def get_models_status():
+async def get_models_status() -> Dict[str, Any]:
     """Get status of loaded ML models"""
     try:
         status = {
-            "summarization_engine": await summarization_engine.get_status(),
-            "headline_generator": await headline_generator.get_status(),
-            "quality_validator": await quality_validator.get_status(),
+            "summarization_engine":
+    await summarization_engine.get_status(),
+            "headline_generator":
+    await headline_generator.get_status(),
+            "quality_validator":
+    await quality_validator.get_status(),
         }
         return status
 
     except Exception as e:
         logger.error(f"Failed to get model status: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to get model status")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to get model status")
 
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True, log_level="info")
+    uvicorn.run(
+        "main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True,
+        log_level="info")

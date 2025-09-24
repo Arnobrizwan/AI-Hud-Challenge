@@ -64,7 +64,8 @@ class RSSAdapter(BaseAdapter):
                     continue
 
         except Exception as e:
-            logger.error(f"Error fetching RSS feed {self.source_config.url}: {e}")
+            logger.error(
+                f"Error fetching RSS feed {self.source_config.url}: {e}")
             raise
 
     async def _fetch_feed(self) -> FeedParseResult:
@@ -99,7 +100,8 @@ class RSSAdapter(BaseAdapter):
             # Parse feed
             parsed_feed = self._parse_feed_content(response.text, response)
 
-            parse_time = (datetime.utcnow() - start_time).total_seconds() * 1000
+            parse_time = (
+                datetime.utcnow() - start_time).total_seconds() * 1000
 
             return FeedParseResult(
                 success=True,
@@ -113,7 +115,8 @@ class RSSAdapter(BaseAdapter):
             )
 
         except Exception as e:
-            parse_time = (datetime.utcnow() - start_time).total_seconds() * 1000
+            parse_time = (
+                datetime.utcnow() - start_time).total_seconds() * 1000
             return FeedParseResult(
                 success=False,
                 feed=None,
@@ -122,7 +125,10 @@ class RSSAdapter(BaseAdapter):
                 source_url=self.source_config.url,
             )
 
-    def _parse_feed_content(self, content: str, response: HTTPResponse) -> ParsedFeed:
+    def _parse_feed_content(
+            self,
+            content: str,
+            response: HTTPResponse) -> ParsedFeed:
         """Parse feed content using feedparser."""
         # Parse with feedparser
         parsed = feedparser.parse(content)
@@ -190,7 +196,8 @@ class RSSAdapter(BaseAdapter):
             },
         }
 
-    def _extract_feed_item(self, entry, feed_type: FeedType) -> Optional[Dict[str, Any]]:
+    def _extract_feed_item(
+            self, entry, feed_type: FeedType) -> Optional[Dict[str, Any]]:
         """Extract feed item from parsed entry."""
         try:
             # Basic fields
@@ -217,7 +224,8 @@ class RSSAdapter(BaseAdapter):
             # Categories
             categories = []
             if hasattr(entry, "tags"):
-                categories = [tag.get("term", "") for tag in entry.tags if tag.get("term")]
+                categories = [tag.get("term", "")
+                              for tag in entry.tags if tag.get("term")]
             elif hasattr(entry, "category"):
                 categories = [entry.category]
 
@@ -253,7 +261,10 @@ class RSSAdapter(BaseAdapter):
                 "enclosure_type": enclosure_type,
                 "raw_data": {
                     "feed_type": feed_type.value,
-                    "entry_keys": list(entry.keys()) if hasattr(entry, "keys") else [],
+                    "entry_keys": list(
+                        entry.keys()) if hasattr(
+                        entry,
+                        "keys") else [],
                 },
             }
 
@@ -289,11 +300,14 @@ class RSSAdapter(BaseAdapter):
             ingestion_metadata.update(
                 {
                     "feed_type": self.feed_type.value if self.feed_type else "unknown",
-                    "feed_title": feed_metadata.get("title", ""),
-                    "item_guid": item.get("guid", ""),
+                    "feed_title": feed_metadata.get(
+                        "title",
+                        ""),
+                    "item_guid": item.get(
+                        "guid",
+                        ""),
                     "item_categories": tags,
-                }
-            )
+                })
 
             # Create normalized article
             article = self._normalize_article(

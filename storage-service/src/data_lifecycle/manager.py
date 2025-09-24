@@ -35,7 +35,7 @@ class DataLifecycleManager:
         self._initialized = False
         self._retention_scheduler: Optional[asyncio.Task] = None
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize data lifecycle management components"""
         if self._initialized:
             return
@@ -66,7 +66,7 @@ class DataLifecycleManager:
             logger.error(f"Failed to initialize Data Lifecycle Manager: {e}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup data lifecycle management components"""
         logger.info("Cleaning up Data Lifecycle Manager...")
 
@@ -74,7 +74,7 @@ class DataLifecycleManager:
         if self._retention_scheduler:
             self._retention_scheduler.cancel()
             try:
-                await self._retention_scheduler
+    await self._retention_scheduler
             except asyncio.CancelledError:
                 pass
 
@@ -90,12 +90,12 @@ class DataLifecycleManager:
             cleanup_tasks.append(self.backup_manager.cleanup())
 
         if cleanup_tasks:
-            await asyncio.gather(*cleanup_tasks, return_exceptions=True)
+    await asyncio.gather(*cleanup_tasks, return_exceptions=True)
 
         self._initialized = False
         logger.info("Data Lifecycle Manager cleanup complete")
 
-    async def start_retention_scheduler(self):
+    async def start_retention_scheduler(self) -> Dict[str, Any]:
         """Start background retention policy scheduler"""
         if not self._initialized:
             raise RuntimeError("Data Lifecycle Manager not initialized")
@@ -103,14 +103,15 @@ class DataLifecycleManager:
         if self._retention_scheduler and not self._retention_scheduler.done():
             return
 
-        self._retention_scheduler = asyncio.create_task(self._retention_scheduler_loop())
+        self._retention_scheduler = asyncio.create_task(
+            self._retention_scheduler_loop())
         logger.info("Retention scheduler started")
 
-    async def _retention_scheduler_loop(self):
+    async def _retention_scheduler_loop(self) -> Dict[str, Any]:
         """Background loop for retention policy execution"""
         while True:
             try:
-                await asyncio.sleep(3600)  # Run every hour
+    await asyncio.sleep(3600)  # Run every hour
 
                 if not self._initialized:
                     break
@@ -142,14 +143,16 @@ class DataLifecycleManager:
                         result = await self._archive_old_data(policy)
                     elif policy.policy_type == RetentionPolicyType.ANONYMIZE_DATA:
                         result = await self._anonymize_old_data(policy)
-                    else:
-                        logger.warning(f"Unknown policy type: {policy.policy_type}")
+                else:
+                        logger.warning(
+                            f"Unknown policy type: {policy.policy_type}")
                         continue
 
                     retention_results.append(result)
 
                 except Exception as e:
-                    logger.error(f"Failed to apply policy {policy.policy_id}: {e}")
+                    logger.error(
+                        f"Failed to apply policy {policy.policy_id}: {e}")
                     retention_results.append(
                         {"policy_id": policy.policy_id, "status": "failed", "error": str(e)}
                     )
@@ -166,8 +169,9 @@ class DataLifecycleManager:
             logger.error(f"Failed to apply retention policies: {e}")
             raise
 
-    async def _delete_old_data(self, policy: RetentionPolicy) -> Dict[str, Any]:
-        """Delete old data based on policy"""
+    async def _delete_old_data(
+            self, policy: RetentionPolicy) -> Dict[str, Any]:
+    """Delete old data based on policy"""
         try:
             logger.info(f"Deleting old data for policy {policy.policy_id}")
 
@@ -204,7 +208,8 @@ class DataLifecycleManager:
                     {"store": "redis", "deleted_count": redis_result.get("deleted_count", 0)}
                 )
 
-            total_deleted = sum(result["deleted_count"] for result in deletion_results)
+            total_deleted = sum(result["deleted_count"]
+                                for result in deletion_results)
 
             return {
                 "policy_id": policy.policy_id,
@@ -216,7 +221,8 @@ class DataLifecycleManager:
             }
 
         except Exception as e:
-            logger.error(f"Failed to delete old data for policy {policy.policy_id}: {e}")
+            logger.error(
+                f"Failed to delete old data for policy {policy.policy_id}: {e}")
             return {
                 "policy_id": policy.policy_id,
                 "policy_type": policy.policy_type.value,
@@ -224,8 +230,9 @@ class DataLifecycleManager:
                 "error": str(e),
             }
 
-    async def _archive_old_data(self, policy: RetentionPolicy) -> Dict[str, Any]:
-        """Archive old data based on policy"""
+    async def _archive_old_data(
+            self, policy: RetentionPolicy) -> Dict[str, Any]:
+    """Archive old data based on policy"""
         try:
             logger.info(f"Archiving old data for policy {policy.policy_id}")
 
@@ -243,8 +250,12 @@ class DataLifecycleManager:
                     "policy_type": policy.policy_type.value,
                     "status": "completed",
                     "cutoff_date": cutoff_date.isoformat(),
-                    "archived_count": archive_result.get("archived_count", 0),
-                    "archive_location": archive_result.get("archive_location", ""),
+                    "archived_count": archive_result.get(
+                        "archived_count",
+                        0),
+                    "archive_location": archive_result.get(
+                        "archive_location",
+                        ""),
                 }
             else:
                 return {
@@ -255,7 +266,8 @@ class DataLifecycleManager:
                 }
 
         except Exception as e:
-            logger.error(f"Failed to archive old data for policy {policy.policy_id}: {e}")
+            logger.error(
+                f"Failed to archive old data for policy {policy.policy_id}: {e}")
             return {
                 "policy_id": policy.policy_id,
                 "policy_type": policy.policy_type.value,
@@ -263,8 +275,9 @@ class DataLifecycleManager:
                 "error": str(e),
             }
 
-    async def _anonymize_old_data(self, policy: RetentionPolicy) -> Dict[str, Any]:
-        """Anonymize old data based on policy"""
+    async def _anonymize_old_data(
+            self, policy: RetentionPolicy) -> Dict[str, Any]:
+    """Anonymize old data based on policy"""
         try:
             logger.info(f"Anonymizing old data for policy {policy.policy_id}")
 
@@ -282,7 +295,9 @@ class DataLifecycleManager:
                     "policy_type": policy.policy_type.value,
                     "status": "completed",
                     "cutoff_date": cutoff_date.isoformat(),
-                    "anonymized_count": anonymize_result.get("anonymized_count", 0),
+                    "anonymized_count": anonymize_result.get(
+                        "anonymized_count",
+                        0),
                 }
             else:
                 return {
@@ -293,7 +308,8 @@ class DataLifecycleManager:
                 }
 
         except Exception as e:
-            logger.error(f"Failed to anonymize old data for policy {policy.policy_id}: {e}")
+            logger.error(
+                f"Failed to anonymize old data for policy {policy.policy_id}: {e}")
             return {
                 "policy_id": policy.policy_id,
                 "policy_type": policy.policy_type.value,
@@ -301,7 +317,8 @@ class DataLifecycleManager:
                 "error": str(e),
             }
 
-    async def handle_gdpr_request(self, gdpr_request: GDPRRequest) -> GDPRResponse:
+    async def handle_gdpr_request(
+            self, gdpr_request: GDPRRequest) -> GDPRResponse:
         """Handle GDPR data requests"""
         if not self._initialized:
             raise RuntimeError("Data Lifecycle Manager not initialized")
@@ -317,11 +334,13 @@ class DataLifecycleManager:
                 return await self._delete_user_data(gdpr_request)
             elif gdpr_request.request_type == "data_rectification":
                 return await self._rectify_user_data(gdpr_request)
-            else:
-                raise ValueError(f"Unknown GDPR request type: {gdpr_request.request_type}")
+        else:
+                raise ValueError(
+                    f"Unknown GDPR request type: {gdpr_request.request_type}")
 
         except Exception as e:
-            logger.error(f"Failed to handle GDPR request {gdpr_request.request_id}: {e}")
+            logger.error(
+                f"Failed to handle GDPR request {gdpr_request.request_id}: {e}")
             return GDPRResponse(
                 request_id=gdpr_request.request_id,
                 user_id=gdpr_request.user_id,
@@ -330,7 +349,8 @@ class DataLifecycleManager:
                 data={"error": str(e)},
             )
 
-    async def _export_user_data(self, gdpr_request: GDPRRequest) -> GDPRResponse:
+    async def _export_user_data(
+            self, gdpr_request: GDPRRequest) -> GDPRResponse:
         """Export user data for GDPR compliance"""
         try:
             if not self.gdpr_processor:
@@ -347,10 +367,12 @@ class DataLifecycleManager:
             )
 
         except Exception as e:
-            logger.error(f"Failed to export user data for {gdpr_request.user_id}: {e}")
+            logger.error(
+                f"Failed to export user data for {gdpr_request.user_id}: {e}")
             raise
 
-    async def _delete_user_data(self, gdpr_request: GDPRRequest) -> GDPRResponse:
+    async def _delete_user_data(
+            self, gdpr_request: GDPRRequest) -> GDPRResponse:
         """Delete user data for GDPR compliance"""
         try:
             if not self.gdpr_processor:
@@ -367,10 +389,12 @@ class DataLifecycleManager:
             )
 
         except Exception as e:
-            logger.error(f"Failed to delete user data for {gdpr_request.user_id}: {e}")
+            logger.error(
+                f"Failed to delete user data for {gdpr_request.user_id}: {e}")
             raise
 
-    async def _rectify_user_data(self, gdpr_request: GDPRRequest) -> GDPRResponse:
+    async def _rectify_user_data(
+            self, gdpr_request: GDPRRequest) -> GDPRResponse:
         """Rectify user data for GDPR compliance"""
         try:
             if not self.gdpr_processor:
@@ -389,11 +413,13 @@ class DataLifecycleManager:
             )
 
         except Exception as e:
-            logger.error(f"Failed to rectify user data for {gdpr_request.user_id}: {e}")
+            logger.error(
+                f"Failed to rectify user data for {gdpr_request.user_id}: {e}")
             raise
 
-    async def create_backup(self, backup_name: str, data_types: List[str] = None) -> Dict[str, Any]:
-        """Create comprehensive backup"""
+    async def create_backup(self, backup_name: str,
+                            data_types: List[str] = None) -> Dict[str, Any]:
+    """Create comprehensive backup"""
         if not self._initialized:
             raise RuntimeError("Data Lifecycle Manager not initialized")
 
@@ -428,7 +454,7 @@ class DataLifecycleManager:
             logger.error(f"Failed to restore backup {backup_name}: {e}")
             raise
 
-    async def log_gdpr_request(self, gdpr_request: GDPRRequest):
+    async def log_gdpr_request(self, gdpr_request: GDPRRequest) -> Dict[str, Any]:
         """Log GDPR request for audit purposes"""
         try:
             # This would typically log to an audit database

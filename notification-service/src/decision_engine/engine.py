@@ -3,9 +3,8 @@ Core notification decision engine with ML optimization.
 """
 
 import asyncio
-import logging
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+from typing import List
 
 import structlog
 from redis.asyncio import Redis
@@ -78,9 +77,7 @@ class NotificationDecisionEngine:
 
         logger.info("Notification decision engine cleanup completed")
 
-    async def process_notification_candidate(
-        self, candidate: NotificationCandidate
-    ) -> NotificationDecision:
+    async def process_notification_candidate(self, candidate: NotificationCandidate) -> NotificationDecision:
         """Main notification decisioning pipeline."""
 
         async with self._semaphore:
@@ -149,9 +146,7 @@ class NotificationDecisionEngine:
                 )
 
                 # Determine delivery channel
-                delivery_channel = await self._select_delivery_channel(
-                    candidate, user_prefs, optimal_timing
-                )
+                delivery_channel = await self._select_delivery_channel(candidate, user_prefs, optimal_timing)
 
                 # Get A/B test variant for notification strategy
                 strategy_variant = await self.ab_tester.get_variant(
@@ -176,8 +171,7 @@ class NotificationDecisionEngine:
                         "relevance_score": relevance_score,
                         "urgency_score": urgency_score,
                         "predicted_engagement": optimal_timing.predicted_engagement,
-                        "processing_time_ms": (datetime.utcnow() - start_time).total_seconds()
-                        * 1000,
+                        "processing_time_ms": (datetime.utcnow() - start_time).total_seconds() * 1000,
                     },
                 )
 
@@ -222,9 +216,7 @@ class NotificationDecisionEngine:
                 result = await self.delivery_manager.deliver_notification(decision)
 
                 # Record notification sent for fatigue tracking
-                await self.fatigue_detector.record_notification_sent(
-                    decision.user_id, decision.content.category
-                )
+                await self.fatigue_detector.record_notification_sent(decision.user_id, decision.content.category)
 
                 # Log successful delivery
                 await self._log_delivery_success(decision, result)
@@ -249,9 +241,7 @@ class NotificationDecisionEngine:
                     await self._log_delivery_failure(decision, str(e))
                     raise NotificationDeliveryError(f"Failed to deliver notification: {str(e)}")
 
-    async def process_batch_notifications(
-        self, candidates: List[NotificationCandidate]
-    ) -> List[NotificationDecision]:
+    async def process_batch_notifications(self, candidates: List[NotificationCandidate]) -> List[NotificationDecision]:
         """Process multiple notification candidates in parallel."""
 
         logger.info("Processing batch notifications", batch_size=len(candidates))
@@ -265,9 +255,7 @@ class NotificationDecisionEngine:
         processed_decisions = []
         for i, decision in enumerate(decisions):
             if isinstance(decision, Exception):
-                logger.error(
-                    "Error processing candidate in batch", candidate_index=i, error=str(decision)
-                )
+                logger.error("Error processing candidate in batch", candidate_index=i, error=str(decision))
                 processed_decisions.append(
                     NotificationDecision(
                         should_send=False,
@@ -282,16 +270,12 @@ class NotificationDecisionEngine:
         logger.info(
             "Batch processing completed",
             total_candidates=len(candidates),
-            successful_decisions=len(
-                [d for d in processed_decisions if not isinstance(d, Exception)]
-            ),
+            successful_decisions=len([d for d in processed_decisions if not isinstance(d, Exception)]),
         )
 
         return processed_decisions
 
-    def _is_notification_type_enabled(
-        self, notification_type: NotificationType, user_prefs
-    ) -> bool:
+    def _is_notification_type_enabled(self, notification_type: NotificationType, user_prefs) -> bool:
         """Check if notification type is enabled for user."""
         return user_prefs.is_notification_type_enabled(notification_type)
 
@@ -366,9 +350,7 @@ class NotificationDecisionEngine:
         # Keep only last 10000 decisions
         await self.redis_client.ltrim("notification_decisions", 0, 9999)
 
-    async def _log_delivery_success(
-        self, decision: NotificationDecision, result: DeliveryResult
-    ) -> None:
+    async def _log_delivery_success(self, decision: NotificationDecision, result: DeliveryResult) -> None:
         """Log successful delivery."""
         logger.info(
             "Notification delivered successfully",

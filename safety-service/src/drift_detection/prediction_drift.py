@@ -24,24 +24,26 @@ class PredictionDriftDetector:
         self.config = get_drift_config()
         self.is_initialized = False
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize the prediction drift detector"""
         try:
             self.is_initialized = True
             logger.info("Prediction drift detector initialized")
 
         except Exception as e:
-            logger.error(f"Failed to initialize prediction drift detector: {str(e)}")
+            logger.error(
+                f"Failed to initialize prediction drift detector: {str(e)}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup resources"""
         try:
             self.is_initialized = False
             logger.info("Prediction drift detector cleanup completed")
 
         except Exception as e:
-            logger.error(f"Error during prediction drift detector cleanup: {str(e)}")
+            logger.error(
+                f"Error during prediction drift detector cleanup: {str(e)}")
 
     async def detect_prediction_drift(
         self, reference_predictions: pd.Series, current_predictions: pd.Series
@@ -68,8 +70,12 @@ class PredictionDriftDetector:
             )
 
             # Combine results
-            drift_scores = [distribution_drift, accuracy_drift, calibration_drift]
-            drift_detected = any(score > self.config.confidence_threshold for score in drift_scores)
+            drift_scores = [
+                distribution_drift,
+                accuracy_drift,
+                calibration_drift]
+            drift_detected = any(
+                score > self.config.confidence_threshold for score in drift_scores)
             overall_drift_score = max(drift_scores)
 
             # Calculate accuracy change
@@ -124,10 +130,14 @@ class PredictionDriftDetector:
             return drift_score
 
         except Exception as e:
-            logger.error(f"Prediction distribution drift detection failed: {str(e)}")
+            logger.error(
+                f"Prediction distribution drift detection failed: {str(e)}")
             return 0.0
 
-    async def detect_accuracy_drift(self, ref_pred: pd.Series, curr_pred: pd.Series) -> float:
+    async def detect_accuracy_drift(
+            self,
+            ref_pred: pd.Series,
+            curr_pred: pd.Series) -> float:
         """Detect drift in prediction accuracy"""
         try:
             # Calculate prediction statistics
@@ -149,7 +159,9 @@ class PredictionDriftDetector:
 
             # Entropy drift (for classification)
             if "entropy" in ref_stats and "entropy" in curr_stats:
-                entropy_drift = abs(ref_stats["entropy"] - curr_stats["entropy"])
+                entropy_drift = abs(
+                    ref_stats["entropy"] -
+                    curr_stats["entropy"])
                 accuracy_drift += entropy_drift * 0.4
 
             # Normalize drift score
@@ -161,7 +173,10 @@ class PredictionDriftDetector:
             logger.error(f"Accuracy drift detection failed: {str(e)}")
             return 0.0
 
-    async def detect_calibration_drift(self, ref_pred: pd.Series, curr_pred: pd.Series) -> float:
+    async def detect_calibration_drift(
+            self,
+            ref_pred: pd.Series,
+            curr_pred: pd.Series) -> float:
         """Detect drift in prediction calibration"""
         try:
             # Convert predictions to probabilities if needed
@@ -173,7 +188,8 @@ class PredictionDriftDetector:
             curr_calibration = self.calculate_calibration_curve(curr_probs)
 
             # Calculate calibration drift
-            calibration_drift = np.mean(np.abs(ref_calibration - curr_calibration))
+            calibration_drift = np.mean(
+                np.abs(ref_calibration - curr_calibration))
 
             # Convert to drift score
             drift_score = min(calibration_drift * 2, 1.0)
@@ -184,7 +200,8 @@ class PredictionDriftDetector:
             logger.error(f"Calibration drift detection failed: {str(e)}")
             return 0.0
 
-    def calculate_prediction_stats(self, predictions: pd.Series) -> Dict[str, float]:
+    def calculate_prediction_stats(
+            self, predictions: pd.Series) -> Dict[str, float]:
         """Calculate prediction statistics"""
         try:
             stats_dict = {}
@@ -198,7 +215,8 @@ class PredictionDriftDetector:
             else:
                 # For categorical predictions
                 value_counts = predictions.value_counts(normalize=True)
-                stats_dict["entropy"] = -np.sum(value_counts * np.log2(value_counts + 1e-10))
+                stats_dict["entropy"] = - \
+                    np.sum(value_counts * np.log2(value_counts + 1e-10))
                 stats_dict["unique_count"] = len(value_counts)
                 stats_dict["most_common_prob"] = value_counts.max()
 
@@ -214,7 +232,7 @@ class PredictionDriftDetector:
             if pd.api.types.is_numeric_dtype(predictions):
                 # Assume predictions are already probabilities
                 return predictions.values
-            else:
+        else:
                 # Convert categorical to probabilities
                 value_counts = predictions.value_counts(normalize=True)
                 return predictions.map(value_counts).values
@@ -237,13 +255,16 @@ class PredictionDriftDetector:
             calibration = np.zeros(n_bins)
 
             for i in range(n_bins):
-                in_bin = (probabilities > bin_lowers[i]) & (probabilities <= bin_uppers[i])
+                in_bin = (
+                    probabilities > bin_lowers[i]) & (
+                    probabilities <= bin_uppers[i])
                 prop_in_bin = in_bin.mean()
 
                 if prop_in_bin > 0:
                     calibration[i] = prop_in_bin
                 else:
-                    calibration[i] = bin_lowers[i] + (bin_uppers[i] - bin_lowers[i]) / 2
+                    calibration[i] = bin_lowers[i] + \
+                        (bin_uppers[i] - bin_lowers[i]) / 2
 
             return calibration
 
@@ -251,7 +272,10 @@ class PredictionDriftDetector:
             logger.error(f"Calibration curve calculation failed: {str(e)}")
             return np.linspace(0, 1, n_bins)
 
-    def calculate_accuracy_change(self, ref_pred: pd.Series, curr_pred: pd.Series) -> float:
+    def calculate_accuracy_change(
+            self,
+            ref_pred: pd.Series,
+            curr_pred: pd.Series) -> float:
         """Calculate accuracy change between reference and current predictions"""
         try:
             # This is a simplified version - in practice, you'd need ground truth labels
@@ -261,10 +285,12 @@ class PredictionDriftDetector:
                 return 0.0
 
             # Calculate prediction agreement
-            if pd.api.types.is_numeric_dtype(ref_pred) and pd.api.types.is_numeric_dtype(curr_pred):
+            if pd.api.types.is_numeric_dtype(
+                    ref_pred) and pd.api.types.is_numeric_dtype(curr_pred):
                 # For numeric predictions, calculate correlation
                 correlation = ref_pred.corr(curr_pred)
-                accuracy_change = 1.0 - abs(correlation) if not np.isnan(correlation) else 0.0
+                accuracy_change = 1.0 - \
+                    abs(correlation) if not np.isnan(correlation) else 0.0
             else:
                 # For categorical predictions, calculate agreement
                 agreement = (ref_pred == curr_pred).mean()

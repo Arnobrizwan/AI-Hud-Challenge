@@ -21,9 +21,8 @@ async def evaluate_models(
     datasets: List[Dict[str, Any]],
     metrics: Dict[str, Any],
     evaluation_engine: EvaluationEngine = Depends(get_evaluation_engine),
-):
+) -> Dict[str, Any]:
     """Evaluate models offline"""
-
     try:
         logger.info(f"Evaluating {len(models)} models offline")
 
@@ -47,9 +46,8 @@ async def evaluate_single_model(
     datasets: List[Dict[str, Any]],
     metrics: Dict[str, Any],
     evaluation_engine: EvaluationEngine = Depends(get_evaluation_engine),
-):
+) -> Dict[str, Any]:
     """Evaluate a single model offline"""
-
     try:
         logger.info(f"Evaluating model {model_name} offline")
 
@@ -72,9 +70,8 @@ async def evaluate_single_model(
 @offline_evaluation_router.get("/metrics/{model_type}")
 async def get_available_metrics(
     model_type: str, evaluation_engine: EvaluationEngine = Depends(get_evaluation_engine)
-):
+) -> Dict[str, Any]:
     """Get available metrics for a model type"""
-
     try:
         # Get available metrics based on model type
         metrics = {
@@ -113,9 +110,8 @@ async def run_cross_validation(
     dataset_config: Dict[str, Any],
     cv_config: Dict[str, Any],
     evaluation_engine: EvaluationEngine = Depends(get_evaluation_engine),
-):
+) -> Dict[str, Any]:
     """Run cross-validation for a model"""
-
     try:
         logger.info("Running cross-validation")
 
@@ -141,9 +137,8 @@ async def analyze_feature_importance(
     model_config: Dict[str, Any],
     dataset_config: Dict[str, Any],
     evaluation_engine: EvaluationEngine = Depends(get_evaluation_engine),
-):
+) -> Dict[str, Any]:
     """Analyze feature importance for a model"""
-
     try:
         logger.info("Analyzing feature importance")
 

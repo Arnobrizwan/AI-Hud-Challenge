@@ -4,7 +4,7 @@ Data models for rate limiting system
 """
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Dict, List
 
 from pydantic import BaseModel, Field
 

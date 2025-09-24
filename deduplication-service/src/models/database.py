@@ -1,7 +1,5 @@
 """Database models using SQLAlchemy."""
 
-from datetime import datetime
-from typing import Any, Dict, List, Optional
 
 from sqlalchemy import (
     JSON,
@@ -52,9 +50,7 @@ class Article(Base):
 
     # Relationships
     clusters = relationship("ArticleCluster", back_populates="article")
-    duplicates = relationship(
-        "Duplicate", foreign_keys="Duplicate.article_id", back_populates="article"
-    )
+    duplicates = relationship("Duplicate", foreign_keys="Duplicate.article_id", back_populates="article")
     duplicate_of = relationship(
         "Duplicate", foreign_keys="Duplicate.duplicate_of_id", back_populates="duplicate_article"
     )
@@ -106,12 +102,8 @@ class ArticleCluster(Base):
 
     __tablename__ = "article_clusters"
 
-    article_id = Column(
-        UUID(as_uuid=True), ForeignKey("articles.id", ondelete="CASCADE"), primary_key=True
-    )
-    cluster_id = Column(
-        UUID(as_uuid=True), ForeignKey("clusters.id", ondelete="CASCADE"), primary_key=True
-    )
+    article_id = Column(UUID(as_uuid=True), ForeignKey("articles.id", ondelete="CASCADE"), primary_key=True)
+    cluster_id = Column(UUID(as_uuid=True), ForeignKey("clusters.id", ondelete="CASCADE"), primary_key=True)
     similarity_score = Column(Float, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
@@ -133,21 +125,16 @@ class Duplicate(Base):
     __tablename__ = "duplicates"
 
     id = Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
-    article_id = Column(
-        UUID(as_uuid=True), ForeignKey("articles.id", ondelete="CASCADE"), nullable=False
-    )
-    duplicate_of_id = Column(
-        UUID(as_uuid=True), ForeignKey("articles.id", ondelete="CASCADE"), nullable=False
-    )
+    article_id = Column(UUID(as_uuid=True), ForeignKey("articles.id", ondelete="CASCADE"), nullable=False)
+    duplicate_of_id = Column(UUID(as_uuid=True), ForeignKey("articles.id", ondelete="CASCADE"), nullable=False)
     similarity_score = Column(Float, nullable=False)
-    similarity_type = Column(String(50), nullable=False)  # 'lsh', 'semantic', 'content'
+    # 'lsh', 'semantic', 'content'
+    similarity_type = Column(String(50), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships
     article = relationship("Article", foreign_keys=[article_id], back_populates="duplicates")
-    duplicate_article = relationship(
-        "Article", foreign_keys=[duplicate_of_id], back_populates="duplicate_of"
-    )
+    duplicate_article = relationship("Article", foreign_keys=[duplicate_of_id], back_populates="duplicate_of")
 
     # Constraints
     __table_args__ = (
@@ -164,9 +151,7 @@ class LSHIndex(Base):
     __tablename__ = "lsh_index"
 
     id = Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
-    article_id = Column(
-        UUID(as_uuid=True), ForeignKey("articles.id", ondelete="CASCADE"), nullable=False
-    )
+    article_id = Column(UUID(as_uuid=True), ForeignKey("articles.id", ondelete="CASCADE"), nullable=False)
     minhash_signature = Column(LargeBinary, nullable=False)
     content_fingerprint = Column(String(64), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -187,10 +172,9 @@ class ProcessingQueue(Base):
     __tablename__ = "processing_queue"
 
     id = Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
-    article_id = Column(
-        UUID(as_uuid=True), ForeignKey("articles.id", ondelete="CASCADE"), nullable=False
-    )
-    status = Column(String(20), default="pending")  # 'pending', 'processing', 'completed', 'failed'
+    article_id = Column(UUID(as_uuid=True), ForeignKey("articles.id", ondelete="CASCADE"), nullable=False)
+    # 'pending', 'processing', 'completed', 'failed'
+    status = Column(String(20), default="pending")
     priority = Column(Integer, default=0)
     retry_count = Column(Integer, default=0)
     error_message = Column(Text)
@@ -218,7 +202,8 @@ class SystemMetrics(Base):
     timestamp = Column(DateTime(timezone=True), server_default=func.now())
     metric_name = Column(String(100), nullable=False)
     metric_value = Column(Float, nullable=False)
-    metric_type = Column(String(20), nullable=False)  # 'counter', 'gauge', 'histogram'
+    # 'counter', 'gauge', 'histogram'
+    metric_type = Column(String(20), nullable=False)
     labels = Column(JSON, default=dict)
 
     # Indexes

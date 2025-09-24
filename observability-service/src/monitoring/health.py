@@ -57,11 +57,12 @@ class HealthChecker:
         self.health_checks = {}
         self.is_initialized = False
 
-    async def initialize(self, config: Dict[str, Any] = None):
+    async def initialize(self, config: Dict[str, Any] = None) -> Dict[str, Any]:
         """Initialize health checker"""
 
         # Load service endpoints
-        self.service_endpoints = config.get("service_endpoints", {}) if config else {}
+        self.service_endpoints = config.get(
+            "service_endpoints", {}) if config else {}
 
         # Set up default health checks
         self._setup_default_health_checks()
@@ -87,14 +88,17 @@ class HealthChecker:
         ]
 
         # Cache health checks
-        self.health_checks["cache"] = [self._check_redis_connection, self._check_cache_performance]
+        self.health_checks["cache"] = [
+            self._check_redis_connection,
+            self._check_cache_performance]
 
         # External service health checks
-        self.health_checks["external"] = [self._check_external_apis, self._check_dns_resolution]
+        self.health_checks["external"] = [
+            self._check_external_apis,
+            self._check_dns_resolution]
 
     async def check_all_services(self) -> Dict[str, Any]:
         """Check health of all microservices"""
-
         services = [
             "ingestion-service",
             "content-extraction-service",
@@ -126,8 +130,8 @@ class HealthChecker:
 
     async def check_service_health(self, service_name: str) -> Dict[str, Any]:
         """Check health of a specific service"""
-
-        endpoint = self.service_endpoints.get(service_name, f"http://{service_name}:8000")
+        endpoint = self.service_endpoints.get(
+            service_name, f"http://{service_name}:8000")
         health_endpoint = f"{endpoint}/health"
 
         try:
@@ -181,7 +185,6 @@ class HealthChecker:
 
     async def check_infrastructure(self) -> Dict[str, Any]:
         """Check infrastructure health"""
-
         infrastructure_checks = {}
 
         # Kubernetes health
@@ -204,7 +207,6 @@ class HealthChecker:
 
     async def check_data_pipeline(self) -> Dict[str, Any]:
         """Check data pipeline health"""
-
         pipeline_checks = {}
 
         # Ingestion pipeline
@@ -223,7 +225,6 @@ class HealthChecker:
 
     async def check_ml_models(self) -> Dict[str, Any]:
         """Check ML model health"""
-
         model_checks = {}
 
         # Model availability
@@ -242,7 +243,6 @@ class HealthChecker:
 
     async def check_external_dependencies(self) -> Dict[str, Any]:
         """Check external dependencies health"""
-
         dependency_checks = {}
 
         # External APIs
@@ -369,7 +369,8 @@ class HealthChecker:
 
         try:
             # Test basic connectivity
-            response = requests.get("https://httpbin.org/status/200", timeout=5)
+            response = requests.get(
+                "https://httpbin.org/status/200", timeout=5)
 
             if response.status_code == 200:
                 status = HealthStatus.HEALTHY
@@ -521,7 +522,7 @@ class HealthChecker:
                     response = requests.get(api, timeout=5)
                     if response.status_code == 200:
                         successful_checks += 1
-                except:
+                except BaseException:
                     pass
 
             success_rate = successful_checks / total_checks
@@ -542,7 +543,9 @@ class HealthChecker:
                 message=message,
                 response_time=0.0,
                 timestamp=datetime.utcnow(),
-                metadata={"success_rate": success_rate, "successful_checks": successful_checks},
+                metadata={
+                    "success_rate": success_rate,
+                    "successful_checks": successful_checks},
             )
 
         except Exception as e:
@@ -585,7 +588,6 @@ class HealthChecker:
 
     async def _check_kubernetes_health(self) -> Dict[str, Any]:
         """Check Kubernetes cluster health"""
-
         try:
             # This would check actual Kubernetes health
             # For now, return mock result
@@ -611,7 +613,6 @@ class HealthChecker:
 
     async def _check_load_balancer_health(self) -> Dict[str, Any]:
         """Check load balancer health"""
-
         try:
             # This would check actual load balancer health
             # For now, return mock result
@@ -620,7 +621,10 @@ class HealthChecker:
                 "status": HealthStatus.HEALTHY,
                 "health_score": 0.98,
                 "message": "Load balancer healthy",
-                "details": {"backend_servers": 3, "healthy_servers": 3, "response_time": 0.05},
+                "details": {
+                    "backend_servers": 3,
+                    "healthy_servers": 3,
+                    "response_time": 0.05},
             }
 
         except Exception as e:
@@ -632,7 +636,6 @@ class HealthChecker:
 
     async def _check_storage_health(self) -> Dict[str, Any]:
         """Check storage health"""
-
         try:
             # This would check actual storage health
             # For now, return mock result
@@ -657,7 +660,6 @@ class HealthChecker:
 
     async def _check_network_health(self) -> Dict[str, Any]:
         """Check network health"""
-
         try:
             # This would check actual network health
             # For now, return mock result
@@ -666,7 +668,10 @@ class HealthChecker:
                 "status": HealthStatus.HEALTHY,
                 "health_score": 0.97,
                 "message": "Network healthy",
-                "details": {"latency_ms": 5.2, "packet_loss": 0.001, "bandwidth_mbps": 1000},
+                "details": {
+                    "latency_ms": 5.2,
+                    "packet_loss": 0.001,
+                    "bandwidth_mbps": 1000},
             }
 
         except Exception as e:
@@ -680,7 +685,6 @@ class HealthChecker:
 
     async def _check_ingestion_pipeline(self) -> Dict[str, Any]:
         """Check ingestion pipeline health"""
-
         try:
             # This would check actual ingestion pipeline
             # For now, return mock result
@@ -705,7 +709,6 @@ class HealthChecker:
 
     async def _check_processing_pipeline(self) -> Dict[str, Any]:
         """Check processing pipeline health"""
-
         try:
             # This would check actual processing pipeline
             # For now, return mock result
@@ -730,7 +733,6 @@ class HealthChecker:
 
     async def _check_storage_pipeline(self) -> Dict[str, Any]:
         """Check storage pipeline health"""
-
         try:
             # This would check actual storage pipeline
             # For now, return mock result
@@ -757,7 +759,6 @@ class HealthChecker:
 
     async def _check_model_availability(self) -> Dict[str, Any]:
         """Check ML model availability"""
-
         try:
             # This would check actual model availability
             # For now, return mock result
@@ -766,7 +767,10 @@ class HealthChecker:
                 "status": HealthStatus.HEALTHY,
                 "health_score": 0.98,
                 "message": "ML models available",
-                "details": {"models_loaded": 5, "models_loading": 0, "models_failed": 0},
+                "details": {
+                    "models_loaded": 5,
+                    "models_loading": 0,
+                    "models_failed": 0},
             }
 
         except Exception as e:
@@ -778,7 +782,6 @@ class HealthChecker:
 
     async def _check_model_performance(self) -> Dict[str, Any]:
         """Check ML model performance"""
-
         try:
             # This would check actual model performance
             # For now, return mock result
@@ -803,7 +806,6 @@ class HealthChecker:
 
     async def _check_model_drift(self) -> Dict[str, Any]:
         """Check ML model drift"""
-
         try:
             # This would check actual model drift
             # For now, return mock result
@@ -830,7 +832,6 @@ class HealthChecker:
 
     async def _check_third_party_services(self) -> Dict[str, Any]:
         """Check third-party services"""
-
         try:
             # This would check actual third-party services
             # For now, return mock result
@@ -839,7 +840,10 @@ class HealthChecker:
                 "status": HealthStatus.HEALTHY,
                 "health_score": 0.93,
                 "message": "Third-party services OK",
-                "details": {"services_checked": 3, "services_healthy": 3, "services_degraded": 0},
+                "details": {
+                    "services_checked": 3,
+                    "services_healthy": 3,
+                    "services_degraded": 0},
             }
 
         except Exception as e:

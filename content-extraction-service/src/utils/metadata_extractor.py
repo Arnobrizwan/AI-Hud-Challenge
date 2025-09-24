@@ -45,7 +45,10 @@ class MetadataExtractor:
             "twitter:player:height",
         ]
 
-    async def extract_metadata(self, html_content: str, url: str) -> ContentMetadata:
+    async def extract_metadata(
+            self,
+            html_content: str,
+            url: str) -> ContentMetadata:
         """
         Extract comprehensive metadata from HTML content.
 
@@ -118,7 +121,8 @@ class MetadataExtractor:
 
         except Exception as e:
             logger.error(f"Metadata extraction failed for {url}: {str(e)}")
-            raise ContentProcessingError(f"Metadata extraction failed: {str(e)}")
+            raise ContentProcessingError(
+                f"Metadata extraction failed: {str(e)}")
 
     async def _extract_open_graph(self, soup: BeautifulSoup) -> Dict[str, str]:
         """Extract Open Graph metadata."""
@@ -142,7 +146,8 @@ class MetadataExtractor:
 
         return og_data
 
-    async def _extract_twitter_cards(self, soup: BeautifulSoup) -> Dict[str, str]:
+    async def _extract_twitter_cards(
+            self, soup: BeautifulSoup) -> Dict[str, str]:
         """Extract Twitter Card metadata."""
         twitter_data = {}
 
@@ -173,7 +178,8 @@ class MetadataExtractor:
                         data = json.loads(content)
                         json_ld_data[f"schema_{i}"] = data
                 except json.JSONDecodeError as e:
-                    logger.warning(f"JSON-LD parsing failed for script {i}: {str(e)}")
+                    logger.warning(
+                        f"JSON-LD parsing failed for script {i}: {str(e)}")
                     continue
 
         except Exception as e:
@@ -236,7 +242,10 @@ class MetadataExtractor:
 
         return basic_meta
 
-    async def _extract_canonical_link(self, soup: BeautifulSoup, url: str) -> Optional[str]:
+    async def _extract_canonical_link(
+            self,
+            soup: BeautifulSoup,
+            url: str) -> Optional[str]:
         """Extract canonical link."""
         try:
             canonical_tag = soup.find("link", attrs={"rel": "canonical"})
@@ -252,7 +261,10 @@ class MetadataExtractor:
 
         return None
 
-    async def _extract_favicon(self, soup: BeautifulSoup, url: str) -> Optional[str]:
+    async def _extract_favicon(
+            self,
+            soup: BeautifulSoup,
+            url: str) -> Optional[str]:
         """Extract favicon URL."""
         try:
             # Try different favicon selectors
@@ -292,7 +304,9 @@ class MetadataExtractor:
                 return og_data["og:site_name"]
 
             # Try meta tag
-            site_name_tag = soup.find("meta", attrs={"name": "application-name"})
+            site_name_tag = soup.find(
+                "meta", attrs={
+                    "name": "application-name"})
             if site_name_tag and site_name_tag.get("content"):
                 return site_name_tag["content"]
 
@@ -353,7 +367,8 @@ class MetadataExtractor:
             # Extract keywords from meta tag
             keywords_tag = soup.find("meta", attrs={"name": "keywords"})
             if keywords_tag and keywords_tag.get("content"):
-                keywords = [kw.strip() for kw in keywords_tag["content"].split(",") if kw.strip()]
+                keywords = [
+                    kw.strip() for kw in keywords_tag["content"].split(",") if kw.strip()]
 
             # Extract from Open Graph tags
             og_tags = []
@@ -363,7 +378,8 @@ class MetadataExtractor:
                         if isinstance(value["keywords"], list):
                             keywords.extend(value["keywords"])
                         elif isinstance(value["keywords"], str):
-                            keywords.extend([kw.strip() for kw in value["keywords"].split(",")])
+                            keywords.extend(
+                                [kw.strip() for kw in value["keywords"].split(",")])
 
                     if "articleSection" in value:
                         categories.append(value["articleSection"])
@@ -396,16 +412,19 @@ class MetadataExtractor:
 
             # Remove duplicates and clean
             keywords = list(set([kw.strip() for kw in keywords if kw.strip()]))
-            categories = list(set([cat.strip() for cat in categories if cat.strip()]))
+            categories = list(set([cat.strip()
+                              for cat in categories if cat.strip()]))
             tags = list(set([tag.strip() for tag in tags if tag.strip()]))
 
         except Exception as e:
-            logger.warning(f"Keywords and categories extraction failed: {str(e)}")
+            logger.warning(
+                f"Keywords and categories extraction failed: {str(e)}")
 
         return keywords, categories, tags
 
-    async def extract_structured_data(self, html_content: str) -> Dict[str, Any]:
-        """
+    async def extract_structured_data(
+            self, html_content: str) -> Dict[str, Any]:
+    """
         Extract all structured data from HTML content.
 
         Args:
@@ -418,10 +437,14 @@ class MetadataExtractor:
             soup = BeautifulSoup(html_content, "html.parser")
 
             structured_data = {
-                "open_graph": await self._extract_open_graph(soup),
-                "twitter_cards": await self._extract_twitter_cards(soup),
-                "json_ld": await self._extract_json_ld(soup),
-                "basic_meta": await self._extract_basic_meta(soup),
+                "open_graph":
+    await self._extract_open_graph(soup),
+                "twitter_cards":
+    await self._extract_twitter_cards(soup),
+                "json_ld":
+    await self._extract_json_ld(soup),
+                "basic_meta":
+    await self._extract_basic_meta(soup),
             }
 
             return structured_data

@@ -24,13 +24,13 @@ class PowerAnalyzer:
             "anova": self._anova_power,
         }
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize the power analyzer"""
         logger.info("Initializing power analyzer...")
         # No specific initialization needed
         logger.info("Power analyzer initialized successfully")
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup power analyzer resources"""
         logger.info("Cleaning up power analyzer...")
         # No specific cleanup needed
@@ -59,8 +59,11 @@ class PowerAnalyzer:
         return max(sample_size, 100)  # Minimum sample size
 
     async def _t_test_power(
-        self, effect_size: float, alpha: float, power: float, baseline_rate: float
-    ) -> int:
+            self,
+            effect_size: float,
+            alpha: float,
+            power: float,
+            baseline_rate: float) -> int:
         """Calculate sample size for t-test"""
 
         # Non-centrality parameter
@@ -77,8 +80,11 @@ class PowerAnalyzer:
         return total_n
 
     async def _z_test_power(
-        self, effect_size: float, alpha: float, power: float, baseline_rate: float
-    ) -> int:
+            self,
+            effect_size: float,
+            alpha: float,
+            power: float,
+            baseline_rate: float) -> int:
         """Calculate sample size for z-test (proportions)"""
 
         # For proportions, effect size is difference in proportions
@@ -102,47 +108,71 @@ class PowerAnalyzer:
         return total_n
 
     async def _chi_square_power(
-        self, effect_size: float, alpha: float, power: float, baseline_rate: float
-    ) -> int:
+            self,
+            effect_size: float,
+            alpha: float,
+            power: float,
+            baseline_rate: float) -> int:
         """Calculate sample size for chi-square test"""
 
         # For chi-square, effect size is Cramér's V
         # This is a simplified calculation
-        n_per_group = int((norm.ppf(1 - alpha / 2) + norm.ppf(power)) ** 2 / effect_size**2)
+        n_per_group = int(
+            (norm.ppf(
+                1 -
+                alpha /
+                2) +
+                norm.ppf(power)) ** 2 /
+            effect_size**2)
         total_n = 2 * n_per_group
 
         return total_n
 
     async def _anova_power(
-        self, effect_size: float, alpha: float, power: float, baseline_rate: float
-    ) -> int:
+            self,
+            effect_size: float,
+            alpha: float,
+            power: float,
+            baseline_rate: float) -> int:
         """Calculate sample size for ANOVA"""
 
         # For ANOVA, effect size is Cohen's f
         # This is a simplified calculation
-        n_per_group = int((norm.ppf(1 - alpha / 2) + norm.ppf(power)) ** 2 / effect_size**2)
+        n_per_group = int(
+            (norm.ppf(
+                1 -
+                alpha /
+                2) +
+                norm.ppf(power)) ** 2 /
+            effect_size**2)
         total_n = 3 * n_per_group  # Assuming 3 groups
 
         return total_n
 
     async def calculate_power(
-        self, effect_size: float, sample_size: int, alpha: float = 0.05, test_type: str = "t_test"
-    ) -> float:
+            self,
+            effect_size: float,
+            sample_size: int,
+            alpha: float = 0.05,
+            test_type: str = "t_test") -> float:
         """Calculate statistical power for given parameters"""
 
-        logger.info(f"Calculating power for effect size {effect_size}, sample size {sample_size}")
+        logger.info(
+            f"Calculating power for effect size {effect_size}, sample size {sample_size}")
 
         if test_type == "t_test":
             # Two-sample t-test power
             ncp = effect_size * np.sqrt(sample_size / 2)
             critical_value = norm.ppf(1 - alpha / 2)
-            power = 1 - norm.cdf(critical_value - ncp) + norm.cdf(-critical_value - ncp)
+            power = 1 - norm.cdf(critical_value - ncp) + \
+                norm.cdf(-critical_value - ncp)
 
         elif test_type == "z_test":
             # Z-test power (proportions)
             ncp = effect_size * np.sqrt(sample_size / 2)
             critical_value = norm.ppf(1 - alpha / 2)
-            power = 1 - norm.cdf(critical_value - ncp) + norm.cdf(-critical_value - ncp)
+            power = 1 - norm.cdf(critical_value - ncp) + \
+                norm.cdf(-critical_value - ncp)
 
         else:
             # Default power calculation
@@ -151,8 +181,11 @@ class PowerAnalyzer:
         return max(0, min(1, power))
 
     async def calculate_effect_size(
-        self, sample_size: int, alpha: float = 0.05, power: float = 0.8, test_type: str = "t_test"
-    ) -> float:
+            self,
+            sample_size: int,
+            alpha: float = 0.05,
+            power: float = 0.8,
+            test_type: str = "t_test") -> float:
         """Calculate minimum detectable effect size"""
 
         logger.info(f"Calculating effect size for sample size {sample_size}")
@@ -175,11 +208,12 @@ class PowerAnalyzer:
 
         return effect_size
 
-    async def power_analysis_report(
-        self, effect_size: float, sample_size: int, alpha: float = 0.05, test_type: str = "t_test"
-    ) -> Dict[str, Any]:
-        """Generate comprehensive power analysis report"""
-
+    async def power_analysis_report(self,
+                                    effect_size: float,
+                                    sample_size: int,
+                                    alpha: float = 0.05,
+                                    test_type: str = "t_test") -> Dict[str, Any]:
+    """Generate comprehensive power analysis report"""
         logger.info("Generating power analysis report")
 
         # Calculate power
@@ -206,7 +240,10 @@ class PowerAnalyzer:
             "required_sample_size_80_power": required_n,
             "power_curve": power_curve,
             "test_type": test_type,
-            "recommendations": self._generate_power_recommendations(power, sample_size, required_n),
+            "recommendations": self._generate_power_recommendations(
+                power,
+                sample_size,
+                required_n),
         }
 
     def _generate_power_recommendations(
@@ -217,8 +254,10 @@ class PowerAnalyzer:
         recommendations = []
 
         if power < 0.8:
-            recommendations.append(f"Current power ({power:.3f}) is below recommended 0.8")
-            recommendations.append(f"Consider increasing sample size to {required_n} for 80% power")
+            recommendations.append(
+                f"Current power ({power:.3f}) is below recommended 0.8")
+            recommendations.append(
+                f"Consider increasing sample size to {required_n} for 80% power")
 
         if sample_size < 1000:
             recommendations.append(
@@ -231,6 +270,7 @@ class PowerAnalyzer:
             )
 
         if not recommendations:
-            recommendations.append("Power analysis looks good - no changes needed")
+            recommendations.append(
+                "Power analysis looks good - no changes needed")
 
         return recommendations

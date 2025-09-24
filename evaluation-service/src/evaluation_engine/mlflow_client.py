@@ -26,7 +26,7 @@ class MLflowClient:
         self.experiment_name = None
         self.active_run = None
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize MLflow client"""
         logger.info("Initializing MLflow client...")
 
@@ -47,7 +47,8 @@ class MLflowClient:
                     f"Created MLflow experiment: {self.experiment_name} (ID: {experiment_id})"
                 )
             else:
-                logger.info(f"Using existing MLflow experiment: {self.experiment_name}")
+                logger.info(
+                    f"Using existing MLflow experiment: {self.experiment_name}")
 
             logger.info("MLflow client initialized successfully")
 
@@ -55,7 +56,7 @@ class MLflowClient:
             logger.error(f"Failed to initialize MLflow client: {str(e)}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup MLflow client resources"""
         logger.info("Cleaning up MLflow client...")
 
@@ -65,7 +66,8 @@ class MLflowClient:
 
         logger.info("MLflow client cleanup completed")
 
-    async def start_run(self, run_name: str = None, tags: Dict[str, str] = None) -> str:
+    async def start_run(self, run_name: str = None,
+                        tags: Dict[str, str] = None) -> str:
         """Start a new MLflow run"""
 
         try:
@@ -87,7 +89,7 @@ class MLflowClient:
             logger.error(f"Failed to start MLflow run: {str(e)}")
             raise
 
-    async def end_run(self, status: str = "FINISHED"):
+    async def end_run(self, status: str = "FINISHED") -> Dict[str, Any]:
         """End the current MLflow run"""
 
         if self.active_run:
@@ -95,7 +97,7 @@ class MLflowClient:
             self.active_run = None
             logger.info("Ended MLflow run")
 
-    async def log_evaluation_results(self, results: Dict[str, Any]):
+    async def log_evaluation_results(self, results: Dict[str, Any]) -> Dict[str, Any]:
         """Log evaluation results to MLflow"""
 
         try:
@@ -118,11 +120,14 @@ class MLflowClient:
             # Log parameters
             mlflow.log_params(
                 {
-                    "evaluation_id": results.get("evaluation_id", "unknown"),
+                    "evaluation_id": results.get(
+                        "evaluation_id",
+                        "unknown"),
                     "evaluation_type": "comprehensive",
-                    "timestamp": results.get("started_at", datetime.utcnow()).isoformat(),
-                }
-            )
+                    "timestamp": results.get(
+                        "started_at",
+                        datetime.utcnow()).isoformat(),
+                })
 
             # Log tags
             mlflow.set_tags(
@@ -135,25 +140,29 @@ class MLflowClient:
             logger.info("Logged evaluation results to MLflow")
 
         except Exception as e:
-            logger.error(f"Failed to log evaluation results to MLflow: {str(e)}")
+            logger.error(
+                f"Failed to log evaluation results to MLflow: {str(e)}")
             raise
 
-    async def _log_offline_results(self, offline_results: Dict[str, Any]):
+    async def _log_offline_results(self, offline_results: Dict[str, Any]) -> Dict[str, Any]:
         """Log offline evaluation results"""
 
         if "models" in offline_results:
             for model_result in offline_results["models"]:
                 if "metrics" in model_result:
                     # Log model metrics
-                    for metric_type, metrics in model_result["metrics"].items():
+                    for metric_type, metrics in model_result["metrics"].items(
+                    ):
                         if isinstance(metrics, dict):
                             for metric_name, value in metrics.items():
                                 if isinstance(value, (int, float)):
-                                    mlflow.log_metric(f"offline_{metric_type}_{metric_name}", value)
+                                    mlflow.log_metric(
+                                        f"offline_{metric_type}_{metric_name}", value)
                         elif isinstance(metrics, (int, float)):
-                            mlflow.log_metric(f"offline_{metric_type}", metrics)
+                            mlflow.log_metric(
+                                f"offline_{metric_type}", metrics)
 
-    async def _log_online_results(self, online_results: Dict[str, Any]):
+    async def _log_online_results(self, online_results: Dict[str, Any]) -> Dict[str, Any]:
         """Log online evaluation results"""
 
         if "experiments" in online_results:
@@ -163,20 +172,20 @@ class MLflowClient:
                     if "statistical_results" in analysis:
                         stats = analysis["statistical_results"]
                         if "variant_results" in stats:
-                            for variant, result in stats["variant_results"].items():
+                            for variant, result in stats["variant_results"].items(
+                            ):
                                 if "primary_metric_result" in result:
                                     primary = result["primary_metric_result"]
                                     if "p_value" in primary:
                                         mlflow.log_metric(
-                                            f"online_{variant}_p_value", primary["p_value"]
-                                        )
+                                            f"online_{variant}_p_value", primary["p_value"])
                                     if "test_statistic" in primary:
                                         mlflow.log_metric(
                                             f"online_{variant}_test_statistic",
                                             primary["test_statistic"],
                                         )
 
-    async def _log_business_impact(self, business_impact: Dict[str, Any]):
+    async def _log_business_impact(self, business_impact: Dict[str, Any]) -> Dict[str, Any]:
         """Log business impact results"""
 
         if "overall_roi" in business_impact:
@@ -185,24 +194,32 @@ class MLflowClient:
         if "metric_impacts" in business_impact:
             for metric, impact in business_impact["metric_impacts"].items():
                 if "revenue_change" in impact:
-                    mlflow.log_metric(f"business_{metric}_revenue_change", impact["revenue_change"])
+                    mlflow.log_metric(
+                        f"business_{metric}_revenue_change",
+                        impact["revenue_change"])
                 if "engagement_change" in impact:
                     mlflow.log_metric(
-                        f"business_{metric}_engagement_change", impact["engagement_change"]
-                    )
+                        f"business_{metric}_engagement_change",
+                        impact["engagement_change"])
 
-    async def _log_drift_analysis(self, drift_analysis: Dict[str, Any]):
+    async def _log_drift_analysis(self, drift_analysis: Dict[str, Any]) -> Dict[str, Any]:
         """Log drift analysis results"""
 
         if "drift_severity" in drift_analysis:
-            mlflow.log_metric("drift_severity", drift_analysis["drift_severity"])
+            mlflow.log_metric(
+                "drift_severity",
+                drift_analysis["drift_severity"])
 
         if "drift_results" in drift_analysis:
             for result_name, result in drift_analysis["drift_results"].items():
-                if isinstance(result, dict) and "overall_drift_score" in result:
-                    mlflow.log_metric(f"drift_{result_name}_score", result["overall_drift_score"])
+                if isinstance(result,
+                              dict) and "overall_drift_score" in result:
+                    mlflow.log_metric(
+                        f"drift_{result_name}_score",
+                        result["overall_drift_score"])
 
-    async def log_model(self, model, model_name: str, model_version: str = "1.0.0"):
+    async def log_model(self, model, model_name: str,
+                        model_version: str = "1.0.0") -> Dict[str, Any]:
         """Log model to MLflow"""
 
         try:
@@ -235,7 +252,8 @@ class MLflowClient:
             logger.error(f"Failed to log model to MLflow: {str(e)}")
             raise
 
-    async def get_experiment_runs(self, experiment_name: str = None) -> List[Dict[str, Any]]:
+    async def get_experiment_runs(
+            self, experiment_name: str = None) -> List[Dict[str, Any]]:
         """Get experiment runs"""
 
         try:
@@ -247,7 +265,8 @@ class MLflowClient:
             else:
                 experiment_id = None
 
-            runs = mlflow.search_runs(experiment_ids=[experiment_id] if experiment_id else None)
+            runs = mlflow.search_runs(
+                experiment_ids=[experiment_id] if experiment_id else None)
 
             return runs.to_dict("records")
 
@@ -257,7 +276,6 @@ class MLflowClient:
 
     async def get_run_metrics(self, run_id: str) -> Dict[str, Any]:
         """Get metrics for a specific run"""
-
         try:
             run = mlflow.get_run(run_id)
             return run.data.metrics
@@ -268,7 +286,6 @@ class MLflowClient:
 
     async def get_run_params(self, run_id: str) -> Dict[str, Any]:
         """Get parameters for a specific run"""
-
         try:
             run = mlflow.get_run(run_id)
             return run.data.params
@@ -279,7 +296,6 @@ class MLflowClient:
 
     async def get_run_tags(self, run_id: str) -> Dict[str, Any]:
         """Get tags for a specific run"""
-
         try:
             run = mlflow.get_run(run_id)
             return run.data.tags

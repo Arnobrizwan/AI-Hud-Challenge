@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 try:
     nltk.download("punkt", quiet=True)
     nltk.download("stopwords", quiet=True)
-except:
+except BaseException:
     pass
 
 
@@ -40,13 +40,14 @@ class BertExtractiveSummarizer:
         self.max_length = 512
         self._initialized = False
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize models and tokenizers"""
         try:
             logger.info("Initializing BERT extractive summarizer...")
 
             # Initialize BERT model for sentence scoring
-            self.tokenizer = BertTokenizer.from_pretrained(settings.BERT_MODEL_PATH)
+            self.tokenizer = BertTokenizer.from_pretrained(
+                settings.BERT_MODEL_PATH)
             self.model = BertModel.from_pretrained(settings.BERT_MODEL_PATH)
             self.model.to(self.device)
             self.model.eval()
@@ -57,11 +58,11 @@ class BertExtractiveSummarizer:
             self._initialized = True
             logger.info("BERT extractive summarizer initialized successfully")
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Failed to initialize BERT summarizer: {str(e)}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Clean up resources"""
         try:
             if self.model:
@@ -74,8 +75,11 @@ class BertExtractiveSummarizer:
             logger.error(f"Error during cleanup: {str(e)}")
 
     async def summarize(
-        self, text: str, target_length: int = 120, min_sentences: int = 2, max_sentences: int = 10
-    ) -> str:
+            self,
+            text: str,
+            target_length: int = 120,
+            min_sentences: int = 2,
+            max_sentences: int = 10) -> str:
         """
         Generate extractive summary using BERT-based scoring
 
@@ -107,14 +111,15 @@ class BertExtractiveSummarizer:
             )
 
             # Reorder sentences to maintain coherence
-            ordered_sentences = self._reorder_sentences(selected_sentences, sentences)
+            ordered_sentences = self._reorder_sentences(
+                selected_sentences, sentences)
 
             # Generate final summary
             summary = " ".join(ordered_sentences)
 
             return summary.strip()
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Extractive summarization failed: {str(e)}")
             # Fallback to simple extraction
             return self._fallback_extraction(text, target_length)
@@ -134,12 +139,13 @@ class BertExtractiveSummarizer:
 
             return sentences
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Sentence preprocessing failed: {str(e)}")
             # Fallback to simple splitting
             return [s.strip() for s in text.split(".") if s.strip()]
 
-    async def _calculate_sentence_scores(self, text: str, sentences: List[str]) -> List[float]:
+    async def _calculate_sentence_scores(
+            self, text: str, sentences: List[str]) -> List[float]:
         """Calculate comprehensive sentence scores"""
         try:
             # Get sentence embeddings
@@ -151,8 +157,10 @@ class BertExtractiveSummarizer:
             for i, sentence in enumerate(sentences):
                 score = 0.0
 
-                # 1. Position score (sentences at beginning and end are often important)
-                position_score = self._calculate_position_score(i, len(sentences))
+                # 1. Position score (sentences at beginning and end are often
+                # important)
+                position_score = self._calculate_position_score(
+                    i, len(sentences))
                 score += position_score * 0.1
 
                 # 2. Length score (moderate length sentences are preferred)
@@ -187,12 +195,15 @@ class BertExtractiveSummarizer:
 
             return scores
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Sentence scoring failed: {str(e)}")
             # Return uniform scores as fallback
             return [1.0] * len(sentences)
 
-    def _calculate_position_score(self, position: int, total_sentences: int) -> float:
+    def _calculate_position_score(
+            self,
+            position: int,
+            total_sentences: int) -> float:
         """Calculate position-based score"""
         if total_sentences <= 1:
             return 1.0
@@ -202,7 +213,7 @@ class BertExtractiveSummarizer:
             return 1.0
         elif position < total_sentences * 0.1 or position > total_sentences * 0.9:
             return 0.8
-        else:
+else:
             return 0.5
 
     def _calculate_length_score(self, sentence: str) -> float:
@@ -216,7 +227,7 @@ class BertExtractiveSummarizer:
             return 0.8
         elif 5 <= word_count <= 40:
             return 0.6
-        else:
+else:
             return 0.3
 
     def _calculate_keyword_score(self, sentence: str, full_text: str) -> float:
@@ -247,12 +258,14 @@ class BertExtractiveSummarizer:
             if total_freq == 0:
                 return 0.0
 
-            sentence_score = sum(word_freq.get(word, 0) for word in sentence_words)
-            max_possible_score = len(sentence_words) * max(word_freq.values()) if word_freq else 1
+            sentence_score = sum(word_freq.get(word, 0)
+                                 for word in sentence_words)
+            max_possible_score = len(sentence_words) * \
+                max(word_freq.values()) if word_freq else 1
 
             return sentence_score / max_possible_score if max_possible_score > 0 else 0.0
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Keyword scoring failed: {str(e)}")
             return 0.5
 
@@ -262,15 +275,17 @@ class BertExtractiveSummarizer:
         """Calculate semantic similarity score"""
         try:
             # Calculate cosine similarity with all other sentences
-            similarities = cosine_similarity([sentence_embedding], all_embeddings)[0]
+            similarities = cosine_similarity(
+                [sentence_embedding], all_embeddings)[0]
 
             # Remove self-similarity
             similarities = np.delete(similarities, np.argmax(similarities))
 
             # Return average similarity (higher = more representative)
-            return float(np.mean(similarities)) if len(similarities) > 0 else 0.0
+            return float(np.mean(similarities)) if len(
+                similarities) > 0 else 0.0
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Semantic scoring failed: {str(e)}")
             return 0.5
 
@@ -280,7 +295,8 @@ class BertExtractiveSummarizer:
             # Simple entity detection (can be enhanced with spaCy)
             entity_indicators = [
                 # Capitalized words (potential proper nouns)
-                len([word for word in sentence.split() if word[0].isupper() and len(word) > 2]),
+                len([word for word in sentence.split()
+                    if word[0].isupper() and len(word) > 2]),
                 # Numbers
                 len([word for word in sentence.split() if word.isdigit()]),
                 # Common entity patterns
@@ -292,11 +308,14 @@ class BertExtractiveSummarizer:
             max_indicators = max(entity_indicators) if entity_indicators else 1
             return min(sum(entity_indicators) / (max_indicators * 4), 1.0)
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Entity scoring failed: {str(e)}")
             return 0.5
 
-    async def _calculate_bert_score(self, sentence: str, full_text: str) -> float:
+    async def _calculate_bert_score(
+            self,
+            sentence: str,
+            full_text: str) -> float:
         """Calculate BERT-based importance score"""
         try:
             # Tokenize inputs
@@ -326,11 +345,12 @@ class BertExtractiveSummarizer:
                 text_embedding = text_output.last_hidden_state[:, 0, :]
 
                 # Calculate cosine similarity
-                similarity = torch.cosine_similarity(sentence_embedding, text_embedding)
+                similarity = torch.cosine_similarity(
+                    sentence_embedding, text_embedding)
 
                 return float(similarity.cpu().numpy()[0])
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"BERT scoring failed: {str(e)}")
             return 0.5
 
@@ -373,15 +393,14 @@ class BertExtractiveSummarizer:
             # Ensure minimum sentences
             if len(selected_sentences) < min_sentences:
                 remaining = min_sentences - len(selected_sentences)
-                for sentence, _ in sentence_scores[
-                    len(selected_sentences) : len(selected_sentences) + remaining
-                ]:
+                for sentence, _ in sentence_scores[len(
+                        selected_sentences): len(selected_sentences) + remaining]:
                     if sentence not in selected_sentences:
                         selected_sentences.append(sentence)
 
             return selected_sentences
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Sentence selection failed: {str(e)}")
             # Fallback to first few sentences
             return sentences[:min_sentences]
@@ -399,7 +418,7 @@ class BertExtractiveSummarizer:
 
             return ordered
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Sentence reordering failed: {str(e)}")
             return selected_sentences
 
@@ -421,7 +440,7 @@ class BertExtractiveSummarizer:
 
             return ". ".join(selected) + "."
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Fallback extraction failed: {str(e)}")
             return text[: target_length * 5]  # Rough character limit
 

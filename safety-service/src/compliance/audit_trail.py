@@ -92,7 +92,7 @@ class AuditTrailManager:
             },
         }
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize the audit trail manager"""
         try:
             # Start cleanup task
@@ -105,7 +105,7 @@ class AuditTrailManager:
             logger.error(f"Failed to initialize audit trail manager: {str(e)}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup resources"""
         try:
             self.audit_events.clear()
@@ -139,7 +139,9 @@ class AuditTrailManager:
 
             # Determine severity
             if severity is None:
-                severity = self.event_types.get(event_type, {}).get("severity", "info")
+                severity = self.event_types.get(
+                    event_type, {}).get(
+                    "severity", "info")
 
             # Create audit event
             audit_event = AuditEvent(
@@ -160,7 +162,8 @@ class AuditTrailManager:
             self.audit_events.append(audit_event)
 
             # Log to system logger
-            logger.info(f"Audit event logged: {event_id} - {event_type}:{action}")
+            logger.info(
+                f"Audit event logged: {event_id} - {event_type}:{action}")
 
             return event_id
 
@@ -188,7 +191,10 @@ class AuditTrailManager:
             logger.error(f"Safety check logging failed: {str(e)}")
             return ""
 
-    async def log_abuse_detection(self, user_id: str, abuse_result: Any) -> str:
+    async def log_abuse_detection(
+            self,
+            user_id: str,
+            abuse_result: Any) -> str:
         """Log abuse detection event"""
         try:
             return await self.log_event(
@@ -209,7 +215,10 @@ class AuditTrailManager:
             logger.error(f"Abuse detection logging failed: {str(e)}")
             return ""
 
-    async def log_content_moderation(self, content_id: str, moderation_result: Any) -> str:
+    async def log_content_moderation(
+            self,
+            content_id: str,
+            moderation_result: Any) -> str:
         """Log content moderation event"""
         try:
             return await self.log_event(
@@ -233,7 +242,10 @@ class AuditTrailManager:
             logger.error(f"Content moderation logging failed: {str(e)}")
             return ""
 
-    async def log_rate_limiting(self, user_id: str, rate_limit_result: Any) -> str:
+    async def log_rate_limiting(
+            self,
+            user_id: str,
+            rate_limit_result: Any) -> str:
         """Log rate limiting event"""
         try:
             return await self.log_event(
@@ -357,25 +369,30 @@ class AuditTrailManager:
             filtered_events = self.audit_events
 
             if event_type:
-                filtered_events = [e for e in filtered_events if e.event_type == event_type]
+                filtered_events = [
+                    e for e in filtered_events if e.event_type == event_type]
 
             if user_id:
-                filtered_events = [e for e in filtered_events if e.user_id == user_id]
+                filtered_events = [
+                    e for e in filtered_events if e.user_id == user_id]
 
             if severity:
-                filtered_events = [e for e in filtered_events if e.severity == severity]
+                filtered_events = [
+                    e for e in filtered_events if e.severity == severity]
 
             if start_date:
-                filtered_events = [e for e in filtered_events if e.timestamp >= start_date]
+                filtered_events = [
+                    e for e in filtered_events if e.timestamp >= start_date]
 
             if end_date:
-                filtered_events = [e for e in filtered_events if e.timestamp <= end_date]
+                filtered_events = [
+                    e for e in filtered_events if e.timestamp <= end_date]
 
             # Sort by timestamp (newest first)
             filtered_events.sort(key=lambda x: x.timestamp, reverse=True)
 
             # Apply pagination
-            paginated_events = filtered_events[offset : offset + limit]
+            paginated_events = filtered_events[offset: offset + limit]
 
             # Convert to dictionaries
             return [asdict(event) for event in paginated_events]
@@ -396,21 +413,25 @@ class AuditTrailManager:
             # Count by event type
             event_type_counts = {}
             for event in self.audit_events:
-                event_type_counts[event.event_type] = event_type_counts.get(event.event_type, 0) + 1
+                event_type_counts[event.event_type] = event_type_counts.get(
+                    event.event_type, 0) + 1
 
             # Count by severity
             severity_counts = {}
             for event in self.audit_events:
-                severity_counts[event.severity] = severity_counts.get(event.severity, 0) + 1
+                severity_counts[event.severity] = severity_counts.get(
+                    event.severity, 0) + 1
 
             # Count by result
             result_counts = {}
             for event in self.audit_events:
-                result_counts[event.result] = result_counts.get(event.result, 0) + 1
+                result_counts[event.result] = result_counts.get(
+                    event.result, 0) + 1
 
             # Get recent events (last 24 hours)
             cutoff_time = datetime.utcnow() - timedelta(hours=24)
-            recent_events = [e for e in self.audit_events if e.timestamp > cutoff_time]
+            recent_events = [
+                e for e in self.audit_events if e.timestamp > cutoff_time]
 
             return {
                 "total_events": total_events,
@@ -418,8 +439,10 @@ class AuditTrailManager:
                 "event_type_counts": event_type_counts,
                 "severity_counts": severity_counts,
                 "result_counts": result_counts,
-                "oldest_event": min(e.timestamp for e in self.audit_events).isoformat(),
-                "newest_event": max(e.timestamp for e in self.audit_events).isoformat(),
+                "oldest_event": min(
+                    e.timestamp for e in self.audit_events).isoformat(),
+                "newest_event": max(
+                    e.timestamp for e in self.audit_events).isoformat(),
                 "retention_days": self.config.audit_log_retention_days,
             }
 
@@ -484,11 +507,11 @@ class AuditTrailManager:
             logger.error(f"CSV export generation failed: {str(e)}")
             return ""
 
-    async def cleanup_old_events(self):
+    async def cleanup_old_events(self) -> Dict[str, Any]:
         """Background task to clean up old audit events"""
         while True:
             try:
-                await asyncio.sleep(3600)  # Run every hour
+    await asyncio.sleep(3600)  # Run every hour
 
                 if not self.is_initialized:
                     break
@@ -500,7 +523,8 @@ class AuditTrailManager:
 
                 # Remove old events
                 initial_count = len(self.audit_events)
-                self.audit_events = [e for e in self.audit_events if e.timestamp > cutoff_date]
+                self.audit_events = [
+                    e for e in self.audit_events if e.timestamp > cutoff_date]
                 removed_count = initial_count - len(self.audit_events)
 
                 if removed_count > 0:
@@ -510,7 +534,8 @@ class AuditTrailManager:
                 logger.error(f"Audit cleanup task failed: {str(e)}")
                 await asyncio.sleep(3600)
 
-    async def search_audit_logs(self, query: str, limit: int = 100) -> List[Dict[str, Any]]:
+    async def search_audit_logs(
+            self, query: str, limit: int = 100) -> List[Dict[str, Any]]:
         """Search audit logs by query"""
         try:
             # Simple text search in event details
@@ -536,10 +561,12 @@ class AuditTrailManager:
             logger.error(f"Audit search failed: {str(e)}")
             return []
 
-    async def get_user_activity(self, user_id: str, limit: int = 100) -> List[Dict[str, Any]]:
+    async def get_user_activity(
+            self, user_id: str, limit: int = 100) -> List[Dict[str, Any]]:
         """Get activity for a specific user"""
         try:
-            user_events = [e for e in self.audit_events if e.user_id == user_id]
+            user_events = [
+                e for e in self.audit_events if e.user_id == user_id]
             user_events.sort(key=lambda x: x.timestamp, reverse=True)
 
             return [asdict(event) for event in user_events[:limit]]
@@ -548,7 +575,8 @@ class AuditTrailManager:
             logger.error(f"User activity retrieval failed: {str(e)}")
             return []
 
-    async def get_security_events(self, limit: int = 100) -> List[Dict[str, Any]]:
+    async def get_security_events(
+            self, limit: int = 100) -> List[Dict[str, Any]]:
         """Get security-related events"""
         try:
             security_events = [

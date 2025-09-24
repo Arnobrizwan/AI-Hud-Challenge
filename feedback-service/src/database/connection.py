@@ -21,7 +21,7 @@ async_session_maker = None
 Base = declarative_base()
 
 
-async def init_db():
+async def init_db() -> Dict[str, Any]:
     """Initialize database connection"""
     global engine, async_session_maker
 
@@ -37,17 +37,18 @@ async def init_db():
     )
 
     # Create session maker
-    async_session_maker = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    async_session_maker = async_sessionmaker(
+        engine, class_=AsyncSession, expire_on_commit=False)
 
     logger.info("Database connection initialized")
 
 
-async def close_db():
+async def close_db() -> Dict[str, Any]:
     """Close database connection"""
     global engine
 
     if engine:
-        await engine.dispose()
+    await engine.dispose()
         logger.info("Database connection closed")
 
 
@@ -60,7 +61,7 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
         try:
             yield session
         except Exception:
-            await session.rollback()
+    await session.rollback()
             raise
         finally:
-            await session.close()
+    await session.close()

@@ -107,7 +107,7 @@ class CostCollector:
         self.cost_data = []
         self.is_initialized = False
 
-    async def initialize(self, config: Dict[str, Any] = None):
+    async def initialize(self, config: Dict[str, Any] = None) -> Dict[str, Any]:
         """Initialize cost collector"""
 
         # Set up data sources
@@ -133,7 +133,8 @@ class CostCollector:
 
         # Keep only last 30 days of data
         cutoff_date = datetime.utcnow() - timedelta(days=30)
-        self.cost_data = [d for d in self.cost_data if d.timestamp >= cutoff_date]
+        self.cost_data = [
+            d for d in self.cost_data if d.timestamp >= cutoff_date]
 
         return cost_data
 
@@ -246,9 +247,11 @@ class CostCollector:
                     category=CostCategory.COMPUTE,
                     service="kubernetes",
                     amount=200.00,
-                    metadata={"pods": 15, "cpu_hours": 360, "memory_gb_hours": 720},
-                )
-            ]
+                    metadata={
+                        "pods": 15,
+                        "cpu_hours": 360,
+                        "memory_gb_hours": 720},
+                )]
 
             return mock_costs
 
@@ -304,7 +307,6 @@ class CostAnalyzer:
 
     async def analyze_costs(self, cost_data: List[CostData]) -> Dict[str, Any]:
         """Analyze cost data and generate insights"""
-
         self.cost_data = cost_data
 
         # Calculate total costs
@@ -335,7 +337,8 @@ class CostAnalyzer:
             "analysis_timestamp": datetime.utcnow().isoformat(),
         }
 
-    def _group_by_category(self, cost_data: List[CostData]) -> Dict[str, float]:
+    def _group_by_category(
+            self, cost_data: List[CostData]) -> Dict[str, float]:
         """Group costs by category"""
 
         category_costs = {}
@@ -361,7 +364,6 @@ class CostAnalyzer:
 
     def _calculate_trends(self, cost_data: List[CostData]) -> Dict[str, Any]:
         """Calculate cost trends"""
-
         # Group by day
         daily_costs = {}
         for data in cost_data:
@@ -393,7 +395,8 @@ class CostAnalyzer:
             "daily_costs": daily_costs,
         }
 
-    def _identify_anomalies(self, cost_data: List[CostData]) -> List[Dict[str, Any]]:
+    def _identify_anomalies(
+            self, cost_data: List[CostData]) -> List[Dict[str, Any]]:
         """Identify cost anomalies"""
 
         anomalies = []
@@ -410,13 +413,16 @@ class CostAnalyzer:
 
         # Calculate average and standard deviation for each service
         for service in set(data.service for data in cost_data):
-            service_costs = [cost for (s, day), cost in service_daily_costs.items() if s == service]
+            service_costs = [
+                cost for (
+                    s,
+                    day),
+                cost in service_daily_costs.items() if s == service]
 
             if len(service_costs) >= 3:
                 avg_cost = sum(service_costs) / len(service_costs)
-                variance = sum((cost - avg_cost) ** 2 for cost in service_costs) / len(
-                    service_costs
-                )
+                variance = sum(
+                    (cost - avg_cost) ** 2 for cost in service_costs) / len(service_costs)
                 std_dev = variance**0.5
 
                 # Identify outliers (costs > 2 standard deviations from mean)
@@ -428,39 +434,46 @@ class CostAnalyzer:
                                 "date": day.isoformat(),
                                 "cost": cost,
                                 "expected_cost": avg_cost,
-                                "deviation": cost - avg_cost,
-                                "severity": "high" if cost > avg_cost + 3 * std_dev else "medium",
-                            }
-                        )
+                                "deviation": cost -
+                                avg_cost,
+                                "severity": "high" if cost > avg_cost +
+                                3 *
+                                std_dev else "medium",
+                            })
 
         return anomalies
 
-    async def _generate_optimizations(self, cost_data: List[CostData]) -> List[CostOptimization]:
+    async def _generate_optimizations(
+            self, cost_data: List[CostData]) -> List[CostOptimization]:
         """Generate cost optimization recommendations"""
 
         optimizations = []
 
         # Analyze compute costs
-        compute_costs = [d for d in cost_data if d.category == CostCategory.COMPUTE]
+        compute_costs = [
+            d for d in cost_data if d.category == CostCategory.COMPUTE]
         if compute_costs:
             compute_optimizations = await self._analyze_compute_costs(compute_costs)
             optimizations.extend(compute_optimizations)
 
         # Analyze storage costs
-        storage_costs = [d for d in cost_data if d.category == CostCategory.STORAGE]
+        storage_costs = [
+            d for d in cost_data if d.category == CostCategory.STORAGE]
         if storage_costs:
             storage_optimizations = await self._analyze_storage_costs(storage_costs)
             optimizations.extend(storage_optimizations)
 
         # Analyze database costs
-        db_costs = [d for d in cost_data if d.category == CostCategory.DATABASE]
+        db_costs = [d for d in cost_data if d.category ==
+                    CostCategory.DATABASE]
         if db_costs:
             db_optimizations = await self._analyze_database_costs(db_costs)
             optimizations.extend(db_optimizations)
 
         return optimizations
 
-    async def _analyze_compute_costs(self, compute_costs: List[CostData]) -> List[CostOptimization]:
+    async def _analyze_compute_costs(
+            self, compute_costs: List[CostData]) -> List[CostOptimization]:
         """Analyze compute costs for optimization opportunities"""
 
         optimizations = []
@@ -491,7 +504,8 @@ class CostAnalyzer:
 
         return optimizations
 
-    async def _analyze_storage_costs(self, storage_costs: List[CostData]) -> List[CostOptimization]:
+    async def _analyze_storage_costs(
+            self, storage_costs: List[CostData]) -> List[CostOptimization]:
         """Analyze storage costs for optimization opportunities"""
 
         optimizations = []
@@ -512,7 +526,8 @@ class CostAnalyzer:
 
         return optimizations
 
-    async def _analyze_database_costs(self, db_costs: List[CostData]) -> List[CostOptimization]:
+    async def _analyze_database_costs(
+            self, db_costs: List[CostData]) -> List[CostOptimization]:
         """Analyze database costs for optimization opportunities"""
 
         optimizations = []
@@ -542,7 +557,8 @@ class CostAlertManager:
         self.budgets = {}
         self.alert_rules = {}
 
-    async def check_cost_alerts(self, cost_data: List[CostData]) -> List[CostAlert]:
+    async def check_cost_alerts(
+            self, cost_data: List[CostData]) -> List[CostAlert]:
         """Check for cost alerts based on current data"""
 
         alerts = []
@@ -564,7 +580,8 @@ class CostAlertManager:
 
         return alerts
 
-    async def _check_budget_alerts(self, cost_data: List[CostData]) -> List[CostAlert]:
+    async def _check_budget_alerts(
+            self, cost_data: List[CostData]) -> List[CostAlert]:
         """Check for budget threshold alerts"""
 
         alerts = []
@@ -603,7 +620,8 @@ class CostAlertManager:
 
         return alerts
 
-    async def _check_spike_alerts(self, cost_data: List[CostData]) -> List[CostAlert]:
+    async def _check_spike_alerts(
+            self, cost_data: List[CostData]) -> List[CostAlert]:
         """Check for unusual cost spikes"""
 
         alerts = []
@@ -620,7 +638,11 @@ class CostAlertManager:
 
         # Calculate average daily cost for each service
         for service in set(data.service for data in cost_data):
-            service_costs = [cost for (s, day), cost in service_daily_costs.items() if s == service]
+            service_costs = [
+                cost for (
+                    s,
+                    day),
+                cost in service_daily_costs.items() if s == service]
 
             if len(service_costs) >= 3:
                 avg_cost = sum(service_costs) / len(service_costs)
@@ -648,7 +670,8 @@ class CostAlertManager:
 
         return alerts
 
-    async def _check_waste_alerts(self, cost_data: List[CostData]) -> List[CostAlert]:
+    async def _check_waste_alerts(
+            self, cost_data: List[CostData]) -> List[CostAlert]:
         """Check for resource waste"""
 
         alerts = []
@@ -705,7 +728,7 @@ class CostMonitor:
         self.alert_manager = CostAlertManager()
         self.is_initialized = False
 
-    async def initialize(self, config: Dict[str, Any] = None):
+    async def initialize(self, config: Dict[str, Any] = None) -> Dict[str, Any]:
         """Initialize cost monitoring"""
 
         await self.cost_collector.initialize(config)
@@ -718,7 +741,6 @@ class CostMonitor:
 
     async def analyze_costs(self) -> Dict[str, Any]:
         """Analyze costs and generate insights"""
-
         # Collect fresh cost data
         cost_data = await self.collect_cost_metrics()
 
@@ -731,9 +753,9 @@ class CostMonitor:
 
         return analysis
 
-    async def get_cost_summary(self, time_window: timedelta = timedelta(days=7)) -> Dict[str, Any]:
-        """Get cost summary for time window"""
-
+    async def get_cost_summary(
+            self, time_window: timedelta = timedelta(days=7)) -> Dict[str, Any]:
+    """Get cost summary for time window"""
         # Collect cost data
         cost_data = await self.collect_cost_metrics()
 
@@ -743,7 +765,8 @@ class CostMonitor:
 
         # Calculate summary
         total_cost = sum(d.amount for d in recent_costs)
-        category_breakdown = self.cost_analyzer._group_by_category(recent_costs)
+        category_breakdown = self.cost_analyzer._group_by_category(
+            recent_costs)
         service_breakdown = self.cost_analyzer._group_by_service(recent_costs)
 
         # Calculate daily average
@@ -767,8 +790,12 @@ class CostMonitor:
         """Get active cost alerts"""
         return [alert for alert in self.alert_manager.alerts if not alert.resolved]
 
-    async def resolve_alert(self, alert_id: str, user: str, notes: Optional[str] = None):
-        """Resolve cost alert"""
+    async def resolve_alert(
+            self,
+            alert_id: str,
+            user: str,
+            notes: Optional[str] = None):
+         -> Dict[str, Any]:"""Resolve cost alert"""
 
         for alert in self.alert_manager.alerts:
             if alert.id == alert_id:
@@ -777,7 +804,7 @@ class CostMonitor:
                 logger.info(f"Cost alert {alert_id} resolved by {user}")
                 break
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup cost monitor"""
         self.is_initialized = False
         logger.info("Cost monitor cleaned up")

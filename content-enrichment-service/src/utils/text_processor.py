@@ -25,7 +25,8 @@ class TextProcessor:
 
             self.html_parser = BeautifulSoup
         except ImportError:
-            logger.warning("BeautifulSoup not available, using basic HTML cleaning")
+            logger.warning(
+                "BeautifulSoup not available, using basic HTML cleaning")
             self.html_parser = None
 
     def clean_text(self, text: str, remove_html: bool = True) -> str:
@@ -180,7 +181,8 @@ class TextProcessor:
             # Filter words
             keywords = []
             for word in words:
-                if len(word) >= min_length and word not in stop_words and not word.isdigit():
+                if len(
+                        word) >= min_length and word not in stop_words and not word.isdigit():
                     keywords.append(word)
 
             return keywords
@@ -189,7 +191,11 @@ class TextProcessor:
             logger.error("Keyword extraction failed", error=str(e))
             return []
 
-    def extract_phrases(self, text: str, min_words: int = 2, max_words: int = 4) -> List[str]:
+    def extract_phrases(
+            self,
+            text: str,
+            min_words: int = 2,
+            max_words: int = 4) -> List[str]:
         """Extract phrases from text."""
         try:
             # Clean text
@@ -204,8 +210,10 @@ class TextProcessor:
 
                 # Generate n-grams
                 for i in range(len(words) - min_words + 1):
-                    for n in range(min_words, min(max_words + 1, len(words) - i + 1)):
-                        phrase = " ".join(words[i : i + n])
+                    for n in range(
+                        min_words, min(
+                            max_words + 1, len(words) - i + 1)):
+                        phrase = " ".join(words[i: i + n])
                         if len(phrase) > 10:  # Filter out very short phrases
                             phrases.append(phrase)
 
@@ -233,7 +241,8 @@ class TextProcessor:
             )
 
             # Calculate readability metrics
-            readability_score = self._calculate_simple_readability(cleaned_text)
+            readability_score = self._calculate_simple_readability(
+                cleaned_text)
 
             # Calculate complexity metrics
             unique_words = len(set(cleaned_text.lower().split()))
@@ -330,15 +339,14 @@ class TextProcessor:
             for pattern, number_type in number_patterns:
                 matches = re.finditer(pattern, text)
                 for match in matches:
-                    numbers.append(
-                        {
-                            "value": match.group(),
-                            "type": number_type,
-                            "start": match.start(),
-                            "end": match.end(),
-                            "context": self._get_context(text, match.start(), match.end()),
-                        }
-                    )
+                    numbers.append({"value": match.group(),
+                                    "type": number_type,
+                                    "start": match.start(),
+                                    "end": match.end(),
+                                    "context": self._get_context(text,
+                                                                 match.start(),
+                                                                 match.end()),
+                                    })
 
             return numbers
 
@@ -346,7 +354,12 @@ class TextProcessor:
             logger.error("Number extraction failed", error=str(e))
             return []
 
-    def _get_context(self, text: str, start: int, end: int, context_length: int = 50) -> str:
+    def _get_context(
+            self,
+            text: str,
+            start: int,
+            end: int,
+            context_length: int = 50) -> str:
         """Get context around a match."""
         try:
             context_start = max(0, start - context_length)
@@ -406,7 +419,8 @@ class TextProcessor:
         """Extract phone numbers from text."""
         try:
             phone_patterns = [
-                r"(\+?1[-.\s]?)?\(?[0-9]{3}\)?[-.\s]?[0-9]{3}[-.\s]?[0-9]{4}",  # US format
+                # US format
+                r"(\+?1[-.\s]?)?\(?[0-9]{3}\)?[-.\s]?[0-9]{3}[-.\s]?[0-9]{4}",
                 r"\+?[1-9]\d{1,14}",  # International format
             ]
 

@@ -101,12 +101,14 @@ class PostMortemResponse(BaseModel):
 
 
 @router.post("/", response_model=IncidentResponse)
-async def create_incident(incident_request: IncidentRequest):
+async def create_incident(incident_request: IncidentRequest) -> Dict[str, Any]:
     """Create new incident"""
 
     try:
         if not observability_engine or not observability_engine.incident_manager:
-            raise HTTPException(status_code=503, detail="Incident manager not available")
+            raise HTTPException(
+                status_code=503,
+                detail="Incident manager not available")
 
         # Create incident data
         incident_data = {
@@ -145,7 +147,8 @@ async def create_incident(incident_request: IncidentRequest):
 
     except Exception as e:
         logger.error(f"Failed to create incident: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to create incident: {str(e)}")
+        raise HTTPException(status_code=500,
+                            detail=f"Failed to create incident: {str(e)}")
 
 
 @router.post("/emergency")
@@ -158,7 +161,9 @@ async def create_emergency_incident(
 
     try:
         if not observability_engine or not observability_engine.incident_manager:
-            raise HTTPException(status_code=503, detail="Incident manager not available")
+            raise HTTPException(
+                status_code=503,
+                detail="Incident manager not available")
 
         # Create emergency incident
         incident = await observability_engine.incident_manager.create_emergency_incident(
@@ -177,8 +182,8 @@ async def create_emergency_incident(
     except Exception as e:
         logger.error(f"Failed to create emergency incident: {str(e)}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to create emergency incident: {str(e)}"
-        )
+            status_code=500,
+            detail=f"Failed to create emergency incident: {str(e)}")
 
 
 @router.get("/", response_model=List[IncidentResponse])
@@ -193,7 +198,9 @@ async def get_incidents(
 
     try:
         if not observability_engine or not observability_engine.incident_manager:
-            raise HTTPException(status_code=503, detail="Incident manager not available")
+            raise HTTPException(
+                status_code=503,
+                detail="Incident manager not available")
 
         # Get all incidents
         incident_manager = observability_engine.incident_manager
@@ -203,18 +210,20 @@ async def get_incidents(
         filtered_incidents = all_incidents
 
         if status:
-            filtered_incidents = [i for i in filtered_incidents if i.status.value == status]
+            filtered_incidents = [
+                i for i in filtered_incidents if i.status.value == status]
 
         if severity:
-            filtered_incidents = [i for i in filtered_incidents if i.severity.value == severity]
+            filtered_incidents = [
+                i for i in filtered_incidents if i.severity.value == severity]
 
         if incident_type:
             filtered_incidents = [
-                i for i in filtered_incidents if i.incident_type.value == incident_type
-            ]
+                i for i in filtered_incidents if i.incident_type.value == incident_type]
 
         if service:
-            filtered_incidents = [i for i in filtered_incidents if service in i.affected_services]
+            filtered_incidents = [
+                i for i in filtered_incidents if service in i.affected_services]
 
         # Limit results
         filtered_incidents = filtered_incidents[:limit]
@@ -242,23 +251,25 @@ async def get_incidents(
                     tags=incident.tags,
                     metadata=incident.metadata,
                     timeline=incident.timeline,
-                )
-            )
+                ))
 
         return incidents
 
     except Exception as e:
         logger.error(f"Failed to get incidents: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to get incidents: {str(e)}")
+        raise HTTPException(status_code=500,
+                            detail=f"Failed to get incidents: {str(e)}")
 
 
 @router.get("/active", response_model=List[IncidentResponse])
-async def get_active_incidents():
+async def get_active_incidents() -> Dict[str, Any]:
     """Get active incidents"""
 
     try:
         if not observability_engine or not observability_engine.incident_manager:
-            raise HTTPException(status_code=503, detail="Incident manager not available")
+            raise HTTPException(
+                status_code=503,
+                detail="Incident manager not available")
 
         # Get active incidents
         active_incidents = await observability_engine.incident_manager.get_active_incidents()
@@ -286,29 +297,33 @@ async def get_active_incidents():
                     tags=incident.tags,
                     metadata=incident.metadata,
                     timeline=incident.timeline,
-                )
-            )
+                ))
 
         return incidents
 
     except Exception as e:
         logger.error(f"Failed to get active incidents: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to get active incidents: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get active incidents: {str(e)}")
 
 
 @router.get("/{incident_id}", response_model=IncidentResponse)
-async def get_incident(incident_id: str):
+async def get_incident(incident_id: str) -> Dict[str, Any]:
     """Get specific incident by ID"""
 
     try:
         if not observability_engine or not observability_engine.incident_manager:
-            raise HTTPException(status_code=503, detail="Incident manager not available")
+            raise HTTPException(
+                status_code=503,
+                detail="Incident manager not available")
 
         # Get incident
         incident = await observability_engine.incident_manager.get_incident(incident_id)
 
         if not incident:
-            raise HTTPException(status_code=404, detail=f"Incident {incident_id} not found")
+            raise HTTPException(status_code=404,
+                                detail=f"Incident {incident_id} not found")
 
         return IncidentResponse(
             id=incident.id,
@@ -336,29 +351,33 @@ async def get_incident(incident_id: str):
     except Exception as e:
         logger.error(f"Failed to get incident {incident_id}: {str(e)}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to get incident {incident_id}: {str(e)}"
-        )
+            status_code=500,
+            detail=f"Failed to get incident {incident_id}: {str(e)}")
 
 
 @router.put("/{incident_id}", response_model=IncidentResponse)
-async def update_incident(
-    incident_id: str, update_request: IncidentUpdateRequest, user: str = Body(..., embed=True)
-):
+async def update_incident(incident_id: str,
+                          update_request: IncidentUpdateRequest,
+                          user: str = Body(...,
+                                           embed=True)):
     """Update incident"""
 
     try:
         if not observability_engine or not observability_engine.incident_manager:
-            raise HTTPException(status_code=503, detail="Incident manager not available")
+            raise HTTPException(
+                status_code=503,
+                detail="Incident manager not available")
 
         # Get incident
         incident = await observability_engine.incident_manager.get_incident(incident_id)
 
         if not incident:
-            raise HTTPException(status_code=404, detail=f"Incident {incident_id} not found")
+            raise HTTPException(status_code=404,
+                                detail=f"Incident {incident_id} not found")
 
         # Update incident fields
         if update_request.status:
-            await observability_engine.incident_manager.update_incident_status(
+    await observability_engine.incident_manager.update_incident_status(
                 incident_id, IncidentStatus(update_request.status), user, update_request.notes
             )
 
@@ -370,8 +389,7 @@ async def update_incident(
                     "action": "assigned",
                     "user": user,
                     "description": f"Incident assigned to {update_request.assigned_to}",
-                }
-            )
+                })
 
         if update_request.root_cause:
             incident.root_cause = update_request.root_cause
@@ -381,8 +399,7 @@ async def update_incident(
                     "action": "root_cause_updated",
                     "user": user,
                     "description": f"Root cause updated: {update_request.root_cause}",
-                }
-            )
+                })
 
         if update_request.resolution:
             incident.resolution = update_request.resolution
@@ -392,8 +409,7 @@ async def update_incident(
                     "action": "resolution_updated",
                     "user": user,
                     "description": f"Resolution updated: {update_request.resolution}",
-                }
-            )
+                })
 
         return IncidentResponse(
             id=incident.id,
@@ -421,23 +437,26 @@ async def update_incident(
     except Exception as e:
         logger.error(f"Failed to update incident {incident_id}: {str(e)}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to update incident {incident_id}: {str(e)}"
-        )
+            status_code=500,
+            detail=f"Failed to update incident {incident_id}: {str(e)}")
 
 
 @router.get("/{incident_id}/timeline")
-async def get_incident_timeline(incident_id: str):
+async def get_incident_timeline(incident_id: str) -> Dict[str, Any]:
     """Get incident timeline"""
 
     try:
         if not observability_engine or not observability_engine.incident_manager:
-            raise HTTPException(status_code=503, detail="Incident manager not available")
+            raise HTTPException(
+                status_code=503,
+                detail="Incident manager not available")
 
         # Get incident
         incident = await observability_engine.incident_manager.get_incident(incident_id)
 
         if not incident:
-            raise HTTPException(status_code=404, detail=f"Incident {incident_id} not found")
+            raise HTTPException(status_code=404,
+                                detail=f"Incident {incident_id} not found")
 
         return {
             "incident_id": incident_id,
@@ -448,19 +467,24 @@ async def get_incident_timeline(incident_id: str):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Failed to get timeline for incident {incident_id}: {str(e)}")
+        logger.error(
+            f"Failed to get timeline for incident {incident_id}: {str(e)}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to get timeline for incident {incident_id}: {str(e)}"
-        )
+            status_code=500,
+            detail=f"Failed to get timeline for incident {incident_id}: {str(e)}")
 
 
 @router.post("/{incident_id}/post-mortem", response_model=PostMortemResponse)
-async def create_post_mortem(incident_id: str, post_mortem_request: PostMortemRequest):
-    """Create post-mortem for incident"""
+async def create_post_mortem(
+        incident_id: str,
+        post_mortem_request: PostMortemRequest):
+     -> Dict[str, Any]:"""Create post-mortem for incident"""
 
     try:
         if not observability_engine or not observability_engine.incident_manager:
-            raise HTTPException(status_code=503, detail="Incident manager not available")
+            raise HTTPException(
+                status_code=503,
+                detail="Incident manager not available")
 
         # Create post-mortem
         post_mortem = await observability_engine.incident_manager.create_post_mortem(incident_id)
@@ -494,7 +518,8 @@ async def create_post_mortem(incident_id: str, post_mortem_request: PostMortemRe
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Failed to create post-mortem for incident {incident_id}: {str(e)}")
+        logger.error(
+            f"Failed to create post-mortem for incident {incident_id}: {str(e)}")
         raise HTTPException(
             status_code=500,
             detail=f"Failed to create post-mortem for incident {incident_id}: {str(e)}",
@@ -502,23 +527,24 @@ async def create_post_mortem(incident_id: str, post_mortem_request: PostMortemRe
 
 
 @router.get("/{incident_id}/post-mortem", response_model=PostMortemResponse)
-async def get_post_mortem(incident_id: str):
+async def get_post_mortem(incident_id: str) -> Dict[str, Any]:
     """Get post-mortem for incident"""
 
     try:
         if not observability_engine or not observability_engine.incident_manager:
-            raise HTTPException(status_code=503, detail="Incident manager not available")
+            raise HTTPException(
+                status_code=503,
+                detail="Incident manager not available")
 
         # Find post-mortem for incident
         post_mortems = observability_engine.incident_manager.post_mortems
         post_mortem = next(
-            (pm for pm in post_mortems.values() if pm.incident_id == incident_id), None
-        )
+            (pm for pm in post_mortems.values() if pm.incident_id == incident_id), None)
 
         if not post_mortem:
             raise HTTPException(
-                status_code=404, detail=f"Post-mortem for incident {incident_id} not found"
-            )
+                status_code=404,
+                detail=f"Post-mortem for incident {incident_id} not found")
 
         return PostMortemResponse(
             id=post_mortem.id,
@@ -540,7 +566,8 @@ async def get_post_mortem(incident_id: str):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Failed to get post-mortem for incident {incident_id}: {str(e)}")
+        logger.error(
+            f"Failed to get post-mortem for incident {incident_id}: {str(e)}")
         raise HTTPException(
             status_code=500,
             detail=f"Failed to get post-mortem for incident {incident_id}: {str(e)}",
@@ -549,13 +576,16 @@ async def get_post_mortem(incident_id: str):
 
 @router.get("/stats")
 async def get_incident_statistics(
-    time_window: int = Query(2592000, description="Time window in seconds (default: 30 days)")
-):
+    time_window: int = Query(
+        2592000,
+        description="Time window in seconds (default: 30 days)")):
     """Get incident statistics"""
 
     try:
         if not observability_engine or not observability_engine.incident_manager:
-            raise HTTPException(status_code=503, detail="Incident manager not available")
+            raise HTTPException(
+                status_code=503,
+                detail="Incident manager not available")
 
         # Get incident metrics
         time_window_delta = timedelta(seconds=time_window)
@@ -571,7 +601,9 @@ async def get_incident_statistics(
 
     except Exception as e:
         logger.error(f"Failed to get incident statistics: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to get incident statistics: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get incident statistics: {str(e)}")
 
 
 @router.get("/search")
@@ -583,7 +615,9 @@ async def search_incidents(
 
     try:
         if not observability_engine or not observability_engine.incident_manager:
-            raise HTTPException(status_code=503, detail="Incident manager not available")
+            raise HTTPException(
+                status_code=503,
+                detail="Incident manager not available")
 
         # Search incidents
         incidents = await observability_engine.incident_manager.search_incidents(query)
@@ -614,8 +648,7 @@ async def search_incidents(
                     tags=incident.tags,
                     metadata=incident.metadata,
                     timeline=incident.timeline,
-                )
-            )
+                ))
 
         return {
             "query": query,
@@ -625,4 +658,5 @@ async def search_incidents(
 
     except Exception as e:
         logger.error(f"Failed to search incidents: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to search incidents: {str(e)}")
+        raise HTTPException(status_code=500,
+                            detail=f"Failed to search incidents: {str(e)}")

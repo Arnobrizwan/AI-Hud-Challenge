@@ -129,7 +129,7 @@ def expired_jwt_token() -> str:
 
 # Mock rate limiter fixture
 @pytest.fixture(scope="function")
-async def mock_rate_limiter():
+async def mock_rate_limiter() -> Dict[str, Any]:
     """Mock rate limiter for testing."""
     with (
         patch.object(rate_limiter, "check_user_rate_limit") as mock_user_limit,
@@ -145,7 +145,7 @@ async def mock_rate_limiter():
 
 # Database fixtures (if using database)
 @pytest.fixture(scope="function")
-async def db_session():
+async def db_session() -> Dict[str, Any]:
     """Create a database session for testing."""
     # This would be implemented if using a database like PostgreSQL
     # For now, we're using Redis only
@@ -200,7 +200,11 @@ def sample_filter_data():
 @pytest.fixture(scope="function")
 def performance_test_config():
     """Configuration for performance testing."""
-    return {"concurrent_requests": 100, "total_requests": 1000, "timeout": 30.0, "rate_limit": 1000}
+    return {
+        "concurrent_requests": 100,
+        "total_requests": 1000,
+        "timeout": 30.0,
+        "rate_limit": 1000}
 
 
 # Security testing fixtures
@@ -217,7 +221,7 @@ def security_test_payloads():
 
 # Cleanup fixtures
 @pytest.fixture(scope="function", autouse=True)
-async def cleanup_redis(mock_redis):
+async def cleanup_redis(mock_redis) -> Dict[str, Any]:
     """Clean up Redis after each test."""
     yield
     mock_redis.flushdb()
@@ -251,7 +255,7 @@ class AsyncTestCase:
     """Base class for async test utilities."""
 
     @staticmethod
-    async def wait_for_condition(condition_func, timeout=5.0, interval=0.1):
+    async def wait_for_condition(condition_func, timeout=5.0, interval=0.1) -> Dict[str, Any]:
         """Wait for a condition to be true."""
         import time
 
@@ -265,7 +269,7 @@ class AsyncTestCase:
         return False
 
     @staticmethod
-    async def assert_eventually(assertion_func, timeout=5.0, interval=0.1):
+    async def assert_eventually(assertion_func, timeout=5.0, interval=0.1) -> Dict[str, Any]:
         """Assert that a condition becomes true within timeout."""
         success = await AsyncTestCase.wait_for_condition(assertion_func, timeout, interval)
         if not success:
@@ -276,7 +280,13 @@ class AsyncTestCase:
 def pytest_configure(config):
     """Configure pytest markers."""
     config.addinivalue_line("markers", "unit: mark test as a unit test")
-    config.addinivalue_line("markers", "integration: mark test as an integration test")
+    config.addinivalue_line(
+        "markers",
+        "integration: mark test as an integration test")
     config.addinivalue_line("markers", "slow: mark test as slow running")
-    config.addinivalue_line("markers", "security: mark test as a security test")
-    config.addinivalue_line("markers", "performance: mark test as a performance test")
+    config.addinivalue_line(
+        "markers",
+        "security: mark test as a security test")
+    config.addinivalue_line(
+        "markers",
+        "performance: mark test as a performance test")

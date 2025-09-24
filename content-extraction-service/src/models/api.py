@@ -3,12 +3,11 @@ API models for the content extraction service.
 """
 
 from datetime import datetime
-from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, validator
 
-from .content import ContentType, ExtractionMethod, ProcessingStatus
+from .content import ContentType, ProcessingStatus
 
 
 class APIResponse(BaseModel):
@@ -167,9 +166,7 @@ class BatchProcessingRequest(BaseModel):
     processing_type: str = Field(..., description="Type of processing")
     options: Dict[str, Any] = Field(default_factory=dict, description="Processing options")
     priority: int = Field(default=1, description="Processing priority (1-10)")
-    callback_url: Optional[str] = Field(
-        None, description="Callback URL for completion notification"
-    )
+    callback_url: Optional[str] = Field(None, description="Callback URL for completion notification")
 
     @validator("urls")
     def validate_urls(cls, v):
@@ -216,9 +213,7 @@ class MetricsResponse(BaseModel):
     error_rate: float = Field(..., description="Error rate")
     content_type_distribution: Dict[str, int] = Field(..., description="Content type distribution")
     language_distribution: Dict[str, int] = Field(..., description="Language distribution")
-    quality_score_distribution: Dict[str, int] = Field(
-        ..., description="Quality score distribution"
-    )
+    quality_score_distribution: Dict[str, int] = Field(..., description="Quality score distribution")
 
 
 class CacheStatsResponse(BaseModel):

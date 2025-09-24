@@ -24,16 +24,16 @@ class WebScrapingAdapter(BaseAdapter):
         self.browser = None
         self.page = None
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> Dict[str, Any]:
         """Async context manager entry."""
         await self._initialize_browser()
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> Dict[str, Any]:
         """Async context manager exit."""
         await self._cleanup_browser()
 
-    async def _initialize_browser(self):
+    async def _initialize_browser(self) -> Dict[str, Any]:
         """Initialize Playwright browser."""
         try:
             from playwright.async_api import async_playwright
@@ -68,15 +68,15 @@ class WebScrapingAdapter(BaseAdapter):
             logger.error(f"Failed to initialize browser: {e}")
             raise
 
-    async def _cleanup_browser(self):
+    async def _cleanup_browser(self) -> Dict[str, Any]:
         """Cleanup browser resources."""
         try:
             if self.page:
-                await self.page.close()
+    await self.page.close()
             if self.browser:
-                await self.browser.close()
+    await self.browser.close()
             if self.playwright:
-                await self.playwright.stop()
+    await self.playwright.stop()
         except Exception as e:
             logger.warning(f"Error cleaning up browser: {e}")
 
@@ -85,7 +85,7 @@ class WebScrapingAdapter(BaseAdapter):
         try:
             # Initialize browser if not already done
             if not self.browser:
-                await self._initialize_browser()
+    await self._initialize_browser()
 
             # Get URLs to scrape
             urls = await self._get_urls_to_scrape()
@@ -171,13 +171,14 @@ class WebScrapingAdapter(BaseAdapter):
             return urls
 
         except Exception as e:
-            logger.warning(f"Error extracting URLs from sitemap {sitemap_url}: {e}")
+            logger.warning(
+                f"Error extracting URLs from sitemap {sitemap_url}: {e}")
             return []
 
     async def _extract_urls_from_listing(self, listing_url: str) -> List[str]:
         """Extract URLs from listing page."""
         try:
-            await self.page.goto(listing_url, wait_until="networkidle")
+    await self.page.goto(listing_url, wait_until="networkidle")
 
             # Get URLs using CSS selectors
             selectors = self.scraping_config.get("url_selectors", ["a[href]"])
@@ -189,14 +190,16 @@ class WebScrapingAdapter(BaseAdapter):
                     href = await element.get_attribute("href")
                     if href:
                         # Convert relative URL to absolute
-                        absolute_url = self.url_utils.resolve_relative_url(href, listing_url)
+                        absolute_url = self.url_utils.resolve_relative_url(
+                            href, listing_url)
                         if self.url_utils.is_valid_url(absolute_url):
                             urls.append(absolute_url)
 
             return urls
 
         except Exception as e:
-            logger.warning(f"Error extracting URLs from listing {listing_url}: {e}")
+            logger.warning(
+                f"Error extracting URLs from listing {listing_url}: {e}")
             return []
 
     async def _check_robots_compliance(self, url: str) -> bool:
@@ -235,19 +238,19 @@ class WebScrapingAdapter(BaseAdapter):
             logger.warning(f"Error scraping URL {url}: {e}")
             return None
 
-    async def _wait_for_content(self):
+    async def _wait_for_content(self) -> Dict[str, Any]:
         """Wait for content to load on the page."""
         try:
             # Wait for main content selectors
             content_selectors = self.scraping_config.get(
-                "content_selectors", ["article", "main", ".content", ".post", ".article"]
-            )
+                "content_selectors", [
+                    "article", "main", ".content", ".post", ".article"])
 
             for selector in content_selectors:
                 try:
-                    await self.page.wait_for_selector(selector, timeout=5000)
+    await self.page.wait_for_selector(selector, timeout=5000)
                     break
-                except:
+                except BaseException:
                     continue
 
             # Wait for any lazy-loaded content
@@ -273,15 +276,14 @@ class WebScrapingAdapter(BaseAdapter):
 
             # Content
             content_selectors = self.scraping_config.get(
-                "content_selectors",
-                ["article", "main", ".content", ".post", ".article", ".entry-content"],
-            )
+                "content_selectors", [
+                    "article", "main", ".content", ".post", ".article", ".entry-content"], )
             content_data["content"] = await self._extract_html_by_selectors(content_selectors)
 
             # Author
             author_selectors = self.scraping_config.get(
-                "author_selectors", [".author", ".byline", '[rel="author"]', ".post-author"]
-            )
+                "author_selectors", [
+                    ".author", ".byline", '[rel="author"]', ".post-author"])
             content_data["author"] = await self._extract_text_by_selectors(author_selectors)
 
             # Published date
@@ -328,7 +330,7 @@ class WebScrapingAdapter(BaseAdapter):
                     text = await element.text_content()
                     if text and text.strip():
                         return text.strip()
-            except:
+            except BaseException:
                 continue
         return ""
 
@@ -341,11 +343,12 @@ class WebScrapingAdapter(BaseAdapter):
                     html = await element.inner_html()
                     if html and html.strip():
                         return html.strip()
-            except:
+            except BaseException:
                 continue
         return ""
 
-    async def _extract_attribute_by_selectors(self, selectors: List[str], attribute: str) -> str:
+    async def _extract_attribute_by_selectors(
+            self, selectors: List[str], attribute: str) -> str:
         """Extract attribute value using multiple selectors."""
         for selector in selectors:
             try:
@@ -354,11 +357,12 @@ class WebScrapingAdapter(BaseAdapter):
                     value = await element.get_attribute(attribute)
                     if value and value.strip():
                         return value.strip()
-            except:
+            except BaseException:
                 continue
         return ""
 
-    async def _extract_text_list_by_selectors(self, selectors: List[str]) -> List[str]:
+    async def _extract_text_list_by_selectors(
+            self, selectors: List[str]) -> List[str]:
         """Extract list of text using multiple selectors."""
         for selector in selectors:
             try:
@@ -371,7 +375,7 @@ class WebScrapingAdapter(BaseAdapter):
                             texts.append(text.strip())
                     if texts:
                         return texts
-            except:
+            except BaseException:
                 continue
         return []
 
@@ -405,7 +409,8 @@ class WebScrapingAdapter(BaseAdapter):
                 if not author:
                     author = self.content_parser.extract_author(raw_html)
                 if not image_url:
-                    image_url = self.content_parser.extract_image_url(raw_html, url)
+                    image_url = self.content_parser.extract_image_url(
+                        raw_html, url)
                 if not tags:
                     tags = self.content_parser.extract_tags(raw_html)
 
@@ -451,7 +456,7 @@ class WebScrapingAdapter(BaseAdapter):
         """Test connection by trying to load a simple page."""
         try:
             if not self.browser:
-                await self._initialize_browser()
+    await self._initialize_browser()
 
             await self.page.goto("https://httpbin.org/get", timeout=10000)
             return True

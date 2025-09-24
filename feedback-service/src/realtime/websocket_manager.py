@@ -44,7 +44,8 @@ class WebSocketManager:
             del self.connection_metadata[user_id]
             logger.info("WebSocket disconnected", user_id=user_id)
 
-    async def send_personal_message(self, message: Dict[str, Any], user_id: str) -> bool:
+    async def send_personal_message(
+            self, message: Dict[str, Any], user_id: str) -> bool:
         """Send message to specific user"""
 
         try:
@@ -54,7 +55,8 @@ class WebSocketManager:
 
                 # Update metadata
                 self.connection_metadata[user_id]["message_count"] += 1
-                self.connection_metadata[user_id]["last_ping"] = datetime.utcnow()
+                self.connection_metadata[user_id]["last_ping"] = datetime.utcnow(
+                )
 
                 return True
             else:
@@ -62,7 +64,10 @@ class WebSocketManager:
                 return False
 
         except Exception as e:
-            logger.error("Error sending personal message", error=str(e), user_id=user_id)
+            logger.error(
+                "Error sending personal message",
+                error=str(e),
+                user_id=user_id)
             return False
 
     async def broadcast_message(
@@ -77,15 +82,19 @@ class WebSocketManager:
                 continue
 
             try:
-                await websocket.send_text(json.dumps(message))
+    await websocket.send_text(json.dumps(message))
                 sent_count += 1
 
                 # Update metadata
                 self.connection_metadata[user_id]["message_count"] += 1
-                self.connection_metadata[user_id]["last_ping"] = datetime.utcnow()
+                self.connection_metadata[user_id]["last_ping"] = datetime.utcnow(
+                )
 
             except Exception as e:
-                logger.error("Error broadcasting message", error=str(e), user_id=user_id)
+                logger.error(
+                    "Error broadcasting message",
+                    error=str(e),
+                    user_id=user_id)
                 # Remove failed connection
                 self.disconnect(user_id)
 
@@ -99,8 +108,7 @@ class WebSocketManager:
     async def process_realtime_feedback(
         self, user_id: str, feedback_data: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Process real-time feedback and return result"""
-
+    """Process real-time feedback and return result"""
         try:
             # Basic validation
             if not feedback_data.get("content_id"):
@@ -125,10 +133,14 @@ class WebSocketManager:
             return result
 
         except Exception as e:
-            logger.error("Error processing real-time feedback", error=str(e), user_id=user_id)
+            logger.error(
+                "Error processing real-time feedback",
+                error=str(e),
+                user_id=user_id)
             return {"status": "error", "message": str(e)}
 
-    async def broadcast_feedback_update(self, feedback_data: Dict[str, Any]) -> None:
+    async def broadcast_feedback_update(
+            self, feedback_data: Dict[str, Any]) -> None:
         """Broadcast feedback update to relevant stakeholders"""
 
         message = {
@@ -145,13 +157,15 @@ class WebSocketManager:
         message = {
             "type": "task_update",
             "data": {
-                "task_id": str(task_data.id),
+                "task_id": str(
+                    task_data.id),
                 "status": (
-                    task_data.status.value
-                    if hasattr(task_data.status, "value")
-                    else str(task_data.status)
-                ),
-                "assigned_to": str(task_data.assigned_to) if task_data.assigned_to else None,
+                    task_data.status.value if hasattr(
+                        task_data.status,
+                        "value") else str(
+                        task_data.status)),
+                "assigned_to": str(
+                    task_data.assigned_to) if task_data.assigned_to else None,
                 "task_type": task_data.task_type,
             },
             "timestamp": datetime.utcnow().isoformat(),
@@ -159,7 +173,8 @@ class WebSocketManager:
 
         await self.broadcast_message(message)
 
-    async def broadcast_review_completion(self, task_data: Any, review_result: Any) -> None:
+    async def broadcast_review_completion(
+            self, task_data: Any, review_result: Any) -> None:
         """Broadcast review completion notification"""
 
         message = {
@@ -184,7 +199,8 @@ class WebSocketManager:
     ) -> int:
         """Send alert to specific users or all users"""
 
-        message = {"type": "alert", "data": alert_data, "timestamp": datetime.utcnow().isoformat()}
+        message = {"type": "alert", "data": alert_data,
+                   "timestamp": datetime.utcnow().isoformat()}
 
         if target_users:
             sent_count = 0
@@ -199,21 +215,23 @@ class WebSocketManager:
         """Start background cleanup task for stale connections"""
 
         if self.cleanup_task is None or self.cleanup_task.done():
-            self.cleanup_task = asyncio.create_task(self._cleanup_stale_connections())
+            self.cleanup_task = asyncio.create_task(
+                self._cleanup_stale_connections())
 
     async def _cleanup_stale_connections(self) -> None:
         """Clean up stale WebSocket connections"""
 
         while True:
             try:
-                await asyncio.sleep(300)  # Check every 5 minutes
+    await asyncio.sleep(300)  # Check every 5 minutes
 
                 current_time = datetime.utcnow()
                 stale_users = []
 
                 for user_id, metadata in self.connection_metadata.items():
                     # Consider connection stale if no ping in 10 minutes
-                    if (current_time - metadata["last_ping"]).total_seconds() > 600:
+                    if (current_time -
+                            metadata["last_ping"]).total_seconds() > 600:
                         stale_users.append(user_id)
 
                 # Remove stale connections
@@ -221,7 +239,9 @@ class WebSocketManager:
                     self.disconnect(user_id)
 
                 if stale_users:
-                    logger.info("Cleaned up stale connections", count=len(stale_users))
+                    logger.info(
+                        "Cleaned up stale connections",
+                        count=len(stale_users))
 
             except Exception as e:
                 logger.error("Error in cleanup task", error=str(e))
@@ -233,16 +253,19 @@ class WebSocketManager:
         if self.cleanup_task and not self.cleanup_task.done():
             self.cleanup_task.cancel()
             try:
-                await self.cleanup_task
+    await self.cleanup_task
             except asyncio.CancelledError:
                 pass
 
         # Close all connections
         for user_id, websocket in self.active_connections.items():
             try:
-                await websocket.close()
+    await websocket.close()
             except Exception as e:
-                logger.error("Error closing WebSocket", error=str(e), user_id=user_id)
+                logger.error(
+                    "Error closing WebSocket",
+                    error=str(e),
+                    user_id=user_id)
 
         self.active_connections.clear()
         self.connection_metadata.clear()
@@ -251,7 +274,6 @@ class WebSocketManager:
 
     def get_connection_stats(self) -> Dict[str, Any]:
         """Get connection statistics"""
-
         return {
             "active_connections": len(self.active_connections),
             "total_messages_sent": sum(

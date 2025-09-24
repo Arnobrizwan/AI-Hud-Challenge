@@ -1,15 +1,13 @@
 """Incremental DBSCAN clustering implementation."""
 
-import asyncio
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Set
 from uuid import UUID
 
 import numpy as np
 from sklearn.cluster import DBSCAN
-from sklearn.metrics import silhouette_score
 from sklearn.preprocessing import StandardScaler
 
-from ..models.schemas import Cluster, Entity, Location, NewsEvent, NormalizedArticle, Topic
+from ..models.schemas import Entity, Location, NormalizedArticle, Topic
 
 
 class IncrementalDBSCAN:
@@ -45,9 +43,7 @@ class IncrementalDBSCAN:
         self.scaler = StandardScaler()
         self.is_fitted = False
 
-    async def fit_predict(
-        self, articles: List[NormalizedArticle], features: Optional[np.ndarray] = None
-    ) -> List[int]:
+    async def fit_predict(self, articles: List[NormalizedArticle], features: Optional[np.ndarray] = None) -> List[int]:
         """Fit clustering model and predict cluster labels.
 
         Args:
@@ -112,9 +108,7 @@ class IncrementalDBSCAN:
                 await self._update_cluster_center(nearest_cluster, article_features[0])
             else:
                 # Check if it can form a new cluster with nearby articles
-                new_cluster_id = await self._try_create_new_cluster(
-                    article, article_features, new_articles
-                )
+                new_cluster_id = await self._try_create_new_cluster(article, article_features, new_articles)
 
                 if new_cluster_id is not None:
                     cluster_labels.append(new_cluster_id)
@@ -177,7 +171,6 @@ class IncrementalDBSCAN:
             Temporal feature vector
         """
         import time
-        from datetime import datetime
 
         # Current time
         current_time = time.time()
@@ -410,8 +403,7 @@ class IncrementalDBSCAN:
             # Compute cluster center
             cluster_articles = [article] + nearby_articles
             cluster_features = np.array(
-                [article_features[0]]
-                + [np.random.random(article_features.shape[1]) for _ in nearby_articles]
+                [article_features[0]] + [np.random.random(article_features.shape[1]) for _ in nearby_articles]
             )
             self.cluster_centers[new_cluster_id] = np.mean(cluster_features, axis=0)
 

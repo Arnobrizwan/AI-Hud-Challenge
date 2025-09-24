@@ -19,7 +19,8 @@ logger = structlog.get_logger()
 class PersonalizationMetrics:
     """Comprehensive evaluation metrics for personalization systems."""
 
-    def __init__(self, redis_client: RedisClient, postgres_client: PostgreSQLClient):
+    def __init__(self, redis_client: RedisClient,
+                 postgres_client: PostgreSQLClient):
         self.redis = redis_client
         self.postgres = postgres_client
 
@@ -35,8 +36,10 @@ class PersonalizationMetrics:
         relevant_items = set(ground_truth)
 
         # Binary relevance for each recommendation
-        y_true = [1 if item in relevant_items else 0 for item in recommended_items]
-        y_pred = [1] * len(recommended_items)  # All recommendations are predicted as relevant
+        y_true = [
+            1 if item in relevant_items else 0 for item in recommended_items]
+        # All recommendations are predicted as relevant
+        y_pred = [1] * len(recommended_items)
 
         # Basic metrics
         precision = precision_score(y_true, y_pred, zero_division=0)
@@ -90,7 +93,8 @@ class PersonalizationMetrics:
             "novelty": novelty,
         }
 
-    async def calculate_business_metrics(self, time_window: int = 30) -> Dict[str, float]:
+    async def calculate_business_metrics(
+            self, time_window: int = 30) -> Dict[str, float]:
         """Calculate business impact metrics."""
         # Get interactions in time window
         interactions = await self._get_interactions_in_window(time_window)
@@ -100,7 +104,8 @@ class PersonalizationMetrics:
 
         # Calculate engagement metrics
         total_interactions = len(interactions)
-        unique_users = len(set(interaction["user_id"] for interaction in interactions))
+        unique_users = len(set(interaction["user_id"]
+                           for interaction in interactions))
 
         # Calculate content performance
         content_performance = self._calculate_content_performance(interactions)
@@ -123,8 +128,10 @@ class PersonalizationMetrics:
         }
 
     def _calculate_ndcg(
-        self, recommendations: List[Recommendation], relevant_items: set, k: int = 10
-    ) -> float:
+            self,
+            recommendations: List[Recommendation],
+            relevant_items: set,
+            k: int = 10) -> float:
         """Calculate Normalized Discounted Cumulative Gain."""
         if not recommendations:
             return 0.0
@@ -145,16 +152,19 @@ class PersonalizationMetrics:
             return 0.0
 
         # Ideal DCG (all relevant items at the top)
-        ideal_dcg = sum(
-            1.0 / np.log2(i + 2) for i in range(min(len(relevance_scores), len(relevant_items)))
-        )
+        ideal_dcg = sum(1.0 / np.log2(i + 2)
+                        for i in range(min(len(relevance_scores), len(relevant_items))))
 
         # Actual DCG
-        actual_dcg = sum(score / np.log2(i + 2) for i, score in enumerate(relevance_scores))
+        actual_dcg = sum(score / np.log2(i + 2)
+                         for i, score in enumerate(relevance_scores))
 
         return actual_dcg / ideal_dcg if ideal_dcg > 0 else 0.0
 
-    def _calculate_map(self, recommendations: List[Recommendation], relevant_items: set) -> float:
+    def _calculate_map(
+            self,
+            recommendations: List[Recommendation],
+            relevant_items: set) -> float:
         """Calculate Mean Average Precision."""
         if not recommendations:
             return 0.0
@@ -187,20 +197,22 @@ class PersonalizationMetrics:
 
         # Coverage = intersection / ground truth
         intersection = len(recommended_items.intersection(ground_truth_items))
-        return intersection / len(ground_truth_items) if ground_truth_items else 0.0
+        return intersection / \
+            len(ground_truth_items) if ground_truth_items else 0.0
 
-    def _calculate_click_rate(self, interactions: List[Dict[str, Any]]) -> float:
+    def _calculate_click_rate(
+            self, interactions: List[Dict[str, Any]]) -> float:
         """Calculate click rate from interactions."""
         if not interactions:
             return 0.0
 
-        clicks = sum(
-            1 for interaction in interactions if interaction.get("interaction_type") == "click"
-        )
+        clicks = sum(1 for interaction in interactions if interaction.get(
+            "interaction_type") == "click")
 
         return clicks / len(interactions)
 
-    def _calculate_conversion_rate(self, interactions: List[Dict[str, Any]]) -> float:
+    def _calculate_conversion_rate(
+            self, interactions: List[Dict[str, Any]]) -> float:
         """Calculate conversion rate from interactions."""
         if not interactions:
             return 0.0
@@ -213,7 +225,8 @@ class PersonalizationMetrics:
 
         return conversions / len(interactions)
 
-    def _calculate_avg_dwell_time(self, interactions: List[Dict[str, Any]]) -> float:
+    def _calculate_avg_dwell_time(
+            self, interactions: List[Dict[str, Any]]) -> float:
         """Calculate average dwell time from interactions."""
         if not interactions:
             return 0.0
@@ -222,7 +235,8 @@ class PersonalizationMetrics:
         # For now, return a placeholder
         return 0.0
 
-    def _calculate_topic_diversity(self, interactions: List[Dict[str, Any]]) -> float:
+    def _calculate_topic_diversity(
+            self, interactions: List[Dict[str, Any]]) -> float:
         """Calculate topic diversity from interactions."""
         if not interactions:
             return 0.0
@@ -242,7 +256,8 @@ class PersonalizationMetrics:
 
         return unique_topics / total_topics if total_topics > 0 else 0.0
 
-    def _calculate_source_diversity(self, interactions: List[Dict[str, Any]]) -> float:
+    def _calculate_source_diversity(
+            self, interactions: List[Dict[str, Any]]) -> float:
         """Calculate source diversity from interactions."""
         if not interactions:
             return 0.0
@@ -297,10 +312,11 @@ class PersonalizationMetrics:
 
         return content_metrics
 
-    async def _get_user_interactions(self, user_id: str, time_window: int) -> List[Dict[str, Any]]:
+    async def _get_user_interactions(
+            self, user_id: str, time_window: int) -> List[Dict[str, Any]]:
         """Get user interactions in time window."""
         query = """
-        SELECT * FROM user_interactions 
+        SELECT * FROM user_interactions
         WHERE user_id = $1 AND timestamp > $2
         ORDER BY timestamp DESC
         """
@@ -308,10 +324,11 @@ class PersonalizationMetrics:
         cutoff_date = datetime.utcnow() - timedelta(days=time_window)
         return await self.postgres.fetch_all(query, user_id, cutoff_date)
 
-    async def _get_interactions_in_window(self, time_window: int) -> List[Dict[str, Any]]:
+    async def _get_interactions_in_window(
+            self, time_window: int) -> List[Dict[str, Any]]:
         """Get all interactions in time window."""
         query = """
-        SELECT * FROM user_interactions 
+        SELECT * FROM user_interactions
         WHERE timestamp > $1
         ORDER BY timestamp DESC
         """
@@ -329,7 +346,7 @@ class PersonalizationMetrics:
         # Users active in first half
         first_half_users = await self.postgres.fetch_all(
             """
-            SELECT DISTINCT user_id FROM user_interactions 
+            SELECT DISTINCT user_id FROM user_interactions
             WHERE timestamp BETWEEN $1 AND $2
             """,
             start_date,
@@ -342,7 +359,7 @@ class PersonalizationMetrics:
         # Users active in second half
         second_half_users = await self.postgres.fetch_all(
             """
-            SELECT DISTINCT user_id FROM user_interactions 
+            SELECT DISTINCT user_id FROM user_interactions
             WHERE timestamp > $1
             """,
             mid_date,
@@ -350,9 +367,11 @@ class PersonalizationMetrics:
 
         # Calculate retention
         first_half_user_ids = set(user["user_id"] for user in first_half_users)
-        second_half_user_ids = set(user["user_id"] for user in second_half_users)
+        second_half_user_ids = set(user["user_id"]
+                                   for user in second_half_users)
 
-        retained_users = len(first_half_user_ids.intersection(second_half_user_ids))
+        retained_users = len(
+            first_half_user_ids.intersection(second_half_user_ids))
         total_users = len(first_half_user_ids)
 
         return retained_users / total_users if total_users > 0 else 0.0
@@ -363,9 +382,13 @@ class PersonalizationMetrics:
         """Calculate revenue-related metrics."""
         # This would require revenue data
         # For now, return placeholder metrics
-        return {"revenue_per_user": 0.0, "revenue_per_interaction": 0.0, "total_revenue": 0.0}
+        return {
+            "revenue_per_user": 0.0,
+            "revenue_per_interaction": 0.0,
+            "total_revenue": 0.0}
 
-    async def calculate_model_performance(self, model_name: str) -> Dict[str, float]:
+    async def calculate_model_performance(
+            self, model_name: str) -> Dict[str, float]:
         """Calculate performance metrics for a specific model."""
         # Get model predictions and actual outcomes
         predictions = await self._get_model_predictions(model_name)
@@ -380,12 +403,17 @@ class PersonalizationMetrics:
         recall = self._calculate_recall(predictions, actual_outcomes)
         f1 = self._calculate_f1_score(predictions, actual_outcomes)
 
-        return {"accuracy": accuracy, "precision": precision, "recall": recall, "f1_score": f1}
+        return {
+            "accuracy": accuracy,
+            "precision": precision,
+            "recall": recall,
+            "f1_score": f1}
 
-    async def _get_model_predictions(self, model_name: str) -> List[Dict[str, Any]]:
+    async def _get_model_predictions(
+            self, model_name: str) -> List[Dict[str, Any]]:
         """Get model predictions from database."""
         query = """
-        SELECT * FROM recommendation_logs 
+        SELECT * FROM recommendation_logs
         WHERE algorithm_used = $1
         ORDER BY timestamp DESC
         LIMIT 1000
@@ -393,7 +421,8 @@ class PersonalizationMetrics:
 
         return await self.postgres.fetch_all(query, model_name)
 
-    async def _get_actual_outcomes(self, model_name: str) -> List[Dict[str, Any]]:
+    async def _get_actual_outcomes(
+            self, model_name: str) -> List[Dict[str, Any]]:
         """Get actual outcomes for model predictions."""
         # This would require tracking actual user behavior after recommendations
         # For now, return empty list
@@ -431,8 +460,9 @@ class PersonalizationMetrics:
         # For now, return placeholder
         return 0.0
 
-    async def get_comprehensive_metrics(self, user_id: Optional[str] = None) -> Dict[str, Any]:
-        """Get comprehensive evaluation metrics."""
+    async def get_comprehensive_metrics(
+            self, user_id: Optional[str] = None) -> Dict[str, Any]:
+    """Get comprehensive evaluation metrics."""
         metrics = {}
 
         if user_id:

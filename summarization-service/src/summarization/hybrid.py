@@ -27,10 +27,11 @@ class HybridSummarizer:
         """Initialize the hybrid summarizer"""
         self.extractive_summarizer = BertExtractiveSummarizer()
         self.abstractive_summarizer = VertexAISummarizer()
-        self.tfidf_vectorizer = TfidfVectorizer(max_features=1000, stop_words="english")
+        self.tfidf_vectorizer = TfidfVectorizer(
+            max_features=1000, stop_words="english")
         self._initialized = False
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize all components"""
         try:
             logger.info("Initializing hybrid summarizer...")
@@ -46,17 +47,19 @@ class HybridSummarizer:
             logger.error(f"Failed to initialize hybrid summarizer: {str(e)}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Clean up resources"""
         try:
-            await self.extractive_summarizer.cleanup()
+    await self.extractive_summarizer.cleanup()
             await self.abstractive_summarizer.cleanup()
         except Exception as e:
             logger.error(f"Error during cleanup: {str(e)}")
 
     async def summarize(
-        self, content: ProcessedContent, target_length: int = 120, strategy: str = "adaptive"
-    ) -> str:
+            self,
+            content: ProcessedContent,
+            target_length: int = 120,
+            strategy: str = "adaptive") -> str:
         """
         Generate hybrid summary using optimal combination of methods
 
@@ -78,7 +81,7 @@ class HybridSummarizer:
                 return await self._weighted_hybrid(content, target_length)
             elif strategy == "sequential":
                 return await self._sequential_hybrid(content, target_length)
-            else:
+        else:
                 raise ValueError(f"Unknown strategy: {strategy}")
 
         except Exception as e:
@@ -86,7 +89,10 @@ class HybridSummarizer:
             # Fallback to extractive only
             return await self.extractive_summarizer.summarize(content.text, target_length)
 
-    async def _adaptive_hybrid(self, content: ProcessedContent, target_length: int) -> str:
+    async def _adaptive_hybrid(
+            self,
+            content: ProcessedContent,
+            target_length: int) -> str:
         """Adaptive hybrid strategy that chooses the best approach"""
         try:
             # Analyze content characteristics
@@ -133,7 +139,10 @@ class HybridSummarizer:
             logger.error(f"Adaptive hybrid failed: {str(e)}")
             raise
 
-    async def _weighted_hybrid(self, content: ProcessedContent, target_length: int) -> str:
+    async def _weighted_hybrid(
+            self,
+            content: ProcessedContent,
+            target_length: int) -> str:
         """Weighted hybrid strategy with fixed weights"""
         try:
             # Generate both summaries
@@ -155,7 +164,10 @@ class HybridSummarizer:
             logger.error(f"Weighted hybrid failed: {str(e)}")
             raise
 
-    async def _sequential_hybrid(self, content: ProcessedContent, target_length: int) -> str:
+    async def _sequential_hybrid(
+            self,
+            content: ProcessedContent,
+            target_length: int) -> str:
         """Sequential hybrid strategy: extractive first, then abstractive"""
         try:
             # Step 1: Generate extractive summary
@@ -187,8 +199,9 @@ class HybridSummarizer:
             logger.error(f"Sequential hybrid failed: {str(e)}")
             raise
 
-    async def _analyze_content(self, content: ProcessedContent) -> Dict[str, Any]:
-        """Analyze content characteristics to determine optimal strategy"""
+    async def _analyze_content(
+            self, content: ProcessedContent) -> Dict[str, Any]:
+    """Analyze content characteristics to determine optimal strategy"""
         try:
             text = content.text.lower()
 
@@ -203,7 +216,8 @@ class HybridSummarizer:
                 "confirmed",
                 "statement",
             ]
-            is_news_article = any(indicator in text for indicator in news_indicators)
+            is_news_article = any(
+                indicator in text for indicator in news_indicators)
 
             # Technical content indicators
             technical_indicators = [
@@ -218,7 +232,8 @@ class HybridSummarizer:
                 "findings",
                 "conclusion",
             ]
-            is_technical = any(indicator in text for indicator in technical_indicators)
+            is_technical = any(
+                indicator in text for indicator in technical_indicators)
 
             # Narrative content indicators
             narrative_indicators = [
@@ -232,7 +247,8 @@ class HybridSummarizer:
                 "tells",
                 "recounts",
             ]
-            is_narrative = any(indicator in text for indicator in narrative_indicators)
+            is_narrative = any(
+                indicator in text for indicator in narrative_indicators)
 
             # Content length analysis
             word_count = len(content.text.split())
@@ -290,13 +306,17 @@ class HybridSummarizer:
             )
 
     async def _sentence_level_fusion(
-        self, extractive_summary: str, abstractive_summary: str, target_length: int
-    ) -> str:
+            self,
+            extractive_summary: str,
+            abstractive_summary: str,
+            target_length: int) -> str:
         """Fuse summaries at sentence level"""
         try:
             # Split into sentences
-            extractive_sentences = [s.strip() for s in extractive_summary.split(".") if s.strip()]
-            abstractive_sentences = [s.strip() for s in abstractive_summary.split(".") if s.strip()]
+            extractive_sentences = [
+                s.strip() for s in extractive_summary.split(".") if s.strip()]
+            abstractive_sentences = [
+                s.strip() for s in abstractive_summary.split(".") if s.strip()]
 
             # Calculate sentence similarities
             all_sentences = extractive_sentences + abstractive_sentences
@@ -327,7 +347,8 @@ class HybridSummarizer:
                     break
                 abs_index = i + len(extractive_sentences)
                 if abs_index not in used_indices:
-                    # Check if this sentence is too similar to already selected ones
+                    # Check if this sentence is too similar to already selected
+                    # ones
                     is_similar = False
                     for used_idx in used_indices:
                         if similarity_matrix[abs_index][used_idx] > 0.7:
@@ -377,7 +398,8 @@ class HybridSummarizer:
                     )
 
                 except Exception as e:
-                    logger.error(f"Failed to generate {strategy} variant: {str(e)}")
+                    logger.error(
+                        f"Failed to generate {strategy} variant: {str(e)}")
                     continue
 
         return variants

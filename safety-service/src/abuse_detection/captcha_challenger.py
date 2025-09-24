@@ -20,7 +20,11 @@ logger = logging.getLogger(__name__)
 class CaptchaChallenge:
     """Individual CAPTCHA challenge"""
 
-    def __init__(self, challenge_id: str, challenge_type: str, difficulty: str):
+    def __init__(
+            self,
+            challenge_id: str,
+            challenge_type: str,
+            difficulty: str):
         self.challenge_id = challenge_id
         self.challenge_type = challenge_type
         self.difficulty = difficulty
@@ -78,12 +82,15 @@ class CaptchaChallenger:
 
         # Difficulty configurations
         self.difficulty_configs = {
-            "easy": {"time_limit": 300, "max_attempts": 5, "complexity": 1},  # 5 minutes
-            "medium": {"time_limit": 180, "max_attempts": 3, "complexity": 2},  # 3 minutes
-            "hard": {"time_limit": 120, "max_attempts": 2, "complexity": 3},  # 2 minutes
+            # 5 minutes
+            "easy": {"time_limit": 300, "max_attempts": 5, "complexity": 1},
+            # 3 minutes
+            "medium": {"time_limit": 180, "max_attempts": 3, "complexity": 2},
+            # 2 minutes
+            "hard": {"time_limit": 120, "max_attempts": 2, "complexity": 3},
         }
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize the CAPTCHA challenger"""
         try:
             # Start cleanup task
@@ -96,7 +103,7 @@ class CaptchaChallenger:
             logger.error(f"Failed to initialize CAPTCHA challenger: {str(e)}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup resources"""
         try:
             self.active_challenges.clear()
@@ -108,11 +115,11 @@ class CaptchaChallenger:
         except Exception as e:
             logger.error(f"Error during CAPTCHA challenger cleanup: {str(e)}")
 
-    async def challenge_user(
-        self, user_id: str, challenge_type: str = "text_captcha", difficulty: str = "medium"
-    ) -> Dict[str, Any]:
-        """Create a CAPTCHA challenge for a user"""
-
+    async def challenge_user(self,
+                             user_id: str,
+                             challenge_type: str = "text_captcha",
+                             difficulty: str = "medium") -> Dict[str, Any]:
+    """Create a CAPTCHA challenge for a user"""
         if not self.is_initialized:
             raise RuntimeError("CAPTCHA challenger not initialized")
 
@@ -132,7 +139,8 @@ class CaptchaChallenger:
 
             # Generate new challenge
             challenge_id = self.generate_challenge_id()
-            challenge = CaptchaChallenge(challenge_id, challenge_type, difficulty)
+            challenge = CaptchaChallenge(
+                challenge_id, challenge_type, difficulty)
 
             # Generate challenge content
             challenge_data = await self.generate_challenge_content(challenge_type, difficulty)
@@ -156,7 +164,8 @@ class CaptchaChallenger:
                 }
             )
 
-            logger.info(f"Created {difficulty} {challenge_type} challenge for user {user_id}")
+            logger.info(
+                f"Created {difficulty} {challenge_type} challenge for user {user_id}")
 
             return {
                 "challenge_id": challenge_id,
@@ -168,14 +177,14 @@ class CaptchaChallenger:
             }
 
         except Exception as e:
-            logger.error(f"Failed to create challenge for user {user_id}: {str(e)}")
+            logger.error(
+                f"Failed to create challenge for user {user_id}: {str(e)}")
             raise
 
     async def verify_challenge(
         self, user_id: str, challenge_id: str, user_response: str
     ) -> Dict[str, Any]:
-        """Verify a user's response to a CAPTCHA challenge"""
-
+    """Verify a user's response to a CAPTCHA challenge"""
         if not self.is_initialized:
             raise RuntimeError("CAPTCHA challenger not initialized")
 
@@ -184,10 +193,16 @@ class CaptchaChallenger:
             challenge = self.get_active_challenge(user_id)
 
             if not challenge:
-                return {"success": False, "error": "No active challenge found", "can_retry": False}
+                return {
+                    "success": False,
+                    "error": "No active challenge found",
+                    "can_retry": False}
 
             if challenge.challenge_id != challenge_id:
-                return {"success": False, "error": "Invalid challenge ID", "can_retry": True}
+                return {
+                    "success": False,
+                    "error": "Invalid challenge ID",
+                    "can_retry": True}
 
             if not challenge.can_attempt():
                 return {
@@ -224,7 +239,8 @@ class CaptchaChallenger:
 
                 if not can_retry:
                     # Update history
-                    self.update_challenge_history(user_id, challenge_id, "failed")
+                    self.update_challenge_history(
+                        user_id, challenge_id, "failed")
 
                     # Remove from active challenges
                     del self.active_challenges[user_id]
@@ -237,12 +253,17 @@ class CaptchaChallenger:
                     "success": False,
                     "error": "Incorrect response",
                     "can_retry": can_retry,
-                    "attempts_remaining": challenge.max_attempts - challenge.attempts,
+                    "attempts_remaining": challenge.max_attempts -
+                    challenge.attempts,
                 }
 
         except Exception as e:
-            logger.error(f"Failed to verify challenge for user {user_id}: {str(e)}")
-            return {"success": False, "error": "Verification failed", "can_retry": False}
+            logger.error(
+                f"Failed to verify challenge for user {user_id}: {str(e)}")
+            return {
+                "success": False,
+                "error": "Verification failed",
+                "can_retry": False}
 
     def get_active_challenge(self, user_id: str) -> Optional[CaptchaChallenge]:
         """Get active challenge for a user"""
@@ -257,9 +278,10 @@ class CaptchaChallenger:
     async def generate_challenge_content(
         self, challenge_type: str, difficulty: str
     ) -> Dict[str, Any]:
-        """Generate challenge content based on type and difficulty"""
+    """Generate challenge content based on type and difficulty"""
         try:
-            config = self.difficulty_configs.get(difficulty, self.difficulty_configs["medium"])
+            config = self.difficulty_configs.get(
+                difficulty, self.difficulty_configs["medium"])
 
             if challenge_type == "text_captcha":
                 return await self.generate_text_captcha(config)
@@ -276,8 +298,9 @@ class CaptchaChallenger:
             logger.error(f"Failed to generate challenge content: {str(e)}")
             raise
 
-    async def generate_text_captcha(self, config: Dict[str, Any]) -> Dict[str, Any]:
-        """Generate text-based CAPTCHA"""
+    async def generate_text_captcha(
+            self, config: Dict[str, Any]) -> Dict[str, Any]:
+    """Generate text-based CAPTCHA"""
         try:
             complexity = config["complexity"]
 
@@ -309,8 +332,9 @@ class CaptchaChallenger:
             logger.error(f"Text CAPTCHA generation failed: {str(e)}")
             raise
 
-    async def generate_math_captcha(self, config: Dict[str, Any]) -> Dict[str, Any]:
-        """Generate math-based CAPTCHA"""
+    async def generate_math_captcha(
+            self, config: Dict[str, Any]) -> Dict[str, Any]:
+    """Generate math-based CAPTCHA"""
         try:
             complexity = config["complexity"]
 
@@ -352,13 +376,22 @@ class CaptchaChallenger:
             logger.error(f"Math CAPTCHA generation failed: {str(e)}")
             raise
 
-    async def generate_image_captcha(self, config: Dict[str, Any]) -> Dict[str, Any]:
-        """Generate image-based CAPTCHA"""
+    async def generate_image_captcha(
+            self, config: Dict[str, Any]) -> Dict[str, Any]:
+    """Generate image-based CAPTCHA"""
         try:
             # In a real implementation, this would generate actual images
             # For now, we'll simulate with text descriptions
 
-            objects = ["car", "tree", "house", "dog", "cat", "bird", "flower", "book"]
+            objects = [
+                "car",
+                "tree",
+                "house",
+                "dog",
+                "cat",
+                "bird",
+                "flower",
+                "book"]
             complexity = config["complexity"]
 
             if complexity == 1:  # Easy
@@ -384,8 +417,9 @@ class CaptchaChallenger:
             logger.error(f"Image CAPTCHA generation failed: {str(e)}")
             raise
 
-    async def generate_puzzle_captcha(self, config: Dict[str, Any]) -> Dict[str, Any]:
-        """Generate puzzle-based CAPTCHA"""
+    async def generate_puzzle_captcha(
+            self, config: Dict[str, Any]) -> Dict[str, Any]:
+    """Generate puzzle-based CAPTCHA"""
         try:
             complexity = config["complexity"]
 
@@ -443,7 +477,10 @@ class CaptchaChallenger:
 
         return "".join(distorted)
 
-    async def verify_response(self, challenge: CaptchaChallenge, user_response: str) -> bool:
+    async def verify_response(
+            self,
+            challenge: CaptchaChallenge,
+            user_response: str) -> bool:
         """Verify user's response to a challenge"""
         try:
             if not challenge.solution:
@@ -469,7 +506,11 @@ class CaptchaChallenger:
             logger.error(f"Response verification failed: {str(e)}")
             return False
 
-    def update_challenge_history(self, user_id: str, challenge_id: str, status: str):
+    def update_challenge_history(
+            self,
+            user_id: str,
+            challenge_id: str,
+            status: str):
         """Update challenge history for a user"""
         try:
             if user_id in self.challenge_history:
@@ -488,11 +529,11 @@ class CaptchaChallenger:
             f"{secrets.token_hex(16)}{datetime.utcnow().timestamp()}".encode()
         ).hexdigest()[:16]
 
-    async def cleanup_expired_challenges(self):
+    async def cleanup_expired_challenges(self) -> Dict[str, Any]:
         """Background task to clean up expired challenges"""
         while True:
             try:
-                await asyncio.sleep(60)  # Run every minute
+    await asyncio.sleep(60)  # Run every minute
 
                 if not self.is_initialized:
                     break
@@ -502,13 +543,15 @@ class CaptchaChallenger:
                 for user_id, challenge in self.active_challenges.items():
                     if challenge.is_expired():
                         expired_users.append(user_id)
-                        self.update_challenge_history(user_id, challenge.challenge_id, "expired")
+                        self.update_challenge_history(
+                            user_id, challenge.challenge_id, "expired")
 
                 for user_id in expired_users:
                     del self.active_challenges[user_id]
 
                 if expired_users:
-                    logger.debug(f"Cleaned up {len(expired_users)} expired challenges")
+                    logger.debug(
+                        f"Cleaned up {len(expired_users)} expired challenges")
 
             except Exception as e:
                 logger.error(f"Challenge cleanup task failed: {str(e)}")
@@ -517,7 +560,8 @@ class CaptchaChallenger:
     async def get_challenge_statistics(self) -> Dict[str, Any]:
         """Get CAPTCHA challenge statistics"""
         try:
-            total_challenges = sum(len(history) for history in self.challenge_history.values())
+            total_challenges = sum(len(history)
+                                   for history in self.challenge_history.values())
             active_challenges = len(self.active_challenges)
 
             # Calculate success rate

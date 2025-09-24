@@ -25,13 +25,13 @@ class RateLimitMiddleware:
         self.cleanup_interval = 300  # 5 minutes
         self.last_cleanup = time.time()
 
-    async def __call__(self, scope, receive, send):
+    async def __call__(self, scope, receive, send) -> Dict[str, Any]:
         if scope["type"] == "http":
             request = Request(scope, receive)
 
             # Skip rate limiting for health checks
             if self._is_health_endpoint(request.url.path):
-                await self.app(scope, receive, send)
+    await self.app(scope, receive, send)
                 return
 
             # Check rate limit
@@ -51,7 +51,8 @@ class RateLimitMiddleware:
 
         health_paths = ["/health", "/metrics", "/"]
 
-        return any(path.startswith(health_path) for health_path in health_paths)
+        return any(path.startswith(health_path)
+                   for health_path in health_paths)
 
     def _get_client_id(self, request: Request) -> str:
         """Get client identifier for rate limiting"""
@@ -120,7 +121,7 @@ class RateLimitMiddleware:
             headers={"Retry-After": str(self.settings.rate_limit_window)},
         )
 
-    async def _cleanup_old_entries(self):
+    async def _cleanup_old_entries(self) -> Dict[str, Any]:
         """Cleanup old rate limiting entries"""
 
         current_time = time.time()
@@ -144,7 +145,8 @@ class RateLimitMiddleware:
         for client_id in clients_to_remove:
             del self.requests[client_id]
 
-        logger.info(f"Cleaned up rate limiting data for {len(clients_to_remove)} clients")
+        logger.info(
+            f"Cleaned up rate limiting data for {len(clients_to_remove)} clients")
 
 
 class AdaptiveRateLimitMiddleware(RateLimitMiddleware):

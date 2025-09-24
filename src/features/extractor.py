@@ -1,14 +1,13 @@
 """Comprehensive feature extraction for ranking."""
 
-import asyncio
 import math
 import re
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from datetime import datetime
+from typing import Dict, List
 
 import numpy as np
 import structlog
-from textstat import flesch_kincaid_grade, flesch_reading_ease
+from textstat import flesch_reading_ease
 
 from ..optimization.cache import CacheManager
 from ..schemas import Article, AuthorityScore, RankingRequest, TrendingScore
@@ -44,9 +43,7 @@ class RankingFeatureExtractor:
             # Readability features
             if article.content:
                 features["readability_score"] = await self._compute_readability(article.content)
-                features["avg_sentence_length"] = await self._compute_avg_sentence_length(
-                    article.content
-                )
+                features["avg_sentence_length"] = await self._compute_avg_sentence_length(article.content)
                 features["paragraph_count"] = len(article.content.split("\n\n"))
             else:
                 features["readability_score"] = 0.5
@@ -103,9 +100,12 @@ class RankingFeatureExtractor:
             features["age_sqrt"] = math.sqrt(age_hours)
 
             # Freshness scores with different decay rates
-            features["freshness_24h"] = math.exp(-age_hours / 24)  # 24-hour half-life
-            features["freshness_6h"] = math.exp(-age_hours / 6)  # 6-hour half-life
-            features["freshness_1h"] = math.exp(-age_hours / 1)  # 1-hour half-life
+            # 24-hour half-life
+            features["freshness_24h"] = math.exp(-age_hours / 24)
+            # 6-hour half-life
+            features["freshness_6h"] = math.exp(-age_hours / 6)
+            # 1-hour half-life
+            features["freshness_1h"] = math.exp(-age_hours / 1)
 
             # Time-based categories
             features["is_breaking"] = 1.0 if age_hours < 1 else 0.0
@@ -169,9 +169,7 @@ class RankingFeatureExtractor:
             logger.error("Authority feature extraction failed", error=str(e), article_id=article.id)
             return self._get_default_authority_features()
 
-    async def compute_personalization_features(
-        self, article: Article, user_id: str
-    ) -> Dict[str, float]:
+    async def compute_personalization_features(self, article: Article, user_id: str) -> Dict[str, float]:
         """Personalization features based on user preferences."""
         try:
             # Get user profile from cache
@@ -219,9 +217,7 @@ class RankingFeatureExtractor:
                 features["time_preference"] = 0.5
 
             # Historical interaction features
-            features["user_engagement_score"] = await self._get_user_engagement_score(
-                user_id, article.id
-            )
+            features["user_engagement_score"] = await self._get_user_engagement_score(user_id, article.id)
 
             return features
 
@@ -229,9 +225,7 @@ class RankingFeatureExtractor:
             logger.error("Personalization feature extraction failed", error=str(e), user_id=user_id)
             return self._get_default_personalization_features()
 
-    async def compute_contextual_features(
-        self, article: Article, request: RankingRequest
-    ) -> Dict[str, float]:
+    async def compute_contextual_features(self, article: Article, request: RankingRequest) -> Dict[str, float]:
         """Contextual features based on request context."""
         try:
             features = {}
@@ -246,9 +240,7 @@ class RankingFeatureExtractor:
                 features["title_query_match"] = 1.0 if query_lower in title_lower else 0.0
                 features["content_query_match"] = 1.0 if query_lower in content_lower else 0.0
                 features["query_word_count"] = len(query_lower.split())
-                features["title_query_similarity"] = await self._compute_text_similarity(
-                    query_lower, title_lower
-                )
+                features["title_query_similarity"] = await self._compute_text_similarity(query_lower, title_lower)
             else:
                 features["title_query_match"] = 0.0
                 features["content_query_match"] = 0.0
@@ -257,9 +249,7 @@ class RankingFeatureExtractor:
 
             # Geographic features
             if request.location and article.country:
-                geo_distance = await self.geo_calculator.compute_distance(
-                    request.location, article.country
-                )
+                geo_distance = await self.geo_calculator.compute_distance(request.location, article.country)
                 features["geo_distance"] = geo_distance
                 features["geo_relevance"] = 1.0 / (1.0 + geo_distance) if geo_distance > 0 else 1.0
             else:
@@ -267,18 +257,14 @@ class RankingFeatureExtractor:
                 features["geo_relevance"] = 0.5
 
             # Content type features
-            features["requested_content_type"] = (
-                1.0 if article.content_type in request.content_types else 0.0
-            )
+            features["requested_content_type"] = 1.0 if article.content_type in request.content_types else 0.0
 
             # Topic filtering features
             if request.topics:
                 article_topic_names = [t.name.lower() for t in article.topics]
                 requested_topics = [t.lower() for t in request.topics]
                 topic_match = len(set(article_topic_names).intersection(set(requested_topics)))
-                features["topic_filter_match"] = (
-                    topic_match / len(requested_topics) if requested_topics else 0.0
-                )
+                features["topic_filter_match"] = topic_match / len(requested_topics) if requested_topics else 0.0
             else:
                 features["topic_filter_match"] = 0.0
 
@@ -304,14 +290,10 @@ class RankingFeatureExtractor:
             return features
 
         except Exception as e:
-            logger.error(
-                "Contextual feature extraction failed", error=str(e), article_id=article.id
-            )
+            logger.error("Contextual feature extraction failed", error=str(e), article_id=article.id)
             return self._get_default_contextual_features()
 
-    async def compute_interaction_features(
-        self, article: Article, user_id: str
-    ) -> Dict[str, float]:
+    async def compute_interaction_features(self, article: Article, user_id: str) -> Dict[str, float]:
         """User interaction features."""
         try:
             features = {}
@@ -323,12 +305,7 @@ class RankingFeatureExtractor:
             features["comment_count"] = article.comment_count
 
             # Engagement ratios
-            total_engagement = (
-                article.view_count
-                + article.like_count
-                + article.share_count
-                + article.comment_count
-            )
+            total_engagement = article.view_count + article.like_count + article.share_count + article.comment_count
             features["total_engagement"] = total_engagement
             features["engagement_rate"] = total_engagement / max(article.view_count, 1)
             features["like_rate"] = article.like_count / max(article.view_count, 1)
@@ -340,9 +317,7 @@ class RankingFeatureExtractor:
             features["user_has_viewed"] = 1.0 if user_interactions.get("viewed", False) else 0.0
             features["user_has_liked"] = 1.0 if user_interactions.get("liked", False) else 0.0
             features["user_has_shared"] = 1.0 if user_interactions.get("shared", False) else 0.0
-            features["user_has_commented"] = (
-                1.0 if user_interactions.get("commented", False) else 0.0
-            )
+            features["user_has_commented"] = 1.0 if user_interactions.get("commented", False) else 0.0
 
             # Trending features
             trending_score = await self.trending_detector.compute_trending_score(article)
@@ -353,9 +328,7 @@ class RankingFeatureExtractor:
             return features
 
         except Exception as e:
-            logger.error(
-                "Interaction feature extraction failed", error=str(e), article_id=article.id
-            )
+            logger.error("Interaction feature extraction failed", error=str(e), article_id=article.id)
             return self._get_default_interaction_features()
 
     # Helper methods
@@ -366,7 +339,7 @@ class RankingFeatureExtractor:
             score = flesch_reading_ease(content)
             # Normalize to 0-1 range
             return max(0, min(1, (score - 0) / 100))
-        except:
+        except BaseException:
             return 0.5
 
     async def _compute_avg_sentence_length(self, content: str) -> float:
@@ -660,9 +633,7 @@ class GeographicCalculator:
     def __init__(self):
         self.earth_radius_km = 6371
 
-    async def compute_distance(
-        self, location1: Dict[str, float], location2: Dict[str, float]
-    ) -> float:
+    async def compute_distance(self, location1: Dict[str, float], location2: Dict[str, float]) -> float:
         """Compute distance between two locations in kilometers."""
         try:
             lat1, lon1 = location1.get("lat", 0), location1.get("lng", 0)

@@ -4,8 +4,6 @@ Logging configuration for MLOps Orchestration Service
 
 import logging
 import sys
-from datetime import datetime
-from typing import Optional
 
 import structlog
 from loguru import logger
@@ -113,15 +111,11 @@ class MLOpsLogger:
 
     def log_pipeline_event(self, pipeline_id: str, event: str, **kwargs):
         """Log pipeline-specific event"""
-        self.logger.info(
-            f"Pipeline {pipeline_id}: {event}", pipeline_id=pipeline_id, event=event, **kwargs
-        )
+        self.logger.info(f"Pipeline {pipeline_id}: {event}", pipeline_id=pipeline_id, event=event, **kwargs)
 
     def log_training_event(self, model_name: str, event: str, **kwargs):
         """Log training-specific event"""
-        self.logger.info(
-            f"Training {model_name}: {event}", model_name=model_name, event=event, **kwargs
-        )
+        self.logger.info(f"Training {model_name}: {event}", model_name=model_name, event=event, **kwargs)
 
     def log_deployment_event(self, deployment_id: str, event: str, **kwargs):
         """Log deployment-specific event"""
@@ -134,6 +128,4 @@ class MLOpsLogger:
 
     def log_monitoring_event(self, model_name: str, event: str, **kwargs):
         """Log monitoring-specific event"""
-        self.logger.info(
-            f"Monitoring {model_name}: {event}", model_name=model_name, event=event, **kwargs
-        )
+        self.logger.info(f"Monitoring {model_name}: {event}", model_name=model_name, event=event, **kwargs)

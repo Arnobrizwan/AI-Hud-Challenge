@@ -55,7 +55,7 @@ class ContentRankingEngine:
         # Load models asynchronously
         asyncio.create_task(self._load_models())
 
-    async def _load_models(self):
+    async def _load_models(self) -> Dict[str, Any]:
         """Load ML models asynchronously."""
         try:
             # In production, load from model registry
@@ -147,7 +147,10 @@ class ContentRankingEngine:
             )
 
         except Exception as e:
-            logger.error("Ranking failed", error=str(e), user_id=request.user_id)
+            logger.error(
+                "Ranking failed",
+                error=str(e),
+                user_id=request.user_id)
             await self.metrics_collector.record_error()
             raise
 
@@ -155,7 +158,8 @@ class ContentRankingEngine:
         """Retrieve candidate articles for ranking."""
         # In production, this would query a content database
         # For now, return dummy articles
-        return await self._get_dummy_articles(request.limit * 2)  # Get more for filtering
+        # Get more for filtering
+        return await self._get_dummy_articles(request.limit * 2)
 
     async def _get_dummy_articles(self, count: int) -> List[Article]:
         """Generate dummy articles for testing."""
@@ -223,11 +227,14 @@ class ContentRankingEngine:
         return np.array(features_matrix)
 
     async def ml_ranking(
-        self, candidates: List[Article], features: np.ndarray, request: RankingRequest
-    ) -> List[RankedArticle]:
+            self,
+            candidates: List[Article],
+            features: np.ndarray,
+            request: RankingRequest) -> List[RankedArticle]:
         """ML-based ranking using LightGBM."""
         if not self.model_loaded or self.ranker_model is None:
-            logger.warning("ML model not loaded, falling back to heuristic ranking")
+            logger.warning(
+                "ML model not loaded, falling back to heuristic ranking")
             return await self.heuristic_ranking(candidates, features, request)
 
         try:
@@ -241,8 +248,10 @@ class ContentRankingEngine:
             ranked_articles = []
             for i, (article, score) in enumerate(zip(candidates, scores)):
                 ranked_article = RankedArticle(
-                    article=article, rank=i + 1, score=float(score), explanation="ML-based ranking"
-                )
+                    article=article,
+                    rank=i + 1,
+                    score=float(score),
+                    explanation="ML-based ranking")
                 ranked_articles.append(ranked_article)
 
             # Sort by score (descending)
@@ -259,8 +268,10 @@ class ContentRankingEngine:
             return await self.heuristic_ranking(candidates, features, request)
 
     async def hybrid_ranking(
-        self, candidates: List[Article], features: np.ndarray, request: RankingRequest
-    ) -> List[RankedArticle]:
+            self,
+            candidates: List[Article],
+            features: np.ndarray,
+            request: RankingRequest) -> List[RankedArticle]:
         """Hybrid ranking combining ML and heuristics."""
         # Get ML scores
         ml_articles = await self.ml_ranking(candidates, features, request)
@@ -270,7 +281,8 @@ class ContentRankingEngine:
 
         # Combine scores with weights
         combined_articles = []
-        for ml_article, heuristic_article in zip(ml_articles, heuristic_articles):
+        for ml_article, heuristic_article in zip(
+                ml_articles, heuristic_articles):
             combined_score = 0.7 * ml_article.score + 0.3 * heuristic_article.score
 
             combined_article = RankedArticle(
@@ -291,14 +303,17 @@ class ContentRankingEngine:
         return combined_articles[: request.limit]
 
     async def heuristic_ranking(
-        self, candidates: List[Article], features: np.ndarray, request: RankingRequest
-    ) -> List[RankedArticle]:
+            self,
+            candidates: List[Article],
+            features: np.ndarray,
+            request: RankingRequest) -> List[RankedArticle]:
         """Heuristic-based ranking using multiple signals."""
         ranked_articles = []
 
         for i, article in enumerate(candidates):
             # Extract features for this article
-            article_features = features[i] if len(features) > i else np.zeros(10)
+            article_features = features[i] if len(
+                features) > i else np.zeros(10)
 
             # Compute heuristic score
             score = await self._compute_heuristic_score(article, article_features, request)
@@ -327,7 +342,8 @@ class ContentRankingEngine:
         score = 0.0
 
         # Freshness score (higher for newer content)
-        age_hours = (datetime.utcnow() - article.published_at).total_seconds() / 3600
+        age_hours = (datetime.utcnow() -
+                     article.published_at).total_seconds() / 3600
         freshness_score = math.exp(-age_hours / 24)  # 24-hour half-life
         score += freshness_score * self.default_weights["freshness"]
 
@@ -342,16 +358,19 @@ class ContentRankingEngine:
 
         # Source authority (if available)
         if article.source.authority_score:
-            score += article.source.authority_score * self.default_weights["authority"]
+            score += article.source.authority_score * \
+                self.default_weights["authority"]
 
         # Personalization (if enabled)
         if request.enable_personalization:
             personalization_score = await self._get_personalization_score(article, request.user_id)
-            score += personalization_score * self.default_weights["personalization"]
+            score += personalization_score * \
+                self.default_weights["personalization"]
 
         return min(score, 1.0)  # Cap at 1.0
 
-    async def _get_personalization_score(self, article: Article, user_id: str) -> float:
+    async def _get_personalization_score(
+            self, article: Article, user_id: str) -> float:
         """Get personalization score for article."""
         try:
             personalized_scores = await self.personalization_engine.personalize_ranking(
@@ -372,14 +391,16 @@ class ContentRankingEngine:
 
         for article in ranked_articles:
             source_id = article.article.source.id
-            if source_counts.get(source_id, 0) < 3:  # Max 3 articles per source
+            if source_counts.get(
+                    source_id, 0) < 3:  # Max 3 articles per source
                 filtered_articles.append(article)
                 source_counts[source_id] = source_counts.get(source_id, 0) + 1
 
         # Apply freshness constraint (boost recent content)
         now = datetime.utcnow()
         for article in filtered_articles:
-            age_hours = (now - article.article.published_at).total_seconds() / 3600
+            age_hours = (
+                now - article.article.published_at).total_seconds() / 3600
             if age_hours < 1:  # Breaking news boost
                 article.score *= 1.2
             elif age_hours < 6:  # Recent news boost
@@ -395,9 +416,11 @@ class ContentRankingEngine:
         return filtered_articles[: request.limit]
 
     async def _log_ranking_decision(
-        self, request: RankingRequest, results: List[RankedArticle], algorithm_variant: str
-    ):
-        """Log ranking decision for model updates and analysis."""
+            self,
+            request: RankingRequest,
+            results: List[RankedArticle],
+            algorithm_variant: str):
+         -> Dict[str, Any]:"""Log ranking decision for model updates and analysis."""
         try:
             # In production, this would log to a data warehouse
             logger.info(
@@ -405,7 +428,9 @@ class ContentRankingEngine:
                 user_id=request.user_id,
                 algorithm_variant=algorithm_variant,
                 article_count=len(results),
-                avg_score=sum(r.score for r in results) / len(results) if results else 0,
+                avg_score=sum(
+                    r.score for r in results) /
+                len(results) if results else 0,
             )
         except Exception as e:
             logger.warning("Failed to log ranking decision", error=str(e))

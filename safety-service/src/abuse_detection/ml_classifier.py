@@ -44,7 +44,7 @@ class AbuseClassificationModel:
         self.model_dir = "models/abuse_classifiers"
         os.makedirs(self.model_dir, exist_ok=True)
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize the ML classifier"""
         try:
             # Try to load existing models
@@ -52,7 +52,7 @@ class AbuseClassificationModel:
 
             # If no models exist, create new ones
             if self.primary_model is None:
-                await self.create_models()
+    await self.create_models()
 
             self.is_initialized = True
             logger.info("ML abuse classifier initialized")
@@ -61,7 +61,7 @@ class AbuseClassificationModel:
             logger.error(f"Failed to initialize ML classifier: {str(e)}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup resources"""
         try:
             # Save models before cleanup
@@ -106,7 +106,8 @@ class AbuseClassificationModel:
             normalized_features = self.scaler.transform(feature_array)
 
             # Get predictions from primary model
-            primary_prob = self.primary_model.predict_proba(normalized_features)[0][1]
+            primary_prob = self.primary_model.predict_proba(normalized_features)[
+                0][1]
 
             # Get ensemble predictions
             ensemble_probs = []
@@ -115,7 +116,8 @@ class AbuseClassificationModel:
                     prob = model.predict_proba(normalized_features)[0][1]
                     ensemble_probs.append(prob)
                 except Exception as e:
-                    logger.warning(f"Ensemble model prediction failed: {str(e)}")
+                    logger.warning(
+                        f"Ensemble model prediction failed: {str(e)}")
                     continue
 
             # Calculate final probability
@@ -125,7 +127,8 @@ class AbuseClassificationModel:
                 final_prob = primary_prob
 
             # Calculate confidence
-            confidence = self.calculate_confidence(primary_prob, ensemble_probs)
+            confidence = self.calculate_confidence(
+                primary_prob, ensemble_probs)
 
             # Get feature importance
             feature_importance = self.get_feature_importance(combined_features)
@@ -152,12 +155,21 @@ class AbuseClassificationModel:
             feature_vector = []
 
             # User features
-            feature_vector.append(features.get("account_age_days", 0) / 365.0)  # Normalized age
-            feature_vector.append(features.get("reputation_score", 0.5))  # Reputation
+            feature_vector.append(
+                features.get(
+                    "account_age_days",
+                    0) / 365.0)  # Normalized age
+            feature_vector.append(
+                features.get(
+                    "reputation_score",
+                    0.5))  # Reputation
             feature_vector.append(
                 1.0 if features.get("is_verified", False) else 0.0
             )  # Verification
-            feature_vector.append(features.get("activity_score", 0.5))  # Activity level
+            feature_vector.append(
+                features.get(
+                    "activity_score",
+                    0.5))  # Activity level
             feature_vector.append(
                 features.get("connection_count", 0) / 100.0
             )  # Normalized connections
@@ -166,8 +178,14 @@ class AbuseClassificationModel:
             feature_vector.append(
                 features.get("request_frequency", 0) / 100.0
             )  # Normalized frequency
-            feature_vector.append(features.get("avg_request_size", 0) / 1000.0)  # Normalized size
-            feature_vector.append(features.get("error_rate", 0.0))  # Error rate
+            feature_vector.append(
+                features.get(
+                    "avg_request_size",
+                    0) / 1000.0)  # Normalized size
+            feature_vector.append(
+                features.get(
+                    "error_rate",
+                    0.0))  # Error rate
             feature_vector.append(
                 features.get("response_time_avg", 0) / 1000.0
             )  # Normalized response time
@@ -182,9 +200,18 @@ class AbuseClassificationModel:
             feature_vector.append(
                 features.get("time_variance", 0) / 3600.0
             )  # Normalized time variance
-            feature_vector.append(features.get("geographic_diversity", 0.0))  # Geographic diversity
-            feature_vector.append(features.get("device_diversity", 0.0))  # Device diversity
-            feature_vector.append(features.get("ip_diversity", 0.0))  # IP diversity
+            feature_vector.append(
+                features.get(
+                    "geographic_diversity",
+                    0.0))  # Geographic diversity
+            feature_vector.append(
+                features.get(
+                    "device_diversity",
+                    0.0))  # Device diversity
+            feature_vector.append(
+                features.get(
+                    "ip_diversity",
+                    0.0))  # IP diversity
 
             # Risk indicators
             feature_vector.append(
@@ -196,7 +223,10 @@ class AbuseClassificationModel:
             feature_vector.append(
                 features.get("unusual_hours_activity", 0.0)
             )  # Unusual hours activity
-            feature_vector.append(features.get("automated_behavior_score", 0.0))  # Automation score
+            feature_vector.append(
+                features.get(
+                    "automated_behavior_score",
+                    0.0))  # Automation score
             feature_vector.append(
                 features.get("content_violation_count", 0) / 10.0
             )  # Normalized violations
@@ -207,7 +237,10 @@ class AbuseClassificationModel:
             logger.error(f"Feature extraction failed: {str(e)}")
             return []
 
-    def calculate_confidence(self, primary_prob: float, ensemble_probs: List[float]) -> float:
+    def calculate_confidence(
+            self,
+            primary_prob: float,
+            ensemble_probs: List[float]) -> float:
         """Calculate prediction confidence"""
         try:
             if not ensemble_probs:
@@ -221,7 +254,8 @@ class AbuseClassificationModel:
             variance = np.var(all_probs)
 
             # Lower variance = higher confidence
-            confidence = max(0.0, 1.0 - variance * 4)  # Scale variance to [0, 1]
+            # Scale variance to [0, 1]
+            confidence = max(0.0, 1.0 - variance * 4)
 
             return min(confidence, 1.0)
 
@@ -229,7 +263,8 @@ class AbuseClassificationModel:
             logger.error(f"Confidence calculation failed: {str(e)}")
             return 0.5
 
-    def get_feature_importance(self, features: Dict[str, Any]) -> Dict[str, float]:
+    def get_feature_importance(
+            self, features: Dict[str, Any]) -> Dict[str, float]:
         """Get feature importance from the model"""
         try:
             if not hasattr(self.primary_model, "feature_importances_"):
@@ -273,7 +308,7 @@ class AbuseClassificationModel:
             logger.error(f"Feature importance calculation failed: {str(e)}")
             return {}
 
-    async def create_models(self):
+    async def create_models(self) -> Dict[str, Any]:
         """Create new ML models"""
         try:
             # Create primary model (Random Forest)
@@ -283,15 +318,16 @@ class AbuseClassificationModel:
 
             # Create ensemble models
             self.ensemble_models = [
-                GradientBoostingClassifier(n_estimators=100, learning_rate=0.1, random_state=42),
-                LogisticRegression(random_state=42, max_iter=1000),
-                SVC(probability=True, random_state=42),
-            ]
+                GradientBoostingClassifier(
+                    n_estimators=100, learning_rate=0.1, random_state=42), LogisticRegression(
+                    random_state=42, max_iter=1000), SVC(
+                    probability=True, random_state=42), ]
 
             # Initialize scaler
             self.scaler = StandardScaler()
 
-            # Train models with synthetic data (in production, use real training data)
+            # Train models with synthetic data (in production, use real
+            # training data)
             await self.train_models_with_synthetic_data()
 
             logger.info("ML models created and trained")
@@ -300,7 +336,7 @@ class AbuseClassificationModel:
             logger.error(f"Model creation failed: {str(e)}")
             raise
 
-    async def train_models_with_synthetic_data(self):
+    async def train_models_with_synthetic_data(self) -> Dict[str, Any]:
         """Train models with synthetic data for demonstration"""
         try:
             # Generate synthetic training data
@@ -349,7 +385,8 @@ class AbuseClassificationModel:
                 ensemble_scores.append(score)
 
             self.model_performance["ensemble_models"] = ensemble_scores
-            self.model_performance["average_ensemble"] = np.mean(ensemble_scores)
+            self.model_performance["average_ensemble"] = np.mean(
+                ensemble_scores)
 
             logger.info(
                 f"Models trained - Primary: {primary_score:.3f}, Ensemble: {np.mean(ensemble_scores):.3f}"
@@ -359,17 +396,33 @@ class AbuseClassificationModel:
             logger.error(f"Synthetic data training failed: {str(e)}")
             raise
 
-    async def save_models(self):
+    async def save_models(self) -> Dict[str, Any]:
         """Save trained models to disk"""
         try:
             if self.primary_model is not None:
-                joblib.dump(self.primary_model, os.path.join(self.model_dir, "primary_model.pkl"))
+                joblib.dump(
+                    self.primary_model,
+                    os.path.join(
+                        self.model_dir,
+                        "primary_model.pkl"))
 
             for i, model in enumerate(self.ensemble_models):
-                joblib.dump(model, os.path.join(self.model_dir, f"ensemble_model_{i}.pkl"))
+                joblib.dump(
+                    model,
+                    os.path.join(
+                        self.model_dir,
+                        f"ensemble_model_{i}.pkl"))
 
-            joblib.dump(self.scaler, os.path.join(self.model_dir, "scaler.pkl"))
-            joblib.dump(self.label_encoder, os.path.join(self.model_dir, "label_encoder.pkl"))
+            joblib.dump(
+                self.scaler,
+                os.path.join(
+                    self.model_dir,
+                    "scaler.pkl"))
+            joblib.dump(
+                self.label_encoder,
+                os.path.join(
+                    self.model_dir,
+                    "label_encoder.pkl"))
 
             # Save metadata
             metadata = {
@@ -385,17 +438,19 @@ class AbuseClassificationModel:
         except Exception as e:
             logger.error(f"Model saving failed: {str(e)}")
 
-    async def load_models(self):
+    async def load_models(self) -> Dict[str, Any]:
         """Load trained models from disk"""
         try:
             # Load primary model
-            primary_model_path = os.path.join(self.model_dir, "primary_model.pkl")
+            primary_model_path = os.path.join(
+                self.model_dir, "primary_model.pkl")
             if os.path.exists(primary_model_path):
                 self.primary_model = joblib.load(primary_model_path)
 
             # Load ensemble models
             for i in range(3):  # Assuming 3 ensemble models
-                ensemble_model_path = os.path.join(self.model_dir, f"ensemble_model_{i}.pkl")
+                ensemble_model_path = os.path.join(
+                    self.model_dir, f"ensemble_model_{i}.pkl")
                 if os.path.exists(ensemble_model_path):
                     model = joblib.load(ensemble_model_path)
                     self.ensemble_models.append(model)
@@ -423,7 +478,7 @@ class AbuseClassificationModel:
         except Exception as e:
             logger.error(f"Model loading failed: {str(e)}")
 
-    async def retrain_models(self, training_data: List[Dict[str, Any]]):
+    async def retrain_models(self, training_data: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Retrain models with new data"""
         try:
             if not training_data:

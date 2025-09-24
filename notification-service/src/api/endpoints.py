@@ -3,30 +3,24 @@ FastAPI endpoints for notification decisioning service.
 """
 
 import asyncio
-import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 from uuid import uuid4
 
 import structlog
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
-from fastapi.responses import JSONResponse
 
 from ..breaking_news.breaking_news_handler import BreakingNewsHandler
 from ..decision_engine.engine import NotificationDecisionEngine
-from ..exceptions import NotificationDeliveryError, NotificationError
+from ..exceptions import NotificationDeliveryError
 from ..models.schemas import (
-    ABTestVariant,
     BatchNotificationRequest,
     BatchNotificationResponse,
-    DeliveryChannel,
     DeliveryResult,
     NewsItem,
     NotificationCandidate,
     NotificationDecision,
     NotificationPreferences,
-    NotificationType,
-    UserProfile,
 )
 
 logger = structlog.get_logger()
@@ -134,9 +128,7 @@ async def deliver_notification(
 
     try:
         if not decision.should_send:
-            raise HTTPException(
-                status_code=400, detail="Cannot deliver notification that should not be sent"
-            )
+            raise HTTPException(status_code=400, detail="Cannot deliver notification that should not be sent")
 
         logger.info(
             "Delivering notification",
@@ -159,9 +151,7 @@ async def deliver_notification(
         logger.error("Notification delivery failed", user_id=decision.user_id, error=str(e))
         raise HTTPException(status_code=500, detail=str(e))
     except Exception as e:
-        logger.error(
-            "Error delivering notification", user_id=decision.user_id, error=str(e), exc_info=True
-        )
+        logger.error("Error delivering notification", user_id=decision.user_id, error=str(e), exc_info=True)
         raise HTTPException(status_code=500, detail=f"Delivery failed: {str(e)}")
 
 
@@ -172,7 +162,6 @@ async def process_breaking_news(
     decision_engine: NotificationDecisionEngine = Depends(),
 ) -> Dict[str, Any]:
     """Process breaking news for immediate notification."""
-
     try:
         logger.info("Processing breaking news", news_item_id=news_item.id, title=news_item.title)
 
@@ -195,9 +184,7 @@ async def process_breaking_news(
         # Process candidates in background
         background_tasks.add_task(_process_breaking_news_candidates, candidates, decision_engine)
 
-        logger.info(
-            "Breaking news processed", news_item_id=news_item.id, candidates_created=len(candidates)
-        )
+        logger.info("Breaking news processed", news_item_id=news_item.id, candidates_created=len(candidates))
 
         return {
             "message": "Breaking news processed successfully",
@@ -206,9 +193,7 @@ async def process_breaking_news(
         }
 
     except Exception as e:
-        logger.error(
-            "Error processing breaking news", news_item_id=news_item.id, error=str(e), exc_info=True
-        )
+        logger.error("Error processing breaking news", news_item_id=news_item.id, error=str(e), exc_info=True)
         raise HTTPException(status_code=500, detail=f"Breaking news processing failed: {str(e)}")
 
 
@@ -218,9 +203,7 @@ async def _process_breaking_news_candidates(
     """Process breaking news candidates in background."""
 
     try:
-        logger.info(
-            "Processing breaking news candidates in background", candidate_count=len(candidates)
-        )
+        logger.info("Processing breaking news candidates in background", candidate_count=len(candidates))
 
         # Process decisions
         decisions = await decision_engine.process_batch_notifications(candidates)
@@ -233,7 +216,7 @@ async def _process_breaking_news_candidates(
                 delivery_tasks.append(task)
 
         if delivery_tasks:
-            await asyncio.gather(*delivery_tasks, return_exceptions=True)
+    await asyncio.gather(*delivery_tasks, return_exceptions=True)
 
         logger.info(
             "Breaking news candidates processed",
@@ -242,9 +225,7 @@ async def _process_breaking_news_candidates(
         )
 
     except Exception as e:
-        logger.error(
-            "Error processing breaking news candidates in background", error=str(e), exc_info=True
-        )
+        logger.error("Error processing breaking news candidates in background", error=str(e), exc_info=True)
 
 
 @router.get("/preferences/{user_id}", response_model=NotificationPreferences)
@@ -274,9 +255,7 @@ async def update_user_preferences(
         # Ensure user_id matches
         preferences.user_id = user_id
 
-        updated_prefs = await decision_engine.preference_manager.update_preferences(
-            user_id, preferences
-        )
+        updated_prefs = await decision_engine.preference_manager.update_preferences(user_id, preferences)
 
         logger.info(
             "Updated user preferences",
@@ -296,7 +275,6 @@ async def get_user_fatigue_analytics(
     user_id: str, decision_engine: NotificationDecisionEngine = Depends()
 ) -> Dict[str, Any]:
     """Get user fatigue analytics."""
-
     try:
         analytics = await decision_engine.fatigue_detector.get_user_fatigue_analytics(user_id)
         return analytics
@@ -311,7 +289,6 @@ async def get_delivery_analytics(
     user_id: str, decision_engine: NotificationDecisionEngine = Depends()
 ) -> Dict[str, Any]:
     """Get delivery analytics for user."""
-
     try:
         analytics = await decision_engine.delivery_manager.get_delivery_analytics(user_id)
         return analytics
@@ -326,7 +303,6 @@ async def get_active_experiments(
     decision_engine: NotificationDecisionEngine = Depends(),
 ) -> Dict[str, Any]:
     """Get active A/B test experiments."""
-
     try:
         experiments = {}
         for exp_name in decision_engine.ab_tester.experiments:
@@ -352,22 +328,17 @@ async def get_experiment_results(
     experiment_name: str, decision_engine: NotificationDecisionEngine = Depends()
 ) -> Dict[str, Any]:
     """Get A/B test experiment results."""
-
     try:
         results = await decision_engine.ab_tester.get_experiment_results(experiment_name)
         return results
 
     except Exception as e:
-        logger.error(
-            "Error getting experiment results", experiment_name=experiment_name, error=str(e)
-        )
+        logger.error("Error getting experiment results", experiment_name=experiment_name, error=str(e))
         raise HTTPException(status_code=500, detail=f"Failed to get experiment results: {str(e)}")
 
 
 @router.get("/ab-tests/user/{user_id}")
-async def get_user_experiments(
-    user_id: str, decision_engine: NotificationDecisionEngine = Depends()
-) -> Dict[str, str]:
+async def get_user_experiments(user_id: str, decision_engine: NotificationDecisionEngine = Depends()) -> Dict[str, str]:
     """Get user's A/B test assignments."""
 
     try:
@@ -384,7 +355,6 @@ async def create_experiment(
     experiment_data: Dict[str, Any], decision_engine: NotificationDecisionEngine = Depends()
 ) -> Dict[str, Any]:
     """Create new A/B test experiment."""
-
     try:
         experiment = await decision_engine.ab_tester.create_experiment(
             experiment_name=experiment_data["name"],
@@ -409,7 +379,7 @@ async def stop_experiment(
     """Stop A/B test experiment."""
 
     try:
-        await decision_engine.ab_tester.stop_experiment(experiment_name)
+    await decision_engine.ab_tester.stop_experiment(experiment_name)
 
         logger.info("Stopped A/B test experiment", experiment_name=experiment_name)
 
@@ -425,7 +395,6 @@ async def detailed_health_check(
     decision_engine: NotificationDecisionEngine = Depends(),
 ) -> Dict[str, Any]:
     """Detailed health check with component status."""
-
     try:
         health_status = {
             "status": "healthy",

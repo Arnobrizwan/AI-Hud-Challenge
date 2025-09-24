@@ -28,7 +28,10 @@ class CrowdsourcingManager:
         self.quality_controller = CrowdsourceQualityController()
         self.consensus_builder = ConsensusBuilder()
 
-    async def create_campaign(self, campaign: CampaignCreate, created_by: UUID) -> Campaign:
+    async def create_campaign(
+            self,
+            campaign: CampaignCreate,
+            created_by: UUID) -> Campaign:
         """Create crowdsourcing campaign"""
 
         try:
@@ -81,8 +84,9 @@ class CrowdsourcingManager:
             await self.db.commit()
 
             logger.info(
-                "Campaign tasks created", campaign_id=str(campaign_id), task_count=len(tasks)
-            )
+                "Campaign tasks created",
+                campaign_id=str(campaign_id),
+                task_count=len(tasks))
 
             return [self._task_to_schema(task) for task in tasks]
 
@@ -93,8 +97,7 @@ class CrowdsourcingManager:
     async def submit_campaign_response(
         self, task_id: UUID, worker_id: str, submission_data: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Submit response to campaign task"""
-
+    """Submit response to campaign task"""
         try:
             # Validate submission
             validation_result = await self.validate_submission(submission_data)
@@ -137,9 +140,9 @@ class CrowdsourcingManager:
             logger.error("Error submitting campaign response", error=str(e))
             raise
 
-    async def process_campaign_results(self, campaign_id: UUID) -> Dict[str, Any]:
-        """Process and validate campaign results"""
-
+    async def process_campaign_results(
+            self, campaign_id: UUID) -> Dict[str, Any]:
+    """Process and validate campaign results"""
         try:
             # Get campaign
             result = await self.db.execute(select(CampaignDB).where(CampaignDB.id == campaign_id))
@@ -180,7 +183,10 @@ class CrowdsourcingManager:
                 ),
             }
 
-            logger.info("Campaign results processed", campaign_id=str(campaign_id), metrics=metrics)
+            logger.info(
+                "Campaign results processed",
+                campaign_id=str(campaign_id),
+                metrics=metrics)
 
             return {
                 "campaign_id": str(campaign_id),
@@ -193,24 +199,30 @@ class CrowdsourcingManager:
             logger.error("Error processing campaign results", error=str(e))
             raise
 
-    async def validate_submission(self, submission_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Validate crowdsourced submission"""
-
+    async def validate_submission(
+            self, submission_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Validate crowdsourced submission"""
         try:
             # Basic validation
             if not submission_data:
-                return {"is_valid": False, "error_message": "Submission data is required"}
+                return {
+                    "is_valid": False,
+                    "error_message": "Submission data is required"}
 
             # Check for required fields
             required_fields = ["response", "confidence"]
             for field in required_fields:
                 if field not in submission_data:
-                    return {"is_valid": False, "error_message": f"Field '{field}' is required"}
+                    return {"is_valid": False,
+                            "error_message": f"Field '{field}' is required"}
 
             # Validate confidence score
             confidence = submission_data.get("confidence", 0)
-            if not isinstance(confidence, (int, float)) or confidence < 0 or confidence > 1:
-                return {"is_valid": False, "error_message": "Confidence must be between 0 and 1"}
+            if not isinstance(confidence, (int, float)
+                              ) or confidence < 0 or confidence > 1:
+                return {
+                    "is_valid": False,
+                    "error_message": "Confidence must be between 0 and 1"}
 
             return {"is_valid": True, "error_message": None}
 
@@ -222,7 +234,8 @@ class CrowdsourcingManager:
         """Convert database model to schema"""
 
         return Campaign(
-            id=str(campaign.id),
+            id=str(
+                campaign.id),
             name=campaign.name,
             description=campaign.description,
             task_type=campaign.task_type,
@@ -230,7 +243,8 @@ class CrowdsourcingManager:
             reward_per_task=campaign.reward_per_task,
             quality_threshold=campaign.quality_threshold,
             status=campaign.status,
-            created_by=str(campaign.created_by) if campaign.created_by else None,
+            created_by=str(
+                campaign.created_by) if campaign.created_by else None,
             created_at=campaign.created_at,
         )
 
@@ -250,7 +264,10 @@ class CrowdsourcingManager:
 class TaskDistributor:
     """Distribute tasks to crowd workers"""
 
-    def distribute_tasks(self, tasks: List[Any], worker_criteria: Dict[str, Any]) -> None:
+    def distribute_tasks(self,
+                         tasks: List[Any],
+                         worker_criteria: Dict[str,
+                                               Any]) -> None:
         """Distribute tasks to appropriate workers"""
 
         # This would implement task distribution logic
@@ -296,7 +313,8 @@ class CrowdsourceQualityController:
 class ConsensusBuilder:
     """Build consensus from multiple submissions"""
 
-    async def build_consensus(self, submissions: List[Any]) -> List[Dict[str, Any]]:
+    async def build_consensus(
+            self, submissions: List[Any]) -> List[Dict[str, Any]]:
         """Build consensus from multiple submissions"""
 
         try:
@@ -332,9 +350,9 @@ class ConsensusBuilder:
 
     def _calculate_consensus(self, submissions: List[Any]) -> Dict[str, Any]:
         """Calculate consensus from submissions"""
-
         # Simple majority voting
-        responses = [sub.submission_data.get("response") for sub in submissions]
+        responses = [sub.submission_data.get(
+            "response") for sub in submissions]
 
         # Count responses
         response_counts = {}
@@ -342,9 +360,9 @@ class ConsensusBuilder:
             response_counts[response] = response_counts.get(response, 0) + 1
 
         # Find most common response
-        consensus_response = max(response_counts.items(), key=lambda x: x[1])[0]
+        consensus_response = max(
+            response_counts.items(),
+            key=lambda x: x[1])[0]
 
-        return {
-            "response": consensus_response,
-            "confidence": len([r for r in responses if r == consensus_response]) / len(responses),
-        }
+        return {"response": consensus_response, "confidence": len(
+            [r for r in responses if r == consensus_response]) / len(responses), }

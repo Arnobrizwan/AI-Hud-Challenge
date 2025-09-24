@@ -48,7 +48,7 @@ class IncidentResponseManager:
         # Incident counter
         self.incident_counter = 0
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize the incident response manager"""
         try:
             # Initialize all components
@@ -65,13 +65,14 @@ class IncidentResponseManager:
             logger.info("Incident response manager initialized")
 
         except Exception as e:
-            logger.error(f"Failed to initialize incident response manager: {str(e)}")
+            logger.error(
+                f"Failed to initialize incident response manager: {str(e)}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup resources"""
         try:
-            await self.incident_classifier.cleanup()
+    await self.incident_classifier.cleanup()
             await self.response_orchestrator.cleanup()
             await self.escalation_manager.cleanup()
             await self.communication_manager.cleanup()
@@ -83,9 +84,11 @@ class IncidentResponseManager:
             logger.info("Incident response manager cleanup completed")
 
         except Exception as e:
-            logger.error(f"Error during incident response manager cleanup: {str(e)}")
+            logger.error(
+                f"Error during incident response manager cleanup: {str(e)}")
 
-    async def handle_safety_incident(self, incident: SafetyIncident) -> IncidentResponse:
+    async def handle_safety_incident(
+            self, incident: SafetyIncident) -> IncidentResponse:
         """Handle safety incident with automated response"""
 
         if not self.is_initialized:
@@ -110,7 +113,7 @@ class IncidentResponseManager:
 
             # Handle escalation if needed
             if classification.requires_escalation:
-                await self.escalation_manager.escalate_incident(incident, classification)
+    await self.escalation_manager.escalate_incident(incident, classification)
 
             # Communicate with stakeholders
             await self.communication_manager.notify_stakeholders(incident, response_plan)
@@ -146,7 +149,9 @@ class IncidentResponseManager:
                 incident_type="data_drift",
                 severity="high" if drift_status.overall_severity > 0.8 else "medium",
                 description=f"Data drift detected with severity {drift_status.overall_severity:.2f}",
-                affected_systems=["drift_detection", "ml_models"],
+                affected_systems=[
+                    "drift_detection",
+                    "ml_models"],
                 detected_at=datetime.utcnow(),
                 status="open",
                 metadata={
@@ -170,14 +175,17 @@ class IncidentResponseManager:
                 incident_type="abuse_detection",
                 severity=abuse_status.threat_level,
                 description=f"Abuse detected for user {abuse_status.user_id} with score {abuse_status.abuse_score:.2f}",
-                affected_systems=["abuse_detection", "user_management"],
+                affected_systems=[
+                    "abuse_detection",
+                    "user_management"],
                 detected_at=datetime.utcnow(),
                 status="open",
                 metadata={
                     "user_id": abuse_status.user_id,
                     "abuse_score": abuse_status.abuse_score,
                     "threat_level": abuse_status.threat_level,
-                    "rule_violations": len(abuse_status.rule_violations),
+                    "rule_violations": len(
+                        abuse_status.rule_violations),
                 },
             )
 
@@ -187,7 +195,8 @@ class IncidentResponseManager:
             logger.error(f"Abuse incident creation failed: {str(e)}")
             raise
 
-    async def create_content_incident(self, content_status: Any) -> SafetyIncident:
+    async def create_content_incident(
+            self, content_status: Any) -> SafetyIncident:
         """Create incident for content safety"""
         try:
             incident = SafetyIncident(
@@ -195,13 +204,16 @@ class IncidentResponseManager:
                 incident_type="content_safety",
                 severity="high" if content_status.overall_safety_score < 0.5 else "medium",
                 description=f"Content safety violation detected with score {content_status.overall_safety_score:.2f}",
-                affected_systems=["content_moderation", "content_management"],
+                affected_systems=[
+                    "content_moderation",
+                    "content_management"],
                 detected_at=datetime.utcnow(),
                 status="open",
                 metadata={
                     "content_id": content_status.content_id,
                     "safety_score": content_status.overall_safety_score,
-                    "violations": len(content_status.violations),
+                    "violations": len(
+                        content_status.violations),
                     "recommended_action": content_status.recommended_action,
                 },
             )
@@ -273,17 +285,18 @@ class IncidentResponseManager:
                         ResponseAction(
                             action_id=f"action_{incident.id}_1",
                             action_type="apply_mitigation",
-                            parameters={"user_id": incident.metadata.get("user_id")},
+                            parameters={
+                                "user_id": incident.metadata.get("user_id")},
                             priority=1,
                         ),
                         ResponseAction(
                             action_id=f"action_{incident.id}_2",
                             action_type="review_user_activity",
-                            parameters={"user_id": incident.metadata.get("user_id")},
+                            parameters={
+                                "user_id": incident.metadata.get("user_id")},
                             priority=2,
                         ),
-                    ]
-                )
+                    ])
 
             elif incident.incident_type == "content_safety":
                 actions.extend(
@@ -291,17 +304,18 @@ class IncidentResponseManager:
                         ResponseAction(
                             action_id=f"action_{incident.id}_1",
                             action_type="moderate_content",
-                            parameters={"content_id": incident.metadata.get("content_id")},
+                            parameters={
+                                "content_id": incident.metadata.get("content_id")},
                             priority=1,
                         ),
                         ResponseAction(
                             action_id=f"action_{incident.id}_2",
                             action_type="review_content_policy",
-                            parameters={"violations": incident.metadata.get("violations")},
+                            parameters={
+                                "violations": incident.metadata.get("violations")},
                             priority=2,
                         ),
-                    ]
-                )
+                    ])
 
             # Add escalation action if needed
             if classification.requires_escalation:
@@ -332,36 +346,44 @@ class IncidentResponseManager:
                 TimelineItem(
                     phase="immediate_response",
                     duration_minutes=15,
-                    actions=["detect_incident", "classify_severity", "execute_immediate_actions"],
-                )
-            )
+                    actions=[
+                        "detect_incident",
+                        "classify_severity",
+                        "execute_immediate_actions"],
+                ))
 
             # Investigation phase
             timeline.append(
                 TimelineItem(
                     phase="investigation",
                     duration_minutes=60 if classification.severity == "high" else 30,
-                    actions=["investigate_root_cause", "assess_impact", "gather_evidence"],
-                )
-            )
+                    actions=[
+                        "investigate_root_cause",
+                        "assess_impact",
+                        "gather_evidence"],
+                ))
 
             # Resolution phase
             timeline.append(
                 TimelineItem(
                     phase="resolution",
                     duration_minutes=120 if classification.severity == "high" else 60,
-                    actions=["implement_fix", "verify_resolution", "update_monitoring"],
-                )
-            )
+                    actions=[
+                        "implement_fix",
+                        "verify_resolution",
+                        "update_monitoring"],
+                ))
 
             # Follow-up phase
             timeline.append(
                 TimelineItem(
                     phase="follow_up",
                     duration_minutes=30,
-                    actions=["document_incident", "update_procedures", "conduct_post_mortem"],
-                )
-            )
+                    actions=[
+                        "document_incident",
+                        "update_procedures",
+                        "conduct_post_mortem"],
+                ))
 
             return timeline
 
@@ -421,21 +443,25 @@ class IncidentResponseManager:
             logger.error(f"Success criteria generation failed: {str(e)}")
             return []
 
-    async def execute_immediate_response(self, response_plan: ResponsePlan) -> List[ResponseAction]:
+    async def execute_immediate_response(
+            self, response_plan: ResponsePlan) -> List[ResponseAction]:
         """Execute immediate response actions"""
         try:
             executed_actions = []
 
             # Execute high-priority actions immediately
-            immediate_actions = [action for action in response_plan.actions if action.priority <= 2]
+            immediate_actions = [
+                action for action in response_plan.actions if action.priority <= 2]
 
             for action in immediate_actions:
                 try:
-                    await self.response_orchestrator.execute_action(action)
+    await self.response_orchestrator.execute_action(action)
                     executed_actions.append(action)
-                    logger.info(f"Executed immediate action: {action.action_type}")
+                    logger.info(
+                        f"Executed immediate action: {action.action_type}")
                 except Exception as e:
-                    logger.error(f"Failed to execute action {action.action_type}: {str(e)}")
+                    logger.error(
+                        f"Failed to execute action {action.action_type}: {str(e)}")
 
             return executed_actions
 
@@ -443,7 +469,8 @@ class IncidentResponseManager:
             logger.error(f"Immediate response execution failed: {str(e)}")
             return []
 
-    async def setup_incident_monitoring(self, incident: SafetyIncident) -> MonitoringConfig:
+    async def setup_incident_monitoring(
+            self, incident: SafetyIncident) -> MonitoringConfig:
         """Set up monitoring for incident resolution"""
         try:
             monitoring_config = MonitoringConfig(
@@ -453,7 +480,10 @@ class IncidentResponseManager:
                     "response_time",
                     "user_activity",
                 ],
-                alert_thresholds={"error_rate": 0.05, "response_time": 1000, "system_health": 0.8},
+                alert_thresholds={
+                    "error_rate": 0.05,
+                    "response_time": 1000,
+                    "system_health": 0.8},
                 check_interval=60,  # 1 minute
             )
 
@@ -463,11 +493,15 @@ class IncidentResponseManager:
             logger.error(f"Incident monitoring setup failed: {str(e)}")
             raise
 
-    async def resolve_incident(self, incident_id: str, resolution_notes: str) -> bool:
+    async def resolve_incident(
+            self,
+            incident_id: str,
+            resolution_notes: str) -> bool:
         """Resolve an incident"""
         try:
             if incident_id not in self.active_incidents:
-                logger.warning(f"Incident {incident_id} not found in active incidents")
+                logger.warning(
+                    f"Incident {incident_id} not found in active incidents")
                 return False
 
             incident = self.active_incidents[incident_id]
@@ -509,7 +543,7 @@ class IncidentResponseManager:
             logger.error(f"Active incidents retrieval failed: {str(e)}")
             return []
 
-    async def cleanup_resolved_incidents(self):
+    async def cleanup_resolved_incidents(self) -> Dict[str, Any]:
         """Cleanup old resolved incidents"""
         try:
             cutoff_date = datetime.utcnow() - timedelta(days=30)  # Keep for 30 days
@@ -524,16 +558,17 @@ class IncidentResponseManager:
                 del self.resolved_incidents[incident_id]
 
             if old_incidents:
-                logger.info(f"Cleaned up {len(old_incidents)} old resolved incidents")
+                logger.info(
+                    f"Cleaned up {len(old_incidents)} old resolved incidents")
 
         except Exception as e:
             logger.error(f"Incident cleanup failed: {str(e)}")
 
-    async def incident_monitoring_task(self):
+    async def incident_monitoring_task(self) -> Dict[str, Any]:
         """Background task for incident monitoring"""
         while True:
             try:
-                await asyncio.sleep(300)  # Check every 5 minutes
+    await asyncio.sleep(300)  # Check every 5 minutes
 
                 if not self.is_initialized:
                     break
@@ -551,11 +586,11 @@ class IncidentResponseManager:
                 logger.error(f"Incident monitoring task failed: {str(e)}")
                 await asyncio.sleep(300)
 
-    async def incident_cleanup_task(self):
+    async def incident_cleanup_task(self) -> Dict[str, Any]:
         """Background task for incident cleanup"""
         while True:
             try:
-                await asyncio.sleep(3600)  # Run every hour
+    await asyncio.sleep(3600)  # Run every hour
 
                 if not self.is_initialized:
                     break
@@ -594,11 +629,13 @@ class IncidentResponseManager:
 
             # Count active incidents
             for incident in self.active_incidents.values():
-                type_counts[incident.incident_type] = type_counts.get(incident.incident_type, 0) + 1
+                type_counts[incident.incident_type] = type_counts.get(
+                    incident.incident_type, 0) + 1
 
             # Count resolved incidents
             for incident in self.resolved_incidents.values():
-                type_counts[incident.incident_type] = type_counts.get(incident.incident_type, 0) + 1
+                type_counts[incident.incident_type] = type_counts.get(
+                    incident.incident_type, 0) + 1
 
             return type_counts
 
@@ -613,11 +650,13 @@ class IncidentResponseManager:
 
             # Count active incidents
             for incident in self.active_incidents.values():
-                severity_counts[incident.severity] = severity_counts.get(incident.severity, 0) + 1
+                severity_counts[incident.severity] = severity_counts.get(
+                    incident.severity, 0) + 1
 
             # Count resolved incidents
             for incident in self.resolved_incidents.values():
-                severity_counts[incident.severity] = severity_counts.get(incident.severity, 0) + 1
+                severity_counts[incident.severity] = severity_counts.get(
+                    incident.severity, 0) + 1
 
             return severity_counts
 
@@ -642,8 +681,10 @@ class IncidentResponseManager:
                 for incident in resolved_incidents
             )
 
-            return total_time / len(resolved_incidents) / 3600  # Convert to hours
+            return total_time / len(resolved_incidents) / \
+                3600  # Convert to hours
 
         except Exception as e:
-            logger.error(f"Average resolution time calculation failed: {str(e)}")
+            logger.error(
+                f"Average resolution time calculation failed: {str(e)}")
             return 0.0

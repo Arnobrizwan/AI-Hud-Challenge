@@ -13,14 +13,9 @@ from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..models.database import Annotation as AnnotationDB
-from ..models.database import (
-    AnnotationAssignment,
-)
+from ..models.database import AnnotationAssignment
 from ..models.database import AnnotationTask as AnnotationTaskDB
-from ..models.database import (
-    ContentItem,
-    User,
-)
+from ..models.database import ContentItem, User
 from ..models.schemas import (
     Annotation,
     AnnotationCreate,
@@ -91,7 +86,7 @@ class AnnotationManager:
 
             # Notify annotators
             for annotator_id in annotator_ids:
-                await self.notify_annotator(annotator_id, task)
+    await self.notify_annotator(annotator_id, task)
 
             logger.info(
                 "Annotation task created",
@@ -103,7 +98,10 @@ class AnnotationManager:
             return self._db_to_schema(task)
 
         except Exception as e:
-            logger.error("Error creating annotation task", error=str(e), content_id=str(content_id))
+            logger.error(
+                "Error creating annotation task",
+                error=str(e),
+                content_id=str(content_id))
             raise
 
     async def submit_annotation(
@@ -114,8 +112,7 @@ class AnnotationManager:
         confidence_score: Optional[float] = None,
         time_spent_seconds: Optional[int] = None,
     ) -> Dict[str, Any]:
-        """Process submitted annotation"""
-
+    """Process submitted annotation"""
         try:
             # Validate annotation
             validation_result = await self.validate_annotation(annotation_data, task_id)
@@ -143,12 +140,12 @@ class AnnotationManager:
             # Check if task is complete
             task = await self.get_task(task_id)
             if await self.is_annotation_task_complete(task):
-                await self.finalize_annotation_task(task)
+    await self.finalize_annotation_task(task)
 
             # Calculate inter-annotator agreement if multiple annotations
             agreement_score = await self.inter_annotator.calculate_agreement(task_id)
             if agreement_score is not None:
-                await self.store_agreement_metrics(task_id, agreement_score)
+    await self.store_agreement_metrics(task_id, agreement_score)
 
             # Calculate quality score
             quality_score = await self.quality_controller.score_annotation(annotation_data)
@@ -169,7 +166,10 @@ class AnnotationManager:
             }
 
         except Exception as e:
-            logger.error("Error submitting annotation", error=str(e), task_id=str(task_id))
+            logger.error(
+                "Error submitting annotation",
+                error=str(e),
+                task_id=str(task_id))
             raise
 
     async def get_task(self, task_id: UUID) -> Optional[AnnotationTaskDB]:
@@ -199,7 +199,8 @@ class AnnotationManager:
 
         return [self._db_to_schema(task) for task in tasks]
 
-    async def get_annotation_guidelines(self, annotation_type: AnnotationType) -> str:
+    async def get_annotation_guidelines(
+            self, annotation_type: AnnotationType) -> str:
         """Get annotation guidelines for specific type"""
 
         guidelines = {
@@ -254,14 +255,13 @@ class AnnotationManager:
         }
 
         return guidelines.get(
-            annotation_type, "Please provide accurate and consistent annotations."
-        )
+            annotation_type,
+            "Please provide accurate and consistent annotations.")
 
     async def validate_annotation(
         self, annotation_data: Dict[str, Any], task_id: UUID
     ) -> Dict[str, Any]:
-        """Validate annotation data"""
-
+    """Validate annotation data"""
         try:
             # Get task to understand requirements
             task = await self.get_task(task_id)
@@ -271,19 +271,24 @@ class AnnotationManager:
             # Basic validation based on annotation type
             if task.annotation_type == AnnotationType.SENTIMENT:
                 if "sentiment" not in annotation_data:
-                    return {"is_valid": False, "error_message": "Sentiment field required"}
+                    return {"is_valid": False,
+                            "error_message": "Sentiment field required"}
 
                 valid_sentiments = ["positive", "negative", "neutral"]
                 if annotation_data["sentiment"] not in valid_sentiments:
-                    return {"is_valid": False, "error_message": "Invalid sentiment value"}
+                    return {"is_valid": False,
+                            "error_message": "Invalid sentiment value"}
 
             elif task.annotation_type == AnnotationType.QUALITY:
                 if "quality_score" not in annotation_data:
-                    return {"is_valid": False, "error_message": "Quality score required"}
+                    return {"is_valid": False,
+                            "error_message": "Quality score required"}
 
                 score = annotation_data["quality_score"]
-                if not isinstance(score, (int, float)) or score < 1 or score > 5:
-                    return {"is_valid": False, "error_message": "Quality score must be 1-5"}
+                if not isinstance(
+                        score, (int, float)) or score < 1 or score > 5:
+                    return {"is_valid": False,
+                            "error_message": "Quality score must be 1-5"}
 
             # Add more validation rules as needed
 
@@ -293,7 +298,8 @@ class AnnotationManager:
             logger.error("Error validating annotation", error=str(e))
             return {"is_valid": False, "error_message": "Validation error"}
 
-    async def update_assignment_completion(self, task_id: UUID, annotator_id: UUID) -> None:
+    async def update_assignment_completion(
+            self, task_id: UUID, annotator_id: UUID) -> None:
         """Update assignment completion status"""
 
         result = await self.db.execute(
@@ -310,7 +316,8 @@ class AnnotationManager:
             assignment.completed_at = datetime.utcnow()
             await self.db.commit()
 
-    async def is_annotation_task_complete(self, task: AnnotationTaskDB) -> bool:
+    async def is_annotation_task_complete(
+            self, task: AnnotationTaskDB) -> bool:
         """Check if annotation task is complete"""
 
         # Get all assignments for this task
@@ -320,7 +327,8 @@ class AnnotationManager:
         assignments = result.scalars().all()
 
         # Check if all assignments are completed
-        return all(assignment.completed_at is not None for assignment in assignments)
+        return all(
+            assignment.completed_at is not None for assignment in assignments)
 
     async def finalize_annotation_task(self, task: AnnotationTaskDB) -> None:
         """Finalize completed annotation task"""
@@ -337,16 +345,17 @@ class AnnotationManager:
 
         # Store consensus (this would be implemented based on your needs)
         logger.info(
-            "Annotation task finalized", task_id=str(task.id), annotation_count=len(annotations)
-        )
+            "Annotation task finalized",
+            task_id=str(
+                task.id),
+            annotation_count=len(annotations))
 
         await self.db.commit()
 
     async def calculate_consensus_annotation(
         self, annotations: List[AnnotationDB], annotation_type: AnnotationType
     ) -> Dict[str, Any]:
-        """Calculate consensus from multiple annotations"""
-
+    """Calculate consensus from multiple annotations"""
         if not annotations:
             return {}
 
@@ -355,32 +364,47 @@ class AnnotationManager:
 
         # Simple majority voting for categorical annotations
         if annotation_type == AnnotationType.SENTIMENT:
-            sentiments = [ann.annotation_data.get("sentiment") for ann in annotations]
+            sentiments = [ann.annotation_data.get(
+                "sentiment") for ann in annotations]
             consensus_sentiment = max(set(sentiments), key=sentiments.count)
             return {"sentiment": consensus_sentiment}
 
         # Average for numerical annotations
         elif annotation_type == AnnotationType.QUALITY:
-            scores = [ann.annotation_data.get("quality_score", 0) for ann in annotations]
+            scores = [
+                ann.annotation_data.get(
+                    "quality_score",
+                    0) for ann in annotations]
             avg_score = sum(scores) / len(scores)
             return {"quality_score": round(avg_score, 2)}
 
         # Default to first annotation
         return annotations[0].annotation_data
 
-    async def store_agreement_metrics(self, task_id: UUID, agreement_score: float) -> None:
+    async def store_agreement_metrics(
+            self,
+            task_id: UUID,
+            agreement_score: float) -> None:
         """Store inter-annotator agreement metrics"""
 
         # This would store agreement metrics in a dedicated table
         logger.info(
-            "Agreement metrics stored", task_id=str(task_id), agreement_score=agreement_score
-        )
+            "Agreement metrics stored",
+            task_id=str(task_id),
+            agreement_score=agreement_score)
 
-    async def notify_annotator(self, annotator_id: UUID, task: AnnotationTaskDB) -> None:
+    async def notify_annotator(
+            self,
+            annotator_id: UUID,
+            task: AnnotationTaskDB) -> None:
         """Notify annotator about new task"""
 
         # This would send notification via email, WebSocket, etc.
-        logger.info("Annotator notified", annotator_id=str(annotator_id), task_id=str(task.id))
+        logger.info(
+            "Annotator notified",
+            annotator_id=str(annotator_id),
+            task_id=str(
+                task.id))
 
     def _db_to_schema(self, task: AnnotationTaskDB) -> AnnotationTask:
         """Convert database model to schema"""
@@ -423,14 +447,16 @@ class InterAnnotatorAgreement:
             for i in range(len(annotations)):
                 for j in range(i + 1, len(annotations)):
                     agreement = self._calculate_pairwise_agreement(
-                        annotations[i].annotation_data, annotations[j].annotation_data
-                    )
+                        annotations[i].annotation_data, annotations[j].annotation_data)
                     agreements.append(agreement)
 
             return sum(agreements) / len(agreements) if agreements else None
 
         except Exception as e:
-            logger.error("Error calculating agreement", error=str(e), task_id=str(task_id))
+            logger.error(
+                "Error calculating agreement",
+                error=str(e),
+                task_id=str(task_id))
             return None
 
     def _calculate_pairwise_agreement(

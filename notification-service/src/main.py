@@ -65,7 +65,7 @@ decision_engine: NotificationDecisionEngine = None
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> Dict[str, Any]:
     """Application lifespan manager."""
     global decision_engine
 
@@ -92,7 +92,7 @@ async def lifespan(app: FastAPI):
     # Shutdown
     logger.info("Shutting down notification decisioning service")
     if decision_engine:
-        await decision_engine.cleanup()
+    await decision_engine.cleanup()
 
 
 def create_app() -> FastAPI:
@@ -122,11 +122,14 @@ def create_app() -> FastAPI:
     @app.get("/health")
     async def health_check() -> Dict[str, Any]:
         """Health check endpoint."""
-        return {"status": "healthy", "service": "notification-decisioning", "version": "1.0.0"}
+        return {
+            "status": "healthy",
+            "service": "notification-decisioning",
+            "version": "1.0.0"}
 
     # Metrics endpoint
     @app.get("/metrics")
-    async def metrics():
+    async def metrics() -> Dict[str, Any]:
         """Prometheus metrics endpoint."""
         return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
@@ -140,7 +143,8 @@ app = create_app()
 def get_decision_engine() -> NotificationDecisionEngine:
     """Dependency to get decision engine instance."""
     if decision_engine is None:
-        raise HTTPException(status_code=503, detail="Decision engine not initialized")
+        raise HTTPException(status_code=503,
+                            detail="Decision engine not initialized")
     return decision_engine
 
 

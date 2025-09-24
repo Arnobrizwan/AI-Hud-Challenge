@@ -20,23 +20,24 @@ class CausalInferenceAnalyzer:
         self.regression_discontinuity = RegressionDiscontinuityAnalyzer()
         self.instrumental_variables = InstrumentalVariablesAnalyzer()
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize the causal inference analyzer"""
         logger.info("Initializing causal inference analyzer...")
         # Initialize components
         logger.info("Causal inference analyzer initialized successfully")
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup causal inference analyzer resources"""
         logger.info("Cleaning up causal inference analyzer...")
         logger.info("Causal inference analyzer cleanup completed")
 
-    async def analyze_causal_impact(self, causal_config: Dict[str, Any]) -> Dict[str, Any]:
-        """Comprehensive causal impact analysis"""
-
+    async def analyze_causal_impact(
+            self, causal_config: Dict[str, Any]) -> Dict[str, Any]:
+    """Comprehensive causal impact analysis"""
         logger.info("Analyzing causal impact")
 
-        # Mock implementation - in practice, this would analyze real causal data
+        # Mock implementation - in practice, this would analyze real causal
+        # data
         causal_results = {}
 
         # Difference-in-differences analysis
@@ -67,7 +68,6 @@ class DifferenceInDifferencesAnalyzer:
 
     async def analyze(self, config: Dict[str, Any]) -> Dict[str, Any]:
         """Perform difference-in-differences analysis"""
-
         # Mock DiD analysis
         treatment_effect = np.random.uniform(0.05, 0.15)
         standard_error = np.random.uniform(0.01, 0.03)
@@ -91,7 +91,6 @@ class RegressionDiscontinuityAnalyzer:
 
     async def analyze(self, config: Dict[str, Any]) -> Dict[str, Any]:
         """Perform regression discontinuity analysis"""
-
         # Mock RD analysis
         discontinuity_effect = np.random.uniform(0.08, 0.20)
         standard_error = np.random.uniform(0.02, 0.04)
@@ -115,7 +114,6 @@ class InstrumentalVariablesAnalyzer:
 
     async def analyze(self, config: Dict[str, Any]) -> Dict[str, Any]:
         """Perform instrumental variables analysis"""
-
         # Mock IV analysis
         causal_effect = np.random.uniform(0.10, 0.25)
         standard_error = np.random.uniform(0.03, 0.05)

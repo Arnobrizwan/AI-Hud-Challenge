@@ -2,17 +2,13 @@
 
 import asyncio
 import re
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from datetime import datetime
+from typing import Dict, List, Optional
 from urllib.parse import urlparse
 
-import numpy as np
-import requests
 import structlog
 import textstat
-from bs4 import BeautifulSoup
 
-from ..config import settings
 from ..models.content import ContentSignal, ExtractedContent, TrustworthinessScore
 
 logger = structlog.get_logger(__name__)
@@ -141,9 +137,7 @@ class SignalExtractor:
             r"investigation found",
         ]
 
-    async def extract_signals(
-        self, content: ExtractedContent, language: str = "en"
-    ) -> ContentSignal:
+    async def extract_signals(self, content: ExtractedContent, language: str = "en") -> ContentSignal:
         """Extract comprehensive content quality signals."""
         try:
             # Prepare text for analysis
@@ -303,23 +297,15 @@ class SignalExtractor:
             text_lower = text.lower()
 
             # Count bias keywords
-            left_count = sum(
-                1 for keyword in self.bias_keywords["left_bias"] if keyword in text_lower
-            )
-            right_count = sum(
-                1 for keyword in self.bias_keywords["right_bias"] if keyword in text_lower
-            )
+            left_count = sum(1 for keyword in self.bias_keywords["left_bias"] if keyword in text_lower)
+            right_count = sum(1 for keyword in self.bias_keywords["right_bias"] if keyword in text_lower)
 
             # Count emotional language
-            emotional_count = sum(
-                1 for keyword in self.bias_keywords["emotional_language"] if keyword in text_lower
-            )
+            emotional_count = sum(1 for keyword in self.bias_keywords["emotional_language"] if keyword in text_lower)
 
             # Count subjective indicators
             subjective_count = sum(
-                1
-                for keyword in self.bias_keywords["subjective_indicators"]
-                if keyword in text_lower
+                1 for keyword in self.bias_keywords["subjective_indicators"] if keyword in text_lower
             )
 
             # Calculate bias score
@@ -346,15 +332,9 @@ class SignalExtractor:
         try:
             text_lower = text.lower()
 
-            left_score = sum(
-                1 for keyword in self.political_keywords["left"] if keyword in text_lower
-            )
-            right_score = sum(
-                1 for keyword in self.political_keywords["right"] if keyword in text_lower
-            )
-            center_score = sum(
-                1 for keyword in self.political_keywords["center"] if keyword in text_lower
-            )
+            left_score = sum(1 for keyword in self.political_keywords["left"] if keyword in text_lower)
+            right_score = sum(1 for keyword in self.political_keywords["right"] if keyword in text_lower)
+            center_score = sum(1 for keyword in self.political_keywords["center"] if keyword in text_lower)
 
             total_score = left_score + right_score + center_score
 
@@ -594,9 +574,7 @@ class SignalExtractor:
                     pass
 
             # Content quality indicators
-            expertise_count = sum(
-                1 for indicator in self.expertise_indicators if indicator in text.lower()
-            )
+            expertise_count = sum(1 for indicator in self.expertise_indicators if indicator in text.lower())
             authority_score += min(0.3, expertise_count * 0.05)
 
             return min(1.0, authority_score)
@@ -621,9 +599,7 @@ class SignalExtractor:
             logger.error("Expertise indicators extraction failed", error=str(e))
             return []
 
-    async def compute_trustworthiness(
-        self, content: ExtractedContent, language: str = "en"
-    ) -> TrustworthinessScore:
+    async def compute_trustworthiness(self, content: ExtractedContent, language: str = "en") -> TrustworthinessScore:
         """Compute comprehensive trustworthiness score."""
         try:
             # Get content signals first
@@ -864,9 +840,7 @@ class SignalExtractor:
             logger.error("Author credibility assessment failed", error=str(e))
             return 0.5
 
-    async def _assess_content_quality(
-        self, content: ExtractedContent, signals: ContentSignal
-    ) -> float:
+    async def _assess_content_quality(self, content: ExtractedContent, signals: ContentSignal) -> float:
         """Assess overall content quality."""
         try:
             quality_score = 0.0
@@ -900,9 +874,7 @@ class SignalExtractor:
             logger.error("Content quality assessment failed", error=str(e))
             return 0.5
 
-    async def _identify_bias_indicators(
-        self, content: ExtractedContent, signals: ContentSignal
-    ) -> List[str]:
+    async def _identify_bias_indicators(self, content: ExtractedContent, signals: ContentSignal) -> List[str]:
         """Identify bias indicators in content."""
         try:
             indicators = []
@@ -917,16 +889,12 @@ class SignalExtractor:
 
             # Emotional language
             text = f"{content.title} {content.content}".lower()
-            emotional_count = sum(
-                1 for word in self.bias_keywords["emotional_language"] if word in text
-            )
+            emotional_count = sum(1 for word in self.bias_keywords["emotional_language"] if word in text)
             if emotional_count > 3:
                 indicators.append("excessive_emotional_language")
 
             # Subjective language
-            subjective_count = sum(
-                1 for word in self.bias_keywords["subjective_indicators"] if word in text
-            )
+            subjective_count = sum(1 for word in self.bias_keywords["subjective_indicators"] if word in text)
             if subjective_count > 2:
                 indicators.append("subjective_language")
 
@@ -936,9 +904,7 @@ class SignalExtractor:
             logger.error("Bias indicators identification failed", error=str(e))
             return []
 
-    async def _identify_warning_flags(
-        self, content: ExtractedContent, signals: ContentSignal
-    ) -> List[str]:
+    async def _identify_warning_flags(self, content: ExtractedContent, signals: ContentSignal) -> List[str]:
         """Identify warning flags for content quality."""
         try:
             flags = []

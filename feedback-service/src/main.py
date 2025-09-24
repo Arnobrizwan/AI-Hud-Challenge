@@ -49,7 +49,7 @@ websocket_manager = WebSocketManager()
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> Dict[str, Any]:
     """Application lifespan manager"""
     settings = get_settings()
 
@@ -101,14 +101,26 @@ app.add_middleware(AuthMiddleware)
 app.add_middleware(MonitoringMiddleware)
 
 # Include routers
-app.include_router(feedback_router, prefix="/api/v1/feedback", tags=["feedback"])
-app.include_router(editorial_router, prefix="/api/v1/editorial", tags=["editorial"])
-app.include_router(annotation_router, prefix="/api/v1/annotation", tags=["annotation"])
-app.include_router(analytics_router, prefix="/api/v1/analytics", tags=["analytics"])
+app.include_router(
+    feedback_router,
+    prefix="/api/v1/feedback",
+    tags=["feedback"])
+app.include_router(
+    editorial_router,
+    prefix="/api/v1/editorial",
+    tags=["editorial"])
+app.include_router(
+    annotation_router,
+    prefix="/api/v1/annotation",
+    tags=["annotation"])
+app.include_router(
+    analytics_router,
+    prefix="/api/v1/analytics",
+    tags=["analytics"])
 
 
 @app.get("/health")
-async def health_check():
+async def health_check() -> Dict[str, Any]:
     """Health check endpoint"""
     return {
         "status": "healthy",
@@ -119,14 +131,14 @@ async def health_check():
 
 
 @app.get("/metrics")
-async def metrics():
+async def metrics() -> Dict[str, Any]:
     """Prometheus metrics endpoint"""
     # This would be implemented with prometheus_client
     return {"message": "Metrics endpoint - implement with prometheus_client"}
 
 
 @app.websocket("/ws/feedback/{user_id}")
-async def websocket_feedback_endpoint(websocket: WebSocket, user_id: str):
+async def websocket_feedback_endpoint(websocket: WebSocket, user_id: str) -> Dict[str, Any]:
     """WebSocket endpoint for real-time feedback processing"""
     await websocket_manager.connect(websocket, user_id)
 
@@ -156,24 +168,29 @@ async def websocket_feedback_endpoint(websocket: WebSocket, user_id: str):
 
 
 @app.exception_handler(HTTPException)
-async def http_exception_handler(request, exc):
+async def http_exception_handler(request, exc) -> Dict[str, Any]:
     """Global HTTP exception handler"""
     return JSONResponse(
         status_code=exc.status_code,
-        content=ErrorResponse(error=exc.detail, status_code=exc.status_code).dict(),
+        content=ErrorResponse(
+            error=exc.detail,
+            status_code=exc.status_code).dict(),
     )
 
 
 @app.exception_handler(Exception)
-async def general_exception_handler(request, exc):
+async def general_exception_handler(request, exc) -> Dict[str, Any]:
     """Global exception handler"""
     logger.error("Unhandled exception", error=str(exc), path=request.url.path)
-    return JSONResponse(
-        status_code=500,
-        content=ErrorResponse(error="Internal server error", status_code=500).dict(),
-    )
+    return JSONResponse(status_code=500, content=ErrorResponse(
+        error="Internal server error", status_code=500).dict(), )
 
 
 if __name__ == "__main__":
     settings = get_settings()
-    uvicorn.run("src.main:app", host="0.0.0.0", port=8000, reload=settings.debug, log_level="info")
+    uvicorn.run(
+        "src.main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=settings.debug,
+        log_level="info")

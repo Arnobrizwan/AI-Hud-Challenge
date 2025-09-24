@@ -76,9 +76,7 @@ class SummarizationRequest(BaseModel):
     """Request model for content summarization"""
 
     content: ProcessedContent = Field(..., description="Content to summarize")
-    target_lengths: List[int] = Field(
-        default=[50, 120, 300], description="Target summary lengths in words"
-    )
+    target_lengths: List[int] = Field(default=[50, 120, 300], description="Target summary lengths in words")
     methods: List[SummarizationMethod] = Field(
         default=[SummarizationMethod.HYBRID], description="Summarization methods to use"
     )
@@ -88,12 +86,8 @@ class SummarizationRequest(BaseModel):
     )
     enable_quality_validation: bool = Field(default=True, description="Enable quality validation")
     enable_bias_detection: bool = Field(default=True, description="Enable bias detection")
-    enable_factual_consistency: bool = Field(
-        default=True, description="Enable factual consistency checking"
-    )
-    custom_prompts: Optional[Dict[str, str]] = Field(
-        None, description="Custom prompts for different methods"
-    )
+    enable_factual_consistency: bool = Field(default=True, description="Enable factual consistency checking")
+    custom_prompts: Optional[Dict[str, str]] = Field(None, description="Custom prompts for different methods")
 
     @validator("target_lengths")
     def validate_target_lengths(cls, v):
@@ -230,16 +224,12 @@ class SummaryResult(BaseModel):
 
     summary: Summary = Field(..., description="Best summary")
     headline: Headline = Field(..., description="Best headline")
-    variants: List[Union[Summary, Headline]] = Field(
-        default_factory=list, description="All generated variants"
-    )
+    variants: List[Union[Summary, Headline]] = Field(default_factory=list, description="All generated variants")
     quality_metrics: QualityMetrics = Field(..., description="Quality metrics")
     consistency_scores: ConsistencyScores = Field(..., description="Consistency scores")
     bias_analysis: BiasAnalysis = Field(..., description="Bias analysis")
     processing_stats: ProcessingStats = Field(..., description="Processing statistics")
-    source_attribution: List[str] = Field(
-        default_factory=list, description="Source attribution and citations"
-    )
+    source_attribution: List[str] = Field(default_factory=list, description="Source attribution and citations")
     language_detected: Language = Field(..., description="Detected language")
     confidence_score: float = Field(..., description="Overall confidence score")
 

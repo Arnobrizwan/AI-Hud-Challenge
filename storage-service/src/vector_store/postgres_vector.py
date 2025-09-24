@@ -25,7 +25,7 @@ class PostgreSQLVectorStore:
         self.settings = Settings()
         self._initialized = False
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize PostgreSQL connection pool"""
         if self._initialized:
             return
@@ -55,19 +55,19 @@ class PostgreSQLVectorStore:
             logger.error(f"Failed to initialize PostgreSQL Vector Store: {e}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup connection pool"""
         if self.pool:
-            await self.pool.close()
+    await self.pool.close()
             self.pool = None
 
         self._initialized = False
         logger.info("PostgreSQL Vector Store cleanup complete")
 
-    async def _initialize_schema(self):
+    async def _initialize_schema(self) -> Dict[str, Any]:
         """Initialize database schema for vector operations"""
         try:
-            async with self.pool.acquire() as conn:
+    async with self.pool.acquire() as conn:
                 # Enable pgvector extension
                 await conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
 
@@ -90,21 +90,21 @@ class PostgreSQLVectorStore:
                 # Create indexes for performance
                 await conn.execute(
                     """
-                    CREATE INDEX IF NOT EXISTS idx_vector_embeddings_content_id 
+                    CREATE INDEX IF NOT EXISTS idx_vector_embeddings_content_id
                     ON vector_embeddings(content_id)
                 """
                 )
 
                 await conn.execute(
                     """
-                    CREATE INDEX IF NOT EXISTS idx_vector_embeddings_type 
+                    CREATE INDEX IF NOT EXISTS idx_vector_embeddings_type
                     ON vector_embeddings(embedding_type)
                 """
                 )
 
                 await conn.execute(
                     """
-                    CREATE INDEX IF NOT EXISTS idx_vector_embeddings_metadata 
+                    CREATE INDEX IF NOT EXISTS idx_vector_embeddings_metadata
                     ON vector_embeddings USING GIN(metadata)
                 """
                 )
@@ -112,8 +112,8 @@ class PostgreSQLVectorStore:
                 # Create HNSW index for approximate similarity search
                 await conn.execute(
                     """
-                    CREATE INDEX IF NOT EXISTS idx_vector_embeddings_hnsw 
-                    ON vector_embeddings 
+                    CREATE INDEX IF NOT EXISTS idx_vector_embeddings_hnsw
+                    ON vector_embeddings
                     USING hnsw (vector vector_cosine_ops)
                     WITH (m = 16, ef_construction = 200)
                 """
@@ -125,19 +125,22 @@ class PostgreSQLVectorStore:
             logger.error(f"Failed to initialize vector schema: {e}")
             raise
 
-    async def store_vector(
-        self, content_id: str, embedding_type: str, vector: List[float], metadata: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        """Store vector embedding"""
+    async def store_vector(self,
+                           content_id: str,
+                           embedding_type: str,
+                           vector: List[float],
+                           metadata: Dict[str,
+                                          Any]) -> Dict[str, Any]:
+    """Store vector embedding"""
         if not self._initialized or not self.pool:
             raise RuntimeError("PostgreSQL Vector Store not initialized")
 
         try:
-            async with self.pool.acquire() as conn:
+    async with self.pool.acquire() as conn:
                 # Insert or update vector
                 await conn.execute(
                     """
-                    INSERT INTO vector_embeddings 
+                    INSERT INTO vector_embeddings
                     (content_id, embedding_type, vector, metadata, updated_at)
                     VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
                     ON CONFLICT (content_id, embedding_type)
@@ -169,7 +172,7 @@ class PostgreSQLVectorStore:
             raise RuntimeError("PostgreSQL Vector Store not initialized")
 
         try:
-            async with self.pool.acquire() as conn:
+    async with self.pool.acquire() as conn:
                 rows = await conn.fetch(
                     """
                     SELECT embedding_type, vector, metadata
@@ -195,7 +198,7 @@ class PostgreSQLVectorStore:
             raise RuntimeError("PostgreSQL Vector Store not initialized")
 
         try:
-            async with self.pool.acquire() as conn:
+    async with self.pool.acquire() as conn:
                 rows = await conn.fetch(query, *args)
                 return [dict(row) for row in rows]
 
@@ -203,30 +206,30 @@ class PostgreSQLVectorStore:
             logger.error(f"Query execution failed: {e}")
             raise
 
-    async def execute_ddl(self, ddl: str):
+    async def execute_ddl(self, ddl: str) -> Dict[str, Any]:
         """Execute DDL statement"""
         if not self._initialized or not self.pool:
             raise RuntimeError("PostgreSQL Vector Store not initialized")
 
         try:
-            async with self.pool.acquire() as conn:
-                await conn.execute(ddl)
+    async with self.pool.acquire() as conn:
+    await conn.execute(ddl)
 
         except Exception as e:
             logger.error(f"DDL execution failed: {e}")
             raise
 
-    async def refresh_indexes(self, content_id: str):
+    async def refresh_indexes(self, content_id: str) -> Dict[str, Any]:
         """Refresh indexes for a specific content ID"""
         if not self._initialized or not self.pool:
             return
 
         try:
-            async with self.pool.acquire() as conn:
+    async with self.pool.acquire() as conn:
                 # Update the updated_at timestamp to trigger index refresh
                 await conn.execute(
                     """
-                    UPDATE vector_embeddings 
+                    UPDATE vector_embeddings
                     SET updated_at = CURRENT_TIMESTAMP
                     WHERE content_id = $1
                 """,
@@ -236,15 +239,18 @@ class PostgreSQLVectorStore:
         except Exception as e:
             logger.warning(f"Failed to refresh indexes for {content_id}: {e}")
 
-    async def delete_embeddings(self, content_id: str, embedding_type: Optional[str] = None):
-        """Delete embeddings for a content ID"""
+    async def delete_embeddings(
+            self,
+            content_id: str,
+            embedding_type: Optional[str] = None):
+         -> Dict[str, Any]:"""Delete embeddings for a content ID"""
         if not self._initialized or not self.pool:
             raise RuntimeError("PostgreSQL Vector Store not initialized")
 
         try:
-            async with self.pool.acquire() as conn:
+    async with self.pool.acquire() as conn:
                 if embedding_type:
-                    await conn.execute(
+    await conn.execute(
                         """
                         DELETE FROM vector_embeddings
                         WHERE content_id = $1 AND embedding_type = $2
@@ -253,7 +259,7 @@ class PostgreSQLVectorStore:
                         embedding_type,
                     )
                 else:
-                    await conn.execute(
+    await conn.execute(
                         """
                         DELETE FROM vector_embeddings
                         WHERE content_id = $1
@@ -271,7 +277,7 @@ class PostgreSQLVectorStore:
             raise RuntimeError("PostgreSQL Vector Store not initialized")
 
         try:
-            async with self.pool.acquire() as conn:
+    async with self.pool.acquire() as conn:
                 # Get total vectors count
                 total_count = await conn.fetchval(
                     """
@@ -298,8 +304,7 @@ class PostgreSQLVectorStore:
                 return {
                     "total_vectors": total_count,
                     "embeddings_by_type": {
-                        row["embedding_type"]: row["count"] for row in type_counts
-                    },
+                        row["embedding_type"]: row["count"] for row in type_counts},
                     "table_size": table_size,
                     "timestamp": datetime.utcnow().isoformat(),
                 }

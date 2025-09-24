@@ -27,13 +27,13 @@ class BayesianTestingFramework:
             "gamma_poisson": self._gamma_poisson_test,
         }
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize the Bayesian testing framework"""
         logger.info("Initializing Bayesian testing framework...")
         # No specific initialization needed
         logger.info("Bayesian testing framework initialized successfully")
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup Bayesian testing framework resources"""
         logger.info("Cleaning up Bayesian testing framework...")
         self.active_tests.clear()
@@ -70,7 +70,6 @@ class BayesianTestingFramework:
         self, test_id: str, control_value: float, treatment_value: float
     ) -> Dict[str, Any]:
         """Add data point to Bayesian test"""
-
         if test_id not in self.active_tests:
             raise ValueError(f"Bayesian test {test_id} not found")
 
@@ -99,7 +98,6 @@ class BayesianTestingFramework:
 
     async def analyze_test(self, test_id: str) -> Dict[str, Any]:
         """Analyze Bayesian test results"""
-
         if test_id not in self.active_tests:
             raise ValueError(f"Bayesian test {test_id} not found")
 
@@ -129,7 +127,7 @@ class BayesianTestingFramework:
             "analysis_timestamp": datetime.utcnow(),
         }
 
-    async def _update_posteriors(self, test: Dict[str, Any]):
+    async def _update_posteriors(self, test: Dict[str, Any]) -> Dict[str, Any]:
         """Update posterior distributions"""
 
         method = test["method"]
@@ -140,7 +138,7 @@ class BayesianTestingFramework:
         # Update posteriors using the specified method
         await self.bayesian_methods[method](test)
 
-    async def _beta_binomial_test(self, test: Dict[str, Any]):
+    async def _beta_binomial_test(self, test: Dict[str, Any]) -> Dict[str, Any]:
         """Beta-Binomial Bayesian test for conversion rates"""
 
         control_data = np.array(test["control_data"])
@@ -170,7 +168,7 @@ class BayesianTestingFramework:
             / (prior_alpha + prior_beta + len(treatment_data)),
         }
 
-    async def _normal_normal_test(self, test: Dict[str, Any]):
+    async def _normal_normal_test(self, test: Dict[str, Any]) -> Dict[str, Any]:
         """Normal-Normal Bayesian test for continuous metrics"""
 
         control_data = np.array(test["control_data"])
@@ -178,7 +176,8 @@ class BayesianTestingFramework:
 
         # Prior parameters (Normal distribution)
         prior_mean = test["prior_parameters"].get("mean", 0.0)
-        prior_precision = test["prior_parameters"].get("precision", 0.01)  # 1/variance
+        prior_precision = test["prior_parameters"].get(
+            "precision", 0.01)  # 1/variance
 
         # Data precision (assuming known variance)
         data_precision = test["prior_parameters"].get("data_precision", 1.0)
@@ -186,7 +185,8 @@ class BayesianTestingFramework:
         # Control posterior: Normal(mean, precision)
         if len(control_data) > 0:
             control_mean = np.mean(control_data)
-            control_precision = prior_precision + len(control_data) * data_precision
+            control_precision = prior_precision + \
+                len(control_data) * data_precision
             control_posterior_mean = (
                 prior_precision * prior_mean + len(control_data) * data_precision * control_mean
             ) / control_precision
@@ -206,7 +206,8 @@ class BayesianTestingFramework:
         # Treatment posterior: Normal(mean, precision)
         if len(treatment_data) > 0:
             treatment_mean = np.mean(treatment_data)
-            treatment_precision = prior_precision + len(treatment_data) * data_precision
+            treatment_precision = prior_precision + \
+                len(treatment_data) * data_precision
             treatment_posterior_mean = (
                 prior_precision * prior_mean + len(treatment_data) * data_precision * treatment_mean
             ) / treatment_precision
@@ -223,7 +224,7 @@ class BayesianTestingFramework:
                 "variance": 1.0 / prior_precision,
             }
 
-    async def _gamma_poisson_test(self, test: Dict[str, Any]):
+    async def _gamma_poisson_test(self, test: Dict[str, Any]) -> Dict[str, Any]:
         """Gamma-Poisson Bayesian test for count data"""
 
         control_data = np.array(test["control_data"])
@@ -249,7 +250,8 @@ class BayesianTestingFramework:
             "mean": (prior_shape + treatment_sum) / (prior_rate + len(treatment_data)),
         }
 
-    async def _calculate_probability_better(self, test: Dict[str, Any]) -> float:
+    async def _calculate_probability_better(
+            self, test: Dict[str, Any]) -> float:
         """Calculate probability that treatment is better than control"""
 
         method = test["method"]
@@ -272,11 +274,13 @@ class BayesianTestingFramework:
         # Sample from posterior distributions
         n_samples = 10000
         control_samples = beta.rvs(
-            control_posterior["alpha"], control_posterior["beta"], size=n_samples
-        )
+            control_posterior["alpha"],
+            control_posterior["beta"],
+            size=n_samples)
         treatment_samples = beta.rvs(
-            treatment_posterior["alpha"], treatment_posterior["beta"], size=n_samples
-        )
+            treatment_posterior["alpha"],
+            treatment_posterior["beta"],
+            size=n_samples)
 
         # Calculate probability that treatment > control
         return np.mean(treatment_samples > control_samples)
@@ -289,7 +293,8 @@ class BayesianTestingFramework:
 
         # Calculate difference distribution
         diff_mean = treatment_posterior["mean"] - control_posterior["mean"]
-        diff_variance = treatment_posterior["variance"] + control_posterior["variance"]
+        diff_variance = treatment_posterior["variance"] + \
+            control_posterior["variance"]
         diff_std = math.sqrt(diff_variance)
 
         # Probability that difference > 0
@@ -304,11 +309,13 @@ class BayesianTestingFramework:
         # Sample from posterior distributions
         n_samples = 10000
         control_samples = gamma.rvs(
-            control_posterior["shape"], scale=1.0 / control_posterior["rate"], size=n_samples
-        )
+            control_posterior["shape"],
+            scale=1.0 / control_posterior["rate"],
+            size=n_samples)
         treatment_samples = gamma.rvs(
-            treatment_posterior["shape"], scale=1.0 / treatment_posterior["rate"], size=n_samples
-        )
+            treatment_posterior["shape"],
+            scale=1.0 / treatment_posterior["rate"],
+            size=n_samples)
 
         # Calculate probability that treatment > control
         return np.mean(treatment_samples > control_samples)
@@ -336,11 +343,13 @@ class BayesianTestingFramework:
         # Sample from posterior distributions
         n_samples = 10000
         control_samples = beta.rvs(
-            control_posterior["alpha"], control_posterior["beta"], size=n_samples
-        )
+            control_posterior["alpha"],
+            control_posterior["beta"],
+            size=n_samples)
         treatment_samples = beta.rvs(
-            treatment_posterior["alpha"], treatment_posterior["beta"], size=n_samples
-        )
+            treatment_posterior["alpha"],
+            treatment_posterior["beta"],
+            size=n_samples)
 
         # Expected loss = E[max(0, control - treatment)]
         loss_samples = np.maximum(0, control_samples - treatment_samples)
@@ -354,7 +363,8 @@ class BayesianTestingFramework:
 
         # Calculate difference distribution
         diff_mean = treatment_posterior["mean"] - control_posterior["mean"]
-        diff_variance = treatment_posterior["variance"] + control_posterior["variance"]
+        diff_variance = treatment_posterior["variance"] + \
+            control_posterior["variance"]
         diff_std = math.sqrt(diff_variance)
 
         # Expected loss = E[max(0, -difference)]
@@ -376,11 +386,13 @@ class BayesianTestingFramework:
         # Sample from posterior distributions
         n_samples = 10000
         control_samples = gamma.rvs(
-            control_posterior["shape"], scale=1.0 / control_posterior["rate"], size=n_samples
-        )
+            control_posterior["shape"],
+            scale=1.0 / control_posterior["rate"],
+            size=n_samples)
         treatment_samples = gamma.rvs(
-            treatment_posterior["shape"], scale=1.0 / treatment_posterior["rate"], size=n_samples
-        )
+            treatment_posterior["shape"],
+            scale=1.0 / treatment_posterior["rate"],
+            size=n_samples)
 
         # Expected loss = E[max(0, control - treatment)]
         loss_samples = np.maximum(0, control_samples - treatment_samples)
@@ -389,8 +401,7 @@ class BayesianTestingFramework:
     async def _calculate_credible_interval(
         self, test: Dict[str, Any], level: float = 0.95
     ) -> Dict[str, Any]:
-        """Calculate credible interval for treatment effect"""
-
+    """Calculate credible interval for treatment effect"""
         method = test["method"]
 
         if method == "beta_binomial":
@@ -405,19 +416,20 @@ class BayesianTestingFramework:
     def _beta_binomial_credible_interval(
         self, test: Dict[str, Any], level: float
     ) -> Dict[str, Any]:
-        """Calculate credible interval for Beta-Binomial test"""
-
+    """Calculate credible interval for Beta-Binomial test"""
         control_posterior = test["control_posterior"]
         treatment_posterior = test["treatment_posterior"]
 
         # Sample from posterior distributions
         n_samples = 10000
         control_samples = beta.rvs(
-            control_posterior["alpha"], control_posterior["beta"], size=n_samples
-        )
+            control_posterior["alpha"],
+            control_posterior["beta"],
+            size=n_samples)
         treatment_samples = beta.rvs(
-            treatment_posterior["alpha"], treatment_posterior["beta"], size=n_samples
-        )
+            treatment_posterior["alpha"],
+            treatment_posterior["beta"],
+            size=n_samples)
 
         # Calculate difference
         diff_samples = treatment_samples - control_samples
@@ -432,14 +444,14 @@ class BayesianTestingFramework:
     def _normal_normal_credible_interval(
         self, test: Dict[str, Any], level: float
     ) -> Dict[str, Any]:
-        """Calculate credible interval for Normal-Normal test"""
-
+    """Calculate credible interval for Normal-Normal test"""
         control_posterior = test["control_posterior"]
         treatment_posterior = test["treatment_posterior"]
 
         # Calculate difference distribution
         diff_mean = treatment_posterior["mean"] - control_posterior["mean"]
-        diff_variance = treatment_posterior["variance"] + control_posterior["variance"]
+        diff_variance = treatment_posterior["variance"] + \
+            control_posterior["variance"]
         diff_std = math.sqrt(diff_variance)
 
         # Calculate credible interval
@@ -454,19 +466,20 @@ class BayesianTestingFramework:
     def _gamma_poisson_credible_interval(
         self, test: Dict[str, Any], level: float
     ) -> Dict[str, Any]:
-        """Calculate credible interval for Gamma-Poisson test"""
-
+    """Calculate credible interval for Gamma-Poisson test"""
         control_posterior = test["control_posterior"]
         treatment_posterior = test["treatment_posterior"]
 
         # Sample from posterior distributions
         n_samples = 10000
         control_samples = gamma.rvs(
-            control_posterior["shape"], scale=1.0 / control_posterior["rate"], size=n_samples
-        )
+            control_posterior["shape"],
+            scale=1.0 / control_posterior["rate"],
+            size=n_samples)
         treatment_samples = gamma.rvs(
-            treatment_posterior["shape"], scale=1.0 / treatment_posterior["rate"], size=n_samples
-        )
+            treatment_posterior["shape"],
+            scale=1.0 / treatment_posterior["rate"],
+            size=n_samples)
 
         # Calculate difference
         diff_samples = treatment_samples - control_samples
@@ -481,8 +494,7 @@ class BayesianTestingFramework:
     async def _check_stopping_conditions(
         self, test: Dict[str, Any], prob_better: float, expected_loss: float
     ) -> Dict[str, Any]:
-        """Check if test should stop"""
-
+    """Check if test should stop"""
         # Stop if probability is very high or very low
         if prob_better >= 0.95:
             return {
@@ -491,7 +503,10 @@ class BayesianTestingFramework:
                 "decision": "choose_treatment",
             }
         elif prob_better <= 0.05:
-            return {"should_stop": True, "reason": "high_confidence", "decision": "choose_control"}
+            return {
+                "should_stop": True,
+                "reason": "high_confidence",
+                "decision": "choose_control"}
 
         # Stop if expected loss is very small
         if expected_loss < 0.01:  # 1% threshold
@@ -501,7 +516,10 @@ class BayesianTestingFramework:
                 "decision": "choose_treatment" if prob_better > 0.5 else "choose_control",
             }
 
-        return {"should_stop": False, "reason": "continue", "decision": "continue"}
+        return {
+            "should_stop": False,
+            "reason": "continue",
+            "decision": "continue"}
 
     async def get_test(self, test_id: str) -> Optional[Dict[str, Any]]:
         """Get Bayesian test by ID"""

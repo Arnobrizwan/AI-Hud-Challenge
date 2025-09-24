@@ -13,9 +13,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     """Application configuration with environment variable support."""
 
-    model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", case_sensitive=True, extra="ignore"
-    )
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", case_sensitive=True, extra="ignore")
 
     # Application Settings
     APP_NAME: str = "Foundations & Guards Service"
@@ -35,9 +33,7 @@ class Settings(BaseSettings):
 
     # Firebase Configuration
     FIREBASE_PROJECT_ID: str = Field(description="Firebase project ID")
-    FIREBASE_CREDENTIALS_PATH: Optional[str] = Field(
-        default=None, description="Path to Firebase service account JSON"
-    )
+    FIREBASE_CREDENTIALS_PATH: Optional[str] = Field(default=None, description="Path to Firebase service account JSON")
     FIREBASE_CREDENTIALS_JSON: Optional[str] = Field(
         default=None, description="Firebase service account JSON as string"
     )
@@ -84,17 +80,11 @@ class Settings(BaseSettings):
 
     # Health Check Configuration
     HEALTH_CHECK_PATH: str = Field(default="/health", description="Health check endpoint")
-    HEALTH_CHECK_DEPENDENCIES: bool = Field(
-        default=True, description="Include dependency checks in health endpoint"
-    )
+    HEALTH_CHECK_DEPENDENCIES: bool = Field(default=True, description="Include dependency checks in health endpoint")
 
     # Circuit Breaker Configuration
-    CIRCUIT_BREAKER_FAILURE_THRESHOLD: int = Field(
-        default=5, description="Circuit breaker failure threshold"
-    )
-    CIRCUIT_BREAKER_RECOVERY_TIMEOUT: int = Field(
-        default=60, description="Circuit breaker recovery timeout in seconds"
-    )
+    CIRCUIT_BREAKER_FAILURE_THRESHOLD: int = Field(default=5, description="Circuit breaker failure threshold")
+    CIRCUIT_BREAKER_RECOVERY_TIMEOUT: int = Field(default=60, description="Circuit breaker recovery timeout in seconds")
     CIRCUIT_BREAKER_EXPECTED_EXCEPTION: tuple = Field(
         default=(Exception,), description="Expected exceptions for circuit breaker"
     )
@@ -102,9 +92,7 @@ class Settings(BaseSettings):
     # GCP Configuration
     GCP_PROJECT_ID: Optional[str] = Field(default=None, description="GCP Project ID")
     GCP_REGION: str = Field(default="us-central1", description="GCP Region")
-    CLOUD_RUN_SERVICE_NAME: str = Field(
-        default="foundations-guards-service", description="Cloud Run service name"
-    )
+    CLOUD_RUN_SERVICE_NAME: str = Field(default="foundations-guards-service", description="Cloud Run service name")
 
     @validator("ENVIRONMENT")
     def validate_environment(cls, v):

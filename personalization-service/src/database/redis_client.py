@@ -41,7 +41,7 @@ class RedisClient:
     async def disconnect(self) -> None:
         """Disconnect from Redis."""
         if self.client:
-            await self.client.close()
+    await self.client.close()
             logger.info("Disconnected from Redis")
 
     async def get(self, key: str) -> Any:
@@ -64,7 +64,11 @@ class RedisClient:
             logger.error(f"Error getting key {key}: {e}")
             return None
 
-    async def set(self, key: str, value: Any, ttl: Optional[int] = None) -> bool:
+    async def set(
+            self,
+            key: str,
+            value: Any,
+            ttl: Optional[int] = None) -> bool:
         """Set value in Redis."""
         if not self.client:
             return False
@@ -73,7 +77,7 @@ class RedisClient:
             # Serialize value
             if isinstance(value, (dict, list)):
                 serialized_value = json.dumps(value)
-            else:
+        else:
                 serialized_value = str(value)
 
             if ttl:
@@ -202,7 +206,7 @@ class RedisClient:
             # Serialize value
             if isinstance(value, (dict, list)):
                 serialized_value = json.dumps(value)
-            else:
+        else:
                 serialized_value = str(value)
 
             result = await self.client.hset(name, key, serialized_value)
@@ -255,7 +259,7 @@ class RedisClient:
             for value in values:
                 if isinstance(value, (dict, list)):
                     serialized_values.append(json.dumps(value))
-                else:
+        else:
                     serialized_values.append(str(value))
 
             return await self.client.lpush(key, *serialized_values)

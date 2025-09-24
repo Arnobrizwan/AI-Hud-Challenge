@@ -27,7 +27,7 @@ class MediaStorageManager:
         self._storage_client = None
         self._bucket_name = None
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize cloud storage client"""
         if self._initialized:
             return
@@ -39,13 +39,14 @@ class MediaStorageManager:
             self._bucket_name = cloud_config.bucket_name
 
             if cloud_config.provider == "aws":
-                await self._initialize_aws_s3(cloud_config)
+    await self._initialize_aws_s3(cloud_config)
             elif cloud_config.provider == "gcp":
-                await self._initialize_gcp_storage(cloud_config)
+    await self._initialize_gcp_storage(cloud_config)
             elif cloud_config.provider == "azure":
-                await self._initialize_azure_blob(cloud_config)
+    await self._initialize_azure_blob(cloud_config)
             else:
-                raise ValueError(f"Unsupported cloud provider: {cloud_config.provider}")
+                raise ValueError(
+                    f"Unsupported cloud provider: {cloud_config.provider}")
 
             self._initialized = True
             logger.info("Cloud Storage Manager initialized successfully")
@@ -54,17 +55,17 @@ class MediaStorageManager:
             logger.error(f"Failed to initialize Cloud Storage Manager: {e}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup cloud storage client"""
         if self._storage_client:
             if hasattr(self._storage_client, "close"):
-                await self._storage_client.close()
+    await self._storage_client.close()
             self._storage_client = None
 
         self._initialized = False
         logger.info("Cloud Storage Manager cleanup complete")
 
-    async def _initialize_aws_s3(self, config):
+    async def _initialize_aws_s3(self, config) -> Dict[str, Any]:
         """Initialize AWS S3 client"""
         try:
             import boto3
@@ -76,7 +77,10 @@ class MediaStorageManager:
                 aws_access_key_id=config.access_key,
                 aws_secret_access_key=config.secret_key,
                 region_name=config.region,
-                config=Config(max_pool_connections=50, retries={"max_attempts": 3}),
+                config=Config(
+                    max_pool_connections=50,
+                    retries={
+                        "max_attempts": 3}),
             )
 
             # Test connection
@@ -88,7 +92,7 @@ class MediaStorageManager:
             logger.error(f"Failed to initialize AWS S3: {e}")
             raise
 
-    async def _initialize_gcp_storage(self, config):
+    async def _initialize_gcp_storage(self, config) -> Dict[str, Any]:
         """Initialize Google Cloud Storage client"""
         try:
             from google.cloud import storage
@@ -105,8 +109,7 @@ class MediaStorageManager:
                     "client_id": config.client_id,
                     "auth_uri": "https://accounts.google.com/o/oauth2/auth",
                     "token_uri": "https://oauth2.googleapis.com/token",
-                }
-            )
+                })
 
             # Create storage client
             self._storage_client = storage.Client(
@@ -118,12 +121,13 @@ class MediaStorageManager:
             bucket.exists()
 
         except ImportError:
-            raise ImportError("google-cloud-storage is required for GCP support")
+            raise ImportError(
+                "google-cloud-storage is required for GCP support")
         except Exception as e:
             logger.error(f"Failed to initialize GCP Storage: {e}")
             raise
 
-    async def _initialize_azure_blob(self, config):
+    async def _initialize_azure_blob(self, config) -> Dict[str, Any]:
         """Initialize Azure Blob Storage client"""
         try:
             from azure.storage.blob.aio import BlobServiceClient
@@ -131,13 +135,15 @@ class MediaStorageManager:
             # Create blob service client
             connection_string = f"DefaultEndpointsProtocol=https;AccountName={config.account_name};AccountKey={config.account_key};EndpointSuffix=core.windows.net"
 
-            self._storage_client = BlobServiceClient.from_connection_string(connection_string)
+            self._storage_client = BlobServiceClient.from_connection_string(
+                connection_string)
 
             # Test connection
             await self._storage_client.get_account_information()
 
         except ImportError:
-            raise ImportError("azure-storage-blob is required for Azure support")
+            raise ImportError(
+                "azure-storage-blob is required for Azure support")
         except Exception as e:
             logger.error(f"Failed to initialize Azure Blob Storage: {e}")
             raise
@@ -145,11 +151,12 @@ class MediaStorageManager:
     async def store_media_files(
         self, article_id: str, media_files: List[Dict[str, Any]]
     ) -> Dict[str, Any]:
-        """Store media files for an article"""
+    """Store media files for an article"""
         if not self._initialized or not self._storage_client:
             raise RuntimeError("Cloud Storage Manager not initialized")
 
-        logger.info(f"Storing {len(media_files)} media files for article {article_id}")
+        logger.info(
+            f"Storing {len(media_files)} media files for article {article_id}")
 
         try:
             stored_files = []
@@ -174,11 +181,13 @@ class MediaStorageManager:
                         "storage_key": file_key,
                         "url": file_url,
                         "type": file_type,
-                        "size": len(file_content) if isinstance(file_content, bytes) else 0,
-                    }
-                )
+                        "size": len(file_content) if isinstance(
+                            file_content,
+                            bytes) else 0,
+                    })
 
-            logger.info(f"Stored {len(stored_files)} media files for article {article_id}")
+            logger.info(
+                f"Stored {len(stored_files)} media files for article {article_id}")
 
             return {
                 "article_id": article_id,
@@ -188,7 +197,8 @@ class MediaStorageManager:
             }
 
         except Exception as e:
-            logger.error(f"Failed to store media files for article {article_id}: {e}")
+            logger.error(
+                f"Failed to store media files for article {article_id}: {e}")
             raise
 
     async def get_article_media(self, article_id: str) -> List[Dict[str, Any]]:
@@ -216,7 +226,8 @@ class MediaStorageManager:
             return media_files
 
         except Exception as e:
-            logger.error(f"Failed to get media files for article {article_id}: {e}")
+            logger.error(
+                f"Failed to get media files for article {article_id}: {e}")
             raise
 
     async def delete_article_media(self, article_id: str) -> bool:
@@ -231,16 +242,19 @@ class MediaStorageManager:
 
             # Delete all files
             for file_info in files:
-                await self._delete_file(file_info["key"])
+    await self._delete_file(file_info["key"])
 
-            logger.info(f"Deleted {len(files)} media files for article {article_id}")
+            logger.info(
+                f"Deleted {len(files)} media files for article {article_id}")
             return True
 
         except Exception as e:
-            logger.error(f"Failed to delete media files for article {article_id}: {e}")
+            logger.error(
+                f"Failed to delete media files for article {article_id}: {e}")
             return False
 
-    async def create_backup(self, data: Dict[str, Any], backup_name: str) -> str:
+    async def create_backup(
+            self, data: Dict[str, Any], backup_name: str) -> str:
         """Create a backup of data"""
         if not self._initialized or not self._storage_client:
             raise RuntimeError("Cloud Storage Manager not initialized")
@@ -292,11 +306,16 @@ class MediaStorageManager:
         file_ext = file_path.split(".")[-1] if "." in file_path else ""
 
         # Generate hash for uniqueness
-        file_hash = hashlib.md5(f"{article_id}_{file_path}".encode()).hexdigest()[:8]
+        file_hash = hashlib.md5(
+            f"{article_id}_{file_path}".encode()).hexdigest()[:8]
 
         return f"articles/{article_id}/{file_hash}.{file_ext}"
 
-    async def _store_file(self, file_key: str, content: bytes, content_type: str) -> str:
+    async def _store_file(
+            self,
+            file_key: str,
+            content: bytes,
+            content_type: str) -> str:
         """Store file in cloud storage"""
         try:
             if self.settings.cloud_storage_provider == "aws":
@@ -305,7 +324,7 @@ class MediaStorageManager:
                 return await self._store_file_gcp(file_key, content, content_type)
             elif self.settings.cloud_storage_provider == "azure":
                 return await self._store_file_azure(file_key, content, content_type)
-            else:
+        else:
                 raise ValueError(
                     f"Unsupported storage provider: {self.settings.cloud_storage_provider}"
                 )
@@ -314,15 +333,25 @@ class MediaStorageManager:
             logger.error(f"Failed to store file {file_key}: {e}")
             raise
 
-    async def _store_file_s3(self, file_key: str, content: bytes, content_type: str) -> str:
+    async def _store_file_s3(
+            self,
+            file_key: str,
+            content: bytes,
+            content_type: str) -> str:
         """Store file in AWS S3"""
         self._storage_client.put_object(
-            Bucket=self._bucket_name, Key=file_key, Body=content, ContentType=content_type
-        )
+            Bucket=self._bucket_name,
+            Key=file_key,
+            Body=content,
+            ContentType=content_type)
 
         return f"https://{self._bucket_name}.s3.{self.settings.cloud_storage_region}.amazonaws.com/{file_key}"
 
-    async def _store_file_gcp(self, file_key: str, content: bytes, content_type: str) -> str:
+    async def _store_file_gcp(
+            self,
+            file_key: str,
+            content: bytes,
+            content_type: str) -> str:
         """Store file in Google Cloud Storage"""
         bucket = self._storage_client.bucket(self._bucket_name)
         blob = bucket.blob(file_key)
@@ -331,12 +360,19 @@ class MediaStorageManager:
 
         return f"https://storage.googleapis.com/{self._bucket_name}/{file_key}"
 
-    async def _store_file_azure(self, file_key: str, content: bytes, content_type: str) -> str:
+    async def _store_file_azure(
+            self,
+            file_key: str,
+            content: bytes,
+            content_type: str) -> str:
         """Store file in Azure Blob Storage"""
         container_client = self._storage_client.get_container_client("media")
 
         blob_client = container_client.get_blob_client(file_key)
-        blob_client.upload_blob(content, content_type=content_type, overwrite=True)
+        blob_client.upload_blob(
+            content,
+            content_type=content_type,
+            overwrite=True)
 
         return blob_client.url
 
@@ -349,7 +385,7 @@ class MediaStorageManager:
                 return await self._get_file_gcp(file_key)
             elif self.settings.cloud_storage_provider == "azure":
                 return await self._get_file_azure(file_key)
-            else:
+        else:
                 raise ValueError(
                     f"Unsupported storage provider: {self.settings.cloud_storage_provider}"
                 )
@@ -360,7 +396,8 @@ class MediaStorageManager:
 
     async def _get_file_s3(self, file_key: str) -> bytes:
         """Get file from AWS S3"""
-        response = self._storage_client.get_object(Bucket=self._bucket_name, Key=file_key)
+        response = self._storage_client.get_object(
+            Bucket=self._bucket_name, Key=file_key)
         return response["Body"].read()
 
     async def _get_file_gcp(self, file_key: str) -> bytes:
@@ -384,7 +421,7 @@ class MediaStorageManager:
                 return await self._list_files_gcp(prefix)
             elif self.settings.cloud_storage_provider == "azure":
                 return await self._list_files_azure(prefix)
-            else:
+        else:
                 raise ValueError(
                     f"Unsupported storage provider: {self.settings.cloud_storage_provider}"
                 )
@@ -395,7 +432,8 @@ class MediaStorageManager:
 
     async def _list_files_s3(self, prefix: str) -> List[Dict[str, Any]]:
         """List files in AWS S3"""
-        response = self._storage_client.list_objects_v2(Bucket=self._bucket_name, Prefix=prefix)
+        response = self._storage_client.list_objects_v2(
+            Bucket=self._bucket_name, Prefix=prefix)
 
         files = []
         for obj in response.get("Contents", []):
@@ -405,8 +443,7 @@ class MediaStorageManager:
                     "size": obj["Size"],
                     "last_modified": obj["LastModified"],
                     "url": f"https://{self._bucket_name}.s3.{self.settings.cloud_storage_region}.amazonaws.com/{obj['Key']}",
-                }
-            )
+                })
 
         return files
 
@@ -423,8 +460,7 @@ class MediaStorageManager:
                     "size": blob.size,
                     "last_modified": blob.time_created,
                     "url": f"https://storage.googleapis.com/{self._bucket_name}/{blob.name}",
-                }
-            )
+                })
 
         return files
 
@@ -441,8 +477,7 @@ class MediaStorageManager:
                     "size": blob.size,
                     "last_modified": blob.last_modified,
                     "url": f"https://{self.settings.cloud_storage_bucket}.blob.core.windows.net/media/{blob.name}",
-                }
-            )
+                })
 
         return files
 
@@ -450,11 +485,11 @@ class MediaStorageManager:
         """Delete file from cloud storage"""
         try:
             if self.settings.cloud_storage_provider == "aws":
-                await self._delete_file_s3(file_key)
+    await self._delete_file_s3(file_key)
             elif self.settings.cloud_storage_provider == "gcp":
-                await self._delete_file_gcp(file_key)
+    await self._delete_file_gcp(file_key)
             elif self.settings.cloud_storage_provider == "azure":
-                await self._delete_file_azure(file_key)
+    await self._delete_file_azure(file_key)
             else:
                 raise ValueError(
                     f"Unsupported storage provider: {self.settings.cloud_storage_provider}"
@@ -466,17 +501,18 @@ class MediaStorageManager:
             logger.error(f"Failed to delete file {file_key}: {e}")
             return False
 
-    async def _delete_file_s3(self, file_key: str):
+    async def _delete_file_s3(self, file_key: str) -> Dict[str, Any]:
         """Delete file from AWS S3"""
-        self._storage_client.delete_object(Bucket=self._bucket_name, Key=file_key)
+        self._storage_client.delete_object(
+            Bucket=self._bucket_name, Key=file_key)
 
-    async def _delete_file_gcp(self, file_key: str):
+    async def _delete_file_gcp(self, file_key: str) -> Dict[str, Any]:
         """Delete file from Google Cloud Storage"""
         bucket = self._storage_client.bucket(self._bucket_name)
         blob = bucket.blob(file_key)
         blob.delete()
 
-    async def _delete_file_azure(self, file_key: str):
+    async def _delete_file_azure(self, file_key: str) -> Dict[str, Any]:
         """Delete file from Azure Blob Storage"""
         container_client = self._storage_client.get_container_client("media")
         blob_client = container_client.get_blob_client(file_key)

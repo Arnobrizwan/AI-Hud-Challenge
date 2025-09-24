@@ -1,7 +1,5 @@
 """TF-IDF based content filtering."""
 
-import asyncio
-from collections import Counter
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
@@ -10,7 +8,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 from ..config.settings import settings
-from ..models.schemas import ContentItem, Recommendation, UserProfile
+from ..models.schemas import ContentItem, UserProfile
 
 logger = structlog.get_logger()
 
@@ -53,9 +51,7 @@ class TFIDFContentFilter:
 
         logger.info(f"TF-IDF vectorizer fitted on {len(content_items)} content items")
 
-    async def compute_similarities(
-        self, user_profile: UserProfile, candidates: List[ContentItem]
-    ) -> List[float]:
+    async def compute_similarities(self, user_profile: UserProfile, candidates: List[ContentItem]) -> List[float]:
         """Compute content-based similarity scores for candidates."""
         if not self.is_fitted:
             logger.warning("TF-IDF vectorizer not fitted")
@@ -114,9 +110,7 @@ class TFIDFContentFilter:
 
         return user_vector.toarray()[0]
 
-    async def _compute_topic_similarity(
-        self, user_profile: UserProfile, candidate: ContentItem
-    ) -> float:
+    async def _compute_topic_similarity(self, user_profile: UserProfile, candidate: ContentItem) -> float:
         """Compute topic-based similarity for new content."""
         if not user_profile.topic_preferences or not candidate.topics:
             return 0.5
@@ -128,7 +122,8 @@ class TFIDFContentFilter:
         for candidate_topic in candidate.topics:
             best_match = 0.0
             for user_topic, weight in user_profile.topic_preferences.items():
-                # Simple string similarity (in production, use semantic similarity)
+                # Simple string similarity (in production, use semantic
+                # similarity)
                 similarity = self._string_similarity(candidate_topic, user_topic)
                 weighted_similarity = similarity * weight
                 best_match = max(best_match, weighted_similarity)
@@ -156,9 +151,7 @@ class TFIDFContentFilter:
 
         return intersection / union if union > 0 else 0.0
 
-    async def get_similar_content(
-        self, content_id: str, n_similar: int = 10
-    ) -> List[Tuple[str, float]]:
+    async def get_similar_content(self, content_id: str, n_similar: int = 10) -> List[Tuple[str, float]]:
         """Get similar content based on TF-IDF similarity."""
         if not self.is_fitted or content_id not in self.content_ids:
             return []

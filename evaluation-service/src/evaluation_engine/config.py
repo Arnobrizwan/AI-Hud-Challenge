@@ -2,7 +2,6 @@
 Configuration management for Evaluation Suite Microservice
 """
 
-import os
 from typing import List, Optional
 
 from pydantic import BaseSettings, Field

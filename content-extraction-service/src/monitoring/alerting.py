@@ -81,17 +81,13 @@ class AlertRule:
         now = datetime.utcnow()
 
         # Check if enough time has passed since last evaluation
-        if (
-            self.last_evaluation
-            and (now - self.last_evaluation).total_seconds() < self.evaluation_interval
-        ):
+        if (self.last_evaluation and (
+                now - self.last_evaluation).total_seconds() < self.evaluation_interval):
             return False
 
         # Check if in cooldown period
-        if (
-            self.last_alert_time
-            and (now - self.last_alert_time).total_seconds() < self.cooldown_period
-        ):
+        if (self.last_alert_time and (
+                now - self.last_alert_time).total_seconds() < self.cooldown_period):
             return False
 
         # Evaluate condition
@@ -217,7 +213,7 @@ class AlertManager:
         self.notification_handlers.append(handler)
         logger.info("Added notification handler")
 
-    async def start_monitoring(self):
+    async def start_monitoring(self) -> Dict[str, Any]:
         """Start alert monitoring."""
         if self.is_running:
             return
@@ -227,31 +223,32 @@ class AlertManager:
 
         while self.is_running:
             try:
-                await self._evaluate_alerts()
+    await self._evaluate_alerts()
                 await asyncio.sleep(60)  # Check every minute
             except Exception as e:
                 logger.error(f"Alert monitoring error: {str(e)}")
                 await asyncio.sleep(60)
 
-    async def stop_monitoring(self):
+    async def stop_monitoring(self) -> Dict[str, Any]:
         """Stop alert monitoring."""
         self.is_running = False
         logger.info("Stopped alert monitoring")
 
-    async def _evaluate_alerts(self):
+    async def _evaluate_alerts(self) -> Dict[str, Any]:
         """Evaluate all alert rules."""
         for rule in self.alert_rules:
             try:
                 current_value = await self._get_metric_value(rule.metric_name)
 
                 if rule.evaluate(current_value):
-                    await self._trigger_alert(rule, current_value)
+    await self._trigger_alert(rule, current_value)
                     rule.update_alert_time()
 
                 rule.update_evaluation_time()
 
             except Exception as e:
-                logger.error(f"Alert evaluation failed for {rule.name}: {str(e)}")
+                logger.error(
+                    f"Alert evaluation failed for {rule.name}: {str(e)}")
 
     async def _get_metric_value(self, metric_name: str) -> float:
         """Get current metric value."""
@@ -268,7 +265,7 @@ class AlertManager:
         else:
             return 0.0
 
-    async def _trigger_alert(self, rule: AlertRule, current_value: float):
+    async def _trigger_alert(self, rule: AlertRule, current_value: float) -> Dict[str, Any]:
         """Trigger alert."""
         alert_id = f"{rule.name}_{int(datetime.utcnow().timestamp())}"
 
@@ -291,17 +288,18 @@ class AlertManager:
         # Send notifications
         await self._send_notifications(alert)
 
-        logger.warning(f"Alert triggered: {alert.title} (value: {current_value})")
+        logger.warning(
+            f"Alert triggered: {alert.title} (value: {current_value})")
 
-    async def _send_notifications(self, alert: Alert):
+    async def _send_notifications(self, alert: Alert) -> Dict[str, Any]:
         """Send alert notifications."""
         for handler in self.notification_handlers:
             try:
-                await handler(alert)
+    await handler(alert)
             except Exception as e:
                 logger.error(f"Notification handler failed: {str(e)}")
 
-    async def resolve_alert(self, alert_id: str):
+    async def resolve_alert(self, alert_id: str) -> Dict[str, Any]:
         """Resolve alert."""
         if alert_id in self.alerts:
             alert = self.alerts[alert_id]
@@ -309,7 +307,7 @@ class AlertManager:
             alert.resolved_at = datetime.utcnow()
             logger.info(f"Alert resolved: {alert.title}")
 
-    async def suppress_alert(self, alert_id: str):
+    async def suppress_alert(self, alert_id: str) -> Dict[str, Any]:
         """Suppress alert."""
         if alert_id in self.alerts:
             alert = self.alerts[alert_id]
@@ -318,15 +316,18 @@ class AlertManager:
 
     def get_active_alerts(self) -> List[Alert]:
         """Get active alerts."""
-        return [alert for alert in self.alerts.values() if alert.status == AlertStatus.ACTIVE]
+        return [alert for alert in self.alerts.values() if alert.status ==
+                AlertStatus.ACTIVE]
 
     def get_alerts_by_severity(self, severity: AlertSeverity) -> List[Alert]:
         """Get alerts by severity."""
-        return [alert for alert in self.alerts.values() if alert.severity == severity]
+        return [alert for alert in self.alerts.values()
+                if alert.severity == severity]
 
     def get_alerts_by_component(self, component: str) -> List[Alert]:
         """Get alerts by component."""
-        return [alert for alert in self.alerts.values() if alert.component == component]
+        return [alert for alert in self.alerts.values()
+                if alert.component == component]
 
     def get_alert_summary(self) -> Dict[str, Any]:
         """Get alert summary."""
@@ -335,12 +336,14 @@ class AlertManager:
 
         severity_counts = {}
         for severity in AlertSeverity:
-            severity_counts[severity.value] = len(self.get_alerts_by_severity(severity))
+            severity_counts[severity.value] = len(
+                self.get_alerts_by_severity(severity))
 
         component_counts = {}
         components = set(alert.component for alert in self.alerts.values())
         for component in components:
-            component_counts[component] = len(self.get_alerts_by_component(component))
+            component_counts[component] = len(
+                self.get_alerts_by_component(component))
 
         return {
             "total_alerts": total_alerts,
@@ -357,18 +360,18 @@ alert_manager = AlertManager()
 
 
 # Notification handlers
-async def log_notification_handler(alert: Alert):
+async def log_notification_handler(alert: Alert) -> Dict[str, Any]:
     """Log notification handler."""
     logger.warning(f"ALERT: {alert.title} - {alert.description}")
 
 
-async def email_notification_handler(alert: Alert):
+async def email_notification_handler(alert: Alert) -> Dict[str, Any]:
     """Email notification handler (placeholder)."""
     # In production, this would send actual emails
     logger.info(f"EMAIL ALERT: {alert.title}")
 
 
-async def slack_notification_handler(alert: Alert):
+async def slack_notification_handler(alert: Alert) -> Dict[str, Any]:
     """Slack notification handler (placeholder)."""
     # In production, this would send Slack messages
     logger.info(f"SLACK ALERT: {alert.title}")

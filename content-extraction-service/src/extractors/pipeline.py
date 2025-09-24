@@ -6,11 +6,11 @@ import asyncio
 import hashlib
 import time
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 from loguru import logger
 
-from ..exceptions import ContentExtractionError, ValidationError
+from ..exceptions import ContentExtractionError
 from ..models.api import ExtractionRequest, ExtractionResponse
 from ..models.content import (
     ContentMetadata,
@@ -22,7 +22,6 @@ from ..models.content import (
     ProcessedImage,
     ProcessingStatus,
     QualityMetrics,
-    VideoMetadata,
 )
 from ..services.cache_service import CacheService
 from ..services.document_ai_service import DocumentAIService
@@ -58,9 +57,7 @@ class ContentExtractionPipeline:
         self.cache_service = cache_service
         self.document_ai_service = document_ai_service
 
-    async def extract_content(
-        self, request: ExtractionRequest, raw_html: Optional[str] = None
-    ) -> ExtractionResponse:
+    async def extract_content(self, request: ExtractionRequest, raw_html: Optional[str] = None) -> ExtractionResponse:
         """
         Main extraction pipeline with fallback strategies.
 
@@ -178,7 +175,7 @@ class ContentExtractionPipeline:
                 return await self._fetch_pdf_content(request)
             elif request.content_type in [ContentType.DOC, ContentType.DOCX]:
                 return await self._fetch_document_content(request)
-            else:
+        else:
                 return await self._fetch_web_content(request)
         except Exception as e:
             logger.error(f"HTML fetch failed for {request.url}: {str(e)}")
@@ -244,9 +241,7 @@ class ContentExtractionPipeline:
             # Fallback to basic HTML cleaning
             return await self.html_cleaner.clean_html(html_content)
 
-    async def _extract_with_custom_selectors(
-        self, html_content: str, request: ExtractionRequest
-    ) -> str:
+    async def _extract_with_custom_selectors(self, html_content: str, request: ExtractionRequest) -> str:
         """Extract content using custom CSS selectors."""
         try:
             from bs4 import BeautifulSoup
@@ -273,9 +268,7 @@ class ContentExtractionPipeline:
             # Return basic cleaned content
             return content.strip()
 
-    async def _process_images(
-        self, content: str, request: ExtractionRequest
-    ) -> List[ProcessedImage]:
+    async def _process_images(self, content: str, request: ExtractionRequest) -> List[ProcessedImage]:
         """Stage 5: Image processing and optimization."""
         if not request.include_images:
             return []
@@ -286,9 +279,7 @@ class ContentExtractionPipeline:
             logger.error(f"Image processing failed for {request.url}: {str(e)}")
             return []
 
-    async def _score_content_quality(
-        self, content: str, request: ExtractionRequest
-    ) -> QualityMetrics:
+    async def _score_content_quality(self, content: str, request: ExtractionRequest) -> QualityMetrics:
         """Stage 6: Quality scoring and validation."""
         try:
             return await self.quality_analyzer.analyze_content_quality(
@@ -316,15 +307,11 @@ class ContentExtractionPipeline:
     async def _analyze_language(self, content: str, request: ExtractionRequest) -> LanguageInfo:
         """Stage 7: Language and readability analysis."""
         try:
-            return await self.language_detector.detect_language(
-                content, language_hint=request.language_hint
-            )
+            return await self.language_detector.detect_language(content, language_hint=request.language_hint)
         except Exception as e:
             logger.error(f"Language analysis failed for {request.url}: {str(e)}")
             # Return default language info
-            return LanguageInfo(
-                detected_language="en", confidence=0.5, charset="utf-8", is_reliable=False
-            )
+            return LanguageInfo(detected_language="en", confidence=0.5, charset="utf-8", is_reliable=False)
 
     def _create_extraction_stats(
         self,
@@ -413,9 +400,7 @@ class ContentExtractionPipeline:
             return ContentType.PDF
         elif any(keyword in content.lower() for keyword in ["spreadsheet", "excel", "worksheet"]):
             return ContentType.XLSX
-        elif any(
-            keyword in content.lower() for keyword in ["presentation", "slides", "powerpoint"]
-        ):
+        elif any(keyword in content.lower() for keyword in ["presentation", "slides", "powerpoint"]):
             return ContentType.PPTX
         else:
             return ContentType.HTML

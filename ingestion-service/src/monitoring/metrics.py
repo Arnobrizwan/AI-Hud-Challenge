@@ -2,10 +2,9 @@
 Prometheus metrics for the ingestion service.
 """
 
-import time
 from typing import Any, Dict
 
-from prometheus_client import Counter, Gauge, Histogram, Info, Summary
+from prometheus_client import Counter, Gauge, Histogram, Info
 
 # Application info
 app_info = Info("ingestion_service_info", "Information about the ingestion service")
@@ -22,13 +21,9 @@ request_duration = Histogram(
     "ingestion_request_duration_seconds", "HTTP request duration in seconds", ["method", "endpoint"]
 )
 
-request_size = Histogram(
-    "ingestion_request_size_bytes", "HTTP request size in bytes", ["method", "endpoint"]
-)
+request_size = Histogram("ingestion_request_size_bytes", "HTTP request size in bytes", ["method", "endpoint"])
 
-response_size = Histogram(
-    "ingestion_response_size_bytes", "HTTP response size in bytes", ["method", "endpoint"]
-)
+response_size = Histogram("ingestion_response_size_bytes", "HTTP response size in bytes", ["method", "endpoint"])
 
 # Content processing metrics
 articles_processed_total = Counter(
@@ -146,9 +141,7 @@ batch_processing_duration = Histogram(
 
 batch_size = Histogram("ingestion_batch_size", "Size of processing batches", ["source_id"])
 
-batch_success_rate = Gauge(
-    "ingestion_batch_success_rate", "Success rate of processing batches", ["source_id"]
-)
+batch_success_rate = Gauge("ingestion_batch_success_rate", "Success rate of processing batches", ["source_id"])
 
 # Memory and resource metrics
 memory_usage_bytes = Gauge("ingestion_memory_usage_bytes", "Memory usage in bytes", ["component"])
@@ -186,9 +179,7 @@ pubsub_publish_duration = Histogram(
 )
 
 # Error metrics
-error_count = Counter(
-    "ingestion_errors_total", "Total number of errors", ["error_type", "component", "severity"]
-)
+error_count = Counter("ingestion_errors_total", "Total number of errors", ["error_type", "component", "severity"])
 
 # Custom metrics for specific use cases
 custom_metrics: Dict[str, Any] = {}
@@ -257,31 +248,19 @@ def record_article_processing(
     content_type: str = "article",
 ):
     """Record article processing metrics."""
-    articles_processed_total.labels(
-        source_id=source_id, source_type=source_type, status=status
-    ).inc()
-    articles_processing_duration.labels(source_id=source_id, source_type=source_type).observe(
-        duration
-    )
+    articles_processed_total.labels(source_id=source_id, source_type=source_type, status=status).inc()
+    articles_processing_duration.labels(source_id=source_id, source_type=source_type).observe(duration)
 
     if word_count > 0:
-        articles_word_count.labels(source_id=source_id, content_type=content_type).observe(
-            word_count
-        )
+        articles_word_count.labels(source_id=source_id, content_type=content_type).observe(word_count)
 
     if reading_time > 0:
-        articles_reading_time.labels(source_id=source_id, content_type=content_type).observe(
-            reading_time
-        )
+        articles_reading_time.labels(source_id=source_id, content_type=content_type).observe(reading_time)
 
 
-def record_source_health(
-    source_id: str, source_type: str, is_healthy: bool, last_success: float = None
-):
+def record_source_health(source_id: str, source_type: str, is_healthy: bool, last_success: float = None):
     """Record source health metrics."""
-    source_health_status.labels(source_id=source_id, source_type=source_type).set(
-        1 if is_healthy else 0
-    )
+    source_health_status.labels(source_id=source_id, source_type=source_type).set(1 if is_healthy else 0)
 
     if last_success:
         source_last_success.labels(source_id=source_id, source_type=source_type).set(last_success)
@@ -289,9 +268,7 @@ def record_source_health(
 
 def record_source_error(source_id: str, source_type: str, error_type: str):
     """Record source error metrics."""
-    source_error_count.labels(
-        source_id=source_id, source_type=source_type, error_type=error_type
-    ).inc()
+    source_error_count.labels(source_id=source_id, source_type=source_type, error_type=error_type).inc()
 
 
 def record_source_success(source_id: str, source_type: str):
@@ -302,9 +279,7 @@ def record_source_success(source_id: str, source_type: str):
 def record_duplicate_detection(source_id: str, detection_method: str, similarity_score: float):
     """Record duplicate detection metrics."""
     duplicates_detected.labels(source_id=source_id, detection_method=detection_method).inc()
-    duplicate_similarity.labels(source_id=source_id, detection_method=detection_method).observe(
-        similarity_score
-    )
+    duplicate_similarity.labels(source_id=source_id, detection_method=detection_method).observe(similarity_score)
 
 
 def record_language_detection(source_id: str, language: str, is_correct: bool = None):
@@ -313,9 +288,7 @@ def record_language_detection(source_id: str, language: str, is_correct: bool = 
 
     if is_correct is not None:
         # Update accuracy metric (simplified)
-        current_accuracy = language_detection_accuracy.labels(
-            source_id=source_id, language=language
-        )._value._value
+        current_accuracy = language_detection_accuracy.labels(source_id=source_id, language=language)._value._value
         new_accuracy = (current_accuracy + (1 if is_correct else 0)) / 2
         language_detection_accuracy.labels(source_id=source_id, language=language).set(new_accuracy)
 
@@ -327,9 +300,7 @@ def record_content_type(source_id: str, content_type: str):
 
 def record_batch_processing(source_id: str, batch_size: int, duration: float, success_rate: float):
     """Record batch processing metrics."""
-    batch_processing_duration.labels(source_id=source_id, batch_size=str(batch_size)).observe(
-        duration
-    )
+    batch_processing_duration.labels(source_id=source_id, batch_size=str(batch_size)).observe(duration)
     batch_size.labels(source_id=source_id).observe(batch_size)
     batch_success_rate.labels(source_id=source_id).set(success_rate)
 
@@ -337,9 +308,7 @@ def record_batch_processing(source_id: str, batch_size: int, duration: float, su
 def record_firestore_operation(operation: str, collection: str, status: str, duration: float):
     """Record Firestore operation metrics."""
     firestore_operations.labels(operation=operation, collection=collection, status=status).inc()
-    firestore_operation_duration.labels(operation=operation, collection=collection).observe(
-        duration
-    )
+    firestore_operation_duration.labels(operation=operation, collection=collection).observe(duration)
 
 
 def record_pubsub_publish(topic: str, message_type: str, duration: float):

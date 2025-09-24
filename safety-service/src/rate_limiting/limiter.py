@@ -42,11 +42,12 @@ class AdvancedRateLimiter:
         self.user_reputations = {}
         self.user_abuse_scores = {}
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize the rate limiter"""
         try:
             # Initialize Redis connection
-            self.redis_client = redis.from_url("redis://localhost:6379/0", decode_responses=True)
+            self.redis_client = redis.from_url(
+                "redis://localhost:6379/0", decode_responses=True)
 
             # Test Redis connection
             await self.redis_client.ping()
@@ -64,11 +65,11 @@ class AdvancedRateLimiter:
             logger.error(f"Failed to initialize rate limiter: {str(e)}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup resources"""
         try:
             if self.redis_client:
-                await self.redis_client.close()
+    await self.redis_client.close()
                 self.redis_client = None
 
             self.is_initialized = False
@@ -77,7 +78,8 @@ class AdvancedRateLimiter:
         except Exception as e:
             logger.error(f"Error during rate limiter cleanup: {str(e)}")
 
-    async def check_rate_limits(self, request: RateLimitRequest) -> RateLimitResult:
+    async def check_rate_limits(
+            self, request: RateLimitRequest) -> RateLimitResult:
         """Comprehensive rate limiting check"""
 
         if not self.is_initialized:
@@ -110,7 +112,8 @@ class AdvancedRateLimiter:
 
             for i, check in enumerate(limit_checks):
                 if isinstance(check, Exception):
-                    logger.warning(f"Rate limit check {i} failed: {str(check)}")
+                    logger.warning(
+                        f"Rate limit check {i} failed: {str(check)}")
                     continue
 
                 if check and hasattr(check, "is_limited") and check.is_limited:
@@ -126,14 +129,15 @@ class AdvancedRateLimiter:
             is_rate_limited = len(triggered_limits) > 0
 
             # Calculate remaining capacity (minimum of all strategies)
-            remaining_capacity = min(remaining_capacities) if remaining_capacities else 0
+            remaining_capacity = min(
+                remaining_capacities) if remaining_capacities else 0
 
             # Calculate retry after (maximum of all strategies)
             retry_after = max(retry_afters) if retry_afters else 0
 
             # Apply dynamic rate limiting if needed
             if not is_rate_limited:
-                await self.apply_dynamic_rate_limit(
+    await self.apply_dynamic_rate_limit(
                     user_id, endpoint, reputation_score, abuse_score
                 )
 
@@ -165,7 +169,8 @@ class AdvancedRateLimiter:
             return reputation
 
         except Exception as e:
-            logger.error(f"Failed to get reputation for user {user_id}: {str(e)}")
+            logger.error(
+                f"Failed to get reputation for user {user_id}: {str(e)}")
             return 0.5
 
     async def get_user_abuse_score(self, user_id: str) -> float:
@@ -182,13 +187,17 @@ class AdvancedRateLimiter:
             return abuse_score
 
         except Exception as e:
-            logger.error(f"Failed to get abuse score for user {user_id}: {str(e)}")
+            logger.error(
+                f"Failed to get abuse score for user {user_id}: {str(e)}")
             return 0.0
 
     async def apply_dynamic_rate_limit(
-        self, user_id: str, endpoint: str, reputation_score: float, abuse_score: float
-    ):
-        """Apply dynamic rate limiting based on user behavior"""
+            self,
+            user_id: str,
+            endpoint: str,
+            reputation_score: float,
+            abuse_score: float):
+         -> Dict[str, Any]:"""Apply dynamic rate limiting based on user behavior"""
         try:
             # Calculate dynamic limits based on user reputation and behavior
             reputation_multiplier = max(0.1, min(2.0, reputation_score))
@@ -198,14 +207,18 @@ class AdvancedRateLimiter:
             base_limit = self.get_base_limit_for_endpoint(endpoint)
 
             # Calculate adjusted limit
-            adjusted_limit = int(base_limit * reputation_multiplier * abuse_penalty)
+            adjusted_limit = int(
+                base_limit *
+                reputation_multiplier *
+                abuse_penalty)
 
             # Apply new limits to all strategies
             await self.sliding_window.set_dynamic_limit(user_id, endpoint, adjusted_limit)
             await self.token_bucket.set_dynamic_limit(user_id, endpoint, adjusted_limit)
             await self.adaptive_limiter.set_dynamic_limit(user_id, endpoint, adjusted_limit)
 
-            logger.debug(f"Applied dynamic rate limit for user {user_id}: {adjusted_limit}")
+            logger.debug(
+                f"Applied dynamic rate limit for user {user_id}: {adjusted_limit}")
 
         except Exception as e:
             logger.error(f"Dynamic rate limit application failed: {str(e)}")
@@ -228,30 +241,36 @@ class AdvancedRateLimiter:
             return endpoint_limits.get(endpoint, self.config.default_limit)
 
         except Exception as e:
-            logger.error(f"Failed to get base limit for endpoint {endpoint}: {str(e)}")
+            logger.error(
+                f"Failed to get base limit for endpoint {endpoint}: {str(e)}")
             return self.config.default_limit
 
-    async def reset_rate_limits(self, user_id: str, endpoint: Optional[str] = None):
-        """Reset rate limits for a user"""
+    async def reset_rate_limits(
+            self,
+            user_id: str,
+            endpoint: Optional[str] = None):
+         -> Dict[str, Any]:"""Reset rate limits for a user"""
         try:
             if endpoint:
                 # Reset specific endpoint
                 await self.sliding_window.reset_limit(user_id, endpoint)
                 await self.token_bucket.reset_limit(user_id, endpoint)
                 await self.adaptive_limiter.reset_limit(user_id, endpoint)
-            else:
+        else:
                 # Reset all endpoints for user
                 await self.sliding_window.reset_user_limits(user_id)
                 await self.token_bucket.reset_user_limits(user_id)
                 await self.adaptive_limiter.reset_user_limits(user_id)
 
-            logger.info(f"Reset rate limits for user {user_id}, endpoint: {endpoint or 'all'}")
+            logger.info(
+                f"Reset rate limits for user {user_id}, endpoint: {endpoint or 'all'}")
 
         except Exception as e:
             logger.error(f"Rate limit reset failed: {str(e)}")
 
-    async def get_rate_limit_status(self, user_id: str, endpoint: str) -> Dict[str, Any]:
-        """Get current rate limit status for a user and endpoint"""
+    async def get_rate_limit_status(
+            self, user_id: str, endpoint: str) -> Dict[str, Any]:
+    """Get current rate limit status for a user and endpoint"""
         try:
             # Get status from all strategies
             status_checks = await asyncio.gather(
@@ -261,13 +280,20 @@ class AdvancedRateLimiter:
                 return_exceptions=True,
             )
 
-            status = {"user_id": user_id, "endpoint": endpoint, "strategies": {}}
+            status = {
+                "user_id": user_id,
+                "endpoint": endpoint,
+                "strategies": {}}
 
-            strategy_names = ["sliding_window", "token_bucket", "adaptive_limiter"]
+            strategy_names = [
+                "sliding_window",
+                "token_bucket",
+                "adaptive_limiter"]
 
             for i, check in enumerate(status_checks):
                 if isinstance(check, Exception):
-                    status["strategies"][strategy_names[i]] = {"error": str(check)}
+                    status["strategies"][strategy_names[i]] = {
+                        "error": str(check)}
                 else:
                     status["strategies"][strategy_names[i]] = check
 
@@ -289,7 +315,9 @@ class AdvancedRateLimiter:
                 return_exceptions=True,
             )
 
-            statistics = {"timestamp": datetime.utcnow().isoformat(), "strategies": {}}
+            statistics = {
+                "timestamp": datetime.utcnow().isoformat(),
+                "strategies": {}}
 
             strategy_names = [
                 "sliding_window",
@@ -300,38 +328,48 @@ class AdvancedRateLimiter:
 
             for i, check in enumerate(stats_checks):
                 if isinstance(check, Exception):
-                    statistics["strategies"][strategy_names[i]] = {"error": str(check)}
+                    statistics["strategies"][strategy_names[i]] = {
+                        "error": str(check)}
                 else:
                     statistics["strategies"][strategy_names[i]] = check
 
             return statistics
 
         except Exception as e:
-            logger.error(f"Rate limiting statistics retrieval failed: {str(e)}")
+            logger.error(
+                f"Rate limiting statistics retrieval failed: {str(e)}")
             return {"error": str(e)}
 
-    async def update_user_reputation(self, user_id: str, reputation_score: float):
-        """Update user reputation score"""
+    async def update_user_reputation(
+            self, user_id: str, reputation_score: float):
+         -> Dict[str, Any]:"""Update user reputation score"""
         try:
-            self.user_reputations[user_id] = max(0.0, min(1.0, reputation_score))
-            logger.debug(f"Updated reputation for user {user_id}: {reputation_score}")
+            self.user_reputations[user_id] = max(
+                0.0, min(1.0, reputation_score))
+            logger.debug(
+                f"Updated reputation for user {user_id}: {reputation_score}")
 
         except Exception as e:
-            logger.error(f"Failed to update reputation for user {user_id}: {str(e)}")
+            logger.error(
+                f"Failed to update reputation for user {user_id}: {str(e)}")
 
-    async def update_user_abuse_score(self, user_id: str, abuse_score: float):
+    async def update_user_abuse_score(self, user_id: str, abuse_score: float) -> Dict[str, Any]:
         """Update user abuse score"""
         try:
             self.user_abuse_scores[user_id] = max(0.0, min(1.0, abuse_score))
-            logger.debug(f"Updated abuse score for user {user_id}: {abuse_score}")
+            logger.debug(
+                f"Updated abuse score for user {user_id}: {abuse_score}")
 
         except Exception as e:
-            logger.error(f"Failed to update abuse score for user {user_id}: {str(e)}")
+            logger.error(
+                f"Failed to update abuse score for user {user_id}: {str(e)}")
 
     async def apply_rate_limit_penalty(
-        self, user_id: str, penalty_multiplier: float, duration_minutes: int = 60
-    ):
-        """Apply a rate limit penalty to a user"""
+            self,
+            user_id: str,
+            penalty_multiplier: float,
+            duration_minutes: int = 60):
+         -> Dict[str, Any]:"""Apply a rate limit penalty to a user"""
         try:
             # Apply penalty to all strategies
             await self.sliding_window.apply_penalty(user_id, penalty_multiplier, duration_minutes)
@@ -345,7 +383,7 @@ class AdvancedRateLimiter:
         except Exception as e:
             logger.error(f"Rate limit penalty application failed: {str(e)}")
 
-    async def remove_rate_limit_penalty(self, user_id: str):
+    async def remove_rate_limit_penalty(self, user_id: str) -> Dict[str, Any]:
         """Remove rate limit penalty from a user"""
         try:
             # Remove penalty from all strategies

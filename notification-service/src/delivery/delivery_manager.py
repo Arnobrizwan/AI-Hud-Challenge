@@ -38,7 +38,8 @@ class FCMClient:
             from firebase_admin import credentials
 
             if self.settings.FIREBASE_CREDENTIALS_PATH:
-                cred = credentials.Certificate(self.settings.FIREBASE_CREDENTIALS_PATH)
+                cred = credentials.Certificate(
+                    self.settings.FIREBASE_CREDENTIALS_PATH)
                 self.app = firebase_admin.initialize_app(cred)
             else:
                 # Use default credentials (e.g., from environment)
@@ -55,15 +56,18 @@ class FCMClient:
         logger.info("Cleaning up FCM client")
         # FCM cleanup if needed
 
-    async def send_notification(self, decision: NotificationDecision) -> DeliveryResult:
+    async def send_notification(
+            self, decision: NotificationDecision) -> DeliveryResult:
         """Send push notification via FCM."""
 
         try:
-            # Get user's FCM token (in real implementation, fetch from database)
+            # Get user's FCM token (in real implementation, fetch from
+            # database)
             fcm_token = await self._get_user_fcm_token(decision.user_id)
 
             if not fcm_token:
-                raise DeliveryChannelError(f"No FCM token found for user {decision.user_id}")
+                raise DeliveryChannelError(
+                    f"No FCM token found for user {decision.user_id}")
 
             # Create FCM message
             message = messaging.Message(
@@ -76,43 +80,41 @@ class FCMClient:
                     "action_url": decision.content.action_url or "",
                     "category": decision.content.category,
                     "priority": decision.content.priority.value,
-                    "notification_id": str(uuid.uuid4()),
+                    "notification_id": str(
+                        uuid.uuid4()),
                 },
                 token=fcm_token,
                 android=messaging.AndroidConfig(
                     priority=(
-                        "high"
-                        if decision.content.priority.value in ["high", "urgent"]
-                        else "normal"
-                    ),
+                        "high" if decision.content.priority.value in [
+                            "high",
+                            "urgent"] else "normal"),
                     notification=messaging.AndroidNotification(
                         channel_id="default",
                         priority=(
-                            "high"
-                            if decision.content.priority.value in ["high", "urgent"]
-                            else "normal"
-                        ),
+                            "high" if decision.content.priority.value in [
+                                "high",
+                                "urgent"] else "normal"),
                     ),
                 ),
                 apns=messaging.APNSConfig(
                     payload=messaging.APNSPayload(
                         aps=messaging.Aps(
                             alert=messaging.ApsAlert(
-                                title=decision.content.title, body=decision.content.body
-                            ),
+                                title=decision.content.title,
+                                body=decision.content.body),
                             badge=1,
                             sound="default",
-                        )
-                    )
-                ),
+                        ))),
             )
 
             # Send message
             response = messaging.send(message, app=self.app)
 
             logger.info(
-                "FCM notification sent successfully", user_id=decision.user_id, message_id=response
-            )
+                "FCM notification sent successfully",
+                user_id=decision.user_id,
+                message_id=response)
 
             return DeliveryResult(
                 success=True,
@@ -124,8 +126,10 @@ class FCMClient:
 
         except Exception as e:
             logger.error(
-                "FCM notification failed", user_id=decision.user_id, error=str(e), exc_info=True
-            )
+                "FCM notification failed",
+                user_id=decision.user_id,
+                error=str(e),
+                exc_info=True)
             raise DeliveryChannelError(f"FCM delivery failed: {e}")
 
     async def _get_user_fcm_token(self, user_id: str) -> Optional[str]:
@@ -145,25 +149,30 @@ class EmailClient:
         """Initialize email client."""
         logger.info("Initializing email client")
 
-        if not all(
-            [self.settings.SMTP_HOST, self.settings.SMTP_USERNAME, self.settings.SMTP_PASSWORD]
-        ):
-            logger.warning("Email configuration incomplete, email notifications disabled")
+        if not all([self.settings.SMTP_HOST,
+                    self.settings.SMTP_USERNAME,
+                    self.settings.SMTP_PASSWORD]):
+            logger.warning(
+                "Email configuration incomplete, email notifications disabled")
             return
 
         try:
-            self.smtp_client = smtplib.SMTP(self.settings.SMTP_HOST, self.settings.SMTP_PORT)
+            self.smtp_client = smtplib.SMTP(
+                self.settings.SMTP_HOST, self.settings.SMTP_PORT)
 
             if self.settings.SMTP_USE_TLS:
                 self.smtp_client.starttls()
 
-            self.smtp_client.login(self.settings.SMTP_USERNAME, self.settings.SMTP_PASSWORD)
+            self.smtp_client.login(
+                self.settings.SMTP_USERNAME,
+                self.settings.SMTP_PASSWORD)
 
             logger.info("Email client initialized successfully")
 
         except Exception as e:
             logger.error(f"Failed to initialize email client: {e}")
-            raise DeliveryChannelError(f"Email client initialization failed: {e}")
+            raise DeliveryChannelError(
+                f"Email client initialization failed: {e}")
 
     async def cleanup(self) -> None:
         """Cleanup email client."""
@@ -171,18 +180,21 @@ class EmailClient:
         if self.smtp_client:
             self.smtp_client.quit()
 
-    async def send_notification(self, decision: NotificationDecision) -> DeliveryResult:
+    async def send_notification(
+            self, decision: NotificationDecision) -> DeliveryResult:
         """Send email notification."""
 
         try:
             if not self.smtp_client:
                 raise DeliveryChannelError("Email client not initialized")
 
-            # Get user's email address (in real implementation, fetch from database)
+            # Get user's email address (in real implementation, fetch from
+            # database)
             user_email = await self._get_user_email(decision.user_id)
 
             if not user_email:
-                raise DeliveryChannelError(f"No email address found for user {decision.user_id}")
+                raise DeliveryChannelError(
+                    f"No email address found for user {decision.user_id}")
 
             # Create email message
             msg = MIMEMultipart("alternative")
@@ -221,8 +233,10 @@ class EmailClient:
 
         except Exception as e:
             logger.error(
-                "Email notification failed", user_id=decision.user_id, error=str(e), exc_info=True
-            )
+                "Email notification failed",
+                user_id=decision.user_id,
+                error=str(e),
+                exc_info=True)
             raise DeliveryChannelError(f"Email delivery failed: {e}")
 
     async def _get_user_email(self, user_id: str) -> Optional[str]:
@@ -249,11 +263,11 @@ class EmailClient:
         """Create plain text email content."""
         return f"""
         {decision.content.title}
-        
+
         {decision.content.body}
-        
+
         {f'Read more: {decision.content.action_url}' if decision.content.action_url else ''}
-        
+
         Category: {decision.content.category}
         Priority: {decision.content.priority.value}
         """
@@ -277,7 +291,8 @@ class SMSClient:
                 self.settings.TWILIO_PHONE_NUMBER,
             ]
         ):
-            logger.warning("SMS configuration incomplete, SMS notifications disabled")
+            logger.warning(
+                "SMS configuration incomplete, SMS notifications disabled")
             return
 
         try:
@@ -292,25 +307,29 @@ class SMSClient:
 
         except Exception as e:
             logger.error(f"Failed to initialize SMS client: {e}")
-            raise DeliveryChannelError(f"SMS client initialization failed: {e}")
+            raise DeliveryChannelError(
+                f"SMS client initialization failed: {e}")
 
     async def cleanup(self) -> None:
         """Cleanup SMS client."""
         logger.info("Cleaning up SMS client")
         # SMS cleanup if needed
 
-    async def send_notification(self, decision: NotificationDecision) -> DeliveryResult:
+    async def send_notification(
+            self, decision: NotificationDecision) -> DeliveryResult:
         """Send SMS notification."""
 
         try:
             if not self.client:
                 raise DeliveryChannelError("SMS client not initialized")
 
-            # Get user's phone number (in real implementation, fetch from database)
+            # Get user's phone number (in real implementation, fetch from
+            # database)
             user_phone = await self._get_user_phone(decision.user_id)
 
             if not user_phone:
-                raise DeliveryChannelError(f"No phone number found for user {decision.user_id}")
+                raise DeliveryChannelError(
+                    f"No phone number found for user {decision.user_id}")
 
             # Create SMS message
             sms_body = f"{decision.content.title}\n\n{decision.content.body}"
@@ -342,8 +361,10 @@ class SMSClient:
 
         except Exception as e:
             logger.error(
-                "SMS notification failed", user_id=decision.user_id, error=str(e), exc_info=True
-            )
+                "SMS notification failed",
+                user_id=decision.user_id,
+                error=str(e),
+                exc_info=True)
             raise DeliveryChannelError(f"SMS delivery failed: {e}")
 
     async def _get_user_phone(self, user_id: str) -> Optional[str]:
@@ -381,7 +402,8 @@ class MultiChannelDelivery:
         await self.email_client.cleanup()
         await self.sms_client.cleanup()
 
-    async def deliver_notification(self, decision: NotificationDecision) -> DeliveryResult:
+    async def deliver_notification(
+            self, decision: NotificationDecision) -> DeliveryResult:
         """Deliver notification through the specified channel."""
 
         try:
@@ -398,7 +420,8 @@ class MultiChannelDelivery:
             elif decision.delivery_channel == DeliveryChannel.SMS:
                 result = await self.sms_client.send_notification(decision)
             else:
-                raise DeliveryChannelError(f"Unknown delivery channel: {decision.delivery_channel}")
+                raise DeliveryChannelError(
+                    f"Unknown delivery channel: {decision.delivery_channel}")
 
             # Update channel performance
             await self._update_channel_performance(
@@ -449,10 +472,12 @@ class MultiChannelDelivery:
 
             # Select channel with best performance
             available_performance = {
-                channel: channel_performance.get(channel, 0.5) for channel in user_channels
-            }
+                channel: channel_performance.get(
+                    channel, 0.5) for channel in user_channels}
 
-            optimal_channel = max(available_performance, key=available_performance.get)
+            optimal_channel = max(
+                available_performance,
+                key=available_performance.get)
 
             logger.debug(
                 "Selected optimal channel",
@@ -471,14 +496,18 @@ class MultiChannelDelivery:
     async def _get_user_channels(self, user_id: str) -> List[DeliveryChannel]:
         """Get user's available delivery channels."""
         # Mock implementation - would fetch from user preferences
-        return [DeliveryChannel.PUSH, DeliveryChannel.EMAIL, DeliveryChannel.SMS]
+        return [
+            DeliveryChannel.PUSH,
+            DeliveryChannel.EMAIL,
+            DeliveryChannel.SMS]
 
     async def _is_device_online(self, user_id: str) -> bool:
         """Check if user's device is online."""
         # Mock implementation - would check device status
         return True
 
-    async def _get_channel_performance(self, user_id: str) -> Dict[DeliveryChannel, float]:
+    async def _get_channel_performance(
+            self, user_id: str) -> Dict[DeliveryChannel, float]:
         """Get channel performance scores for user."""
 
         # Check cache first
@@ -504,7 +533,8 @@ class MultiChannelDelivery:
         """Update channel performance based on delivery result."""
 
         try:
-            # In real implementation, would update performance metrics in database
+            # In real implementation, would update performance metrics in
+            # database
             cache_key = f"channel_performance:{user_id}"
 
             if cache_key in self.channel_performance:
@@ -526,14 +556,17 @@ class MultiChannelDelivery:
 
     async def get_delivery_analytics(self, user_id: str) -> Dict[str, Any]:
         """Get delivery analytics for user."""
-
         try:
             analytics = {
                 "user_id": user_id,
-                "channel_performance": await self._get_channel_performance(user_id),
-                "available_channels": await self._get_user_channels(user_id),
-                "device_online": await self._is_device_online(user_id),
-                "delivery_history": await self._get_delivery_history(user_id),
+                "channel_performance":
+    await self._get_channel_performance(user_id),
+                "available_channels":
+    await self._get_user_channels(user_id),
+                "device_online":
+    await self._is_device_online(user_id),
+                "delivery_history":
+    await self._get_delivery_history(user_id),
             }
 
             return analytics
@@ -542,7 +575,8 @@ class MultiChannelDelivery:
             logger.error(f"Error getting delivery analytics: {e}")
             return {}
 
-    async def _get_delivery_history(self, user_id: str) -> List[Dict[str, Any]]:
+    async def _get_delivery_history(
+            self, user_id: str) -> List[Dict[str, Any]]:
         """Get delivery history for user."""
         # Mock implementation - would fetch from database
         return [

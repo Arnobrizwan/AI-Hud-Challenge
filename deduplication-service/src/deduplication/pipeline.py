@@ -2,18 +2,14 @@
 
 import asyncio
 import time
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional
 from uuid import UUID
 
-from ..algorithms.lsh.lsh_index import LSHIndex, LSHIndexManager
+from ..algorithms.lsh.lsh_index import LSHIndexManager
 from ..algorithms.lsh.minhash import ContentFingerprinter, MinHashGenerator
 from ..algorithms.similarity.combined import (
     CombinedSimilarityCalculator,
     SimilarityThresholdManager,
-)
-from ..algorithms.similarity.semantic import (
-    ContentSimilarityCalculator,
-    SemanticSimilarityCalculator,
 )
 from ..config.settings import settings
 from ..models.schemas import DuplicateResult, NormalizedArticle, SimilarityScore
@@ -72,9 +68,7 @@ class DeduplicationPipeline:
 
         try:
             # Stage 1: Content fingerprinting
-            content_fingerprint = self.fingerprinter.compute_fingerprint(
-                article.content, article.title
-            )
+            content_fingerprint = self.fingerprinter.compute_fingerprint(article.content, article.title)
 
             # Stage 2: LSH-based candidate retrieval
             lsh_candidates = await self._find_lsh_candidates(article)
@@ -110,9 +104,7 @@ class DeduplicationPipeline:
         except Exception as e:
             # Log error and return non-duplicate result
             print(f"Error processing article {article.id}: {e}")
-            return DuplicateResult(
-                article_id=article.id, is_duplicate=False, confidence=0.0, detection_method="error"
-            )
+            return DuplicateResult(article_id=article.id, is_duplicate=False, confidence=0.0, detection_method="error")
 
     async def process_batch(self, articles: List[NormalizedArticle]) -> List[DuplicateResult]:
         """Process a batch of articles.
@@ -137,9 +129,7 @@ class DeduplicationPipeline:
 
         # Update batch metrics
         await self._update_metrics("articles_processed", len(articles))
-        await self._update_metrics(
-            "duplicates_found", sum(1 for r in valid_results if r.is_duplicate)
-        )
+        await self._update_metrics("duplicates_found", sum(1 for r in valid_results if r.is_duplicate))
 
         return valid_results
 
@@ -214,9 +204,7 @@ class DeduplicationPipeline:
                 continue
 
             # Compute detailed similarity
-            detailed_sim = await self.similarity_calc.compute_detailed_similarity(
-                article, candidate
-            )
+            detailed_sim = await self.similarity_calc.compute_detailed_similarity(article, candidate)
 
             # Check if it's a duplicate
             is_duplicate = self.threshold_manager.is_duplicate(
@@ -318,7 +306,7 @@ class DeduplicationPipeline:
         pattern = "fingerprint:*"
         keys = await self.redis.keys(pattern)
         if keys:
-            await self.redis.delete(*keys)
+    await self.redis.delete(*keys)
 
         # Clear metrics
         await self.redis.delete("metrics")
@@ -376,9 +364,7 @@ class DeduplicationService:
         candidates = await self.pipeline._find_lsh_candidates(article)
 
         # Find similar articles
-        similar_articles = await self.pipeline.similarity_calc.find_similar_articles(
-            article, candidates, threshold
-        )
+        similar_articles = await self.pipeline.similarity_calc.find_similar_articles(article, candidates, threshold)
 
         return similar_articles
 

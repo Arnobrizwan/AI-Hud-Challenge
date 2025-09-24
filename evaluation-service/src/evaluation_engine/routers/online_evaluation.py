@@ -3,7 +3,7 @@ Online Evaluation Router - A/B testing and online evaluation endpoints
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 

@@ -25,7 +25,7 @@ def mock_redis():
 
 
 @pytest.fixture
-async def fatigue_detector(mock_redis):
+async def fatigue_detector(mock_redis) -> Dict[str, Any]:
     """Fatigue detector instance for testing."""
     detector = FatigueDetector(mock_redis)
     await detector.initialize()
@@ -33,11 +33,12 @@ async def fatigue_detector(mock_redis):
 
 
 @pytest.mark.asyncio
-async def test_check_fatigue_no_fatigue(fatigue_detector):
+async def test_check_fatigue_no_fatigue(fatigue_detector) -> Dict[str, Any]:
     """Test fatigue check when user is not fatigued."""
 
     # Mock Redis to return low counts
-    fatigue_detector.redis_client.get = AsyncMock(return_value="2")  # Low count
+    fatigue_detector.redis_client.get = AsyncMock(
+        return_value="2")  # Low count
 
     # Check fatigue
     result = await fatigue_detector.check_fatigue("user123", NotificationType.PERSONALIZED)
@@ -51,11 +52,12 @@ async def test_check_fatigue_no_fatigue(fatigue_detector):
 
 
 @pytest.mark.asyncio
-async def test_check_fatigue_hourly_limit_exceeded(fatigue_detector):
+async def test_check_fatigue_hourly_limit_exceeded(fatigue_detector) -> Dict[str, Any]:
     """Test fatigue check when hourly limit is exceeded."""
 
     # Mock Redis to return high hourly count
-    fatigue_detector.redis_client.get = AsyncMock(side_effect=["5", "2"])  # High hourly, low daily
+    fatigue_detector.redis_client.get = AsyncMock(
+        side_effect=["5", "2"])  # High hourly, low daily
 
     # Check fatigue
     result = await fatigue_detector.check_fatigue("user123", NotificationType.PERSONALIZED)
@@ -68,11 +70,12 @@ async def test_check_fatigue_hourly_limit_exceeded(fatigue_detector):
 
 
 @pytest.mark.asyncio
-async def test_check_fatigue_daily_limit_exceeded(fatigue_detector):
+async def test_check_fatigue_daily_limit_exceeded(fatigue_detector) -> Dict[str, Any]:
     """Test fatigue check when daily limit is exceeded."""
 
     # Mock Redis to return high daily count
-    fatigue_detector.redis_client.get = AsyncMock(side_effect=["2", "15"])  # Low hourly, high daily
+    fatigue_detector.redis_client.get = AsyncMock(
+        side_effect=["2", "15"])  # Low hourly, high daily
 
     # Check fatigue
     result = await fatigue_detector.check_fatigue("user123", NotificationType.PERSONALIZED)
@@ -85,7 +88,7 @@ async def test_check_fatigue_daily_limit_exceeded(fatigue_detector):
 
 
 @pytest.mark.asyncio
-async def test_record_notification_sent(fatigue_detector):
+async def test_record_notification_sent(fatigue_detector) -> Dict[str, Any]:
     """Test recording notification sent."""
 
     # Mock Redis operations
@@ -101,11 +104,12 @@ async def test_record_notification_sent(fatigue_detector):
 
 
 @pytest.mark.asyncio
-async def test_get_user_fatigue_analytics(fatigue_detector):
+async def test_get_user_fatigue_analytics(fatigue_detector) -> Dict[str, Any]:
     """Test getting user fatigue analytics."""
 
     # Mock Redis to return various counts
-    fatigue_detector.redis_client.get = AsyncMock(return_value="0.5")  # Fatigue score
+    fatigue_detector.redis_client.get = AsyncMock(
+        return_value="0.5")  # Fatigue score
     fatigue_detector.redis_client.keys = AsyncMock(return_value=[])  # No keys
 
     # Get analytics
@@ -120,7 +124,7 @@ async def test_get_user_fatigue_analytics(fatigue_detector):
 
 
 @pytest.mark.asyncio
-async def test_fatigue_score_calculation(fatigue_detector):
+async def test_fatigue_score_calculation(fatigue_detector) -> Dict[str, Any]:
     """Test fatigue score calculation."""
 
     # Test different scenarios
@@ -146,7 +150,7 @@ async def test_fatigue_score_calculation(fatigue_detector):
 
 
 @pytest.mark.asyncio
-async def test_breaking_news_bypass_fatigue(fatigue_detector):
+async def test_breaking_news_bypass_fatigue(fatigue_detector) -> Dict[str, Any]:
     """Test that breaking news can bypass fatigue."""
 
     # Mock Redis to return high counts (fatigued state)
@@ -160,7 +164,7 @@ async def test_breaking_news_bypass_fatigue(fatigue_detector):
 
 
 @pytest.mark.asyncio
-async def test_different_notification_types_fatigue_limits(fatigue_detector):
+async def test_different_notification_types_fatigue_limits(fatigue_detector) -> Dict[str, Any]:
     """Test different fatigue limits for different notification types."""
 
     # Test breaking news (lower limits)
@@ -181,11 +185,12 @@ async def test_different_notification_types_fatigue_limits(fatigue_detector):
 
 
 @pytest.mark.asyncio
-async def test_fatigue_recovery_time_calculation(fatigue_detector):
+async def test_fatigue_recovery_time_calculation(fatigue_detector) -> Dict[str, Any]:
     """Test fatigue recovery time calculation."""
 
     # Mock Redis to return high counts
-    fatigue_detector.redis_client.get = AsyncMock(side_effect=["10", "5"])  # High hourly, low daily
+    fatigue_detector.redis_client.get = AsyncMock(
+        side_effect=["10", "5"])  # High hourly, low daily
 
     # Check fatigue
     result = await fatigue_detector.check_fatigue("user123", NotificationType.PERSONALIZED)
@@ -196,12 +201,14 @@ async def test_fatigue_recovery_time_calculation(fatigue_detector):
 
     # Next eligible time should be approximately 1 hour from now
     expected_time = datetime.utcnow() + timedelta(hours=1)
-    time_diff = abs((result.next_eligible_time - expected_time).total_seconds())
+    time_diff = abs(
+        (result.next_eligible_time -
+         expected_time).total_seconds())
     assert time_diff < 60  # Within 1 minute
 
 
 @pytest.mark.asyncio
-async def test_fatigue_detector_initialization(fatigue_detector):
+async def test_fatigue_detector_initialization(fatigue_detector) -> Dict[str, Any]:
     """Test fatigue detector initialization."""
 
     # Assertions

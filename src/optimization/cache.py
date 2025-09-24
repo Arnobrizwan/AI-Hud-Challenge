@@ -16,7 +16,10 @@ logger = structlog.get_logger(__name__)
 class CacheManager:
     """High-performance Redis cache manager with optimization strategies."""
 
-    def __init__(self, redis_url: str = "redis://localhost:6379", max_connections: int = 100):
+    def __init__(
+            self,
+            redis_url: str = "redis://localhost:6379",
+            max_connections: int = 100):
         self.redis_url = redis_url
         self.max_connections = max_connections
         self.redis_pool = None
@@ -34,7 +37,7 @@ class CacheManager:
         # Initialize Redis connection
         asyncio.create_task(self._initialize_redis())
 
-    async def _initialize_redis(self):
+    async def _initialize_redis(self) -> Dict[str, Any]:
         """Initialize Redis connection pool."""
         try:
             self.redis_pool = redis.ConnectionPool.from_url(
@@ -80,8 +83,11 @@ class CacheManager:
             return None
 
     async def set(
-        self, key: str, value: Any, ttl: Optional[int] = None, serialize: bool = True
-    ) -> bool:
+            self,
+            key: str,
+            value: Any,
+            ttl: Optional[int] = None,
+            serialize: bool = True) -> bool:
         """Set value in cache."""
         if not self.redis:
             return False
@@ -90,7 +96,7 @@ class CacheManager:
             # Serialize value if needed
             if serialize:
                 serialized_value = await self._serialize(value)
-            else:
+        else:
                 serialized_value = value
 
             # Set with TTL
@@ -160,7 +166,8 @@ class CacheManager:
             logger.error("Cache get_many failed", error=str(e))
             return {}
 
-    async def set_many(self, mapping: Dict[str, Any], ttl: Optional[int] = None) -> bool:
+    async def set_many(
+            self, mapping: Dict[str, Any], ttl: Optional[int] = None) -> bool:
         """Set multiple values in cache."""
         if not self.redis or not mapping:
             return False
@@ -205,7 +212,11 @@ class CacheManager:
             logger.error("Cache increment failed", error=str(e), key=key)
             return None
 
-    async def get_or_set(self, key: str, factory_func, ttl: Optional[int] = None) -> Any:
+    async def get_or_set(
+            self,
+            key: str,
+            factory_func,
+            ttl: Optional[int] = None) -> Any:
         """Get value from cache or set using factory function."""
         # Try to get from cache
         value = await self.get(key)
@@ -216,7 +227,7 @@ class CacheManager:
         try:
             if asyncio.iscoroutinefunction(factory_func):
                 value = await factory_func()
-            else:
+        else:
                 value = factory_func()
 
             # Set in cache
@@ -232,13 +243,20 @@ class CacheManager:
         """Serialize value for storage."""
         try:
             # Try JSON first for simple types
-            if isinstance(value, (dict, list, str, int, float, bool)) or value is None:
+            if isinstance(
+                value,
+                (dict,
+                 list,
+                 str,
+                 int,
+                 float,
+                 bool)) or value is None:
                 json_str = json.dumps(value, default=str)
                 if len(json_str) > self.compression_threshold:
                     # Use pickle for large objects
                     return pickle.dumps(value)
                 return json_str.encode("utf-8")
-            else:
+        else:
                 # Use pickle for complex objects
                 return pickle.dumps(value)
 
@@ -279,16 +297,16 @@ class CacheManager:
             "redis_connected": self.redis is not None,
         }
 
-    async def clear_stats(self):
+    async def clear_stats(self) -> Dict[str, Any]:
         """Clear cache statistics."""
         self.hit_count = 0
         self.miss_count = 0
         self.total_requests = 0
 
-    async def close(self):
+    async def close(self) -> Dict[str, Any]:
         """Close Redis connection."""
         if self.redis:
-            await self.redis.close()
+    await self.redis.close()
             logger.info("Redis connection closed")
 
 
@@ -315,13 +333,18 @@ class FeatureCache:
         cache_key = f"{self.feature_prefix}:{feature_type}:{key}"
         return await self.cache_manager.get(cache_key)
 
-    async def set_feature(self, feature_type: str, key: str, value: Any) -> bool:
+    async def set_feature(
+            self,
+            feature_type: str,
+            key: str,
+            value: Any) -> bool:
         """Set feature in cache."""
         cache_key = f"{self.feature_prefix}:{feature_type}:{key}"
         ttl = self.feature_ttls.get(feature_type, 3600)
         return await self.cache_manager.set(cache_key, value, ttl)
 
-    async def get_precomputed_ranking(self, request_hash: str) -> Optional[Any]:
+    async def get_precomputed_ranking(
+            self, request_hash: str) -> Optional[Any]:
         """Get precomputed ranking results."""
         cache_key = f"{self.precomputed_prefix}:ranking:{request_hash}"
         return await self.cache_manager.get(cache_key)
@@ -333,17 +356,17 @@ class FeatureCache:
         cache_key = f"{self.precomputed_prefix}:ranking:{request_hash}"
         return await self.cache_manager.set(cache_key, results, ttl)
 
-    async def invalidate_user_features(self, user_id: str):
+    async def invalidate_user_features(self, user_id: str) -> Dict[str, Any]:
         """Invalidate all features for a user."""
         pattern = f"{self.feature_prefix}:*:{user_id}*"
         await self._invalidate_pattern(pattern)
 
-    async def invalidate_article_features(self, article_id: str):
+    async def invalidate_article_features(self, article_id: str) -> Dict[str, Any]:
         """Invalidate all features for an article."""
         pattern = f"{self.feature_prefix}:*:{article_id}*"
         await self._invalidate_pattern(pattern)
 
-    async def _invalidate_pattern(self, pattern: str):
+    async def _invalidate_pattern(self, pattern: str) -> Dict[str, Any]:
         """Invalidate all keys matching pattern."""
         if not self.cache_manager.redis:
             return
@@ -351,9 +374,12 @@ class FeatureCache:
         try:
             keys = await self.cache_manager.redis.keys(pattern)
             if keys:
-                await self.cache_manager.redis.delete(*keys)
+    await self.cache_manager.redis.delete(*keys)
         except Exception as e:
-            logger.error("Pattern invalidation failed", error=str(e), pattern=pattern)
+            logger.error(
+                "Pattern invalidation failed",
+                error=str(e),
+                pattern=pattern)
 
 
 class RankingCache:
@@ -369,24 +395,34 @@ class RankingCache:
         cache_key = f"{self.ranking_prefix}:result:{request_hash}"
         return await self.cache_manager.get(cache_key)
 
-    async def set_ranking_result(self, request_hash: str, result: Any, ttl: int = 300) -> bool:
+    async def set_ranking_result(
+            self,
+            request_hash: str,
+            result: Any,
+            ttl: int = 300) -> bool:
         """Cache ranking result."""
         cache_key = f"{self.ranking_prefix}:result:{request_hash}"
         return await self.cache_manager.set(cache_key, result, ttl)
 
-    async def get_model_prediction(self, model_name: str, features_hash: str) -> Optional[Any]:
+    async def get_model_prediction(
+            self,
+            model_name: str,
+            features_hash: str) -> Optional[Any]:
         """Get cached model prediction."""
         cache_key = f"{self.model_prefix}:{model_name}:{features_hash}"
         return await self.cache_manager.get(cache_key)
 
     async def set_model_prediction(
-        self, model_name: str, features_hash: str, prediction: Any, ttl: int = 1800
-    ) -> bool:
+            self,
+            model_name: str,
+            features_hash: str,
+            prediction: Any,
+            ttl: int = 1800) -> bool:
         """Cache model prediction."""
         cache_key = f"{self.model_prefix}:{model_name}:{features_hash}"
         return await self.cache_manager.set(cache_key, prediction, ttl)
 
-    async def warm_up_cache(self, common_queries: List[Dict[str, Any]]):
+    async def warm_up_cache(self, common_queries: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Warm up cache with common queries."""
         for query in common_queries:
             # This would precompute and cache common ranking results
@@ -405,17 +441,18 @@ class CacheOptimizer:
             "ttl_optimization": True,
         }
 
-    async def optimize_ttl(self, key_pattern: str, access_frequency: Dict[str, int]):
-        """Optimize TTL based on access frequency."""
+    async def optimize_ttl(self, key_pattern: str,
+                           access_frequency: Dict[str, int]):
+         -> Dict[str, Any]:"""Optimize TTL based on access frequency."""
         # Implement TTL optimization based on access patterns
         pass
 
-    async def precompute_features(self, article_ids: List[str]):
+    async def precompute_features(self, article_ids: List[str]) -> Dict[str, Any]:
         """Precompute features for articles."""
         # Implement feature precomputation
         pass
 
-    async def compress_large_values(self, threshold: int = 1024):
+    async def compress_large_values(self, threshold: int = 1024) -> Dict[str, Any]:
         """Compress large values in cache."""
         # Implement compression for large values
         pass
@@ -427,8 +464,10 @@ class CacheOptimizer:
         return {
             "hit_rate": stats["hit_rate"],
             "total_requests": stats["total_requests"],
-            "memory_usage": await self._get_memory_usage(),
-            "key_count": await self._get_key_count(),
+            "memory_usage":
+    await self._get_memory_usage(),
+            "key_count":
+    await self._get_key_count(),
             "efficiency_score": self._calculate_efficiency_score(stats),
         }
 
