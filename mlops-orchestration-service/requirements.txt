@@ -110,7 +110,7 @@ croniter==2.0.1
 schedule==1.2.0
 
 # File handling
-aiofiles==23.2.1
+aiofiles==24.1.0
 pathlib2==2.3.7
 
 # Networking
