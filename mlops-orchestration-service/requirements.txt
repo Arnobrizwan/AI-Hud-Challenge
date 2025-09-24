@@ -74,7 +74,7 @@ great-expectations==0.17.19
 pandera==0.17.2
 
 # Feature store
-feast==0.34.0
+feast==0.53.0
 
 # Model serving
 bentoml==1.1.7
