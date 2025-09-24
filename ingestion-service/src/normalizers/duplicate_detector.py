@@ -29,8 +29,7 @@ class DuplicateDetector:
 
         # Filter articles within the check period
         cutoff_date = datetime.utcnow() - timedelta(days=self.check_period_days)
-        recent_articles = [
-            a for a in existing_articles if a.published_at and a.published_at >= cutoff_date]
+        recent_articles = [a for a in existing_articles if a.published_at and a.published_at >= cutoff_date]
 
         # Check for duplicates
         for existing_article in recent_articles:
@@ -48,9 +47,7 @@ class DuplicateDetector:
 
         return duplicates
 
-    async def _calculate_similarity(
-        self, article1: NormalizedArticle, article2: NormalizedArticle
-    ) -> float:
+    async def _calculate_similarity(self, article1: NormalizedArticle, article2: NormalizedArticle) -> float:
         """Calculate similarity between two articles."""
         # Check content hash first (exact match)
         if article1.content_hash == article2.content_hash:
@@ -60,13 +57,11 @@ class DuplicateDetector:
         similarities = []
 
         # Title similarity (40% weight)
-        title_similarity = self._text_similarity(
-            article1.title, article2.title)
+        title_similarity = self._text_similarity(article1.title, article2.title)
         similarities.append((title_similarity, 0.4))
 
         # Content similarity (40% weight)
-        content_similarity = self._text_similarity(
-            article1.content or "", article2.content or "")
+        content_similarity = self._text_similarity(article1.content or "", article2.content or "")
         similarities.append((content_similarity, 0.4))
 
         # URL similarity (20% weight)
@@ -100,8 +95,7 @@ class DuplicateDetector:
         ngram_similarity = self._ngram_similarity(text1, text2)
 
         # Combine similarities
-        combined_similarity = word_similarity * 0.5 + \
-            char_similarity * 0.3 + ngram_similarity * 0.2
+        combined_similarity = word_similarity * 0.5 + char_similarity * 0.3 + ngram_similarity * 0.2
 
         return combined_similarity
 
@@ -158,7 +152,7 @@ class DuplicateDetector:
 
         ngrams = []
         for i in range(len(text) - n + 1):
-            ngrams.append(text[i: i + n])
+            ngrams.append(text[i : i + n])
 
         return ngrams
 
@@ -198,8 +192,7 @@ class DuplicateDetector:
             return True
 
         # Check if one is a subdirectory of the other
-        if clean_url1.startswith(
-                clean_url2) or clean_url2.startswith(clean_url1):
+        if clean_url1.startswith(clean_url2) or clean_url2.startswith(clean_url1):
             return True
 
         return False
@@ -222,9 +215,7 @@ class DuplicateDetector:
 
         return text.strip()
 
-    async def find_exact_duplicates(
-        self, articles: List[NormalizedArticle]
-    ) -> List[List[NormalizedArticle]]:
+    async def find_exact_duplicates(self, articles: List[NormalizedArticle]) -> List[List[NormalizedArticle]]:
         """Find exact duplicates based on content hash."""
         hash_groups = {}
 
@@ -235,8 +226,7 @@ class DuplicateDetector:
                 hash_groups[article.content_hash] = [article]
 
         # Return groups with more than one article
-        duplicate_groups = [
-            group for group in hash_groups.values() if len(group) > 1]
+        duplicate_groups = [group for group in hash_groups.values() if len(group) > 1]
 
         return duplicate_groups
 
@@ -257,7 +247,7 @@ class DuplicateDetector:
             similar_group = [article1]
             processed.add(article1.id)
 
-            for j, article2 in enumerate(articles[i + 1:], i + 1):
+            for j, article2 in enumerate(articles[i + 1 :], i + 1):
                 if article2.id in processed:
                     continue
 
@@ -272,9 +262,7 @@ class DuplicateDetector:
 
         return similar_groups
 
-    async def deduplicate_articles(
-        self, articles: List[NormalizedArticle]
-    ) -> List[NormalizedArticle]:
+    async def deduplicate_articles(self, articles: List[NormalizedArticle]) -> List[NormalizedArticle]:
         """Remove duplicates from a list of articles, keeping the best one."""
         if not articles:
             return []
@@ -299,9 +287,7 @@ class DuplicateDetector:
 
         return kept_articles
 
-    def _select_best_article(
-            self,
-            articles: List[NormalizedArticle]) -> NormalizedArticle:
+    def _select_best_article(self, articles: List[NormalizedArticle]) -> NormalizedArticle:
         """Select the best article from a group of similar articles."""
         if len(articles) == 1:
             return articles[0]
@@ -324,15 +310,12 @@ class DuplicateDetector:
 
         # Word count score (0-1)
         if article.word_count > 0:
-            word_score = min(
-                article.word_count / 1000,
-                1.0)  # Normalize to 0-1
+            word_score = min(article.word_count / 1000, 1.0)  # Normalize to 0-1
             score += word_score * 0.3
 
         # Title length score (0-1)
         if article.title:
-            title_score = min(len(article.title) / 100,
-                              1.0)  # Normalize to 0-1
+            title_score = min(len(article.title) / 100, 1.0)  # Normalize to 0-1
             score += title_score * 0.2
 
         # Recency score (0-1)
@@ -353,25 +336,21 @@ class DuplicateDetector:
 
         return score
 
-    async def get_duplicate_statistics(
-            self, articles: List[NormalizedArticle]) -> Dict[str, Any]:
+    async def get_duplicate_statistics(self, articles: List[NormalizedArticle]) -> Dict[str, Any]:
     """Get duplicate detection statistics."""
         total_articles = len(articles)
 
         # Find exact duplicates
         exact_duplicate_groups = await self.find_exact_duplicates(articles)
-        exact_duplicates = sum(len(group) -
-                               1 for group in exact_duplicate_groups)
+        exact_duplicates = sum(len(group) - 1 for group in exact_duplicate_groups)
 
         # Find similar articles
         similar_groups = await self.find_similar_articles(articles)
         similar_duplicates = sum(len(group) - 1 for group in similar_groups)
 
         # Calculate rates
-        exact_duplicate_rate = exact_duplicates / \
-            total_articles if total_articles > 0 else 0
-        similar_duplicate_rate = similar_duplicates / \
-            total_articles if total_articles > 0 else 0
+        exact_duplicate_rate = exact_duplicates / total_articles if total_articles > 0 else 0
+        similar_duplicate_rate = similar_duplicates / total_articles if total_articles > 0 else 0
 
         return {
             "total_articles": total_articles,

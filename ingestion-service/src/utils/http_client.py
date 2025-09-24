@@ -50,22 +50,17 @@ class RateLimiter:
             now = time.time()
 
             # Remove requests older than 1 minute
-            self.requests = [
-                req_time for req_time in self.requests if now -
-                req_time < 60]
+            self.requests = [req_time for req_time in self.requests if now - req_time < 60]
 
             # If we're at the rate limit, wait
             if len(self.requests) >= self.rate_limit:
                 sleep_time = 60 - (now - self.requests[0])
                 if sleep_time > 0:
-                    logger.debug(
-                        f"Rate limit reached, sleeping for {sleep_time:.2f} seconds")
+                    logger.debug(f"Rate limit reached, sleeping for {sleep_time:.2f} seconds")
                     await asyncio.sleep(sleep_time)
                     # Clean up old requests after sleep
                     now = time.time()
-                    self.requests = [
-                        req_time for req_time in self.requests if now -
-                        req_time < 60]
+                    self.requests = [req_time for req_time in self.requests if now - req_time < 60]
 
             # Record this request
             self.requests.append(now)
@@ -108,8 +103,8 @@ class HTTPClient:
 
         # Create session
         self.session = aiohttp.ClientSession(
-            connector=connector, timeout=aiohttp.ClientTimeout(
-                total=timeout), headers=headers)
+            connector=connector, timeout=aiohttp.ClientTimeout(total=timeout), headers=headers
+        )
 
         # Domain-specific rate limiters
         self.domain_limiters: Dict[str, RateLimiter] = {}
@@ -164,7 +159,7 @@ class HTTPClient:
         timeout_val = timeout or self.timeout
 
         try:
-    async with self.session.get(
+            async with self.session.get(
                 url,
                 headers=request_headers,
                 params=params,
@@ -228,7 +223,7 @@ class HTTPClient:
         timeout_val = timeout or self.timeout
 
         try:
-    async with self.session.post(
+            async with self.session.post(
                 url,
                 data=data,
                 json=json,
@@ -269,11 +264,9 @@ class HTTPClient:
             logger.warning(f"Request error for {url}: {e}")
             raise
 
-    async def head(self,
-                   url: str,
-                   headers: Optional[Dict[str,
-                                          str]] = None,
-                   timeout: Optional[int] = None) -> HTTPResponse:
+    async def head(
+        self, url: str, headers: Optional[Dict[str, str]] = None, timeout: Optional[int] = None
+    ) -> HTTPResponse:
         """Make HEAD request to check resource without downloading."""
         # Rate limiting
         domain_limiter = self._get_domain_limiter(url)
@@ -289,7 +282,7 @@ class HTTPClient:
         timeout_val = timeout or self.timeout
 
         try:
-    async with self.session.head(
+            async with self.session.head(
                 url, headers=request_headers, timeout=aiohttp.ClientTimeout(total=timeout_val)
             ) as response:
                 elapsed = time.time() - start_time
@@ -345,8 +338,7 @@ class RobotsTxtChecker:
         # Check cache
         if base_url in self.robots_cache:
             if time.time() < self.cache_expiry.get(base_url, 0):
-                return self._check_robots_rules(
-                    self.robots_cache[base_url], url, user_agent or settings.USER_AGENT)
+                return self._check_robots_rules(self.robots_cache[base_url], url, user_agent or settings.USER_AGENT)
 
         try:
             # Fetch robots.txt
@@ -360,8 +352,7 @@ class RobotsTxtChecker:
                 self.robots_cache[base_url] = rules
                 self.cache_expiry[base_url] = time.time() + self.cache_duration
 
-                return self._check_robots_rules(
-                    rules, url, user_agent or settings.USER_AGENT)
+                return self._check_robots_rules(rules, url, user_agent or settings.USER_AGENT)
             else:
                 # If robots.txt doesn't exist or is inaccessible, allow
                 return True
@@ -396,8 +387,7 @@ class RobotsTxtChecker:
 
         return rules
 
-    def _check_robots_rules(
-            self, rules: Dict[str, Any], url: str, user_agent: str) -> bool:
+    def _check_robots_rules(self, rules: Dict[str, Any], url: str, user_agent: str) -> bool:
         """Check if URL is allowed by robots.txt rules."""
         from urllib.parse import urlparse
 
@@ -426,13 +416,30 @@ class RobotsTxtChecker:
         return True
 
 
-# Global HTTP client instance
-http_client = HTTPClient(
-    timeout=settings.HTTP_TIMEOUT,
-    max_connections=settings.HTTP_MAX_CONNECTIONS,
-    rate_limit=settings.DEFAULT_RATE_LIMIT,
-    user_agent=settings.USER_AGENT,
-)
+# Global HTTP client instance - created lazily to avoid event loop issues
+http_client = None
 
-# Global robots.txt checker
-robots_checker = RobotsTxtChecker(http_client)
+
+def get_http_client() -> HTTPClient:
+    """Get or create the global HTTP client instance."""
+    global http_client
+    if http_client is None:
+        http_client = HTTPClient(
+            timeout=settings.HTTP_TIMEOUT,
+            max_connections=settings.HTTP_MAX_CONNECTIONS,
+            rate_limit=settings.DEFAULT_RATE_LIMIT,
+            user_agent=settings.USER_AGENT,
+        )
+    return http_client
+
+
+# Global robots.txt checker - created lazily
+robots_checker = None
+
+
+def get_robots_checker() -> RobotsTxtChecker:
+    """Get or create the global robots.txt checker instance."""
+    global robots_checker
+    if robots_checker is None:
+        robots_checker = RobotsTxtChecker(get_http_client())
+    return robots_checker

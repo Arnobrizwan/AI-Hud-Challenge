@@ -34,7 +34,7 @@ class TestContentEnrichmentPipeline:
     @pytest.mark.asyncio
     async def test_enrich_content_full_pipeline(
             self, pipeline, sample_content) -> Dict[str, Any]:
-        """Test full content enrichment pipeline."""
+    """Test full content enrichment pipeline."""
         enriched = await pipeline.enrich_content(
             content=sample_content,
             processing_mode=ProcessingMode.REALTIME,
@@ -89,7 +89,7 @@ class TestContentEnrichmentPipeline:
     @pytest.mark.asyncio
     async def test_enrich_content_selective_components(
             self, pipeline, sample_content) -> Dict[str, Any]:
-        """Test enrichment with selective components."""
+    """Test enrichment with selective components."""
         enriched = await pipeline.enrich_content(
             content=sample_content,
             include_entities=True,

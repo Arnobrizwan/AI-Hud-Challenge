@@ -48,7 +48,7 @@ class PubSubService:
             # Choose topic
             if topic == "normalization":
                 topic_path = self.normalization_topic_path
-        else:
+            else:
                 topic_path = self.ingestion_topic_path
 
             # Prepare message data
@@ -116,7 +116,7 @@ class PubSubService:
             # Choose topic
             if topic == "normalization":
                 topic_path = self.normalization_topic_path
-        else:
+            else:
                 topic_path = self.ingestion_topic_path
 
             # Prepare batch data
@@ -219,7 +219,7 @@ class PubSubService:
             if "already exists" in str(e):
                 logger.info(f"Topic {topic_name} already exists")
                 return self.publisher.topic_path(self.project_id, topic_name)
-            else:
+                else:
                 logger.error(f"Error creating topic {topic_name}: {e}")
                 raise
 
@@ -249,7 +249,7 @@ class PubSubService:
                 logger.info(f"Subscription {subscription_name} already exists")
                 return self.subscriber.subscription_path(
                     self.project_id, subscription_name)
-            else:
+                else:
                 logger.error(
                     f"Error creating subscription {subscription_name}: {e}")
                 raise

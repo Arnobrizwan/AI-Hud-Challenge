@@ -40,7 +40,7 @@ from src.services.ingestion_service import IngestionService
 from src.services.pubsub_service import PubSubService
 from src.utils.content_parser import content_parser
 from src.utils.date_utils import date_utils
-from src.utils.http_client import http_client
+from src.utils.http_client import get_http_client
 from src.utils.url_utils import url_utils
 
 # Configure logging
@@ -67,7 +67,7 @@ async def lifespan(app: FastAPI) -> Dict[str, Any]:
     try:
         # Initialize services
         ingestion_service = IngestionService(
-            http_client=http_client,
+            http_client=get_http_client(),
             content_parser=content_parser,
             url_utils=url_utils,
             date_utils=date_utils,
@@ -100,10 +100,11 @@ async def lifespan(app: FastAPI) -> Dict[str, Any]:
 
     try:
         if ingestion_service:
-    await ingestion_service.shutdown()
+            await ingestion_service.shutdown()
 
+        http_client = get_http_client()
         if http_client:
-    await http_client.close()
+            await http_client.close()
 
         logger.info("Application shutdown complete")
 

@@ -47,9 +47,8 @@ class IngestionService:
 
         # Initialize processors
         self.content_normalizer = ContentNormalizer(
-            content_parser=self.content_parser,
-            url_utils=self.url_utils,
-            date_utils=self.date_utils)
+            content_parser=self.content_parser, url_utils=self.url_utils, date_utils=self.date_utils
+        )
         self.duplicate_detector = DuplicateDetector(self.content_normalizer)
 
         # Adapter registry
@@ -66,9 +65,7 @@ class IngestionService:
         self.source_adapters: Dict[str, BaseAdapter] = {}
         self.processing_metrics: Dict[str, ContentMetrics] = {}
 
-    async def process_source(
-            self,
-            source_config: SourceConfig) -> ProcessingBatch:
+    async def process_source(self, source_config: SourceConfig) -> ProcessingBatch:
         """Process a single content source."""
         batch_id = str(uuid.uuid4())
 
@@ -110,9 +107,7 @@ class IngestionService:
             batch.processed_count = len(
                 [a for a in processed_articles if a.processing_status == ProcessingStatus.COMPLETED]
             )
-            batch.failed_count = len(
-                [a for a in processed_articles if a.processing_status == ProcessingStatus.FAILED]
-            )
+            batch.failed_count = len([a for a in processed_articles if a.processing_status == ProcessingStatus.FAILED])
             batch.duplicate_count = len(
                 [a for a in processed_articles if a.processing_status == ProcessingStatus.DUPLICATE]
             )
@@ -128,9 +123,7 @@ class IngestionService:
             # Update metrics
             await self._update_metrics(source_config.id, batch)
 
-            logger.info(
-                f"Completed processing source {source_config.id}: {batch.processed_count} articles processed"
-            )
+            logger.info(f"Completed processing source {source_config.id}: {batch.processed_count} articles processed")
 
         except Exception as e:
             batch.status = ProcessingStatus.FAILED
@@ -140,9 +133,7 @@ class IngestionService:
 
         return batch
 
-    async def process_sources(
-            self,
-            source_configs: List[SourceConfig]) -> List[ProcessingBatch]:
+    async def process_sources(self, source_configs: List[SourceConfig]) -> List[ProcessingBatch]:
         """Process multiple content sources concurrently."""
         # Filter enabled sources
         enabled_sources = [s for s in source_configs if s.enabled]
@@ -186,9 +177,7 @@ class IngestionService:
         self.source_adapters[source_config.id] = adapter
         return adapter
 
-    async def _process_articles(
-            self,
-            articles: List[NormalizedArticle]) -> List[NormalizedArticle]:
+    async def _process_articles(self, articles: List[NormalizedArticle]) -> List[NormalizedArticle]:
         """Process articles through normalization and duplicate detection."""
         processed_articles = []
 
@@ -199,9 +188,7 @@ class IngestionService:
 
                 # Check for duplicates
                 if normalized_article.processing_status == ProcessingStatus.COMPLETED:
-                    duplicates = await self.duplicate_detector.detect_duplicates(
-                        normalized_article, processed_articles
-                    )
+                    duplicates = await self.duplicate_detector.detect_duplicates(normalized_article, processed_articles)
 
                     if duplicates:
                         normalized_article.processing_status = ProcessingStatus.DUPLICATE
@@ -226,9 +213,7 @@ class IngestionService:
     async def _update_metrics(self, source_id: str, batch: ProcessingBatch) -> Dict[str, Any]:
     """Update processing metrics for source."""
         if source_id not in self.processing_metrics:
-            self.processing_metrics[source_id] = ContentMetrics(
-                source_id=source_id, date=datetime.utcnow().date()
-            )
+            self.processing_metrics[source_id] = ContentMetrics(source_id=source_id, date=datetime.utcnow().date())
 
         metrics = self.processing_metrics[source_id]
 
@@ -240,9 +225,7 @@ class IngestionService:
 
         # Update processing time
         if batch.processing_time_seconds:
-            total_time = metrics.average_processing_time_ms * (
-                metrics.total_articles - batch.total_count
-            )
+            total_time = metrics.average_processing_time_ms * (metrics.total_articles - batch.total_count)
             total_time += batch.processing_time_seconds * 1000
             metrics.average_processing_time_ms = total_time / metrics.total_articles
 
@@ -286,16 +269,14 @@ class IngestionService:
 
         return health_status
 
-    async def get_processing_metrics(
-            self, source_id: str = None) -> Dict[str, Any]:
+    async def get_processing_metrics(self, source_id: str = None) -> Dict[str, Any]:
     """Get processing metrics."""
         if source_id:
             return self.processing_metrics.get(source_id, {})
 
         return self.processing_metrics
 
-    async def get_batch_status(
-            self, batch_id: str) -> Optional[ProcessingBatch]:
+    async def get_batch_status(self, batch_id: str) -> Optional[ProcessingBatch]:
         """Get status of a processing batch."""
         return self.active_batches.get(batch_id)
 
@@ -317,8 +298,7 @@ class IngestionService:
 
         logger.info(f"Cleaned up {len(to_remove)} completed batches")
 
-    async def test_source_connection(
-            self, source_config: SourceConfig) -> bool:
+    async def test_source_connection(self, source_config: SourceConfig) -> bool:
         """Test connection to a source."""
         try:
             adapter = await self._get_adapter(source_config)
@@ -327,8 +307,7 @@ class IngestionService:
             logger.error(f"Error testing source connection: {e}")
             return False
 
-    async def get_source_info(
-            self, source_id: str) -> Optional[Dict[str, Any]]:
+    async def get_source_info(self, source_id: str) -> Optional[Dict[str, Any]]:
         """Get information about a source."""
         if source_id not in self.source_adapters:
             return None
@@ -344,7 +323,7 @@ class IngestionService:
         # Clean up adapters
         for adapter in self.source_adapters.values():
             if hasattr(adapter, "close"):
-    await adapter.close()
+                await adapter.close()
 
         # Clear state
         self.source_adapters.clear()

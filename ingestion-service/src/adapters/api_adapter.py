@@ -44,11 +44,7 @@ class APIAdapter(BaseAdapter):
                     try:
                         article = await self._process_api_item(article_data)
 
-                        if (
-                            article
-                            and self._is_valid_article(article)
-                            and self._apply_content_filters(article)
-                        ):
+                        if article and self._is_valid_article(article) and self._apply_content_filters(article):
                             yield article
 
                     except Exception as e:
@@ -62,8 +58,7 @@ class APIAdapter(BaseAdapter):
                     await self._apply_rate_limiting()
 
         except Exception as e:
-            logger.error(
-                f"Error fetching from API {self.source_config.url}: {e}")
+            logger.error(f"Error fetching from API {self.source_config.url}: {e}")
             raise
 
     async def _fetch_page(self) -> List[Dict[str, Any]]:
@@ -76,13 +71,10 @@ class APIAdapter(BaseAdapter):
             headers = self._prepare_headers()
 
             # Make request
-            response = await self.http_client.get(
-                url, headers=headers, timeout=self.source_config.timeout
-            )
+            response = await self.http_client.get(url, headers=headers, timeout=self.source_config.timeout)
 
             if response.status_code != 200:
-                raise Exception(
-                    f"API request failed with status {response.status_code}")
+                raise Exception(f"API request failed with status {response.status_code}")
 
             # Parse response
             data = json.loads(response.text)
@@ -106,14 +98,12 @@ class APIAdapter(BaseAdapter):
             # Replace placeholders with actual values
             for key, value in pagination_params.items():
                 if isinstance(value, str) and "{page}" in value:
-                    pagination_params[key] = value.format(
-                        page=self.current_page)
+                    pagination_params[key] = value.format(page=self.current_page)
                 elif key == "page":
                     pagination_params[key] = self.current_page
                 elif key == "offset":
                     page_size = pagination_params.get("limit", 20)
-                    pagination_params[key] = (
-                        self.current_page - 1) * page_size
+                    pagination_params[key] = (self.current_page - 1) * page_size
 
         # Add other parameters
         all_params = {**pagination_params}
@@ -124,8 +114,7 @@ class APIAdapter(BaseAdapter):
 
         # Build URL with parameters
         if all_params:
-            param_string = "&".join(
-                [f"{k}={v}" for k, v in all_params.items()])
+            param_string = "&".join([f"{k}={v}" for k, v in all_params.items()])
             separator = "&" if "?" in base_url else "?"
             return f"{base_url}{separator}{param_string}"
 
@@ -150,8 +139,7 @@ class APIAdapter(BaseAdapter):
             username = auth_config.get("username", "")
             password = auth_config.get("password", "")
             if username and password:
-                credentials = base64.b64encode(
-                    f"{username}:{password}".encode()).decode()
+                credentials = base64.b64encode(f"{username}:{password}".encode()).decode()
                 headers["Authorization"] = f"Basic {credentials}"
 
         # Add custom headers
@@ -164,8 +152,7 @@ class APIAdapter(BaseAdapter):
 
         return headers
 
-    def _extract_articles_from_response(
-            self, data: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _extract_articles_from_response(self, data: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Extract articles from API response."""
         # Get the path to articles in the response
         articles_path = self.api_config.get("articles_path", "data")
@@ -184,37 +171,20 @@ class APIAdapter(BaseAdapter):
 
         return articles
 
-    async def _process_api_item(
-            self, item_data: Dict[str, Any]) -> Optional[NormalizedArticle]:
+    async def _process_api_item(self, item_data: Dict[str, Any]) -> Optional[NormalizedArticle]:
         """Process API item into normalized article."""
         try:
             # Extract fields using field mapping
             field_mapping = self.api_config.get("field_mapping", {})
 
-            title = self._extract_field(
-                item_data, field_mapping.get(
-                    "title", "title"))
-            url = self._extract_field(
-                item_data, field_mapping.get(
-                    "url", "url"))
-            content = self._extract_field(
-                item_data, field_mapping.get(
-                    "content", "content"))
-            summary = self._extract_field(
-                item_data, field_mapping.get(
-                    "summary", "summary"))
-            author = self._extract_field(
-                item_data, field_mapping.get(
-                    "author", "author"))
-            published_at = self._extract_field(
-                item_data, field_mapping.get("published_at", "published_at")
-            )
-            image_url = self._extract_field(
-                item_data, field_mapping.get(
-                    "image_url", "image_url"))
-            tags = self._extract_field(
-                item_data, field_mapping.get(
-                    "tags", "tags"))
+            title = self._extract_field(item_data, field_mapping.get("title", "title"))
+            url = self._extract_field(item_data, field_mapping.get("url", "url"))
+            content = self._extract_field(item_data, field_mapping.get("content", "content"))
+            summary = self._extract_field(item_data, field_mapping.get("summary", "summary"))
+            author = self._extract_field(item_data, field_mapping.get("author", "author"))
+            published_at = self._extract_field(item_data, field_mapping.get("published_at", "published_at"))
+            image_url = self._extract_field(item_data, field_mapping.get("image_url", "image_url"))
+            tags = self._extract_field(item_data, field_mapping.get("tags", "tags"))
 
             # Parse published date
             if published_at:
@@ -222,9 +192,7 @@ class APIAdapter(BaseAdapter):
                     published_at = self.date_utils.parse_date(published_at)
                 elif isinstance(published_at, (int, float)):
                     # Unix timestamp
-                    published_at = datetime.fromtimestamp(
-                        published_at, tz=self.date_utils.default_timezone
-                    )
+                    published_at = datetime.fromtimestamp(published_at, tz=self.date_utils.default_timezone)
 
             # Ensure tags is a list
             if tags and not isinstance(tags, list):
@@ -246,17 +214,10 @@ class APIAdapter(BaseAdapter):
                 {
                     "api_endpoint": self.source_config.url,
                     "api_page": self.current_page,
-                    "api_item_id": self._extract_field(
-                        item_data,
-                        field_mapping.get(
-                            "id",
-                            "id")),
-                    "api_response_keys": (
-                        list(
-                            item_data.keys()) if isinstance(
-                            item_data,
-                            dict) else []),
-                })
+                    "api_item_id": self._extract_field(item_data, field_mapping.get("id", "id")),
+                    "api_response_keys": (list(item_data.keys()) if isinstance(item_data, dict) else []),
+                }
+            )
 
             # Create normalized article
             article = self._normalize_article(
@@ -295,9 +256,9 @@ class APIAdapter(BaseAdapter):
                     index = int(key)
                     if 0 <= index < len(value):
                         value = value[index]
-        else:
+                    else:
                         return None
-        else:
+                else:
                     return None
 
             return value

@@ -72,11 +72,11 @@ class WebScrapingAdapter(BaseAdapter):
     """Cleanup browser resources."""
         try:
             if self.page:
-    await self.page.close()
+                await self.page.close()
             if self.browser:
-    await self.browser.close()
+                await self.browser.close()
             if self.playwright:
-    await self.playwright.stop()
+                await self.playwright.stop()
         except Exception as e:
             logger.warning(f"Error cleaning up browser: {e}")
 
@@ -85,7 +85,7 @@ class WebScrapingAdapter(BaseAdapter):
         try:
             # Initialize browser if not already done
             if not self.browser:
-    await self._initialize_browser()
+                await self._initialize_browser()
 
             # Get URLs to scrape
             urls = await self._get_urls_to_scrape()
@@ -178,7 +178,7 @@ class WebScrapingAdapter(BaseAdapter):
     async def _extract_urls_from_listing(self, listing_url: str) -> List[str]:
         """Extract URLs from listing page."""
         try:
-    await self.page.goto(listing_url, wait_until="networkidle")
+            await self.page.goto(listing_url, wait_until="networkidle")
 
             # Get URLs using CSS selectors
             selectors = self.scraping_config.get("url_selectors", ["a[href]"])
@@ -205,9 +205,9 @@ class WebScrapingAdapter(BaseAdapter):
     async def _check_robots_compliance(self, url: str) -> bool:
         """Check if URL can be scraped according to robots.txt."""
         try:
-            from src.utils.http_client import robots_checker
+            from src.utils.http_client import get_robots_checker
 
-            return await robots_checker.can_fetch(url, self.http_client.user_agent)
+            return await get_robots_checker().can_fetch(url, self.http_client.user_agent)
         except Exception as e:
             logger.warning(f"Error checking robots.txt for {url}: {e}")
             return True  # Allow if we can't check
@@ -248,7 +248,7 @@ class WebScrapingAdapter(BaseAdapter):
 
             for selector in content_selectors:
                 try:
-    await self.page.wait_for_selector(selector, timeout=5000)
+                    await self.page.wait_for_selector(selector, timeout=5000)
                     break
                 except BaseException:
                     continue
@@ -456,7 +456,7 @@ class WebScrapingAdapter(BaseAdapter):
         """Test connection by trying to load a simple page."""
         try:
             if not self.browser:
-    await self._initialize_browser()
+                await self._initialize_browser()
 
             await self.page.goto("https://httpbin.org/get", timeout=10000)
             return True

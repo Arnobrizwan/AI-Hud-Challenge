@@ -98,9 +98,9 @@ class DateUtils:
                     tz = self._get_timezone(timezone)
                     if parsed_date.tzinfo is None:
                         parsed_date = tz.localize(parsed_date)
-        else:
+                    else:
                         parsed_date = parsed_date.astimezone(tz)
-        else:
+                else:
                     # If no timezone info, assume UTC
                     if parsed_date.tzinfo is None:
                         parsed_date = self.default_timezone.localize(parsed_date)
@@ -116,7 +116,7 @@ class DateUtils:
                 if timezone:
                     tz = self._get_timezone(timezone)
                     parsed_date = tz.localize(parsed_date)
-            else:
+                else:
                     parsed_date = self.default_timezone.localize(parsed_date)
 
                 return parsed_date.astimezone(pytz.UTC)

@@ -3,6 +3,7 @@ Unit tests for content adapters.
 """
 
 from datetime import datetime
+from typing import Any, Dict
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
