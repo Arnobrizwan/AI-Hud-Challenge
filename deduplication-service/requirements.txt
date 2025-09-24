@@ -24,7 +24,7 @@ xxhash==3.4.1
 
 # Text processing
 nltk==3.8.1
-spacy==3.7.2
+spacy==3.8.7
 textstat==0.7.3
 beautifulsoup4==4.12.2
 
