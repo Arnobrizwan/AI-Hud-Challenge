@@ -33,7 +33,7 @@ pingouin==0.5.3
 lifelines==0.27.8
 
 # Visualization and Monitoring
-matplotlib==3.7.2
+matplotlib==3.10.6
 seaborn==0.12.2
 plotly==5.17.0
 grafana-api==1.0.3
