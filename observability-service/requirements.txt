@@ -15,7 +15,7 @@ opentelemetry-instrumentation-psycopg2==0.42b0
 opentelemetry-instrumentation-redis==0.42b0
 opentelemetry-instrumentation-httpx==0.42b0
 opentelemetry-exporter-jaeger-thrift==1.21.0
-opentelemetry-exporter-zipkin-json==1.21.0
+opentelemetry-exporter-zipkin-json==1.37.0
 opentelemetry-exporter-otlp-proto-grpc==1.21.0
 
 # Logging and structured data
