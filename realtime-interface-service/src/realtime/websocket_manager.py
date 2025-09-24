@@ -48,19 +48,19 @@ class HeartbeatManager:
         self.config = config or HeartbeatConfig()
         self.monitoring_tasks: Dict[str, asyncio.Task] = {}
 
-    async def start_monitoring(self, connection: WebSocketConnection):
+    async def start_monitoring(self, connection: WebSocketConnection) -> Dict[str, Any]:
         """Start heartbeat monitoring for a connection"""
         task = asyncio.create_task(self._monitor_connection(connection))
         self.monitoring_tasks[connection.id] = task
 
-    async def stop_monitoring(self, connection_id: str):
+    async def stop_monitoring(self, connection_id: str) -> Dict[str, Any]:
         """Stop heartbeat monitoring for a connection"""
         if connection_id in self.monitoring_tasks:
             task = self.monitoring_tasks[connection_id]
             task.cancel()
             del self.monitoring_tasks[connection_id]
 
-    async def _monitor_connection(self, connection: WebSocketConnection):
+    async def _monitor_connection(self, connection: WebSocketConnection) -> Dict[str, Any]:
         """Monitor connection health with heartbeats"""
         missed_heartbeats = 0
 
@@ -88,10 +88,11 @@ class HeartbeatManager:
                     missed_heartbeats = 0
 
             except Exception as e:
-                logger.error(f"Error monitoring connection {connection.id}: {str(e)}")
+                logger.error(
+                    f"Error monitoring connection {connection.id}: {str(e)}")
                 break
 
-    async def _send_heartbeat(self, connection: WebSocketConnection):
+    async def _send_heartbeat(self, connection: WebSocketConnection) -> Dict[str, Any]:
         """Send heartbeat ping to connection"""
         try:
             heartbeat_message = {
@@ -101,7 +102,8 @@ class HeartbeatManager:
             }
             await connection.websocket.send_json(heartbeat_message)
         except Exception as e:
-            logger.error(f"Failed to send heartbeat to {connection.id}: {str(e)}")
+            logger.error(
+                f"Failed to send heartbeat to {connection.id}: {str(e)}")
             connection.is_active = False
 
 
@@ -112,8 +114,9 @@ class MessageQueue:
         self.max_size = max_size
         self.queues: Dict[str, List[Dict[str, Any]]] = {}
 
-    async def enqueue_message(self, connection_id: str, message: Dict[str, Any]):
-        """Enqueue message for a connection"""
+    async def enqueue_message(self, connection_id: str,
+                              message: Dict[str, Any]):
+         -> Dict[str, Any]:"""Enqueue message for a connection"""
         if connection_id not in self.queues:
             self.queues[connection_id] = []
 
@@ -123,7 +126,8 @@ class MessageQueue:
 
         self.queues[connection_id].append(message)
 
-    async def dequeue_messages(self, connection_id: str) -> List[Dict[str, Any]]:
+    async def dequeue_messages(
+            self, connection_id: str) -> List[Dict[str, Any]]:
         """Dequeue all messages for a connection"""
         if connection_id not in self.queues:
             return []
@@ -132,7 +136,7 @@ class MessageQueue:
         self.queues[connection_id].clear()
         return messages
 
-    async def clear_queue(self, connection_id: str):
+    async def clear_queue(self, connection_id: str) -> Dict[str, Any]:
         """Clear message queue for a connection"""
         if connection_id in self.queues:
             self.queues[connection_id].clear()
@@ -144,21 +148,23 @@ class WebSocketManager:
     def __init__(self, redis_client: redis.Redis = None):
         self.active_connections: Dict[str, WebSocketConnection] = {}
         self.connection_groups: Dict[str, Set[str]] = {}
-        self.user_connections: Dict[str, Set[str]] = {}  # user_id -> connection_ids
+        # user_id -> connection_ids
+        self.user_connections: Dict[str, Set[str]] = {}
         self.heartbeat_manager = HeartbeatManager()
         self.message_queue = MessageQueue()
         self.redis_client = redis_client
         self.heartbeat_task: Optional[asyncio.Task] = None
 
-    async def start_heartbeat_monitoring(self):
+    async def start_heartbeat_monitoring(self) -> Dict[str, Any]:
         """Start global heartbeat monitoring task"""
-        self.heartbeat_task = asyncio.create_task(self._global_heartbeat_monitor())
+        self.heartbeat_task = asyncio.create_task(
+            self._global_heartbeat_monitor())
 
-    async def _global_heartbeat_monitor(self):
+    async def _global_heartbeat_monitor(self) -> Dict[str, Any]:
         """Global heartbeat monitoring for all connections"""
         while True:
             try:
-                await asyncio.sleep(30)  # Check every 30 seconds
+    await asyncio.sleep(30)  # Check every 30 seconds
 
                 # Clean up inactive connections
                 inactive_connections = []
@@ -167,14 +173,15 @@ class WebSocketManager:
                         inactive_connections.append(conn_id)
 
                 for conn_id in inactive_connections:
-                    await self.cleanup_connection(self.active_connections[conn_id])
+    await self.cleanup_connection(self.active_connections[conn_id])
 
             except Exception as e:
                 logger.error(f"Error in global heartbeat monitor: {str(e)}")
                 await asyncio.sleep(5)
 
-    async def handle_websocket_connection(self, websocket: WebSocket, user_id: str):
-        """Handle new WebSocket connection"""
+    async def handle_websocket_connection(
+            self, websocket: WebSocket, user_id: str):
+         -> Dict[str, Any]:"""Handle new WebSocket connection"""
         await websocket.accept()
 
         connection = WebSocketConnection(
@@ -210,20 +217,20 @@ class WebSocketManager:
             # Process queued messages
             queued_messages = await self.message_queue.dequeue_messages(connection.id)
             for message in queued_messages:
-                await self.send_message(connection, message)
+    await self.send_message(connection, message)
 
             # Process incoming messages
             async for message in self.receive_messages(connection):
-                await self.handle_websocket_message(connection, message)
+    await self.handle_websocket_message(connection, message)
 
         except WebSocketDisconnect:
             logger.info(f"WebSocket disconnected: {connection.id}")
         except Exception as e:
             logger.error(f"WebSocket error: {str(e)}")
         finally:
-            await self.cleanup_connection(connection)
+    await self.cleanup_connection(connection)
 
-    async def receive_messages(self, connection: WebSocketConnection):
+    async def receive_messages(self, connection: WebSocketConnection) -> Dict[str, Any]:
         """Receive messages from WebSocket connection"""
         while connection.is_active:
             try:
@@ -232,7 +239,8 @@ class WebSocketManager:
             except WebSocketDisconnect:
                 break
             except Exception as e:
-                logger.error(f"Error receiving message from {connection.id}: {str(e)}")
+                logger.error(
+                    f"Error receiving message from {connection.id}: {str(e)}")
                 break
 
     async def handle_websocket_message(
@@ -243,19 +251,19 @@ class WebSocketManager:
 
         try:
             if message_type == "subscribe":
-                await self.handle_subscription(connection, message)
+    await self.handle_subscription(connection, message)
             elif message_type == "unsubscribe":
-                await self.handle_unsubscription(connection, message)
+    await self.handle_unsubscription(connection, message)
             elif message_type == "heartbeat":
-                await self.handle_heartbeat(connection, message)
+    await self.handle_heartbeat(connection, message)
             elif message_type == "collaboration_event":
-                await self.handle_collaboration_event(connection, message)
+    await self.handle_collaboration_event(connection, message)
             elif message_type == "user_action":
-                await self.handle_user_action(connection, message)
+    await self.handle_user_action(connection, message)
             elif message_type == "join_group":
-                await self.handle_join_group(connection, message)
+    await self.handle_join_group(connection, message)
             elif message_type == "leave_group":
-                await self.handle_leave_group(connection, message)
+    await self.handle_leave_group(connection, message)
             else:
                 logger.warning(f"Unknown message type: {message_type}")
 
@@ -263,8 +271,9 @@ class WebSocketManager:
             logger.error(f"Error handling message {message_type}: {str(e)}")
             await self.send_error(connection, f"Error processing {message_type}", str(e))
 
-    async def handle_subscription(self, connection: WebSocketConnection, message: Dict[str, Any]):
-        """Handle subscription request"""
+    async def handle_subscription(
+            self, connection: WebSocketConnection, message: Dict[str, Any]):
+         -> Dict[str, Any]:"""Handle subscription request"""
         subscriptions = message.get("subscriptions", [])
 
         for subscription in subscriptions:
@@ -284,8 +293,9 @@ class WebSocketManager:
             },
         )
 
-    async def handle_unsubscription(self, connection: WebSocketConnection, message: Dict[str, Any]):
-        """Handle unsubscription request"""
+    async def handle_unsubscription(
+            self, connection: WebSocketConnection, message: Dict[str, Any]):
+         -> Dict[str, Any]:"""Handle unsubscription request"""
         subscriptions = message.get("subscriptions", [])
 
         for subscription in subscriptions:
@@ -305,8 +315,9 @@ class WebSocketManager:
             },
         )
 
-    async def handle_heartbeat(self, connection: WebSocketConnection, message: Dict[str, Any]):
-        """Handle heartbeat response"""
+    async def handle_heartbeat(
+            self, connection: WebSocketConnection, message: Dict[str, Any]):
+         -> Dict[str, Any]:"""Handle heartbeat response"""
         connection.last_heartbeat = datetime.utcnow()
 
         await self.send_message(
@@ -316,15 +327,16 @@ class WebSocketManager:
     async def handle_collaboration_event(
         self, connection: WebSocketConnection, message: Dict[str, Any]
     ):
-        """Handle collaboration event"""
+         -> Dict[str, Any]:"""Handle collaboration event"""
         # Forward to collaboration engine
         if hasattr(self, "collaboration_engine") and self.collaboration_engine:
-            await self.collaboration_engine.handle_collaboration_event(
+    await self.collaboration_engine.handle_collaboration_event(
                 message.get("session_id"), message.get("event")
             )
 
-    async def handle_user_action(self, connection: WebSocketConnection, message: Dict[str, Any]):
-        """Handle user action"""
+    async def handle_user_action(
+            self, connection: WebSocketConnection, message: Dict[str, Any]):
+         -> Dict[str, Any]:"""Handle user action"""
         action = message.get("action")
         data = message.get("data", {})
 
@@ -333,7 +345,7 @@ class WebSocketManager:
 
         # Broadcast to other connections if needed
         if action in ["article_saved", "preferences_updated"]:
-            await self.broadcast_to_user(
+    await self.broadcast_to_user(
                 connection.user_id,
                 {
                     "type": "user_action_update",
@@ -344,11 +356,12 @@ class WebSocketManager:
                 exclude_connection=connection.id,
             )
 
-    async def handle_join_group(self, connection: WebSocketConnection, message: Dict[str, Any]):
-        """Handle join group request"""
+    async def handle_join_group(
+            self, connection: WebSocketConnection, message: Dict[str, Any]):
+         -> Dict[str, Any]:"""Handle join group request"""
         group_id = message.get("group_id")
         if group_id:
-            await self.add_to_group(connection.id, group_id)
+    await self.add_to_group(connection.id, group_id)
             await self.send_message(
                 connection,
                 {
@@ -358,11 +371,12 @@ class WebSocketManager:
                 },
             )
 
-    async def handle_leave_group(self, connection: WebSocketConnection, message: Dict[str, Any]):
-        """Handle leave group request"""
+    async def handle_leave_group(
+            self, connection: WebSocketConnection, message: Dict[str, Any]):
+         -> Dict[str, Any]:"""Handle leave group request"""
         group_id = message.get("group_id")
         if group_id:
-            await self.remove_from_group(connection.id, group_id)
+    await self.remove_from_group(connection.id, group_id)
             await self.send_message(
                 connection,
                 {
@@ -372,7 +386,7 @@ class WebSocketManager:
                 },
             )
 
-    async def add_to_group(self, connection_id: str, group_id: str):
+    async def add_to_group(self, connection_id: str, group_id: str) -> Dict[str, Any]:
         """Add connection to group"""
         if group_id not in self.connection_groups:
             self.connection_groups[group_id] = set()
@@ -382,7 +396,7 @@ class WebSocketManager:
         if connection_id in self.active_connections:
             self.active_connections[connection_id].groups.add(group_id)
 
-    async def remove_from_group(self, connection_id: str, group_id: str):
+    async def remove_from_group(self, connection_id: str, group_id: str) -> Dict[str, Any]:
         """Remove connection from group"""
         if group_id in self.connection_groups:
             self.connection_groups[group_id].discard(connection_id)
@@ -410,7 +424,9 @@ class WebSocketManager:
         # Send to all connections concurrently
         if broadcast_tasks:
             results = await asyncio.gather(*broadcast_tasks, return_exceptions=True)
-            return sum(1 for result in results if not isinstance(result, Exception))
+            return sum(
+                1 for result in results if not isinstance(
+                    result, Exception))
 
         return 0
 
@@ -433,11 +449,16 @@ class WebSocketManager:
 
         if broadcast_tasks:
             results = await asyncio.gather(*broadcast_tasks, return_exceptions=True)
-            return sum(1 for result in results if not isinstance(result, Exception))
+            return sum(
+                1 for result in results if not isinstance(
+                    result, Exception))
 
         return 0
 
-    async def send_message(self, connection: WebSocketConnection, message: Dict[str, Any]) -> bool:
+    async def send_message(self,
+                           connection: WebSocketConnection,
+                           message: Dict[str,
+                                         Any]) -> bool:
         """Send message to specific connection with error handling"""
         try:
             if not connection.is_active:
@@ -447,14 +468,17 @@ class WebSocketManager:
             connection.last_message_sent = datetime.utcnow()
             return True
         except Exception as e:
-            logger.error(f"Failed to send message to {connection.id}: {str(e)}")
+            logger.error(
+                f"Failed to send message to {connection.id}: {str(e)}")
             connection.is_active = False
             return False
 
     async def send_error(
-        self, connection: WebSocketConnection, error_type: str, error_message: str
-    ):
-        """Send error message to connection"""
+            self,
+            connection: WebSocketConnection,
+            error_type: str,
+            error_message: str):
+         -> Dict[str, Any]:"""Send error message to connection"""
         await self.send_message(
             connection,
             {
@@ -465,7 +489,7 @@ class WebSocketManager:
             },
         )
 
-    async def cleanup_connection(self, connection: WebSocketConnection):
+    async def cleanup_connection(self, connection: WebSocketConnection) -> Dict[str, Any]:
         """Clean up connection resources"""
         try:
             # Stop heartbeat monitoring
@@ -477,7 +501,8 @@ class WebSocketManager:
 
             # Remove from user connections
             if connection.user_id in self.user_connections:
-                self.user_connections[connection.user_id].discard(connection.id)
+                self.user_connections[connection.user_id].discard(
+                    connection.id)
                 if not self.user_connections[connection.user_id]:
                     del self.user_connections[connection.user_id]
 
@@ -488,25 +513,29 @@ class WebSocketManager:
 
             # Close WebSocket if still open
             if connection.websocket.client_state.name == "CONNECTED":
-                await connection.websocket.close()
+    await connection.websocket.close()
 
             logger.info(f"Cleaned up connection {connection.id}")
 
         except Exception as e:
-            logger.error(f"Error cleaning up connection {connection.id}: {str(e)}")
+            logger.error(
+                f"Error cleaning up connection {connection.id}: {str(e)}")
 
     async def get_connections_status(self) -> Dict[str, Any]:
         """Get status of active connections"""
         return {
-            "total_connections": len(self.active_connections),
-            "total_users": len(self.user_connections),
-            "total_groups": len(self.connection_groups),
+            "total_connections": len(
+                self.active_connections),
+            "total_users": len(
+                self.user_connections),
+            "total_groups": len(
+                self.connection_groups),
             "connections_by_user": {
-                user_id: len(conn_ids) for user_id, conn_ids in self.user_connections.items()
-            },
+                user_id: len(conn_ids) for user_id,
+                conn_ids in self.user_connections.items()},
             "connections_by_group": {
-                group_id: len(conn_ids) for group_id, conn_ids in self.connection_groups.items()
-            },
+                group_id: len(conn_ids) for group_id,
+                conn_ids in self.connection_groups.items()},
         }
 
     async def create_connection(self, session) -> WebSocketConnection:

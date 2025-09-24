@@ -18,7 +18,7 @@ class TestQualityAnalyzer:
         self.analyzer = QualityAnalyzer()
 
     @pytest.mark.asyncio
-    async def test_analyze_content_quality_basic(self):
+    async def test_analyze_content_quality_basic(self) -> Dict[str, Any]:
         """Test basic content quality analysis."""
         content = "This is a test article with multiple sentences. It contains enough words to be considered valid content. The quality should be reasonable."
 
@@ -35,7 +35,7 @@ class TestQualityAnalyzer:
         assert 0 <= result.overall_quality <= 100
 
     @pytest.mark.asyncio
-    async def test_analyze_content_quality_with_url(self):
+    async def test_analyze_content_quality_with_url(self) -> Dict[str, Any]:
         """Test content quality analysis with URL."""
         content = "This is a test article about technology and innovation."
         url = "https://example.com/article"
@@ -46,7 +46,7 @@ class TestQualityAnalyzer:
         assert result.word_count > 0
 
     @pytest.mark.asyncio
-    async def test_analyze_content_quality_with_title(self):
+    async def test_analyze_content_quality_with_title(self) -> Dict[str, Any]:
         """Test content quality analysis with title."""
         content = "This is a test article about technology and innovation."
         title = "Technology Innovation Article"
@@ -57,7 +57,7 @@ class TestQualityAnalyzer:
         assert result.word_count > 0
 
     @pytest.mark.asyncio
-    async def test_analyze_content_quality_empty_content(self):
+    async def test_analyze_content_quality_empty_content(self) -> Dict[str, Any]:
         """Test content quality analysis with empty content."""
         content = ""
 
@@ -69,7 +69,7 @@ class TestQualityAnalyzer:
         assert result.sentence_count == 0
 
     @pytest.mark.asyncio
-    async def test_analyze_content_quality_short_content(self):
+    async def test_analyze_content_quality_short_content(self) -> Dict[str, Any]:
         """Test content quality analysis with short content."""
         content = "Short content."
 
@@ -80,7 +80,7 @@ class TestQualityAnalyzer:
         assert result.character_count > 0
 
     @pytest.mark.asyncio
-    async def test_calculate_readability_score(self):
+    async def test_calculate_readability_score(self) -> Dict[str, Any]:
         """Test readability score calculation."""
         # Simple content should have high readability
         simple_content = (
@@ -92,7 +92,7 @@ class TestQualityAnalyzer:
         assert score > 50  # Simple content should be readable
 
     @pytest.mark.asyncio
-    async def test_calculate_spam_score(self):
+    async def test_calculate_spam_score(self) -> Dict[str, Any]:
         """Test spam score calculation."""
         # Normal content should have low spam score
         normal_content = "This is a normal article about technology and innovation."
@@ -102,7 +102,7 @@ class TestQualityAnalyzer:
         assert score < 50  # Normal content should have low spam score
 
     @pytest.mark.asyncio
-    async def test_calculate_spam_score_with_spam_keywords(self):
+    async def test_calculate_spam_score_with_spam_keywords(self) -> Dict[str, Any]:
         """Test spam score calculation with spam keywords."""
         # Content with spam keywords should have high spam score
         spam_content = "Click here now! Buy now! Free money! Make money fast! Work from home!"
@@ -112,7 +112,7 @@ class TestQualityAnalyzer:
         assert score > 50  # Spam content should have high spam score
 
     @pytest.mark.asyncio
-    async def test_calculate_duplicate_score(self):
+    async def test_calculate_duplicate_score(self) -> Dict[str, Any]:
         """Test duplicate score calculation."""
         # Normal content should have low duplicate score
         normal_content = "This is a unique article about technology and innovation."
@@ -122,7 +122,7 @@ class TestQualityAnalyzer:
         assert score < 50  # Normal content should have low duplicate score
 
     @pytest.mark.asyncio
-    async def test_calculate_content_freshness(self):
+    async def test_calculate_content_freshness(self) -> Dict[str, Any]:
         """Test content freshness calculation."""
         # Content with current year should have high freshness
         fresh_content = (
@@ -134,7 +134,7 @@ class TestQualityAnalyzer:
         assert score > 50  # Fresh content should have high freshness score
 
     @pytest.mark.asyncio
-    async def test_calculate_link_density(self):
+    async def test_calculate_link_density(self) -> Dict[str, Any]:
         """Test link density calculation."""
         # Content with links should have higher link density
         content_with_links = (
@@ -146,7 +146,7 @@ class TestQualityAnalyzer:
         assert score > 0  # Content with links should have positive link density
 
     @pytest.mark.asyncio
-    async def test_calculate_overall_quality(self):
+    async def test_calculate_overall_quality(self) -> Dict[str, Any]:
         """Test overall quality calculation."""
         # High quality metrics should result in high overall quality
         score = await self.analyzer._calculate_overall_quality(
@@ -207,25 +207,33 @@ class TestQualityAnalyzer:
     def test_is_suspicious_url(self):
         """Test suspicious URL detection."""
         # Normal URLs should not be suspicious
-        assert self.analyzer._is_suspicious_url("https://example.com/article") is False
-        assert self.analyzer._is_suspicious_url("https://news.bbc.co.uk/story") is False
+        assert self.analyzer._is_suspicious_url(
+            "https://example.com/article") is False
+        assert self.analyzer._is_suspicious_url(
+            "https://news.bbc.co.uk/story") is False
 
         # Suspicious URLs should be detected
-        assert self.analyzer._is_suspicious_url("https://bit.ly/abc123") is True
-        assert self.analyzer._is_suspicious_url("https://tinyurl.com/xyz") is True
+        assert self.analyzer._is_suspicious_url(
+            "https://bit.ly/abc123") is True
+        assert self.analyzer._is_suspicious_url(
+            "https://tinyurl.com/xyz") is True
 
     def test_is_clickbait_title(self):
         """Test clickbait title detection."""
         # Normal titles should not be clickbait
-        assert self.analyzer._is_clickbait_title("Technology Innovation in 2024") is False
-        assert self.analyzer._is_clickbait_title("How to Build Better Software") is False
+        assert self.analyzer._is_clickbait_title(
+            "Technology Innovation in 2024") is False
+        assert self.analyzer._is_clickbait_title(
+            "How to Build Better Software") is False
 
         # Clickbait titles should be detected
-        assert self.analyzer._is_clickbait_title("You Won't Believe What Happens Next!") is True
-        assert self.analyzer._is_clickbait_title("This Will Blow Your Mind") is True
+        assert self.analyzer._is_clickbait_title(
+            "You Won't Believe What Happens Next!") is True
+        assert self.analyzer._is_clickbait_title(
+            "This Will Blow Your Mind") is True
 
     @pytest.mark.asyncio
-    async def test_get_quality_recommendations(self):
+    async def test_get_quality_recommendations(self) -> Dict[str, Any]:
         """Test quality recommendations generation."""
         # Low readability score should generate recommendations
         low_readability_metrics = QualityMetrics(
@@ -250,7 +258,7 @@ class TestQualityAnalyzer:
         assert any("readability" in rec.lower() for rec in recommendations)
 
     @pytest.mark.asyncio
-    async def test_analyze_content_quality_error_handling(self):
+    async def test_analyze_content_quality_error_handling(self) -> Dict[str, Any]:
         """Test error handling in content quality analysis."""
         # Test with None content
         result = await self.analyzer.analyze_content_quality(None)

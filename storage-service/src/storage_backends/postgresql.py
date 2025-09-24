@@ -25,7 +25,7 @@ class PostgreSQLManager:
         self.settings = Settings()
         self._initialized = False
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize PostgreSQL connection pool"""
         if self._initialized:
             return
@@ -57,19 +57,19 @@ class PostgreSQLManager:
             logger.error(f"Failed to initialize PostgreSQL Manager: {e}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup connection pool"""
         if self.pool:
-            await self.pool.close()
+    await self.pool.close()
             self.pool = None
 
         self._initialized = False
         logger.info("PostgreSQL Manager cleanup complete")
 
-    async def _initialize_schema(self):
+    async def _initialize_schema(self) -> Dict[str, Any]:
         """Initialize database schema"""
         try:
-            async with self.pool.acquire() as conn:
+    async with self.pool.acquire() as conn:
                 # Create articles table
                 await conn.execute(
                     """
@@ -95,35 +95,35 @@ class PostgreSQLManager:
                 # Create indexes for performance
                 await conn.execute(
                     """
-                    CREATE INDEX IF NOT EXISTS idx_articles_source 
+                    CREATE INDEX IF NOT EXISTS idx_articles_source
                     ON articles(source)
                 """
                 )
 
                 await conn.execute(
                     """
-                    CREATE INDEX IF NOT EXISTS idx_articles_published_at 
+                    CREATE INDEX IF NOT EXISTS idx_articles_published_at
                     ON articles(published_at)
                 """
                 )
 
                 await conn.execute(
                     """
-                    CREATE INDEX IF NOT EXISTS idx_articles_categories 
+                    CREATE INDEX IF NOT EXISTS idx_articles_categories
                     ON articles USING GIN(categories)
                 """
                 )
 
                 await conn.execute(
                     """
-                    CREATE INDEX IF NOT EXISTS idx_articles_tags 
+                    CREATE INDEX IF NOT EXISTS idx_articles_tags
                     ON articles USING GIN(tags)
                 """
                 )
 
                 await conn.execute(
                     """
-                    CREATE INDEX IF NOT EXISTS idx_articles_metadata 
+                    CREATE INDEX IF NOT EXISTS idx_articles_metadata
                     ON articles USING GIN(metadata)
                 """
                 )
@@ -131,7 +131,7 @@ class PostgreSQLManager:
                 # Create full-text search index
                 await conn.execute(
                     """
-                    CREATE INDEX IF NOT EXISTS idx_articles_fulltext 
+                    CREATE INDEX IF NOT EXISTS idx_articles_fulltext
                     ON articles USING GIN(
                         to_tsvector('english', title || ' ' || COALESCE(content, '') || ' ' || COALESCE(summary, ''))
                     )
@@ -150,12 +150,12 @@ class PostgreSQLManager:
             raise RuntimeError("PostgreSQL Manager not initialized")
 
         try:
-            async with self.pool.acquire() as conn:
+    async with self.pool.acquire() as conn:
                 # Insert or update article
                 await conn.execute(
                     """
-                    INSERT INTO articles 
-                    (id, title, content, summary, author, source, published_at, 
+                    INSERT INTO articles
+                    (id, title, content, summary, author, source, published_at,
                      categories, tags, language, url, metadata, updated_at)
                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, CURRENT_TIMESTAMP)
                     ON CONFLICT (id)
@@ -187,7 +187,8 @@ class PostgreSQLManager:
                     json.dumps(article.metadata),
                 )
 
-                logger.info(f"Article {article.id} metadata stored in PostgreSQL")
+                logger.info(
+                    f"Article {article.id} metadata stored in PostgreSQL")
 
                 return {
                     "article_id": article.id,
@@ -205,7 +206,7 @@ class PostgreSQLManager:
             raise RuntimeError("PostgreSQL Manager not initialized")
 
         try:
-            async with self.pool.acquire() as conn:
+    async with self.pool.acquire() as conn:
                 row = await conn.fetchrow(
                     """
                     SELECT id, title, content, summary, author, source, published_at,
@@ -248,15 +249,15 @@ class PostgreSQLManager:
             raise RuntimeError("PostgreSQL Manager not initialized")
 
         try:
-            async with self.pool.acquire() as conn:
+    async with self.pool.acquire() as conn:
                 rows = await conn.fetch(
                     """
                     SELECT id, title, content, summary, author, source, published_at,
                            categories, tags, language, url, metadata,
-                           ts_rank(to_tsvector('english', title || ' ' || COALESCE(content, '') || ' ' || COALESCE(summary, '')), 
+                           ts_rank(to_tsvector('english', title || ' ' || COALESCE(content, '') || ' ' || COALESCE(summary, '')),
                                    plainto_tsquery('english', $1)) as rank
                     FROM articles
-                    WHERE to_tsvector('english', title || ' ' || COALESCE(content, '') || ' ' || COALESCE(summary, '')) 
+                    WHERE to_tsvector('english', title || ' ' || COALESCE(content, '') || ' ' || COALESCE(summary, ''))
                           @@ plainto_tsquery('english', $1)
                     ORDER BY rank DESC, published_at DESC
                     LIMIT $2 OFFSET $3
@@ -300,7 +301,7 @@ class PostgreSQLManager:
             raise RuntimeError("PostgreSQL Manager not initialized")
 
         try:
-            async with self.pool.acquire() as conn:
+    async with self.pool.acquire() as conn:
                 rows = await conn.fetch(
                     """
                     SELECT id, title, content, summary, author, source, published_at,
@@ -339,13 +340,14 @@ class PostgreSQLManager:
             logger.error(f"Failed to get articles by category {category}: {e}")
             raise
 
-    async def get_articles_by_source(self, source: str, limit: int = 20) -> List[Dict[str, Any]]:
+    async def get_articles_by_source(
+            self, source: str, limit: int = 20) -> List[Dict[str, Any]]:
         """Get articles by source"""
         if not self._initialized or not self.pool:
             raise RuntimeError("PostgreSQL Manager not initialized")
 
         try:
-            async with self.pool.acquire() as conn:
+    async with self.pool.acquire() as conn:
                 rows = await conn.fetch(
                     """
                     SELECT id, title, content, summary, author, source, published_at,
@@ -384,14 +386,14 @@ class PostgreSQLManager:
             logger.error(f"Failed to get articles by source {source}: {e}")
             raise
 
-    async def delete_article(self, article_id: str):
+    async def delete_article(self, article_id: str) -> Dict[str, Any]:
         """Delete article from PostgreSQL"""
         if not self._initialized or not self.pool:
             raise RuntimeError("PostgreSQL Manager not initialized")
 
         try:
-            async with self.pool.acquire() as conn:
-                await conn.execute(
+    async with self.pool.acquire() as conn:
+    await conn.execute(
                     """
                     DELETE FROM articles WHERE id = $1
                 """,
@@ -410,7 +412,7 @@ class PostgreSQLManager:
             raise RuntimeError("PostgreSQL Manager not initialized")
 
         try:
-            async with self.pool.acquire() as conn:
+    async with self.pool.acquire() as conn:
                 # Total articles
                 total_articles = await conn.fetchval("SELECT COUNT(*) FROM articles")
 
@@ -446,10 +448,10 @@ class PostgreSQLManager:
 
                 return {
                     "total_articles": total_articles,
-                    "articles_by_source": {row["source"]: row["count"] for row in source_stats},
+                    "articles_by_source": {
+                        row["source"]: row["count"] for row in source_stats},
                     "articles_by_category": {
-                        row["category"]: row["count"] for row in category_stats
-                    },
+                        row["category"]: row["count"] for row in category_stats},
                     "recent_articles_7_days": recent_articles,
                     "timestamp": datetime.utcnow().isoformat(),
                 }

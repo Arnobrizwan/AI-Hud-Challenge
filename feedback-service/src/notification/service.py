@@ -3,8 +3,7 @@ Notification service for alerts and updates
 """
 
 import logging
-from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 logger = logging.getLogger(__name__)
 
@@ -34,19 +33,17 @@ class NotificationService:
             logger.error("Error notifying reviewer", error=str(e))
             return False
 
-    async def send_alert(
-        self, alert_data: Dict[str, Any], recipients: list, channels: list = ["email"]
-    ) -> bool:
+    async def send_alert(self, alert_data: Dict[str, Any], recipients: list, channels: list = ["email"]) -> bool:
         """Send alert to recipients via specified channels"""
 
         try:
             for channel in channels:
                 if channel == "email":
-                    await self.email_service.send_alert(alert_data, recipients)
+    await self.email_service.send_alert(alert_data, recipients)
                 elif channel == "websocket":
-                    await self.websocket_service.send_alert(alert_data, recipients)
+    await self.websocket_service.send_alert(alert_data, recipients)
                 elif channel == "sms":
-                    await self.sms_service.send_alert(alert_data, recipients)
+    await self.sms_service.send_alert(alert_data, recipients)
 
             logger.info("Alert sent", channels=channels, recipient_count=len(recipients))
             return True

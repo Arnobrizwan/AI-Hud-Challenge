@@ -80,13 +80,18 @@ class MetricsCollector:
 
         # Method-specific metrics
         self.method_metrics = defaultdict(
-            lambda: {"count": 0, "total_time": 0.0, "avg_quality": 0.0, "errors": 0}
-        )
+            lambda: {
+                "count": 0,
+                "total_time": 0.0,
+                "avg_quality": 0.0,
+                "errors": 0})
 
         # Language-specific metrics
         self.language_metrics = defaultdict(
-            lambda: {"count": 0, "avg_processing_time": 0.0, "avg_quality": 0.0}
-        )
+            lambda: {
+                "count": 0,
+                "avg_processing_time": 0.0,
+                "avg_quality": 0.0})
 
         # A/B test metrics
         self.ab_test_metrics = defaultdict(
@@ -102,7 +107,7 @@ class MetricsCollector:
         self._monitoring_thread = None
         self._stop_monitoring = False
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize metrics collection"""
         try:
             logger.info("Initializing metrics collector...")
@@ -121,7 +126,7 @@ class MetricsCollector:
             logger.error(f"Failed to initialize metrics collector: {str(e)}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Clean up metrics collection"""
         try:
             self._stop_monitoring = True
@@ -214,7 +219,10 @@ class MetricsCollector:
         except Exception as e:
             logger.error(f"Failed to record summarization metrics: {str(e)}")
 
-    def record_batch_metrics(self, total_requests: int, successful_requests: int):
+    def record_batch_metrics(
+            self,
+            total_requests: int,
+            successful_requests: int):
         """Record metrics for batch processing"""
         try:
             self.service_metrics.total_requests += total_requests
@@ -289,16 +297,19 @@ class MetricsCollector:
         while not self._stop_monitoring:
             try:
                 # CPU usage
-                self.performance_metrics.cpu_usage = psutil.cpu_percent(interval=1)
+                self.performance_metrics.cpu_usage = psutil.cpu_percent(
+                    interval=1)
 
                 # Memory usage
                 memory = psutil.virtual_memory()
                 self.performance_metrics.memory_usage = memory.percent
-                self.performance_metrics.memory_available = memory.available / (1024**3)  # GB
+                self.performance_metrics.memory_available = memory.available / \
+                    (1024**3)  # GB
 
                 # Disk usage
                 disk = psutil.disk_usage("/")
-                self.performance_metrics.disk_usage = (disk.used / disk.total) * 100
+                self.performance_metrics.disk_usage = (
+                    disk.used / disk.total) * 100
 
                 # Network I/O
                 net_io = psutil.net_io_counters()
@@ -339,15 +350,18 @@ class MetricsCollector:
             )
 
             cache_hit_rate = (
-                self.service_metrics.cache_hits
-                / (self.service_metrics.cache_hits + self.service_metrics.cache_misses)
-                if (self.service_metrics.cache_hits + self.service_metrics.cache_misses) > 0
-                else 0
-            )
+                self.service_metrics.cache_hits /
+                (
+                    self.service_metrics.cache_hits +
+                    self.service_metrics.cache_misses) if (
+                    self.service_metrics.cache_hits +
+                    self.service_metrics.cache_misses) > 0 else 0)
 
             # Calculate trends
-            processing_time_trend = self._calculate_trend(list(self.processing_times))
-            quality_score_trend = self._calculate_trend(list(self.quality_scores))
+            processing_time_trend = self._calculate_trend(
+                list(self.processing_times))
+            quality_score_trend = self._calculate_trend(
+                list(self.quality_scores))
             error_rate_trend = self._calculate_trend(list(self.error_rates))
 
             return {
@@ -383,18 +397,24 @@ class MetricsCollector:
                     "quality_distribution": self.quality_metrics.quality_distribution,
                     "total_quality_checks": self.quality_metrics.total_quality_checks,
                 },
-                "method_metrics": dict(self.method_metrics),
-                "language_metrics": dict(self.language_metrics),
-                "ab_test_metrics": dict(self.ab_test_metrics),
+                "method_metrics": dict(
+                    self.method_metrics),
+                "language_metrics": dict(
+                    self.language_metrics),
+                "ab_test_metrics": dict(
+                    self.ab_test_metrics),
                 "trends": {
                     "processing_time_trend": processing_time_trend,
                     "quality_score_trend": quality_score_trend,
                     "error_rate_trend": error_rate_trend,
                 },
                 "time_series": {
-                    "processing_times": list(self.processing_times),
-                    "quality_scores": list(self.quality_scores),
-                    "error_rates": list(self.error_rates),
+                    "processing_times": list(
+                        self.processing_times),
+                    "quality_scores": list(
+                        self.quality_scores),
+                    "error_rates": list(
+                        self.error_rates),
                 },
             }
 
@@ -416,7 +436,8 @@ class MetricsCollector:
             x_mean = sum(x) / n
             y_mean = sum(values) / n
 
-            numerator = sum((x[i] - x_mean) * (values[i] - y_mean) for i in range(n))
+            numerator = sum((x[i] - x_mean) * (values[i] - y_mean)
+                            for i in range(n))
             denominator = sum((x[i] - x_mean) ** 2 for i in range(n))
 
             if denominator == 0:

@@ -18,7 +18,8 @@ logger = structlog.get_logger()
 class ColdStartHandler:
     """Handle cold start scenarios for new users and content."""
 
-    def __init__(self, redis_client: RedisClient, postgres_client: PostgreSQLClient):
+    def __init__(self, redis_client: RedisClient,
+                 postgres_client: PostgreSQLClient):
         self.redis = redis_client
         self.postgres = postgres_client
         self.cache_ttl = 3600  # 1 hour
@@ -45,8 +46,9 @@ class ColdStartHandler:
 
         return combined_recs[:10]  # Return top 10
 
-    async def handle_content_cold_start(self, content_item: ContentItem) -> Dict[str, Any]:
-        """Handle cold start for new content items."""
+    async def handle_content_cold_start(
+            self, content_item: ContentItem) -> Dict[str, Any]:
+    """Handle cold start for new content items."""
         logger.info(f"Handling cold start for content: {content_item.id}")
 
         # Extract content features
@@ -75,9 +77,9 @@ class ColdStartHandler:
         # Get content based on demographic preferences
         query = """
         SELECT item_id, title, content, topics, source, author, published_at, content_features
-        FROM content_items 
+        FROM content_items
         WHERE topics && $1::text[] OR source = ANY($2::text[])
-        ORDER BY published_at DESC 
+        ORDER BY published_at DESC
         LIMIT 20
         """
 
@@ -108,14 +110,14 @@ class ColdStartHandler:
         """Get recommendations based on content popularity."""
         # Get popular content from recent interactions
         query = """
-        SELECT ci.item_id, ci.title, ci.content, ci.topics, ci.source, ci.author, 
+        SELECT ci.item_id, ci.title, ci.content, ci.topics, ci.source, ci.author,
                ci.published_at, ci.content_features,
                COUNT(ui.id) as interaction_count,
                AVG(CASE WHEN ui.rating IS NOT NULL THEN ui.rating ELSE 0 END) as avg_rating
         FROM content_items ci
         LEFT JOIN user_interactions ui ON ci.item_id = ui.item_id
         WHERE ui.timestamp > $1 OR ui.timestamp IS NULL
-        GROUP BY ci.item_id, ci.title, ci.content, ci.topics, ci.source, ci.author, 
+        GROUP BY ci.item_id, ci.title, ci.content, ci.topics, ci.source, ci.author,
                  ci.published_at, ci.content_features
         ORDER BY interaction_count DESC, avg_rating DESC
         LIMIT 20
@@ -131,7 +133,8 @@ class ColdStartHandler:
             avg_rating = row["avg_rating"] or 0.0
 
             # Normalize scores
-            popularity_score = min(1.0, interaction_count / 100.0)  # Normalize by 100 interactions
+            # Normalize by 100 interactions
+            popularity_score = min(1.0, interaction_count / 100.0)
             rating_score = avg_rating / 5.0  # Normalize by 5-star rating
 
             combined_score = popularity_score * 0.7 + rating_score * 0.3
@@ -158,9 +161,9 @@ class ColdStartHandler:
         # Get diverse content for preference collection
         query = """
         SELECT item_id, title, content, topics, source, author, published_at, content_features
-        FROM content_items 
+        FROM content_items
         WHERE content IS NOT NULL AND title IS NOT NULL
-        ORDER BY published_at DESC 
+        ORDER BY published_at DESC
         LIMIT 30
         """
 
@@ -169,7 +172,8 @@ class ColdStartHandler:
         recommendations = []
         for i, row in enumerate(rows):
             # Assign onboarding score based on diversity
-            onboarding_score = 1.0 - (i / len(rows))  # Decreasing score for diversity
+            # Decreasing score for diversity
+            onboarding_score = 1.0 - (i / len(rows))
 
             recommendations.append(
                 Recommendation(
@@ -221,7 +225,7 @@ class ColdStartHandler:
     async def _get_demographic_template(
         self, user_id: str, context: Optional[UserContext]
     ) -> Dict[str, Any]:
-        """Get demographic-based profile template."""
+    """Get demographic-based profile template."""
         # This would typically use demographic data or similar user patterns
         # For now, return a default template with some variation
 
@@ -279,8 +283,9 @@ class ColdStartHandler:
 
         return score
 
-    async def _extract_content_features(self, content_item: ContentItem) -> Dict[str, Any]:
-        """Extract features for new content item."""
+    async def _extract_content_features(
+            self, content_item: ContentItem) -> Dict[str, Any]:
+    """Extract features for new content item."""
         features = {}
 
         # Basic features
@@ -300,13 +305,14 @@ class ColdStartHandler:
 
         return features
 
-    async def _find_similar_content(self, content_item: ContentItem) -> List[Dict[str, Any]]:
+    async def _find_similar_content(
+            self, content_item: ContentItem) -> List[Dict[str, Any]]:
         """Find similar content for new content item."""
         # Get content with similar topics
         query = """
-        SELECT item_id, title, topics, source, 
+        SELECT item_id, title, topics, source,
                array_length(topics, 1) as topic_count
-        FROM content_items 
+        FROM content_items
         WHERE item_id != $1 AND topics && $2::text[]
         ORDER BY array_length(topics, 1) DESC
         LIMIT 5
@@ -317,8 +323,10 @@ class ColdStartHandler:
         similar_content = []
         for row in rows:
             # Compute similarity score
-            common_topics = len(set(content_item.topics).intersection(set(row["topics"] or [])))
-            total_topics = len(set(content_item.topics).union(set(row["topics"] or [])))
+            common_topics = len(
+                set(content_item.topics).intersection(set(row["topics"] or [])))
+            total_topics = len(set(content_item.topics).union(
+                set(row["topics"] or [])))
 
             similarity_score = common_topics / total_topics if total_topics > 0 else 0.0
 
@@ -333,7 +341,8 @@ class ColdStartHandler:
 
         return similar_content
 
-    async def _estimate_content_popularity(self, content_item: ContentItem) -> float:
+    async def _estimate_content_popularity(
+            self, content_item: ContentItem) -> float:
         """Estimate popularity for new content item."""
         # Use content features to estimate popularity
         popularity_score = 0.0
@@ -376,7 +385,8 @@ class ColdStartHandler:
         result = await self.postgres.fetch_one(query, topics, recent_cutoff)
 
         interaction_count = result["interaction_count"] or 0
-        return min(1.0, interaction_count / 1000.0)  # Normalize by 1000 interactions
+        # Normalize by 1000 interactions
+        return min(1.0, interaction_count / 1000.0)
 
     async def _get_source_popularity(self, source: Optional[str]) -> float:
         """Get popularity score for source."""
@@ -396,14 +406,15 @@ class ColdStartHandler:
         result = await self.postgres.fetch_one(query, source, recent_cutoff)
 
         interaction_count = result["interaction_count"] or 0
-        return min(1.0, interaction_count / 500.0)  # Normalize by 500 interactions
+        # Normalize by 500 interactions
+        return min(1.0, interaction_count / 500.0)
 
     async def get_cold_start_analytics(self) -> Dict[str, Any]:
         """Get analytics about cold start handling."""
         # Get new users in last 30 days
         new_users_query = """
         SELECT COUNT(*) as count
-        FROM user_profiles 
+        FROM user_profiles
         WHERE created_at > $1
         """
 
@@ -413,7 +424,7 @@ class ColdStartHandler:
         # Get new content in last 30 days
         new_content_query = """
         SELECT COUNT(*) as count
-        FROM content_items 
+        FROM content_items
         WHERE created_at > $1
         """
 
@@ -422,5 +433,8 @@ class ColdStartHandler:
         return {
             "new_users_30_days": new_users_result["count"],
             "new_content_30_days": new_content_result["count"],
-            "cold_start_strategies": ["demographic", "popularity", "onboarding"],
+            "cold_start_strategies": [
+                "demographic",
+                "popularity",
+                "onboarding"],
         }

@@ -1,13 +1,12 @@
 """Collaborative filtering implementation."""
 
-import asyncio
 from typing import Dict, List, Optional
 
 import structlog
 
 from ..database.postgres_client import PostgreSQLClient
 from ..database.redis_client import RedisClient
-from ..models.schemas import ContentItem, Recommendation, SimilarUser, UserInteraction, UserProfile
+from ..models.schemas import Recommendation, SimilarUser, UserInteraction
 from .matrix_factorization import ImplicitMatrixFactorization
 
 logger = structlog.get_logger()
@@ -30,7 +29,7 @@ class CollaborativeFilter:
         interactions = await self._load_recent_interactions()
 
         if interactions:
-            await self.mf_model.train_model(interactions)
+    await self.mf_model.train_model(interactions)
             logger.info("Collaborative filtering model trained successfully")
         else:
             logger.warning("No interactions found for training")
@@ -38,10 +37,10 @@ class CollaborativeFilter:
     async def _load_recent_interactions(self, limit: int = 100000) -> List[UserInteraction]:
         """Load recent user interactions for training."""
         query = """
-        SELECT user_id, item_id, interaction_type, rating, timestamp, context, 
+        SELECT user_id, item_id, interaction_type, rating, timestamp, context,
                session_id, device_type, location
-        FROM user_interactions 
-        ORDER BY timestamp DESC 
+        FROM user_interactions
+        ORDER BY timestamp DESC
         LIMIT $1
         """
 
@@ -97,9 +96,7 @@ class CollaborativeFilter:
 
         return similar_users
 
-    async def get_recommendations(
-        self, user_id: str, n_recommendations: int = 10
-    ) -> List[Recommendation]:
+    async def get_recommendations(self, user_id: str, n_recommendations: int = 10) -> List[Recommendation]:
         """Get collaborative filtering recommendations."""
         cache_key = f"cf_recommendations:{user_id}:{n_recommendations}"
         cached_recs = await self.redis.get(cache_key)
@@ -143,7 +140,7 @@ class CollaborativeFilter:
         ]
 
         for pattern in patterns:
-            await self.redis.delete_pattern(pattern)
+    await self.redis.delete_pattern(pattern)
 
     async def retrain_model(self) -> None:
         """Retrain the collaborative filtering model."""
@@ -153,7 +150,7 @@ class CollaborativeFilter:
         interactions = await self._load_recent_interactions()
 
         if interactions:
-            await self.mf_model.train_model(interactions)
+    await self.mf_model.train_model(interactions)
             logger.info("Collaborative filtering model retrained successfully")
 
             # Clear all caches
@@ -168,8 +165,10 @@ class CollaborativeFilter:
         # Add additional metrics
         metrics = {
             **model_info,
-            "cache_hit_rate": await self._get_cache_hit_rate(),
-            "last_training_time": await self._get_last_training_time(),
+            "cache_hit_rate":
+    await self._get_cache_hit_rate(),
+            "last_training_time":
+    await self._get_last_training_time(),
         }
 
         return metrics

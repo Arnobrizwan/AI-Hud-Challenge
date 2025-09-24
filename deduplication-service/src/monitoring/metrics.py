@@ -51,20 +51,24 @@ class MetricsCollector:
         """Initialize Prometheus metrics."""
         # Counters
         self.articles_processed_counter = Counter(
-            "articles_processed_total", "Total number of articles processed", registry=self.registry
-        )
+            "articles_processed_total",
+            "Total number of articles processed",
+            registry=self.registry)
 
         self.duplicates_found_counter = Counter(
-            "duplicates_found_total", "Total number of duplicates found", registry=self.registry
-        )
+            "duplicates_found_total",
+            "Total number of duplicates found",
+            registry=self.registry)
 
         self.clusters_created_counter = Counter(
-            "clusters_created_total", "Total number of clusters created", registry=self.registry
-        )
+            "clusters_created_total",
+            "Total number of clusters created",
+            registry=self.registry)
 
         self.events_created_counter = Counter(
-            "events_created_total", "Total number of events created", registry=self.registry
-        )
+            "events_created_total",
+            "Total number of events created",
+            registry=self.registry)
 
         self.processing_errors_counter = Counter(
             "processing_errors_total",
@@ -96,8 +100,9 @@ class MetricsCollector:
         )
 
         self.cluster_size_histogram = Histogram(
-            "cluster_size", "Distribution of cluster sizes", registry=self.registry
-        )
+            "cluster_size",
+            "Distribution of cluster sizes",
+            registry=self.registry)
 
         self.api_response_time_histogram = Histogram(
             "api_response_time_seconds",
@@ -108,12 +113,14 @@ class MetricsCollector:
 
         # Gauges
         self.active_articles_gauge = Gauge(
-            "active_articles", "Number of active articles in the system", registry=self.registry
-        )
+            "active_articles",
+            "Number of active articles in the system",
+            registry=self.registry)
 
         self.active_clusters_gauge = Gauge(
-            "active_clusters", "Number of active clusters", registry=self.registry
-        )
+            "active_clusters",
+            "Number of active clusters",
+            registry=self.registry)
 
         self.active_events_gauge = Gauge(
             "active_events", "Number of active events", registry=self.registry
@@ -124,22 +131,25 @@ class MetricsCollector:
         )
 
         self.redis_memory_usage_gauge = Gauge(
-            "redis_memory_usage_bytes", "Redis memory usage in bytes", registry=self.registry
-        )
+            "redis_memory_usage_bytes",
+            "Redis memory usage in bytes",
+            registry=self.registry)
 
         self.database_connections_gauge = Gauge(
-            "database_connections", "Number of active database connections", registry=self.registry
-        )
+            "database_connections",
+            "Number of active database connections",
+            registry=self.registry)
 
         self.cpu_usage_gauge = Gauge(
             "cpu_usage_percent", "CPU usage percentage", registry=self.registry
         )
 
         self.memory_usage_gauge = Gauge(
-            "memory_usage_bytes", "Memory usage in bytes", registry=self.registry
-        )
+            "memory_usage_bytes",
+            "Memory usage in bytes",
+            registry=self.registry)
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize metrics collector."""
         # Start background tasks
         asyncio.create_task(self._update_system_metrics())
@@ -148,7 +158,7 @@ class MetricsCollector:
     async def increment_counter(
         self, name: str, value: int = 1, labels: Optional[Dict[str, str]] = None
     ):
-        """Increment a counter metric.
+         -> Dict[str, Any]:"""Increment a counter metric.
 
         Args:
             name: Metric name
@@ -170,8 +180,9 @@ class MetricsCollector:
         # Store in Redis
         await self.redis.hincrby("metrics:counters", key, value)
 
-    async def set_gauge(self, name: str, value: float, labels: Optional[Dict[str, str]] = None):
-        """Set a gauge metric.
+    async def set_gauge(self, name: str, value: float,
+                        labels: Optional[Dict[str, str]] = None):
+         -> Dict[str, Any]:"""Set a gauge metric.
 
         Args:
             name: Metric name
@@ -196,7 +207,7 @@ class MetricsCollector:
     async def record_histogram(
         self, name: str, value: float, labels: Optional[Dict[str, str]] = None
     ):
-        """Record a histogram metric.
+         -> Dict[str, Any]:"""Record a histogram metric.
 
         Args:
             name: Metric name
@@ -217,9 +228,11 @@ class MetricsCollector:
 
         # Store in Redis
         await self.redis.lpush(f"metrics:histograms:{key}", value)
-        await self.redis.ltrim(f"metrics:histograms:{key}", 0, 999)  # Keep last 1000 values
+        # Keep last 1000 values
+        await self.redis.ltrim(f"metrics:histograms:{key}", 0, 999)
 
-    async def get_counter(self, name: str, labels: Optional[Dict[str, str]] = None) -> int:
+    async def get_counter(
+            self, name: str, labels: Optional[Dict[str, str]] = None) -> int:
         """Get counter value.
 
         Args:
@@ -232,7 +245,8 @@ class MetricsCollector:
         key = f"{name}:{labels or ''}"
         return self.counters.get(key, 0)
 
-    async def get_gauge(self, name: str, labels: Optional[Dict[str, str]] = None) -> float:
+    async def get_gauge(
+            self, name: str, labels: Optional[Dict[str, str]] = None) -> float:
         """Get gauge value.
 
         Args:
@@ -336,7 +350,7 @@ class MetricsCollector:
         """
         return generate_latest(self.registry)
 
-    async def _update_system_metrics(self):
+    async def _update_system_metrics(self) -> Dict[str, Any]:
         """Update system metrics periodically."""
         while True:
             try:
@@ -363,17 +377,17 @@ class MetricsCollector:
                 print(f"Error updating system metrics: {e}")
                 await asyncio.sleep(60)
 
-    async def _persist_metrics(self):
+    async def _persist_metrics(self) -> Dict[str, Any]:
         """Persist metrics to Redis periodically."""
         while True:
             try:
                 # Persist counters
                 for key, value in self.counters.items():
-                    await self.redis.hset("metrics:counters", key, value)
+    await self.redis.hset("metrics:counters", key, value)
 
                 # Persist gauges
                 for key, value in self.gauges.items():
-                    await self.redis.hset("metrics:gauges", key, value)
+    await self.redis.hset("metrics:gauges", key, value)
 
                 # Persist histogram summaries
                 for key, values in self.histograms.items():

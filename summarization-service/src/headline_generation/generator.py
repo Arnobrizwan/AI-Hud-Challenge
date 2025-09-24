@@ -27,7 +27,7 @@ try:
     nltk.download("punkt", quiet=True)
     nltk.download("stopwords", quiet=True)
     nltk.download("vader_lexicon", quiet=True)
-except:
+except BaseException:
     pass
 
 
@@ -77,14 +77,16 @@ class HeadlineGenerator:
             },
         }
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize models and tokenizers"""
         try:
             logger.info("Initializing headline generator...")
 
             # Initialize T5 model
-            self.t5_tokenizer = T5Tokenizer.from_pretrained(settings.T5_MODEL_PATH)
-            self.t5_model = T5ForConditionalGeneration.from_pretrained(settings.T5_MODEL_PATH)
+            self.t5_tokenizer = T5Tokenizer.from_pretrained(
+                settings.T5_MODEL_PATH)
+            self.t5_model = T5ForConditionalGeneration.from_pretrained(
+                settings.T5_MODEL_PATH)
             self.t5_model.to(self.device)
             self.t5_model.eval()
 
@@ -101,11 +103,11 @@ class HeadlineGenerator:
             self._initialized = True
             logger.info("Headline generator initialized successfully")
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Failed to initialize headline generator: {str(e)}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Clean up resources"""
         try:
             if self.t5_model:
@@ -154,24 +156,29 @@ class HeadlineGenerator:
 
                     # Select best headlines
                     best_headlines = sorted(
-                        scored_candidates, key=lambda x: x["score"], reverse=True
-                    )[:num_variants]
+                        scored_candidates,
+                        key=lambda x: x["score"],
+                        reverse=True)[
+                        :num_variants]
 
                     all_headlines.extend(best_headlines)
 
-                except Exception as e:
-                    logger.error(f"Failed to generate {style} headlines: {str(e)}")
+except Exception as e:
+                    logger.error(
+                        f"Failed to generate {style} headlines: {str(e)}")
                     continue
 
             return all_headlines
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Headline generation failed: {str(e)}")
             raise
 
     async def _generate_style_candidates(
-        self, content: ProcessedContent, style: HeadlineStyle, num_candidates: int
-    ) -> List[str]:
+            self,
+            content: ProcessedContent,
+            style: HeadlineStyle,
+            num_candidates: int) -> List[str]:
         """Generate headline candidates for a specific style"""
         try:
             style_config = self.style_configs[style]
@@ -193,8 +200,12 @@ class HeadlineGenerator:
 
                     # Tokenize input
                     inputs = self.t5_tokenizer(
-                        prompt, return_tensors="pt", truncation=True, max_length=512, padding=True
-                    ).to(self.device)
+                        prompt,
+                        return_tensors="pt",
+                        truncation=True,
+                        max_length=512,
+                        padding=True).to(
+                        self.device)
 
                     # Generate headline
                     with torch.no_grad():
@@ -211,27 +222,30 @@ class HeadlineGenerator:
                         )
 
                     # Decode headline
-                    headline = self.t5_tokenizer.decode(outputs[0], skip_special_tokens=True)
+                    headline = self.t5_tokenizer.decode(
+                        outputs[0], skip_special_tokens=True)
 
                     # Clean up headline
                     headline = self._clean_headline(headline)
 
-                    if headline and len(headline.split()) > 3:  # Minimum length check
+                    if headline and len(
+                            headline.split()) > 3:  # Minimum length check
                         candidates.append(headline)
 
-                except Exception as e:
+except Exception as e:
                     logger.error(f"Failed to generate candidate {i}: {str(e)}")
                     continue
 
             # If we don't have enough candidates, generate fallback ones
             while len(candidates) < num_candidates:
-                fallback_headline = self._generate_fallback_headline(content, style)
+                fallback_headline = self._generate_fallback_headline(
+                    content, style)
                 if fallback_headline not in candidates:
                     candidates.append(fallback_headline)
 
             return candidates[:num_candidates]
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Style candidate generation failed: {str(e)}")
             return []
 
@@ -239,11 +253,16 @@ class HeadlineGenerator:
         """Clean and format headline"""
         try:
             # Remove prompt text if present
-            headline = headline.replace("Generate a factual news headline:", "")
-            headline = headline.replace("Generate an engaging, clickworthy headline:", "")
-            headline = headline.replace("Generate a question-based headline:", "")
-            headline = headline.replace("Generate a neutral, objective headline:", "")
-            headline = headline.replace("Generate an urgent, breaking news headline:", "")
+            headline = headline.replace(
+                "Generate a factual news headline:", "")
+            headline = headline.replace(
+                "Generate an engaging, clickworthy headline:", "")
+            headline = headline.replace(
+                "Generate a question-based headline:", "")
+            headline = headline.replace(
+                "Generate a neutral, objective headline:", "")
+            headline = headline.replace(
+                "Generate an urgent, breaking news headline:", "")
 
             # Clean up whitespace
             headline = " ".join(headline.split())
@@ -260,11 +279,14 @@ class HeadlineGenerator:
 
             return headline.strip()
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Headline cleaning failed: {str(e)}")
             return headline
 
-    def _generate_fallback_headline(self, content: ProcessedContent, style: HeadlineStyle) -> str:
+    def _generate_fallback_headline(
+            self,
+            content: ProcessedContent,
+            style: HeadlineStyle) -> str:
         """Generate fallback headline using simple extraction"""
         try:
             # Extract first sentence or key phrases
@@ -277,7 +299,8 @@ class HeadlineGenerator:
             # Extract key words
             words = word_tokenize(first_sentence.lower())
             stop_words = set(stopwords.words("english"))
-            key_words = [w for w in words if w.isalpha() and w not in stop_words]
+            key_words = [
+                w for w in words if w.isalpha() and w not in stop_words]
 
             # Create headline based on style
             if style == HeadlineStyle.QUESTION:
@@ -286,10 +309,11 @@ class HeadlineGenerator:
                 return f"Breaking: {first_sentence[:50]}..."
             elif style == HeadlineStyle.ENGAGING:
                 return f"Amazing: {first_sentence[:40]}..."
-            else:
-                return first_sentence[:60] + "..." if len(first_sentence) > 60 else first_sentence
+else:
+                return first_sentence[:60] + \
+                    "..." if len(first_sentence) > 60 else first_sentence
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Fallback headline generation failed: {str(e)}")
             return "Important News Update"
 
@@ -314,19 +338,22 @@ class HeadlineGenerator:
                 )
 
                 # 3. Readability score
-                scores["readability"] = self._compute_readability_score(candidate)
+                scores["readability"] = self._compute_readability_score(
+                    candidate)
 
                 # 4. Engagement prediction
                 scores["engagement"] = await self._predict_engagement(candidate, style)
 
                 # 5. Length appropriateness
-                scores["length_appropriateness"] = self._score_length_appropriateness(candidate)
+                scores["length_appropriateness"] = self._score_length_appropriateness(
+                    candidate)
 
                 # 6. Grammatical quality
                 scores["grammatical_quality"] = await self._check_grammar(candidate)
 
                 # 7. Style adherence
-                scores["style_adherence"] = self._check_style_adherence(candidate, style)
+                scores["style_adherence"] = self._check_style_adherence(
+                    candidate, style)
 
                 # 8. Sentiment preservation
                 scores["sentiment_preservation"] = await self._check_sentiment_preservation(
@@ -345,7 +372,9 @@ class HeadlineGenerator:
                     "sentiment_preservation": 0.05,
                 }
 
-                total_score = sum(scores[metric] * weight for metric, weight in weights.items())
+                total_score = sum(
+                    scores[metric] * weight for metric,
+                    weight in weights.items())
 
                 scored_headlines.append(
                     {
@@ -358,23 +387,22 @@ class HeadlineGenerator:
 
             return scored_headlines
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Headline scoring failed: {str(e)}")
             return [
                 {"text": candidate, "style": style.value, "score": 0.5, "metrics": {}}
                 for candidate in candidates
             ]
 
-    async def _check_factual_accuracy(self, headline: str, content: str) -> float:
+    async def _check_factual_accuracy(
+            self, headline: str, content: str) -> float:
         """Check if headline facts are present in content"""
         try:
             # Extract entities from headline and content
-            headline_words = set(
-                word.lower() for word in word_tokenize(headline) if word.isalpha() and len(word) > 2
-            )
-            content_words = set(
-                word.lower() for word in word_tokenize(content) if word.isalpha() and len(word) > 2
-            )
+            headline_words = set(word.lower() for word in word_tokenize(
+                headline) if word.isalpha() and len(word) > 2)
+            content_words = set(word.lower() for word in word_tokenize(
+                content) if word.isalpha() and len(word) > 2)
 
             # Calculate overlap
             if not headline_words:
@@ -383,11 +411,12 @@ class HeadlineGenerator:
             overlap = len(headline_words.intersection(content_words))
             return overlap / len(headline_words)
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Factual accuracy check failed: {str(e)}")
             return 0.5
 
-    async def _compute_semantic_similarity(self, headline: str, title: str) -> float:
+    async def _compute_semantic_similarity(
+            self, headline: str, title: str) -> float:
         """Compute semantic similarity between headline and title"""
         try:
             if not title:
@@ -398,10 +427,11 @@ class HeadlineGenerator:
             title_embedding = self.sentence_model.encode([title])
 
             # Calculate cosine similarity
-            similarity = cosine_similarity(headline_embedding, title_embedding)[0][0]
+            similarity = cosine_similarity(
+                headline_embedding, title_embedding)[0][0]
             return float(similarity)
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Semantic similarity computation failed: {str(e)}")
             return 0.5
 
@@ -416,15 +446,17 @@ class HeadlineGenerator:
 
             # Simple readability metrics
             avg_words_per_sentence = len(words) / len(sentences)
-            avg_syllables_per_word = sum(self._count_syllables(word) for word in words) / len(words)
+            avg_syllables_per_word = sum(
+                self._count_syllables(word) for word in words) / len(words)
 
             # Flesch Reading Ease approximation
-            score = 206.835 - (1.015 * avg_words_per_sentence) - (84.6 * avg_syllables_per_word)
+            score = 206.835 - (1.015 * avg_words_per_sentence) - \
+                (84.6 * avg_syllables_per_word)
 
             # Normalize to 0-1 scale
             return max(0, min(1, score / 100))
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Readability computation failed: {str(e)}")
             return 0.5
 
@@ -447,7 +479,10 @@ class HeadlineGenerator:
 
         return max(1, syllable_count)
 
-    async def _predict_engagement(self, headline: str, style: HeadlineStyle) -> float:
+    async def _predict_engagement(
+            self,
+            headline: str,
+            style: HeadlineStyle) -> float:
         """Predict engagement potential of headline"""
         try:
             # Check for engagement indicators
@@ -471,8 +506,7 @@ class HeadlineGenerator:
 
             headline_lower = headline.lower()
             indicator_count = sum(
-                1 for indicator in engagement_indicators if indicator in headline_lower
-            )
+                1 for indicator in engagement_indicators if indicator in headline_lower)
 
             # Check for emotional words
             emotional_words = [
@@ -490,7 +524,8 @@ class HeadlineGenerator:
                 "relief",
             ]
 
-            emotional_count = sum(1 for word in emotional_words if word in headline_lower)
+            emotional_count = sum(
+                1 for word in emotional_words if word in headline_lower)
 
             # Check for numbers (often increase engagement)
             number_count = len(re.findall(r"\d+", headline))
@@ -503,7 +538,7 @@ class HeadlineGenerator:
 
             return base_score + indicator_score + emotional_score + number_score
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Engagement prediction failed: {str(e)}")
             return 0.5
 
@@ -519,10 +554,10 @@ class HeadlineGenerator:
                 return 0.8
             elif 3 <= word_count <= 18:
                 return 0.6
-            else:
+else:
                 return 0.3
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Length scoring failed: {str(e)}")
             return 0.5
 
@@ -551,11 +586,14 @@ class HeadlineGenerator:
 
             return max(0, score)
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Grammar check failed: {str(e)}")
             return 0.5
 
-    def _check_style_adherence(self, headline: str, style: HeadlineStyle) -> float:
+    def _check_style_adherence(
+            self,
+            headline: str,
+            style: HeadlineStyle) -> float:
         """Check if headline adheres to specified style"""
         try:
             style_config = self.style_configs[style]
@@ -563,8 +601,7 @@ class HeadlineGenerator:
 
             # Check for style-specific keywords
             keyword_matches = sum(
-                1 for keyword in style_config["keywords"] if keyword in headline_lower
-            )
+                1 for keyword in style_config["keywords"] if keyword in headline_lower)
 
             # Check length adherence
             word_count = len(headline.split())
@@ -589,26 +626,30 @@ class HeadlineGenerator:
             keyword_score = min(1.0, keyword_matches * 0.3)
             return (keyword_score + length_score + pattern_score) / 3
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Style adherence check failed: {str(e)}")
             return 0.5
 
-    async def _check_sentiment_preservation(self, headline: str, content: str) -> float:
+    async def _check_sentiment_preservation(
+            self, headline: str, content: str) -> float:
         """Check if headline preserves content sentiment"""
         try:
             # Analyze sentiment of headline and content
             headline_sentiment = self.sentiment_analyzer(headline)[0]
-            content_sentiment = self.sentiment_analyzer(content[:500])[0]  # Sample content
+            content_sentiment = self.sentiment_analyzer(
+                content[:500])[0]  # Sample content
 
             # Compare sentiment labels
             if headline_sentiment["label"] == content_sentiment["label"]:
                 # Check confidence scores
-                confidence_diff = abs(headline_sentiment["score"] - content_sentiment["score"])
+                confidence_diff = abs(
+                    headline_sentiment["score"] -
+                    content_sentiment["score"])
                 return max(0, 1.0 - confidence_diff)
-            else:
+else:
                 return 0.3  # Different sentiment labels
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Sentiment preservation check failed: {str(e)}")
             return 0.5
 

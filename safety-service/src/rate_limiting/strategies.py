@@ -24,7 +24,7 @@ class BaseRateLimiter:
         self.is_initialized = False
         self.redis_client = None
 
-    async def initialize(self, redis_client):
+    async def initialize(self, redis_client) -> Dict[str, Any]:
         """Initialize the rate limiter"""
         self.redis_client = redis_client
         self.is_initialized = True
@@ -69,7 +69,8 @@ class SlidingWindowRateLimiter(BaseRateLimiter):
                 requests = []
 
             # Remove old requests outside the window
-            requests = [req_time for req_time in requests if req_time > window_start]
+            requests = [
+                req_time for req_time in requests if req_time > window_start]
 
             # Check if adding this request would exceed the limit
             if len(requests) + request_size > self.default_limit:
@@ -105,17 +106,22 @@ class SlidingWindowRateLimiter(BaseRateLimiter):
             logger.error(f"Sliding window rate limit check failed: {str(e)}")
             return None
 
-    async def set_dynamic_limit(self, user_id: str, endpoint: str, new_limit: int):
-        """Set dynamic limit for user and endpoint"""
+    async def set_dynamic_limit(
+            self,
+            user_id: str,
+            endpoint: str,
+            new_limit: int):
+         -> Dict[str, Any]:"""Set dynamic limit for user and endpoint"""
         try:
             # Store dynamic limit
             limit_key = f"dynamic_limit:{user_id}:{endpoint}"
-            await self.redis_client.setex(limit_key, 3600, str(new_limit))  # 1 hour TTL
+            # 1 hour TTL
+            await self.redis_client.setex(limit_key, 3600, str(new_limit))
 
         except Exception as e:
             logger.error(f"Dynamic limit setting failed: {str(e)}")
 
-    async def reset_limit(self, user_id: str, endpoint: str):
+    async def reset_limit(self, user_id: str, endpoint: str) -> Dict[str, Any]:
         """Reset rate limit for user and endpoint"""
         try:
             key = self.get_key(user_id, endpoint)
@@ -124,13 +130,13 @@ class SlidingWindowRateLimiter(BaseRateLimiter):
         except Exception as e:
             logger.error(f"Rate limit reset failed: {str(e)}")
 
-    async def reset_user_limits(self, user_id: str):
+    async def reset_user_limits(self, user_id: str) -> Dict[str, Any]:
         """Reset all rate limits for user"""
         try:
             pattern = f"{self.__class__.__name__}:{user_id}:*"
             keys = await self.redis_client.keys(pattern)
             if keys:
-                await self.redis_client.delete(*keys)
+    await self.redis_client.delete(*keys)
 
         except Exception as e:
             logger.error(f"User rate limit reset failed: {str(e)}")
@@ -145,12 +151,16 @@ class SlidingWindowRateLimiter(BaseRateLimiter):
                 requests = json.loads(window_data)
                 current_time = time.time()
                 window_start = current_time - self.window_size
-                active_requests = [req_time for req_time in requests if req_time > window_start]
+                active_requests = [
+                    req_time for req_time in requests if req_time > window_start]
 
                 return {
                     "current_requests": len(active_requests),
                     "limit": self.default_limit,
-                    "remaining": max(0, self.default_limit - len(active_requests)),
+                    "remaining": max(
+                        0,
+                        self.default_limit -
+                        len(active_requests)),
                     "window_size": self.window_size,
                 }
             else:
@@ -189,7 +199,8 @@ class TokenBucketRateLimiter(BaseRateLimiter):
     def __init__(self):
         super().__init__()
         self.capacity = self.config.default_limit
-        self.refill_rate = self.config.default_limit / self.config.window_size  # tokens per second
+        self.refill_rate = self.config.default_limit / \
+            self.config.window_size  # tokens per second
         self.last_refill = {}
 
     async def check_limit(
@@ -258,17 +269,22 @@ class TokenBucketRateLimiter(BaseRateLimiter):
             logger.error(f"Token bucket rate limit check failed: {str(e)}")
             return None
 
-    async def set_dynamic_limit(self, user_id: str, endpoint: str, new_limit: int):
-        """Set dynamic limit for user and endpoint"""
+    async def set_dynamic_limit(
+            self,
+            user_id: str,
+            endpoint: str,
+            new_limit: int):
+         -> Dict[str, Any]:"""Set dynamic limit for user and endpoint"""
         try:
             # Store dynamic limit
             limit_key = f"dynamic_limit:{user_id}:{endpoint}"
-            await self.redis_client.setex(limit_key, 3600, str(new_limit))  # 1 hour TTL
+            # 1 hour TTL
+            await self.redis_client.setex(limit_key, 3600, str(new_limit))
 
         except Exception as e:
             logger.error(f"Dynamic limit setting failed: {str(e)}")
 
-    async def reset_limit(self, user_id: str, endpoint: str):
+    async def reset_limit(self, user_id: str, endpoint: str) -> Dict[str, Any]:
         """Reset rate limit for user and endpoint"""
         try:
             key = self.get_key(user_id, endpoint)
@@ -277,13 +293,13 @@ class TokenBucketRateLimiter(BaseRateLimiter):
         except Exception as e:
             logger.error(f"Rate limit reset failed: {str(e)}")
 
-    async def reset_user_limits(self, user_id: str):
+    async def reset_user_limits(self, user_id: str) -> Dict[str, Any]:
         """Reset all rate limits for user"""
         try:
             pattern = f"{self.__class__.__name__}:{user_id}:*"
             keys = await self.redis_client.keys(pattern)
             if keys:
-                await self.redis_client.delete(*keys)
+    await self.redis_client.delete(*keys)
 
         except Exception as e:
             logger.error(f"User rate limit reset failed: {str(e)}")
@@ -380,7 +396,8 @@ class AdaptiveRateLimiter(BaseRateLimiter):
                 requests = []
 
             # Remove old requests outside the window
-            requests = [req_time for req_time in requests if req_time > window_start]
+            requests = [
+                req_time for req_time in requests if req_time > window_start]
 
             # Check if adding this request would exceed the adaptive limit
             if len(requests) + 1 > adaptive_limit:
@@ -444,17 +461,22 @@ class AdaptiveRateLimiter(BaseRateLimiter):
             logger.error(f"Adaptive limit calculation failed: {str(e)}")
             return self.base_limit
 
-    async def set_dynamic_limit(self, user_id: str, endpoint: str, new_limit: int):
-        """Set dynamic limit for user and endpoint"""
+    async def set_dynamic_limit(
+            self,
+            user_id: str,
+            endpoint: str,
+            new_limit: int):
+         -> Dict[str, Any]:"""Set dynamic limit for user and endpoint"""
         try:
             # Store dynamic limit
             limit_key = f"dynamic_limit:{user_id}:{endpoint}"
-            await self.redis_client.setex(limit_key, 3600, str(new_limit))  # 1 hour TTL
+            # 1 hour TTL
+            await self.redis_client.setex(limit_key, 3600, str(new_limit))
 
         except Exception as e:
             logger.error(f"Dynamic limit setting failed: {str(e)}")
 
-    async def reset_limit(self, user_id: str, endpoint: str):
+    async def reset_limit(self, user_id: str, endpoint: str) -> Dict[str, Any]:
         """Reset rate limit for user and endpoint"""
         try:
             key = self.get_key(user_id, endpoint)
@@ -463,13 +485,13 @@ class AdaptiveRateLimiter(BaseRateLimiter):
         except Exception as e:
             logger.error(f"Rate limit reset failed: {str(e)}")
 
-    async def reset_user_limits(self, user_id: str):
+    async def reset_user_limits(self, user_id: str) -> Dict[str, Any]:
         """Reset all rate limits for user"""
         try:
             pattern = f"{self.__class__.__name__}:{user_id}:*"
             keys = await self.redis_client.keys(pattern)
             if keys:
-                await self.redis_client.delete(*keys)
+    await self.redis_client.delete(*keys)
 
         except Exception as e:
             logger.error(f"User rate limit reset failed: {str(e)}")
@@ -485,11 +507,13 @@ class AdaptiveRateLimiter(BaseRateLimiter):
                 current_time = time.time()
                 window_size = self.config.window_size
                 window_start = current_time - window_size
-                active_requests = [req_time for req_time in requests if req_time > window_start]
+                active_requests = [
+                    req_time for req_time in requests if req_time > window_start]
 
                 return {
                     "current_requests": len(active_requests),
-                    "adaptive_limit": self.base_limit,  # Would need to calculate current adaptive limit
+                    # Would need to calculate current adaptive limit
+                    "adaptive_limit": self.base_limit,
                     "remaining": max(0, self.base_limit - len(active_requests)),
                     "window_size": window_size,
                 }
@@ -528,7 +552,11 @@ class GeolocationBasedLimiter(BaseRateLimiter):
 
     def __init__(self):
         super().__init__()
-        self.location_limits = {"US": 1000, "EU": 800, "ASIA": 600, "OTHER": 400}
+        self.location_limits = {
+            "US": 1000,
+            "EU": 800,
+            "ASIA": 600,
+            "OTHER": 400}
         self.suspicious_locations = set()
 
     async def check_limit(
@@ -541,7 +569,8 @@ class GeolocationBasedLimiter(BaseRateLimiter):
 
             # Determine location from IP (simplified)
             location = self.get_location_from_ip(ip_address)
-            limit = self.location_limits.get(location, self.location_limits["OTHER"])
+            limit = self.location_limits.get(
+                location, self.location_limits["OTHER"])
 
             # Check if location is suspicious
             if location in self.suspicious_locations:
@@ -561,7 +590,8 @@ class GeolocationBasedLimiter(BaseRateLimiter):
                 requests = []
 
             # Remove old requests outside the window
-            requests = [req_time for req_time in requests if req_time > window_start]
+            requests = [
+                req_time for req_time in requests if req_time > window_start]
 
             # Check if adding this request would exceed the limit
             if len(requests) + request_size > limit:
@@ -602,20 +632,21 @@ class GeolocationBasedLimiter(BaseRateLimiter):
         try:
             # In a real implementation, this would use a GeoIP service
             # For now, we'll simulate based on IP patterns
-            if ip_address.startswith("192.168.") or ip_address.startswith("10."):
+            if ip_address.startswith(
+                    "192.168.") or ip_address.startswith("10."):
                 return "US"  # Local network
             elif ip_address.startswith("172."):
                 return "EU"  # Simulated
             elif ip_address.startswith("203."):
                 return "ASIA"  # Simulated
-            else:
+        else:
                 return "OTHER"
 
         except Exception as e:
             logger.error(f"Location detection failed: {str(e)}")
             return "OTHER"
 
-    async def mark_location_suspicious(self, location: str):
+    async def mark_location_suspicious(self, location: str) -> Dict[str, Any]:
         """Mark a location as suspicious"""
         try:
             self.suspicious_locations.add(location)
@@ -624,7 +655,7 @@ class GeolocationBasedLimiter(BaseRateLimiter):
         except Exception as e:
             logger.error(f"Failed to mark location as suspicious: {str(e)}")
 
-    async def unmark_location_suspicious(self, location: str):
+    async def unmark_location_suspicious(self, location: str) -> Dict[str, Any]:
         """Remove suspicious mark from location"""
         try:
             self.suspicious_locations.discard(location)
@@ -633,11 +664,13 @@ class GeolocationBasedLimiter(BaseRateLimiter):
         except Exception as e:
             logger.error(f"Failed to unmark location: {str(e)}")
 
-    async def get_status(self, ip_address: str, endpoint: str) -> Dict[str, Any]:
-        """Get current rate limit status"""
+    async def get_status(self, ip_address: str,
+                         endpoint: str) -> Dict[str, Any]:
+    """Get current rate limit status"""
         try:
             location = self.get_location_from_ip(ip_address)
-            limit = self.location_limits.get(location, self.location_limits["OTHER"])
+            limit = self.location_limits.get(
+                location, self.location_limits["OTHER"])
 
             if location in self.suspicious_locations:
                 limit = int(limit * 0.1)
@@ -650,7 +683,8 @@ class GeolocationBasedLimiter(BaseRateLimiter):
                 current_time = time.time()
                 window_size = self.config.window_size
                 window_start = current_time - window_size
-                active_requests = [req_time for req_time in requests if req_time > window_start]
+                active_requests = [
+                    req_time for req_time in requests if req_time > window_start]
 
                 return {
                     "location": location,

@@ -42,7 +42,9 @@ class ContentExtractionService:
         self.monitoring_service = monitoring_service
         self.start_time = time.time()
 
-    async def extract_content(self, request: ExtractionRequest) -> ExtractionResponse:
+    async def extract_content(
+            self,
+            request: ExtractionRequest) -> ExtractionResponse:
         """
         Extract content from a single URL.
 
@@ -117,7 +119,8 @@ class ContentExtractionService:
             BatchExtractionResponse with results
         """
         try:
-            logger.info(f"Processing batch extraction for {len(request.urls)} URLs")
+            logger.info(
+                f"Processing batch extraction for {len(request.urls)} URLs")
 
             # Generate batch ID
             batch_id = self._generate_batch_id()
@@ -125,10 +128,11 @@ class ContentExtractionService:
             # Create individual extraction requests
             extraction_requests = []
             for i, url in enumerate(request.urls):
-                content_type = request.content_types[i] if i < len(request.content_types) else None
+                content_type = request.content_types[i] if i < len(
+                    request.content_types) else None
                 extraction_method = (
-                    request.extraction_methods[i] if i < len(request.extraction_methods) else None
-                )
+                    request.extraction_methods[i] if i < len(
+                        request.extraction_methods) else None)
 
                 extraction_request = ExtractionRequest(
                     url=url,
@@ -190,8 +194,9 @@ class ContentExtractionService:
                 errors=[str(e)],
             )
 
-    async def get_extraction_status(self, extraction_id: str) -> Dict[str, Any]:
-        """
+    async def get_extraction_status(
+            self, extraction_id: str) -> Dict[str, Any]:
+    """
         Get status of an extraction.
 
         Args:
@@ -231,7 +236,7 @@ class ContentExtractionService:
         limit: int = 20,
         offset: int = 0,
     ) -> Dict[str, Any]:
-        """
+    """
         Search extracted content.
 
         Args:
@@ -273,9 +278,12 @@ class ContentExtractionService:
 
             # Check dependencies
             dependencies = {
-                "cache_service": await self._check_cache_service(),
-                "queue_service": await self._check_queue_service(),
-                "monitoring_service": await self._check_monitoring_service(),
+                "cache_service":
+    await self._check_cache_service(),
+                "queue_service":
+    await self._check_queue_service(),
+                "monitoring_service":
+    await self._check_monitoring_service(),
             }
 
             # Determine overall status
@@ -317,7 +325,8 @@ class ContentExtractionService:
             raise ValidationError("URL must start with http:// or https://")
 
         if request.quality_threshold < 0.0 or request.quality_threshold > 1.0:
-            raise ValidationError("Quality threshold must be between 0.0 and 1.0")
+            raise ValidationError(
+                "Quality threshold must be between 0.0 and 1.0")
 
         if request.timeout and (request.timeout < 1 or request.timeout > 300):
             raise ValidationError("Timeout must be between 1 and 300 seconds")

@@ -2,11 +2,10 @@
 Content quality analyzer with comprehensive scoring and validation.
 """
 
-import math
 import re
 from collections import Counter
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from datetime import datetime
+from typing import List, Optional
 
 from loguru import logger
 
@@ -133,9 +132,7 @@ class QualityAnalyzer:
             logger.warning(f"Readability calculation failed: {str(e)}")
             return 50.0  # Default score
 
-    async def _calculate_spam_score(
-        self, content: str, url: Optional[str], title: Optional[str]
-    ) -> float:
+    async def _calculate_spam_score(self, content: str, url: Optional[str], title: Optional[str]) -> float:
         """Calculate spam detection score (0-100, higher = more spam)."""
         try:
             spam_indicators = 0
@@ -143,9 +140,7 @@ class QualityAnalyzer:
 
             # Check for spam keywords
             content_lower = content.lower()
-            spam_keyword_count = sum(
-                1 for keyword in self.spam_keywords if keyword in content_lower
-            )
+            spam_keyword_count = sum(1 for keyword in self.spam_keywords if keyword in content_lower)
             spam_indicators += min(spam_keyword_count * 10, 50)  # Max 50 points
             total_checks += 1
 
@@ -267,7 +262,7 @@ class QualityAnalyzer:
                             freshness_score += 60
                         elif year >= current_year - 5:
                             freshness_score += 40
-                        else:
+                else:
                             freshness_score += 20
                 except (ValueError, AttributeError):
                     continue
@@ -323,7 +318,8 @@ class QualityAnalyzer:
             # Normalize scores
             readability_norm = readability_score / 100.0
             spam_norm = 1.0 - (spam_score / 100.0)  # Invert spam score
-            duplicate_norm = 1.0 - (duplicate_score / 100.0)  # Invert duplicate score
+            # Invert duplicate score
+            duplicate_norm = 1.0 - (duplicate_score / 100.0)
             freshness_norm = content_freshness / 100.0
 
             # Length score (prefer content between 200-2000 words)
@@ -507,16 +503,12 @@ class QualityAnalyzer:
         recommendations = []
 
         if metrics.readability_score < 30:
-            recommendations.append(
-                "Content is difficult to read. Consider shorter sentences and simpler words."
-            )
+            recommendations.append("Content is difficult to read. Consider shorter sentences and simpler words.")
         elif metrics.readability_score > 80:
             recommendations.append("Content may be too simple. Consider adding more complex ideas.")
 
         if metrics.spam_score > 30:
-            recommendations.append(
-                "Content contains spam indicators. Review for promotional language."
-            )
+            recommendations.append("Content contains spam indicators. Review for promotional language.")
 
         if metrics.duplicate_score > 50:
             recommendations.append("Content appears to have duplicate or boilerplate text.")
@@ -524,18 +516,12 @@ class QualityAnalyzer:
         if metrics.word_count < 200:
             recommendations.append("Content is too short. Consider adding more detail and context.")
         elif metrics.word_count > 3000:
-            recommendations.append(
-                "Content is very long. Consider breaking into sections or summaries."
-            )
+            recommendations.append("Content is very long. Consider breaking into sections or summaries.")
 
         if metrics.average_sentence_length > 25:
-            recommendations.append(
-                "Sentences are too long. Consider breaking them into shorter ones."
-            )
+            recommendations.append("Sentences are too long. Consider breaking them into shorter ones.")
 
         if metrics.link_density > 0.1:
-            recommendations.append(
-                "High link density may affect readability. Consider reducing links."
-            )
+            recommendations.append("High link density may affect readability. Consider reducing links.")
 
         return recommendations

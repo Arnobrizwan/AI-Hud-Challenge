@@ -39,7 +39,7 @@ class CachePolicies:
         self._strategy_configs: Dict[CacheStrategy, Dict[str, Any]] = {}
         self._content_type_configs: Dict[ContentType, Dict[str, Any]] = {}
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize cache policies"""
         if self._initialized:
             return
@@ -63,12 +63,12 @@ class CachePolicies:
             logger.error(f"Failed to initialize Cache Policies: {e}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup cache policies"""
         self._initialized = False
         logger.info("Cache Policies cleanup complete")
 
-    async def _initialize_strategy_configs(self):
+    async def _initialize_strategy_configs(self) -> Dict[str, Any]:
         """Initialize cache strategy configurations"""
         self._strategy_configs = {
             CacheStrategy.AGGRESSIVE: {
@@ -103,7 +103,7 @@ class CachePolicies:
             },
         }
 
-    async def _initialize_content_type_configs(self):
+    async def _initialize_content_type_configs(self) -> Dict[str, Any]:
         """Initialize content type specific configurations"""
         self._content_type_configs = {
             ContentType.ARTICLE: {
@@ -148,7 +148,7 @@ class CachePolicies:
             },
         }
 
-    async def _load_custom_policies(self):
+    async def _load_custom_policies(self) -> Dict[str, Any]:
         """Load custom cache policies from configuration"""
         # This would typically load from a database or configuration file
         # For now, we'll use default policies
@@ -173,7 +173,7 @@ class CachePolicies:
     async def get_cache_config(
         self, content_type: ContentType, context: Dict[str, Any] = None
     ) -> Dict[str, Any]:
-        """Get cache configuration for content type and context"""
+    """Get cache configuration for content type and context"""
         if not self._initialized:
             return self._get_default_config()
 
@@ -247,7 +247,8 @@ class CachePolicies:
             # Check conditions
             conditions = policy.get("conditions", {})
             for condition_key, condition_value in conditions.items():
-                if not self._evaluate_condition(condition_key, condition_value, context):
+                if not self._evaluate_condition(
+                        condition_key, condition_value, context):
                     return False
 
             return True
@@ -269,13 +270,15 @@ class CachePolicies:
 
             elif condition_key == "age_hours":
                 if "published_at" in context:
-                    age_hours = (datetime.utcnow() - context["published_at"]).total_seconds() / 3600
+                    age_hours = (
+                        datetime.utcnow() - context["published_at"]).total_seconds() / 3600
                     return age_hours <= condition_value
                 return False
 
             elif condition_key == "categories":
                 article_categories = context.get("categories", [])
-                return any(cat in article_categories for cat in condition_value)
+                return any(
+                    cat in article_categories for cat in condition_value)
 
             elif condition_key == "user_specific":
                 return context.get("user_id") is not None
@@ -289,7 +292,7 @@ class CachePolicies:
     def _merge_configs(
         self, base_config: Dict[str, Any], strategy_config: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Merge base and strategy configurations"""
+    """Merge base and strategy configurations"""
         config = base_config.copy()
 
         # Override with strategy config
@@ -306,11 +309,12 @@ class CachePolicies:
     async def _apply_context_adjustments(
         self, config: Dict[str, Any], context: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Apply context-specific adjustments to config"""
+    """Apply context-specific adjustments to config"""
         try:
             # Adjust TTL based on content age
             if "published_at" in context:
-                age_hours = (datetime.utcnow() - context["published_at"]).total_seconds() / 3600
+                age_hours = (
+                    datetime.utcnow() - context["published_at"]).total_seconds() / 3600
 
                 # Older content gets longer cache
                 if age_hours > 24:
@@ -352,7 +356,8 @@ class CachePolicies:
             "warm_cache": False,
         }
 
-    async def get_invalidation_strategy(self, content_type: ContentType) -> str:
+    async def get_invalidation_strategy(
+            self, content_type: ContentType) -> str:
         """Get invalidation strategy for content type"""
         if not self._initialized:
             return "immediate"

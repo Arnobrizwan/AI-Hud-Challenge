@@ -2,7 +2,6 @@
 Configuration settings for the Summarization Service
 """
 
-import os
 from typing import List, Optional
 
 from pydantic import BaseSettings, Field
@@ -51,9 +50,7 @@ class Settings(BaseSettings):
 
     # Logging configuration
     LOG_LEVEL: str = Field(default="INFO", env="LOG_LEVEL")
-    LOG_FORMAT: str = Field(
-        default="%(asctime)s - %(name)s - %(levelname)s - %(message)s", env="LOG_FORMAT"
-    )
+    LOG_FORMAT: str = Field(default="%(asctime)s - %(name)s - %(levelname)s - %(message)s", env="LOG_FORMAT")
 
     # A/B Testing configuration
     ENABLE_AB_TESTING: bool = Field(default=True, env="ENABLE_AB_TESTING")

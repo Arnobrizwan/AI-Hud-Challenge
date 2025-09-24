@@ -3,15 +3,10 @@ MLOps Pipeline Orchestrator - Core orchestration service
 Manages complete ML lifecycle including training, deployment, monitoring, and automated retraining
 """
 
-import asyncio
-import logging
-from datetime import datetime, timedelta
-from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-from pydantic import BaseModel, Field
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.settings import Settings
 from src.deployment.deployment_manager import ModelDeploymentManager
@@ -120,7 +115,7 @@ class MLOpsPipelineOrchestrator:
 
             # Set up monitoring
             if pipeline_config.monitoring_enabled:
-                await self.monitoring_service.setup_pipeline_monitoring(pipeline)
+    await self.monitoring_service.setup_pipeline_monitoring(pipeline)
 
             pipeline.status = PipelineStatus.READY
             logger.info(f"ML pipeline created successfully: {pipeline.id}")
@@ -174,9 +169,7 @@ class MLOpsPipelineOrchestrator:
             logger.error(f"Failed to create pipeline components: {str(e)}")
             raise PipelineError(f"Component creation failed: {str(e)}")
 
-    async def trigger_pipeline_execution(
-        self, pipeline_id: str, execution_params: Dict[str, Any]
-    ) -> PipelineExecution:
+    async def trigger_pipeline_execution(self, pipeline_id: str, execution_params: Dict[str, Any]) -> PipelineExecution:
         """Trigger pipeline execution with parameters"""
 
         try:
@@ -281,15 +274,15 @@ class MLOpsPipelineOrchestrator:
             ]
 
             for execution in running_executions:
-                await self.stop_pipeline_execution(execution.id)
+    await self.stop_pipeline_execution(execution.id)
 
             # Cleanup orchestration resources
             if pipeline.orchestrator == "airflow" and pipeline.airflow_dag_id:
-                await self.airflow_client.delete_dag(pipeline.airflow_dag_id)
+    await self.airflow_client.delete_dag(pipeline.airflow_dag_id)
             elif pipeline.orchestrator == "vertex_ai" and pipeline.vertex_pipeline_id:
-                await self.vertex_ai_client.delete_pipeline(pipeline.vertex_pipeline_id)
+    await self.vertex_ai_client.delete_pipeline(pipeline.vertex_pipeline_id)
             elif pipeline.orchestrator == "kubeflow" and pipeline.kubeflow_pipeline_id:
-                await self.kubeflow_client.delete_pipeline(pipeline.kubeflow_pipeline_id)
+    await self.kubeflow_client.delete_pipeline(pipeline.kubeflow_pipeline_id)
 
             # Remove from registry
             del self._pipelines[pipeline_id]
@@ -313,13 +306,11 @@ class MLOpsPipelineOrchestrator:
             pipeline = await self.get_pipeline(execution.pipeline_id)
 
             if pipeline.orchestrator == "airflow":
-                await self.airflow_client.stop_dag_run(
-                    dag_id=pipeline.airflow_dag_id, run_id=execution.external_run_id
-                )
+    await self.airflow_client.stop_dag_run(dag_id=pipeline.airflow_dag_id, run_id=execution.external_run_id)
             elif pipeline.orchestrator == "vertex_ai":
-                await self.vertex_ai_client.cancel_pipeline_job(execution.external_run_id)
+    await self.vertex_ai_client.cancel_pipeline_job(execution.external_run_id)
             elif pipeline.orchestrator == "kubeflow":
-                await self.kubeflow_client.stop_pipeline_run(execution.external_run_id)
+    await self.kubeflow_client.stop_pipeline_run(execution.external_run_id)
 
             # Update execution status
             execution.status = PipelineStatus.STOPPED
@@ -354,9 +345,7 @@ class MLOpsPipelineOrchestrator:
         if config.include_deployment and not config.include_training:
             raise ValidationError("Deployment requires training to be enabled")
 
-    async def _create_data_validation_component(
-        self, config: MLPipelineConfig
-    ) -> PipelineComponent:
+    async def _create_data_validation_component(self, config: MLPipelineConfig) -> PipelineComponent:
         """Create data validation component"""
 
         return PipelineComponent(
@@ -372,9 +361,7 @@ class MLOpsPipelineOrchestrator:
             timeout=config.data_validation_timeout,
         )
 
-    async def _create_feature_engineering_component(
-        self, config: MLPipelineConfig
-    ) -> PipelineComponent:
+    async def _create_feature_engineering_component(self, config: MLPipelineConfig) -> PipelineComponent:
         """Create feature engineering component"""
 
         return PipelineComponent(
@@ -456,9 +443,7 @@ class MLOpsPipelineOrchestrator:
             timeout=config.monitoring_timeout,
         )
 
-    async def _create_airflow_dag(
-        self, pipeline: MLPipeline, components: List[PipelineComponent]
-    ) -> str:
+    async def _create_airflow_dag(self, pipeline: MLPipeline, components: List[PipelineComponent]) -> str:
         """Create Airflow DAG for pipeline"""
 
         dag_id = f"ml_pipeline_{pipeline.name.lower().replace(' ', '_')}"
@@ -475,9 +460,7 @@ class MLOpsPipelineOrchestrator:
         await self.airflow_client.create_dag(dag_id, dag_config)
         return dag_id
 
-    async def _create_vertex_ai_pipeline(
-        self, pipeline: MLPipeline, components: List[PipelineComponent]
-    ) -> str:
+    async def _create_vertex_ai_pipeline(self, pipeline: MLPipeline, components: List[PipelineComponent]) -> str:
         """Create Vertex AI pipeline for pipeline"""
 
         pipeline_spec = {
@@ -490,9 +473,7 @@ class MLOpsPipelineOrchestrator:
         pipeline_id = await self.vertex_ai_client.create_pipeline(pipeline_spec)
         return pipeline_id
 
-    async def _create_kubeflow_pipeline(
-        self, pipeline: MLPipeline, components: List[PipelineComponent]
-    ) -> str:
+    async def _create_kubeflow_pipeline(self, pipeline: MLPipeline, components: List[PipelineComponent]) -> str:
         """Create Kubeflow pipeline for pipeline"""
 
         pipeline_spec = {

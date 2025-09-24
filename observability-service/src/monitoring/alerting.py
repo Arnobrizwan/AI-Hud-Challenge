@@ -141,7 +141,10 @@ class SuppressionRuleEngine:
         self.suppression_rules = []
         self.active_suppressions = {}
 
-    async def should_suppress(self, alert: Alert, correlated_alerts: List[Alert]) -> bool:
+    async def should_suppress(
+            self,
+            alert: Alert,
+            correlated_alerts: List[Alert]) -> bool:
         """Check if alert should be suppressed"""
 
         # Check active suppressions
@@ -164,7 +167,8 @@ class SuppressionRuleEngine:
 
         return False
 
-    def _matches_suppression(self, alert: Alert, suppression: Dict[str, Any]) -> bool:
+    def _matches_suppression(
+            self, alert: Alert, suppression: Dict[str, Any]) -> bool:
         """Check if alert matches active suppression"""
         rule = suppression["rule"]
 
@@ -182,7 +186,8 @@ class SuppressionRuleEngine:
             return False
 
         # Check severity
-        if rule.get("min_severity") and alert.severity.value < rule["min_severity"]:
+        if rule.get(
+                "min_severity") and alert.severity.value < rule["min_severity"]:
             return False
 
         # Check source
@@ -205,9 +210,9 @@ class NotificationRouter:
         self.channels = {}
         self.routing_rules = []
 
-    async def route_alert(self, alert: Alert, severity: AlertSeverity) -> Dict[str, Any]:
-        """Route alert to appropriate channels"""
-
+    async def route_alert(self, alert: Alert,
+                          severity: AlertSeverity) -> Dict[str, Any]:
+    """Route alert to appropriate channels"""
         channels = []
 
         # Determine channels based on severity and routing rules
@@ -225,25 +230,44 @@ class NotificationRouter:
             if self._matches_routing_rule(alert, rule):
                 channels.extend(rule.get("channels", []))
 
-        return {"channels": channels, "routing_reason": f"Severity: {severity.value}"}
+        return {
+            "channels": channels,
+            "routing_reason": f"Severity: {severity.value}"}
 
     def _get_emergency_channels(self) -> List[str]:
         """Get emergency notification channels"""
-        return [ch_id for ch_id, ch in self.channels.items() if ch.get("emergency_enabled", False)]
+        return [
+            ch_id for ch_id,
+            ch in self.channels.items() if ch.get(
+                "emergency_enabled",
+                False)]
 
     def _get_critical_channels(self) -> List[str]:
         """Get critical notification channels"""
-        return [ch_id for ch_id, ch in self.channels.items() if ch.get("critical_enabled", True)]
+        return [
+            ch_id for ch_id,
+            ch in self.channels.items() if ch.get(
+                "critical_enabled",
+                True)]
 
     def _get_high_channels(self) -> List[str]:
         """Get high severity notification channels"""
-        return [ch_id for ch_id, ch in self.channels.items() if ch.get("high_enabled", True)]
+        return [
+            ch_id for ch_id,
+            ch in self.channels.items() if ch.get(
+                "high_enabled",
+                True)]
 
     def _get_standard_channels(self) -> List[str]:
         """Get standard notification channels"""
-        return [ch_id for ch_id, ch in self.channels.items() if ch.get("standard_enabled", True)]
+        return [
+            ch_id for ch_id,
+            ch in self.channels.items() if ch.get(
+                "standard_enabled",
+                True)]
 
-    def _matches_routing_rule(self, alert: Alert, rule: Dict[str, Any]) -> bool:
+    def _matches_routing_rule(
+            self, alert: Alert, rule: Dict[str, Any]) -> bool:
         """Check if alert matches routing rule"""
 
         # Check alert type
@@ -270,8 +294,9 @@ class EscalationEngine:
         self.escalation_policies = {}
         self.active_escalations = {}
 
-    async def setup_escalation(self, alert: Alert, routing_decision: Dict[str, Any]):
-        """Set up escalation for alert"""
+    async def setup_escalation(
+            self, alert: Alert, routing_decision: Dict[str, Any]):
+         -> Dict[str, Any]:"""Set up escalation for alert"""
 
         if not alert.escalation_level:
             alert.escalation_level = 0
@@ -295,10 +320,12 @@ class EscalationEngine:
         # Schedule escalation task
         asyncio.create_task(self._handle_escalation(escalation_id))
 
-    def _find_escalation_policy(self, alert: Alert) -> Optional[Dict[str, Any]]:
+    def _find_escalation_policy(
+            self, alert: Alert) -> Optional[Dict[str, Any]]:
         """Find escalation policy for alert"""
 
-        # Simple policy selection - in practice, this would be more sophisticated
+        # Simple policy selection - in practice, this would be more
+        # sophisticated
         for policy in self.escalation_policies.values():
             if policy.get("alert_types", []):
                 if alert.type in policy["alert_types"]:
@@ -308,7 +335,7 @@ class EscalationEngine:
 
         return None
 
-    async def _handle_escalation(self, escalation_id: str):
+    async def _handle_escalation(self, escalation_id: str) -> Dict[str, Any]:
         """Handle escalation process"""
 
         escalation = self.active_escalations.get(escalation_id)
@@ -374,7 +401,7 @@ class AlertingSystem:
         self.is_initialized = True
         logger.info("Alerting system initialized")
 
-    async def load_alerting_rules(self, rules_path: str):
+    async def load_alerting_rules(self, rules_path: str) -> Dict[str, Any]:
         """Load alerting rules from configuration"""
 
         try:
@@ -402,8 +429,9 @@ class AlertingSystem:
         except Exception as e:
             logger.error(f"Failed to load alerting rules: {str(e)}")
 
-    async def configure_notification_channels(self, channels_config: List[Dict[str, Any]]):
-        """Configure notification channels"""
+    async def configure_notification_channels(
+            self, channels_config: List[Dict[str, Any]]):
+         -> Dict[str, Any]:"""Configure notification channels"""
 
         for channel_config in channels_config:
             channel = NotificationChannel(
@@ -416,8 +444,9 @@ class AlertingSystem:
 
             self.notification_router.channels[channel.id] = channel_config
 
-    async def setup_escalation_policies(self, policies_config: List[Dict[str, Any]]):
-        """Set up escalation policies"""
+    async def setup_escalation_policies(
+            self, policies_config: List[Dict[str, Any]]):
+         -> Dict[str, Any]:"""Set up escalation policies"""
 
         for policy_config in policies_config:
             policy = EscalationPolicy(
@@ -429,15 +458,15 @@ class AlertingSystem:
 
             self.escalation_engine.escalation_policies[policy.id] = policy_config
 
-    async def start_alert_processing(self):
+    async def start_alert_processing(self) -> Dict[str, Any]:
         """Start background alert processing"""
         asyncio.create_task(self._alert_processing_loop())
 
-    async def _alert_processing_loop(self):
+    async def _alert_processing_loop(self) -> Dict[str, Any]:
         """Background alert processing loop"""
         while True:
             try:
-                await self.process_pending_alerts()
+    await self.process_pending_alerts()
                 await asyncio.sleep(10)  # Process every 10 seconds
             except Exception as e:
                 logger.error(f"Alert processing loop error: {str(e)}")
@@ -452,8 +481,9 @@ class AlertingSystem:
         # Check suppression rules
         if await self.suppression_rules.should_suppress(alert, correlated_alerts):
             return AlertProcessingResult(
-                alert_id=alert.id, action="suppressed", reason="matched_suppression_rule"
-            )
+                alert_id=alert.id,
+                action="suppressed",
+                reason="matched_suppression_rule")
 
         # Determine severity and priority
         alert_severity = await self.calculate_alert_severity(alert, correlated_alerts)
@@ -469,7 +499,7 @@ class AlertingSystem:
 
         # Set up escalation if needed
         if alert_severity in [AlertSeverity.CRITICAL, AlertSeverity.EMERGENCY]:
-            await self.escalation_engine.setup_escalation(alert, routing_decision)
+    await self.escalation_engine.setup_escalation(alert, routing_decision)
 
         return AlertProcessingResult(
             alert_id=alert.id,
@@ -497,8 +527,9 @@ class AlertingSystem:
 
         # Increase severity based on frequency
         recent_alerts = [
-            a for a in correlated_alerts if a.timestamp > datetime.utcnow() - timedelta(minutes=10)
-        ]
+            a for a in correlated_alerts if a.timestamp > datetime.utcnow() -
+            timedelta(
+                minutes=10)]
 
         if len(recent_alerts) > 5:
             if severity == AlertSeverity.HIGH:
@@ -506,9 +537,9 @@ class AlertingSystem:
 
         return severity
 
-    async def send_notification(self, alert: Alert, channel_id: str) -> Dict[str, Any]:
-        """Send notification to specific channel"""
-
+    async def send_notification(
+            self, alert: Alert, channel_id: str) -> Dict[str, Any]:
+    """Send notification to specific channel"""
         channel = self.notification_router.channels.get(channel_id)
         if not channel or not channel.get("enabled"):
             return {"success": False, "reason": "channel_disabled"}
@@ -517,7 +548,8 @@ class AlertingSystem:
             # This would integrate with actual notification services
             # For now, just log the notification
 
-            logger.info(f"Sending notification for alert {alert.id} to channel {channel_id}")
+            logger.info(
+                f"Sending notification for alert {alert.id} to channel {channel_id}")
 
             return {
                 "success": True,
@@ -526,7 +558,8 @@ class AlertingSystem:
             }
 
         except Exception as e:
-            logger.error(f"Failed to send notification to {channel_id}: {str(e)}")
+            logger.error(
+                f"Failed to send notification to {channel_id}: {str(e)}")
             return {"success": False, "reason": str(e)}
 
     async def create_alert(self, alert_data: Dict[str, Any]) -> Alert:
@@ -548,12 +581,12 @@ class AlertingSystem:
 
         return alert
 
-    async def process_pending_alerts(self):
+    async def process_pending_alerts(self) -> Dict[str, Any]:
         """Process pending alerts"""
         # This would process alerts from a queue or database
         pass
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup alerting system"""
         self.is_initialized = False
         logger.info("Alerting system cleaned up")
@@ -566,11 +599,11 @@ class AlertManager:
         self.alerts = {}
         self.rules = {}
 
-    async def store_alert(self, alert: Alert):
+    async def store_alert(self, alert: Alert) -> Dict[str, Any]:
         """Store alert"""
         self.alerts[alert.id] = alert
 
-    async def store_rule(self, rule: AlertRule):
+    async def store_rule(self, rule: AlertRule) -> Dict[str, Any]:
         """Store alerting rule"""
         self.rules[rule.id] = rule
 
@@ -580,4 +613,5 @@ class AlertManager:
 
     async def get_active_alerts(self) -> List[Alert]:
         """Get active alerts"""
-        return [alert for alert in self.alerts.values() if alert.status == AlertStatus.ACTIVE]
+        return [alert for alert in self.alerts.values() if alert.status ==
+                AlertStatus.ACTIVE]

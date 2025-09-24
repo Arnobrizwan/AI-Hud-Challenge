@@ -2,7 +2,6 @@
 Unit tests for data models.
 """
 
-from datetime import datetime
 
 import pytest
 from pydantic import ValidationError
@@ -15,9 +14,7 @@ from ..models.content import (
     ExtractionStats,
     LanguageInfo,
     ProcessedImage,
-    ProcessingStatus,
     QualityMetrics,
-    VideoMetadata,
 )
 
 
@@ -96,9 +93,7 @@ class TestLanguageInfo:
 
     def test_valid_language_info(self):
         """Test valid language info creation."""
-        lang_info = LanguageInfo(
-            detected_language="en", confidence=0.95, charset="utf-8", is_reliable=True
-        )
+        lang_info = LanguageInfo(detected_language="en", confidence=0.95, charset="utf-8", is_reliable=True)
 
         assert lang_info.detected_language == "en"
         assert lang_info.confidence == 0.95

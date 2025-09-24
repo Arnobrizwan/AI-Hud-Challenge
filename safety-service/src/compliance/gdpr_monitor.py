@@ -38,7 +38,7 @@ class GDPRComplianceMonitor:
         # Data processing activities
         self.data_processing_activities = {}
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize the GDPR monitor"""
         try:
             self.is_initialized = True
@@ -48,7 +48,7 @@ class GDPRComplianceMonitor:
             logger.error(f"Failed to initialize GDPR monitor: {str(e)}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup resources"""
         try:
             self.is_initialized = False
@@ -60,8 +60,7 @@ class GDPRComplianceMonitor:
     async def check_gdpr_compliance(
         self, data_processing_activities: Optional[List[Dict[str, Any]]] = None
     ) -> Dict[str, Any]:
-        """Check GDPR compliance for data processing activities"""
-
+    """Check GDPR compliance for data processing activities"""
         if not self.is_initialized:
             raise RuntimeError("GDPR monitor not initialized")
 
@@ -120,11 +119,11 @@ class GDPRComplianceMonitor:
                         description="Data processing activity lacks lawful basis",
                         affected_data=activity,
                         remediation_required=True,
-                    )
-                )
+                    ))
 
             # Check purpose limitation
-            if not activity.get("purpose") or not activity.get("purpose_specific"):
+            if not activity.get("purpose") or not activity.get(
+                    "purpose_specific"):
                 violations.append(
                     ComplianceViolation(
                         violation_type=ComplianceType.GDPR,
@@ -132,11 +131,11 @@ class GDPRComplianceMonitor:
                         description="Data processing purpose not specific or clearly defined",
                         affected_data=activity,
                         remediation_required=True,
-                    )
-                )
+                    ))
 
             # Check data minimization
-            if activity.get("data_collected") and not activity.get("data_minimized"):
+            if activity.get("data_collected") and not activity.get(
+                    "data_minimized"):
                 violations.append(
                     ComplianceViolation(
                         violation_type=ComplianceType.GDPR,
@@ -144,14 +143,11 @@ class GDPRComplianceMonitor:
                         description="Data collection may not be minimized to what is necessary",
                         affected_data=activity,
                         remediation_required=True,
-                    )
-                )
+                    ))
 
             # Check storage limitation
-            if (
-                activity.get("retention_period")
-                and activity.get("retention_period") > self.config.data_retention_period
-            ):
+            if (activity.get("retention_period") and activity.get(
+                    "retention_period") > self.config.data_retention_period):
                 violations.append(
                     ComplianceViolation(
                         violation_type=ComplianceType.GDPR,
@@ -159,8 +155,7 @@ class GDPRComplianceMonitor:
                         description=f"Data retention period exceeds maximum allowed period of {self.config.data_retention_period} days",
                         affected_data=activity,
                         remediation_required=True,
-                    )
-                )
+                    ))
 
             # Check security measures
             if not activity.get("security_measures"):
@@ -171,11 +166,11 @@ class GDPRComplianceMonitor:
                         description="No security measures specified for data processing",
                         affected_data=activity,
                         remediation_required=True,
-                    )
-                )
+                    ))
 
             # Check consent (if applicable)
-            if activity.get("lawful_basis") == "consent" and not activity.get("consent_obtained"):
+            if activity.get("lawful_basis") == "consent" and not activity.get(
+                    "consent_obtained"):
                 violations.append(
                     ComplianceViolation(
                         violation_type=ComplianceType.GDPR,
@@ -183,8 +178,7 @@ class GDPRComplianceMonitor:
                         description="Consent-based processing without valid consent",
                         affected_data=activity,
                         remediation_required=True,
-                    )
-                )
+                    ))
 
             return violations
 
@@ -192,7 +186,8 @@ class GDPRComplianceMonitor:
             logger.error(f"Activity compliance check failed: {str(e)}")
             return []
 
-    async def check_general_gdpr_requirements(self) -> List[ComplianceViolation]:
+    async def check_general_gdpr_requirements(
+            self) -> List[ComplianceViolation]:
         """Check general GDPR requirements"""
         try:
             violations = []
@@ -206,8 +201,7 @@ class GDPRComplianceMonitor:
                         description="No Data Protection Officer appointed (may be required for large-scale processing)",
                         affected_data=None,
                         remediation_required=True,
-                    )
-                )
+                    ))
 
             # Check privacy by design
             if not self.has_privacy_by_design():
@@ -218,8 +212,7 @@ class GDPRComplianceMonitor:
                         description="Privacy by design principles not implemented",
                         affected_data=None,
                         remediation_required=True,
-                    )
-                )
+                    ))
 
             # Check data breach notification procedures
             if not self.has_breach_notification_procedures():
@@ -230,8 +223,7 @@ class GDPRComplianceMonitor:
                         description="Data breach notification procedures not in place",
                         affected_data=None,
                         remediation_required=True,
-                    )
-                )
+                    ))
 
             # Check data subject rights procedures
             if not self.has_data_subject_rights_procedures():
@@ -242,8 +234,7 @@ class GDPRComplianceMonitor:
                         description="Data subject rights procedures not implemented",
                         affected_data=None,
                         remediation_required=True,
-                    )
-                )
+                    ))
 
             return violations
 
@@ -281,7 +272,8 @@ class GDPRComplianceMonitor:
             return True
 
         except Exception as e:
-            logger.error(f"Breach notification procedures check failed: {str(e)}")
+            logger.error(
+                f"Breach notification procedures check failed: {str(e)}")
             return False
 
     def has_data_subject_rights_procedures(self) -> bool:
@@ -292,17 +284,20 @@ class GDPRComplianceMonitor:
             return True
 
         except Exception as e:
-            logger.error(f"Data subject rights procedures check failed: {str(e)}")
+            logger.error(
+                f"Data subject rights procedures check failed: {str(e)}")
             return False
 
-    def generate_gdpr_recommendations(self, violations: List[ComplianceViolation]) -> List[str]:
+    def generate_gdpr_recommendations(
+            self, violations: List[ComplianceViolation]) -> List[str]:
         """Generate GDPR compliance recommendations"""
         try:
             recommendations = []
 
             # General recommendations
             if not violations:
-                recommendations.append("GDPR compliance is good - maintain current practices")
+                recommendations.append(
+                    "GDPR compliance is good - maintain current practices")
                 return recommendations
 
             # Violation-specific recommendations
@@ -343,7 +338,8 @@ class GDPRComplianceMonitor:
                     )
 
                 elif "privacy by design" in violation.description.lower():
-                    recommendations.append("Implement privacy by design and default principles")
+                    recommendations.append(
+                        "Implement privacy by design and default principles")
 
                 elif "breach" in violation.description.lower():
                     recommendations.append(
@@ -356,10 +352,14 @@ class GDPRComplianceMonitor:
                     )
 
             # Add general recommendations
-            recommendations.append("Regularly review and update GDPR compliance procedures")
-            recommendations.append("Conduct regular staff training on GDPR requirements")
-            recommendations.append("Maintain detailed records of data processing activities")
-            recommendations.append("Implement regular compliance audits and assessments")
+            recommendations.append(
+                "Regularly review and update GDPR compliance procedures")
+            recommendations.append(
+                "Conduct regular staff training on GDPR requirements")
+            recommendations.append(
+                "Maintain detailed records of data processing activities")
+            recommendations.append(
+                "Implement regular compliance audits and assessments")
 
             return recommendations
 
@@ -372,7 +372,8 @@ class GDPRComplianceMonitor:
         try:
             return {
                 "enabled": self.config.gdpr_enabled,
-                "requirements_checked": len(self.gdpr_requirements),
+                "requirements_checked": len(
+                    self.gdpr_requirements),
                 "data_retention_period_days": self.config.data_retention_period,
                 "consent_required": self.config.consent_required,
                 "right_to_be_forgotten": self.config.right_to_be_forgotten,
@@ -390,7 +391,8 @@ class GDPRComplianceMonitor:
             report = {
                 "report_type": "gdpr_detailed",
                 "generated_at": datetime.utcnow().isoformat(),
-                "compliance_overview": await self.get_compliance_status(),
+                "compliance_overview":
+    await self.get_compliance_status(),
                 "requirements_status": self.gdpr_requirements,
                 "data_processing_activities": self.data_processing_activities,
                 "recommendations": [
@@ -408,10 +410,12 @@ class GDPRComplianceMonitor:
             logger.error(f"GDPR detailed report generation failed: {str(e)}")
             return {"error": str(e)}
 
-    async def register_data_processing_activity(self, activity: Dict[str, Any]) -> bool:
+    async def register_data_processing_activity(
+            self, activity: Dict[str, Any]) -> bool:
         """Register a new data processing activity"""
         try:
-            activity_id = activity.get("id", f"activity_{len(self.data_processing_activities) + 1}")
+            activity_id = activity.get(
+                "id", f"activity_{len(self.data_processing_activities) + 1}")
             self.data_processing_activities[activity_id] = {
                 **activity,
                 "registered_at": datetime.utcnow().isoformat(),
@@ -422,7 +426,8 @@ class GDPRComplianceMonitor:
             return True
 
         except Exception as e:
-            logger.error(f"Data processing activity registration failed: {str(e)}")
+            logger.error(
+                f"Data processing activity registration failed: {str(e)}")
             return False
 
     async def update_data_processing_activity(
@@ -431,7 +436,8 @@ class GDPRComplianceMonitor:
         """Update an existing data processing activity"""
         try:
             if activity_id not in self.data_processing_activities:
-                logger.warning(f"Data processing activity {activity_id} not found")
+                logger.warning(
+                    f"Data processing activity {activity_id} not found")
                 return False
 
             self.data_processing_activities[activity_id].update(updates)
@@ -450,7 +456,8 @@ class GDPRComplianceMonitor:
         """Delete a data processing activity"""
         try:
             if activity_id not in self.data_processing_activities:
-                logger.warning(f"Data processing activity {activity_id} not found")
+                logger.warning(
+                    f"Data processing activity {activity_id} not found")
                 return False
 
             del self.data_processing_activities[activity_id]
@@ -471,5 +478,6 @@ class GDPRComplianceMonitor:
             }
 
         except Exception as e:
-            logger.error(f"Data processing activities retrieval failed: {str(e)}")
+            logger.error(
+                f"Data processing activities retrieval failed: {str(e)}")
             return {"error": str(e)}

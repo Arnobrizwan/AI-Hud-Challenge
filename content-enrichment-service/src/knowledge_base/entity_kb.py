@@ -77,17 +77,18 @@ class EntityKnowledgeBase:
             )
             return None
 
-    async def _search_local_entities(self, entity: "Entity") -> Optional[Dict[str, Any]]:
+    async def _search_local_entities(
+            self, entity: "Entity") -> Optional[Dict[str, Any]]:
         """Search for entities in local database."""
         try:
-            async with self.session_factory() as session:
+    async with self.session_factory() as session:
                 # Search by exact text match first
                 query = text(
                     """
-                    SELECT id, name, description, aliases, categories, properties, 
+                    SELECT id, name, description, aliases, categories, properties,
                            embedding, confidence_score, created_at
-                    FROM entities 
-                    WHERE LOWER(name) = LOWER(:text) 
+                    FROM entities
+                    WHERE LOWER(name) = LOWER(:text)
                        OR LOWER(aliases::text) LIKE LOWER(:text_pattern)
                     ORDER BY confidence_score DESC
                     LIMIT 1
@@ -117,7 +118,7 @@ class EntityKnowledgeBase:
                     """
                     SELECT id, name, description, aliases, categories, properties,
                            confidence_score, 1 - (embedding <=> :embedding) as similarity
-                    FROM entities 
+                    FROM entities
                     WHERE 1 - (embedding <=> :embedding) > 0.7
                     ORDER BY similarity DESC
                     LIMIT 1
@@ -146,10 +147,11 @@ class EntityKnowledgeBase:
             logger.error("Local entity search failed", error=str(e))
             return None
 
-    async def _search_wikidata(self, entity: "Entity") -> Optional[Dict[str, Any]]:
+    async def _search_wikidata(
+            self, entity: "Entity") -> Optional[Dict[str, Any]]:
         """Search for entities in Wikidata."""
         try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
+    async with httpx.AsyncClient(timeout=10.0) as client:
                 params = self.wikidata_params.copy()
                 params["search"] = entity.text
                 params["limit"] = 5
@@ -161,7 +163,8 @@ class EntityKnowledgeBase:
 
                 if "search" in data and data["search"]:
                     # Find best match based on entity type and description
-                    best_match = self._find_best_wikidata_match(data["search"], entity)
+                    best_match = self._find_best_wikidata_match(
+                        data["search"], entity)
 
                     if best_match:
                         # Get detailed information
@@ -197,7 +200,8 @@ class EntityKnowledgeBase:
             score = 0.0
 
             # Label similarity
-            label_similarity = self._calculate_text_similarity(entity.text, result["label"])
+            label_similarity = self._calculate_text_similarity(
+                entity.text, result["label"])
             score += label_similarity * 0.6
 
             # Description relevance
@@ -231,19 +235,22 @@ class EntityKnowledgeBase:
             # Fallback to simple string similarity
             return 1.0 if text1.lower() == text2.lower() else 0.0
 
-    def _matches_entity_type(self, wikidata_result: Dict, entity_type: "EntityType") -> bool:
+    def _matches_entity_type(
+            self,
+            wikidata_result: Dict,
+            entity_type: "EntityType") -> bool:
         """Check if Wikidata result matches entity type."""
         # This is a simplified implementation
         # In practice, you'd check Wikidata properties and categories
         description = wikidata_result.get("description", "").lower()
 
         type_keywords = {
-            "PERSON": ["person", "human", "actor", "politician", "scientist"],
-            "ORGANIZATION": ["organization", "company", "corporation", "institution"],
-            "LOCATION": ["place", "city", "country", "state", "region"],
-            "EVENT": ["event", "conference", "festival", "meeting"],
-            "PRODUCT": ["product", "software", "device", "tool"],
-        }
+            "PERSON": [
+                "person", "human", "actor", "politician", "scientist"], "ORGANIZATION": [
+                "organization", "company", "corporation", "institution"], "LOCATION": [
+                "place", "city", "country", "state", "region"], "EVENT": [
+                    "event", "conference", "festival", "meeting"], "PRODUCT": [
+                        "product", "software", "device", "tool"], }
 
         keywords = type_keywords.get(entity_type.value, [])
         return any(keyword in description for keyword in keywords)
@@ -251,7 +258,7 @@ class EntityKnowledgeBase:
     async def _get_wikidata_details(
         self, entity_id: str, client: httpx.AsyncClient
     ) -> Dict[str, Any]:
-        """Get detailed information from Wikidata."""
+    """Get detailed information from Wikidata."""
         try:
             params = {
                 "format": "json",
@@ -271,7 +278,8 @@ class EntityKnowledgeBase:
             # Extract aliases
             aliases = []
             if "aliases" in entity_data and "en" in entity_data["aliases"]:
-                aliases = [alias["value"] for alias in entity_data["aliases"]["en"]]
+                aliases = [alias["value"]
+                           for alias in entity_data["aliases"]["en"]]
 
             # Extract categories (simplified)
             categories = []
@@ -281,30 +289,38 @@ class EntityKnowledgeBase:
             if "P31" in claims:
                 for claim in claims["P31"]:
                     if "mainsnak" in claim and "datavalue" in claim["mainsnak"]:
-                        categories.append(claim["mainsnak"]["datavalue"]["value"]["id"])
+                        categories.append(
+                            claim["mainsnak"]["datavalue"]["value"]["id"])
 
-            return {"aliases": aliases, "categories": categories, "properties": claims}
+            return {
+                "aliases": aliases,
+                "categories": categories,
+                "properties": claims}
 
         except Exception as e:
-            logger.error("Wikidata details fetch failed", entity_id=entity_id, error=str(e))
+            logger.error(
+                "Wikidata details fetch failed",
+                entity_id=entity_id,
+                error=str(e))
             return {}
 
-    async def _store_entity(self, entity: "Entity", kb_data: Dict[str, Any]) -> None:
+    async def _store_entity(self, entity: "Entity",
+                            kb_data: Dict[str, Any]) -> None:
         """Store entity in local database."""
         try:
-            async with self.session_factory() as session:
+    async with self.session_factory() as session:
                 # Create embedding
                 embedding = self.embedding_model.encode([entity.text])
 
                 query = text(
                     """
-                    INSERT INTO entities (name, description, aliases, categories, 
-                                       properties, embedding, confidence_score, 
+                    INSERT INTO entities (name, description, aliases, categories,
+                                       properties, embedding, confidence_score,
                                        entity_type, created_at)
-                    VALUES (:name, :description, :aliases, :categories, 
+                    VALUES (:name, :description, :aliases, :categories,
                            :properties, :embedding, :confidence, :entity_type, NOW())
-                    ON CONFLICT (name, entity_type) 
-                    DO UPDATE SET 
+                    ON CONFLICT (name, entity_type)
+                    DO UPDATE SET
                         description = EXCLUDED.description,
                         aliases = EXCLUDED.aliases,
                         categories = EXCLUDED.categories,
@@ -344,15 +360,16 @@ class EntityKnowledgeBase:
         """Cache a result."""
         import time
 
-        self.entity_cache[cache_key] = {"data": result, "timestamp": time.time()}
+        self.entity_cache[cache_key] = {
+            "data": result, "timestamp": time.time()}
 
     async def get_entity_statistics(self) -> Dict[str, Any]:
         """Get knowledge base statistics."""
         try:
-            async with self.session_factory() as session:
+    async with self.session_factory() as session:
                 query = text(
                     """
-                    SELECT 
+                    SELECT
                         COUNT(*) as total_entities,
                         COUNT(DISTINCT entity_type) as unique_types,
                         AVG(confidence_score) as avg_confidence
@@ -366,8 +383,10 @@ class EntityKnowledgeBase:
                 return {
                     "total_entities": row.total_entities,
                     "unique_types": row.unique_types,
-                    "average_confidence": float(row.avg_confidence) if row.avg_confidence else 0.0,
-                    "cache_size": len(self.entity_cache),
+                    "average_confidence": float(
+                        row.avg_confidence) if row.avg_confidence else 0.0,
+                    "cache_size": len(
+                        self.entity_cache),
                 }
 
         except Exception as e:

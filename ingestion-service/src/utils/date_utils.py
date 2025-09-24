@@ -4,8 +4,8 @@ Date and time utilities for content processing.
 
 import logging
 import re
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from datetime import datetime, timedelta
+from typing import List, Optional
 
 import pytz
 from dateutil import parser as date_parser
@@ -98,9 +98,9 @@ class DateUtils:
                     tz = self._get_timezone(timezone)
                     if parsed_date.tzinfo is None:
                         parsed_date = tz.localize(parsed_date)
-                    else:
+        else:
                         parsed_date = parsed_date.astimezone(tz)
-                else:
+        else:
                     # If no timezone info, assume UTC
                     if parsed_date.tzinfo is None:
                         parsed_date = self.default_timezone.localize(parsed_date)
@@ -116,7 +116,7 @@ class DateUtils:
                 if timezone:
                     tz = self._get_timezone(timezone)
                     parsed_date = tz.localize(parsed_date)
-                else:
+            else:
                     parsed_date = self.default_timezone.localize(parsed_date)
 
                 return parsed_date.astimezone(pytz.UTC)
@@ -311,8 +311,10 @@ class DateUtils:
             r"\b\d{4}-\d{2}-\d{2}\b",  # YYYY-MM-DD
             r"\b\d{2}/\d{2}/\d{4}\b",  # MM/DD/YYYY
             r"\b\d{2}-\d{2}-\d{4}\b",  # MM-DD-YYYY
-            r"\b\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{4}\b",  # DD Mon YYYY
-            r"\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2},?\s+\d{4}\b",  # Mon DD, YYYY
+            # DD Mon YYYY
+            r"\b\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{4}\b",
+            # Mon DD, YYYY
+            r"\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2},?\s+\d{4}\b",
         ]
 
         for pattern in date_patterns:

@@ -34,7 +34,7 @@ class VertexAISummarizer:
         self.prediction_client = None
         self._initialized = False
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize Vertex AI client and models"""
         try:
             logger.info("Initializing Vertex AI summarizer...")
@@ -52,10 +52,11 @@ class VertexAISummarizer:
             logger.info("Vertex AI summarizer initialized successfully")
 
         except Exception as e:
-            logger.error(f"Failed to initialize Vertex AI summarizer: {str(e)}")
+            logger.error(
+                f"Failed to initialize Vertex AI summarizer: {str(e)}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Clean up resources"""
         try:
             if self.prediction_client:
@@ -89,7 +90,8 @@ class VertexAISummarizer:
 
         try:
             # Construct optimized prompt
-            prompt = self._construct_summarization_prompt(content, target_length)
+            prompt = self._construct_summarization_prompt(
+                content, target_length)
 
             # Generate summary using PaLM 2
             response = await self._generate_with_retry(
@@ -101,7 +103,8 @@ class VertexAISummarizer:
             )
 
             # Post-process and validate
-            summary = self._post_process_summary(response, content, target_length)
+            summary = self._post_process_summary(
+                response, content, target_length)
 
             return summary
 
@@ -109,11 +112,15 @@ class VertexAISummarizer:
             logger.error(f"Abstractive summarization failed: {str(e)}")
             raise
 
-    def _construct_summarization_prompt(self, content: ProcessedContent, target_length: int) -> str:
+    def _construct_summarization_prompt(
+            self,
+            content: ProcessedContent,
+            target_length: int) -> str:
         """Construct optimized prompt for summarization"""
 
         # Determine content type specific instructions
-        type_instructions = self._get_content_type_instructions(content.content_type)
+        type_instructions = self._get_content_type_instructions(
+            content.content_type)
 
         # Construct the main prompt
         prompt = f"""
@@ -181,7 +188,8 @@ SUMMARY:
             except gcp_exceptions.ResourceExhausted:
                 if attempt < max_retries - 1:
                     wait_time = 2**attempt  # Exponential backoff
-                    logger.warning(f"Rate limited, waiting {wait_time}s before retry {attempt + 1}")
+                    logger.warning(
+                        f"Rate limited, waiting {wait_time}s before retry {attempt + 1}")
                     await asyncio.sleep(wait_time)
                 else:
                     raise
@@ -197,7 +205,8 @@ SUMMARY:
                     raise
 
             except Exception as e:
-                logger.error(f"Generation attempt {attempt + 1} failed: {str(e)}")
+                logger.error(
+                    f"Generation attempt {attempt + 1} failed: {str(e)}")
                 if attempt == max_retries - 1:
                     raise
                 await asyncio.sleep(1)
@@ -242,9 +251,11 @@ SUMMARY:
             logger.error(f"Summary post-processing failed: {str(e)}")
             raise
 
-    async def generate_variants(
-        self, content: ProcessedContent, target_lengths: List[int], style_variants: List[str] = None
-    ) -> List[Dict[str, Any]]:
+    async def generate_variants(self,
+                                content: ProcessedContent,
+                                target_lengths: List[int],
+                                style_variants: List[str] = None) -> List[Dict[str,
+                                                                               Any]]:
         """Generate multiple summary variants with different styles"""
 
         if style_variants is None:
@@ -256,7 +267,8 @@ SUMMARY:
             for style in style_variants:
                 try:
                     # Adjust parameters based on style
-                    temperature, max_tokens = self._get_style_parameters(style, target_length)
+                    temperature, max_tokens = self._get_style_parameters(
+                        style, target_length)
 
                     # Generate variant
                     summary = await self.summarize(
@@ -277,7 +289,8 @@ SUMMARY:
                     )
 
                 except Exception as e:
-                    logger.error(f"Failed to generate {style} variant: {str(e)}")
+                    logger.error(
+                        f"Failed to generate {style} variant: {str(e)}")
                     continue
 
         return variants
@@ -297,8 +310,10 @@ SUMMARY:
         return style_configs.get(style, (0.2, target_length * 2))
 
     async def generate_with_custom_prompt(
-        self, content: ProcessedContent, custom_prompt: str, target_length: int = 120
-    ) -> str:
+            self,
+            content: ProcessedContent,
+            custom_prompt: str,
+            target_length: int = 120) -> str:
         """Generate summary with custom prompt"""
         try:
             # Use custom prompt
@@ -328,11 +343,12 @@ SUMMARY:
             # Execute with semaphore to control concurrency
             semaphore = asyncio.Semaphore(5)  # Limit concurrent requests
 
-            async def limited_summarize(content):
+            async def limited_summarize(content) -> Dict[str, Any]:
                 async with semaphore:
                     return await self.summarize(content, target_length)
 
-            limited_tasks = [limited_summarize(content) for content in contents]
+            limited_tasks = [limited_summarize(
+                content) for content in contents]
             summaries = await asyncio.gather(*limited_tasks, return_exceptions=True)
 
             # Handle exceptions
@@ -357,7 +373,17 @@ SUMMARY:
             "project_id": self.project_id,
             "location": self.location,
             "max_tokens": 8192,
-            "supported_languages": ["en", "es", "fr", "de", "it", "pt", "ru", "zh", "ja", "ko"],
+            "supported_languages": [
+                "en",
+                "es",
+                "fr",
+                "de",
+                "it",
+                "pt",
+                "ru",
+                "zh",
+                "ja",
+                "ko"],
             "capabilities": [
                 "abstractive_summarization",
                 "multi_style_generation",

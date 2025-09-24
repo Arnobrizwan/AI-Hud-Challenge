@@ -4,9 +4,8 @@ URL utilities for canonicalization, validation, and domain handling.
 
 import logging
 import re
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 from urllib.parse import parse_qs, urlencode, urljoin, urlparse, urlunparse
-from urllib.robotparser import RobotFileParser
 
 import tldextract
 
@@ -59,7 +58,8 @@ class URLUtils:
         # Basic URL pattern check
         url_pattern = re.compile(
             r"^https?://"  # http:// or https://
-            r"(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?|"  # domain...
+            # domain...
+            r"(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?|"
             r"localhost|"  # localhost...
             r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"  # ...or ip
             r"(?::\d+)?"  # optional port
@@ -108,9 +108,7 @@ class URLUtils:
             path = path[:-1]
 
         # Rebuild URL
-        normalized = urlunparse(
-            (scheme, netloc, path, parsed.params, parsed.query, "")  # Remove fragment
-        )
+        normalized = urlunparse((scheme, netloc, path, parsed.params, parsed.query, ""))  # Remove fragment
 
         return normalized
 
@@ -247,9 +245,7 @@ class URLUtils:
 
         parsed = urlparse(url)
         if parsed.scheme.lower() == "http":
-            return urlunparse(
-                ("https", parsed.netloc, parsed.path, parsed.params, parsed.query, parsed.fragment)
-            )
+            return urlunparse(("https", parsed.netloc, parsed.path, parsed.params, parsed.query, parsed.fragment))
 
         return url
 
@@ -320,7 +316,8 @@ class URLUtils:
             r"/news/(\d+)",  # /news/123
             r"/story/(\d+)",  # /story/123
             r"id=(\d+)",  # ?id=123
-            r"/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})",  # UUID
+            # UUID
+            r"/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})",
         ]
 
         for pattern in id_patterns:

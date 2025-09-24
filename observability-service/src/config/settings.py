@@ -2,9 +2,8 @@
 Configuration settings for observability service
 """
 
-import os
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from pydantic import BaseSettings
 
@@ -305,9 +304,7 @@ def create_observability_config(settings: Settings) -> ObservabilityConfig:
             channels=list(settings.notification_channels.values()),
             escalation_policies=[],
         ),
-        runbook_config=RunbookConfig(
-            runbooks_path=settings.runbooks_path, execution_config={}, approval_policies=[]
-        ),
+        runbook_config=RunbookConfig(runbooks_path=settings.runbooks_path, execution_config={}, approval_policies=[]),
         slo_config=SLOConfig(slo_definitions=[]),
         incident_config=IncidentConfig(templates=[]),
         cost_config=CostConfig(data_sources=settings.cost_data_sources),

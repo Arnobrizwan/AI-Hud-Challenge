@@ -25,7 +25,7 @@ class CDNManager:
         self._api_key = None
         self._zone_id = None
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize CDN client"""
         if self._initialized:
             return
@@ -37,13 +37,14 @@ class CDNManager:
             cdn_provider = getattr(self.settings, "cdn_provider", "cloudflare")
 
             if cdn_provider == "cloudflare":
-                await self._initialize_cloudflare()
+    await self._initialize_cloudflare()
             elif cdn_provider == "aws_cloudfront":
-                await self._initialize_cloudfront()
+    await self._initialize_cloudfront()
             elif cdn_provider == "gcp_cdn":
-                await self._initialize_gcp_cdn()
+    await self._initialize_gcp_cdn()
             else:
-                logger.warning(f"Unknown CDN provider: {cdn_provider}, using mock CDN")
+                logger.warning(
+                    f"Unknown CDN provider: {cdn_provider}, using mock CDN")
                 await self._initialize_mock_cdn()
 
             self._initialized = True
@@ -53,22 +54,23 @@ class CDNManager:
             logger.error(f"Failed to initialize CDN Manager: {e}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup CDN client"""
         if self._cdn_client and hasattr(self._cdn_client, "close"):
-            await self._cdn_client.close()
+    await self._cdn_client.close()
 
         self._initialized = False
         logger.info("CDN Manager cleanup complete")
 
-    async def _initialize_cloudflare(self):
+    async def _initialize_cloudflare(self) -> Dict[str, Any]:
         """Initialize Cloudflare CDN client"""
         try:
             self._api_key = getattr(self.settings, "cloudflare_api_key", None)
             self._zone_id = getattr(self.settings, "cloudflare_zone_id", None)
 
             if not self._api_key or not self._zone_id:
-                logger.warning("Cloudflare credentials not provided, using mock CDN")
+                logger.warning(
+                    "Cloudflare credentials not provided, using mock CDN")
                 await self._initialize_mock_cdn()
                 return
 
@@ -87,7 +89,7 @@ class CDNManager:
             logger.error(f"Failed to initialize Cloudflare CDN: {e}")
             await self._initialize_mock_cdn()
 
-    async def _initialize_cloudfront(self):
+    async def _initialize_cloudfront(self) -> Dict[str, Any]:
         """Initialize AWS CloudFront client"""
         try:
             import boto3
@@ -106,7 +108,7 @@ class CDNManager:
             logger.error(f"Failed to initialize CloudFront: {e}")
             await self._initialize_mock_cdn()
 
-    async def _initialize_gcp_cdn(self):
+    async def _initialize_gcp_cdn(self) -> Dict[str, Any]:
         """Initialize Google Cloud CDN client"""
         try:
             from google.cloud import compute_v1
@@ -114,21 +116,22 @@ class CDNManager:
             self._cdn_client = compute_v1.UrlMapsClient()
 
         except ImportError:
-            logger.warning("google-cloud-compute not available, using mock CDN")
+            logger.warning(
+                "google-cloud-compute not available, using mock CDN")
             await self._initialize_mock_cdn()
         except Exception as e:
             logger.error(f"Failed to initialize GCP CDN: {e}")
             await self._initialize_mock_cdn()
 
-    async def _initialize_mock_cdn(self):
+    async def _initialize_mock_cdn(self) -> Dict[str, Any]:
         """Initialize mock CDN for development/testing"""
         self._cdn_client = MockCDNClient()
         logger.info("Using mock CDN client")
 
-    async def _test_cloudflare_connection(self):
+    async def _test_cloudflare_connection(self) -> Dict[str, Any]:
         """Test Cloudflare API connection"""
         try:
-            async with self._cdn_client.get(
+    async with self._cdn_client.get(
                 f"https://api.cloudflare.com/client/v4/zones/{self._zone_id}"
             ) as response:
                 if response.status == 200:
@@ -139,7 +142,11 @@ class CDNManager:
             logger.error(f"Cloudflare connection test failed: {e}")
             raise
 
-    async def cache_content(self, cache_key: str, content: Any, ttl: int = 3600) -> bool:
+    async def cache_content(
+            self,
+            cache_key: str,
+            content: Any,
+            ttl: int = 3600) -> bool:
         """Cache content in CDN"""
         if not self._initialized:
             return False
@@ -196,7 +203,8 @@ class CDNManager:
                 if await self._purge_key(key):
                     purged_count += 1
 
-            logger.info(f"Purged {purged_count} CDN cache entries matching pattern: {pattern}")
+            logger.info(
+                f"Purged {purged_count} CDN cache entries matching pattern: {pattern}")
             return purged_count
 
         except Exception as e:
@@ -249,7 +257,11 @@ class CDNManager:
         except (json.JSONDecodeError, TypeError):
             return content
 
-    async def _store_in_cdn(self, cache_key: str, content: str, ttl: int) -> bool:
+    async def _store_in_cdn(
+            self,
+            cache_key: str,
+            content: str,
+            ttl: int) -> bool:
         """Store content in CDN"""
         if hasattr(self._cdn_client, "store_content"):
             return await self._cdn_client.store_content(cache_key, content, ttl)
@@ -303,9 +315,16 @@ class MockCDNClient:
         self._cache: Dict[str, Dict[str, Any]] = {}
         self._stats = {"hits": 0, "misses": 0, "stores": 0, "purges": 0}
 
-    async def store_content(self, cache_key: str, content: str, ttl: int) -> bool:
+    async def store_content(
+            self,
+            cache_key: str,
+            content: str,
+            ttl: int) -> bool:
         """Store content in mock CDN"""
-        self._cache[cache_key] = {"content": content, "created_at": datetime.utcnow(), "ttl": ttl}
+        self._cache[cache_key] = {
+            "content": content,
+            "created_at": datetime.utcnow(),
+            "ttl": ttl}
         self._stats["stores"] += 1
         return True
 
@@ -340,12 +359,17 @@ class MockCDNClient:
         """Get keys matching pattern from mock CDN"""
         import fnmatch
 
-        return [key for key in self._cache.keys() if fnmatch.fnmatch(key, pattern)]
+        return [
+            key for key in self._cache.keys() if fnmatch.fnmatch(
+                key, pattern)]
 
     async def get_statistics(self) -> Dict[str, Any]:
         """Get mock CDN statistics"""
         total_requests = self._stats["hits"] + self._stats["misses"]
-        hit_rate = (self._stats["hits"] / total_requests * 100) if total_requests > 0 else 0
+        hit_rate = (
+            self._stats["hits"] /
+            total_requests *
+            100) if total_requests > 0 else 0
 
         return {
             "provider": "mock",

@@ -44,8 +44,8 @@ from monitoring import HealthChecker, MetricsCollector
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 # Global instances
@@ -58,7 +58,7 @@ health_checker: Optional[HealthChecker] = None
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> Dict[str, Any]:
     """Application lifespan management"""
     global storage_orchestrator, cache_coordinator, data_lifecycle_manager
     global query_optimizer, metrics_collector, health_checker
@@ -102,17 +102,17 @@ async def lifespan(app: FastAPI):
 
         # Cleanup resources
         if storage_orchestrator:
-            await storage_orchestrator.cleanup()
+    await storage_orchestrator.cleanup()
         if cache_coordinator:
-            await cache_coordinator.cleanup()
+    await cache_coordinator.cleanup()
         if data_lifecycle_manager:
-            await data_lifecycle_manager.cleanup()
+    await data_lifecycle_manager.cleanup()
         if query_optimizer:
-            await query_optimizer.cleanup()
+    await query_optimizer.cleanup()
         if metrics_collector:
-            await metrics_collector.cleanup()
+    await metrics_collector.cleanup()
         if health_checker:
-            await health_checker.cleanup()
+    await health_checker.cleanup()
 
         logger.info("Storage Service shutdown complete")
 
@@ -144,41 +144,47 @@ app.add_middleware(RateLimitMiddleware)
 # Dependency injection
 async def get_storage_orchestrator() -> StorageOrchestrator:
     if not storage_orchestrator:
-        raise HTTPException(status_code=503, detail="Storage orchestrator not available")
+        raise HTTPException(status_code=503,
+                            detail="Storage orchestrator not available")
     return storage_orchestrator
 
 
 async def get_cache_coordinator() -> CacheCoordinator:
     if not cache_coordinator:
-        raise HTTPException(status_code=503, detail="Cache coordinator not available")
+        raise HTTPException(status_code=503,
+                            detail="Cache coordinator not available")
     return cache_coordinator
 
 
 async def get_data_lifecycle_manager() -> DataLifecycleManager:
     if not data_lifecycle_manager:
-        raise HTTPException(status_code=503, detail="Data lifecycle manager not available")
+        raise HTTPException(status_code=503,
+                            detail="Data lifecycle manager not available")
     return data_lifecycle_manager
 
 
 async def get_query_optimizer() -> QueryOptimizer:
     if not query_optimizer:
-        raise HTTPException(status_code=503, detail="Query optimizer not available")
+        raise HTTPException(status_code=503,
+                            detail="Query optimizer not available")
     return query_optimizer
 
 
 # Health check endpoints
 @app.get("/health", response_model=HealthCheck)
-async def health_check():
+async def health_check() -> Dict[str, Any]:
     """Health check endpoint"""
     if not health_checker:
-        raise HTTPException(status_code=503, detail="Health checker not available")
+        raise HTTPException(
+            status_code=503,
+            detail="Health checker not available")
 
     health_status = await health_checker.check_health()
     return health_status
 
 
 @app.get("/health/ready")
-async def readiness_check():
+async def readiness_check() -> Dict[str, Any]:
     """Readiness check for Kubernetes"""
     if not storage_orchestrator or not cache_coordinator:
         raise HTTPException(status_code=503, detail="Service not ready")
@@ -187,7 +193,7 @@ async def readiness_check():
 
 
 @app.get("/health/live")
-async def liveness_check():
+async def liveness_check() -> Dict[str, Any]:
     """Liveness check for Kubernetes"""
     return {"status": "alive"}
 
@@ -224,7 +230,8 @@ async def retrieve_article(
     try:
         from models import RetrievalOptions
 
-        retrieval_options = RetrievalOptions(use_cache=use_cache, update_cache=update_cache)
+        retrieval_options = RetrievalOptions(
+            use_cache=use_cache, update_cache=update_cache)
 
         article = await storage.retrieve_article(article_id, retrieval_options)
         return article
@@ -236,8 +243,8 @@ async def retrieve_article(
 # Search endpoints
 @app.post("/search/fulltext", response_model=SearchResult)
 async def fulltext_search(
-    search_request: SearchRequest, storage: StorageOrchestrator = Depends(get_storage_orchestrator)
-):
+        search_request: SearchRequest,
+        storage: StorageOrchestrator = Depends(get_storage_orchestrator)):
     """Advanced full-text search"""
     try:
         result = await storage.search_articles(search_request)
@@ -264,13 +271,14 @@ async def similarity_search(
 # Cache management endpoints
 @app.post("/cache/invalidate")
 async def invalidate_cache(
-    cache_keys: list[str], cache: CacheCoordinator = Depends(get_cache_coordinator)
-):
+        cache_keys: list[str],
+        cache: CacheCoordinator = Depends(get_cache_coordinator)):
     """Invalidate cache entries"""
     try:
         from models import CacheInvalidationRequest
 
-        invalidation_request = CacheInvalidationRequest(key_patterns=cache_keys)
+        invalidation_request = CacheInvalidationRequest(
+            key_patterns=cache_keys)
 
         result = await cache.invalidate_cache(invalidation_request)
         return result
@@ -280,7 +288,8 @@ async def invalidate_cache(
 
 
 @app.get("/cache/stats")
-async def cache_stats(cache: CacheCoordinator = Depends(get_cache_coordinator)):
+async def cache_stats(
+        cache: CacheCoordinator = Depends(get_cache_coordinator)):
     """Get cache statistics"""
     try:
         stats = await cache.get_cache_statistics()
@@ -343,10 +352,11 @@ async def optimize_query(
 
 # Metrics endpoints
 @app.get("/metrics")
-async def get_metrics():
+async def get_metrics() -> Dict[str, Any]:
     """Get service metrics"""
     if not metrics_collector:
-        raise HTTPException(status_code=503, detail="Metrics collector not available")
+        raise HTTPException(status_code=503,
+                            detail="Metrics collector not available")
 
     try:
         metrics = await metrics_collector.get_metrics()
@@ -357,4 +367,9 @@ async def get_metrics():
 
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True, log_level="info")
+    uvicorn.run(
+        "main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True,
+        log_level="info")

@@ -39,7 +39,7 @@ class HTMLProcessor:
         include_videos: bool = True,
         custom_selectors: Optional[Dict[str, str]] = None,
     ) -> Dict[str, Any]:
-        """
+    """
         Process HTML content and extract clean text, images, and metadata.
 
         Args:
@@ -93,17 +93,20 @@ class HTMLProcessor:
             logger.error(f"HTML processing failed for {url}: {str(e)}")
             raise ContentProcessingError(f"HTML processing failed: {str(e)}")
 
-    async def _extract_main_content(
-        self, soup: BeautifulSoup, url: str, custom_selectors: Optional[Dict[str, str]] = None
-    ) -> str:
+    async def _extract_main_content(self,
+                                    soup: BeautifulSoup,
+                                    url: str,
+                                    custom_selectors: Optional[Dict[str,
+                                                                    str]] = None) -> str:
         """Extract main content using readability or custom selectors."""
         try:
             if custom_selectors:
                 return await self._extract_with_custom_selectors(soup, custom_selectors)
-            else:
+        else:
                 return await self.readability_extractor.extract_main_content(str(soup), url)
         except Exception as e:
-            logger.warning(f"Main content extraction failed, using fallback: {str(e)}")
+            logger.warning(
+                f"Main content extraction failed, using fallback: {str(e)}")
             return await self._extract_with_fallback(soup)
 
     async def _extract_with_custom_selectors(
@@ -124,7 +127,8 @@ class HTMLProcessor:
                     if text:
                         content_parts.append(text)
             except Exception as e:
-                logger.warning(f"Custom selector '{selector_name}' failed: {str(e)}")
+                logger.warning(
+                    f"Custom selector '{selector_name}' failed: {str(e)}")
                 continue
 
         return "\n\n".join(content_parts)
@@ -164,7 +168,10 @@ class HTMLProcessor:
 
         return soup.get_text(separator=" ", strip=True)
 
-    async def _extract_images(self, soup: BeautifulSoup, base_url: str) -> List[ProcessedImage]:
+    async def _extract_images(
+            self,
+            soup: BeautifulSoup,
+            base_url: str) -> List[ProcessedImage]:
         """Extract and process images from HTML."""
         images = []
 
@@ -210,7 +217,10 @@ class HTMLProcessor:
 
         return images
 
-    async def _extract_videos(self, soup: BeautifulSoup, base_url: str) -> List[VideoMetadata]:
+    async def _extract_videos(
+            self,
+            soup: BeautifulSoup,
+            base_url: str) -> List[VideoMetadata]:
         """Extract video metadata from HTML."""
         videos = []
 
@@ -264,7 +274,8 @@ class HTMLProcessor:
                         videos.append(video_metadata)
 
                 except Exception as e:
-                    logger.warning(f"Failed to process iframe video {src}: {str(e)}")
+                    logger.warning(
+                        f"Failed to process iframe video {src}: {str(e)}")
                     continue
 
         except Exception as e:
@@ -275,7 +286,7 @@ class HTMLProcessor:
     async def _extract_additional_content(
         self, soup: BeautifulSoup, base_url: str
     ) -> Dict[str, Any]:
-        """Extract additional content elements like links, tables, etc."""
+    """Extract additional content elements like links, tables, etc."""
         additional_content = {
             "links": [],
             "tables": [],
@@ -309,9 +320,11 @@ class HTMLProcessor:
             # Extract lists
             list_tags = soup.find_all(["ul", "ol"])
             for list_tag in list_tags:
-                list_items = [li.get_text(strip=True) for li in list_tag.find_all("li")]
+                list_items = [li.get_text(strip=True)
+                              for li in list_tag.find_all("li")]
                 if list_items:
-                    additional_content["lists"].append({"type": list_tag.name, "items": list_items})
+                    additional_content["lists"].append(
+                        {"type": list_tag.name, "items": list_items})
 
             # Extract quotes
             quote_tags = soup.find_all(["blockquote", "q"])
@@ -326,18 +339,19 @@ class HTMLProcessor:
             code_tags = soup.find_all(["code", "pre"])
             for code in code_tags:
                 code_text = code.get_text(strip=True)
-                if code_text and len(code_text) > 10:  # Only include substantial code
+                if code_text and len(
+                        code_text) > 10:  # Only include substantial code
                     additional_content["code_blocks"].append(
                         {
                             "text": code_text,
                             "language": (
-                                code.get("class", [""])[0].replace("language-", "")
-                                if code.get("class")
-                                else ""
-                            ),
+                                code.get(
+                                    "class",
+                                    [""])[0].replace(
+                                    "language-",
+                                    "") if code.get("class") else ""),
                             "type": code.name,
-                        }
-                    )
+                        })
 
         except Exception as e:
             logger.error(f"Additional content extraction failed: {str(e)}")
@@ -362,12 +376,14 @@ class HTMLProcessor:
             header_row = table.find("thead")
             if header_row:
                 headers = header_row.find_all(["th", "td"])
-                table_data["headers"] = [h.get_text(strip=True) for h in headers]
+                table_data["headers"] = [
+                    h.get_text(strip=True) for h in headers]
             else:
                 # Use first row as headers
                 first_row = rows[0]
                 headers = first_row.find_all(["th", "td"])
-                table_data["headers"] = [h.get_text(strip=True) for h in headers]
+                table_data["headers"] = [
+                    h.get_text(strip=True) for h in headers]
                 rows = rows[1:]  # Skip first row
 
             # Extract data rows
@@ -411,7 +427,7 @@ class HTMLProcessor:
                 elif len(parts) == 3:
                     hours, minutes, seconds = map(int, parts)
                     return hours * 3600 + minutes * 60 + seconds
-            else:
+        else:
                 # Assume seconds
                 return int(float(value))
         except (ValueError, TypeError):
@@ -486,7 +502,9 @@ class HTMLProcessor:
 
             # Remove comments
             if remove_comments:
-                comments = soup.find_all(string=lambda text: isinstance(text, Comment))
+                comments = soup.find_all(
+                    string=lambda text: isinstance(
+                        text, Comment))
                 for comment in comments:
                     comment.extract()
 
@@ -512,7 +530,8 @@ class HTMLProcessor:
 
             # Remove empty elements
             for element in soup.find_all():
-                if not element.get_text(strip=True) and not element.find(["img", "video", "audio"]):
+                if not element.get_text(strip=True) and not element.find(
+                        ["img", "video", "audio"]):
                     element.decompose()
 
             return str(soup)

@@ -1,7 +1,5 @@
 """Configuration settings for the personalization service."""
 
-import os
-from typing import Optional
 
 from pydantic import BaseSettings, Field
 

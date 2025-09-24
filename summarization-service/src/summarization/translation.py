@@ -50,7 +50,7 @@ class TranslationService:
         # Reverse mapping
         self.code_to_language = {v: k for k, v in self.language_codes.items()}
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize translation models and services"""
         try:
             logger.info("Initializing translation service...")
@@ -68,7 +68,7 @@ class TranslationService:
             logger.error(f"Failed to initialize translation service: {str(e)}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Clean up resources"""
         try:
             # Clean up MarianMT models
@@ -102,7 +102,11 @@ class TranslationService:
             logger.error(f"Language detection failed: {str(e)}")
             return "en"  # Default to English on error
 
-    async def translate(self, text: str, source_lang: str, target_lang: str) -> str:
+    async def translate(
+            self,
+            text: str,
+            source_lang: str,
+            target_lang: str) -> str:
         """Translate text from source language to target language"""
 
         if not self._initialized:
@@ -129,7 +133,11 @@ class TranslationService:
             logger.error(f"Translation failed: {str(e)}")
             return text  # Return original text on error
 
-    async def _translate_with_marian(self, text: str, source_lang: str, target_lang: str) -> str:
+    async def _translate_with_marian(
+            self,
+            text: str,
+            source_lang: str,
+            target_lang: str) -> str:
         """Translate using MarianMT model"""
         try:
             model_key = f"{source_lang}-{target_lang}"
@@ -137,8 +145,11 @@ class TranslationService:
 
             # Tokenize input
             inputs = tokenizer(
-                text, return_tensors="pt", padding=True, truncation=True, max_length=512
-            )
+                text,
+                return_tensors="pt",
+                padding=True,
+                truncation=True,
+                max_length=512)
 
             # Generate translation
             with tokenizer.as_target_tokenizer():
@@ -147,7 +158,8 @@ class TranslationService:
                 )
 
             # Decode translation
-            translation = tokenizer.decode(translated[0], skip_special_tokens=True)
+            translation = tokenizer.decode(
+                translated[0], skip_special_tokens=True)
 
             return translation
 
@@ -156,11 +168,16 @@ class TranslationService:
             # Fallback to Google Translate
             return await self._translate_with_google(text, source_lang, target_lang)
 
-    async def _translate_with_google(self, text: str, source_lang: str, target_lang: str) -> str:
+    async def _translate_with_google(
+            self,
+            text: str,
+            source_lang: str,
+            target_lang: str) -> str:
         """Translate using Google Translate"""
         try:
             # Use Google Translate
-            result = self.google_translator.translate(text, src=source_lang, dest=target_lang)
+            result = self.google_translator.translate(
+                text, src=source_lang, dest=target_lang)
 
             return result.text
 
@@ -168,7 +185,7 @@ class TranslationService:
             logger.error(f"Google Translate failed: {str(e)}")
             return text  # Return original text on error
 
-    async def _initialize_marian_models(self):
+    async def _initialize_marian_models(self) -> Dict[str, Any]:
         """Initialize MarianMT models for key language pairs"""
         try:
             # Key language pairs for summarization
@@ -196,10 +213,12 @@ class TranslationService:
                     logger.info(f"Loaded MarianMT model: {model_name}")
 
                 except Exception as e:
-                    logger.warning(f"Failed to load MarianMT model {model_name}: {str(e)}")
+                    logger.warning(
+                        f"Failed to load MarianMT model {model_name}: {str(e)}")
                     continue
 
-            logger.info(f"Initialized {len(self.marian_models)} MarianMT models")
+            logger.info(
+                f"Initialized {len(self.marian_models)} MarianMT models")
 
         except Exception as e:
             logger.error(f"Failed to initialize MarianMT models: {str(e)}")
@@ -272,7 +291,7 @@ class TranslationService:
             # Process in parallel with controlled concurrency
             semaphore = asyncio.Semaphore(5)  # Limit concurrent translations
 
-            async def translate_single(text):
+            async def translate_single(text) -> Dict[str, Any]:
                 async with semaphore:
                     return await self.translate(text, source_lang, target_lang)
 
@@ -300,8 +319,11 @@ class TranslationService:
         return self.supported_languages.copy()
 
     async def get_translation_quality(
-        self, original: str, translation: str, source_lang: str, target_lang: str
-    ) -> float:
+            self,
+            original: str,
+            translation: str,
+            source_lang: str,
+            target_lang: str) -> float:
         """Estimate translation quality"""
         try:
             # Simple quality estimation based on length preservation

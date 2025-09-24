@@ -33,9 +33,20 @@ def sample_article():
         content="This is test content",
         url="https://example.com/article/1",
         published_at=datetime.utcnow(),
-        source=Source(id="source_1", name="Test Source", domain="test.com"),
-        author=Author(id="author_1", name="Test Author"),
-        topics=[Topic(name="technology", confidence=0.8), Topic(name="AI", confidence=0.9)],
+        source=Source(
+            id="source_1",
+            name="Test Source",
+            domain="test.com"),
+        author=Author(
+            id="author_1",
+            name="Test Author"),
+        topics=[
+            Topic(
+                name="technology",
+                confidence=0.8),
+            Topic(
+                name="AI",
+                confidence=0.9)],
         word_count=500,
         reading_time=2,
         quality_score=0.8,
@@ -47,10 +58,24 @@ def sample_user_profile():
     """Sample user profile for testing."""
     return UserProfile(
         user_id="test_user",
-        topic_preferences={"technology": 0.9, "AI": 0.8, "science": 0.7},
-        source_preferences={"source_1": 0.8, "source_2": 0.6},
-        reading_patterns={"preferred_hours": [9, 10, 11, 14, 15, 16]},
-        content_preferences={"preferred_length": 500, "preferred_quality": 0.8},
+        topic_preferences={
+            "technology": 0.9,
+            "AI": 0.8,
+            "science": 0.7},
+        source_preferences={
+            "source_1": 0.8,
+            "source_2": 0.6},
+        reading_patterns={
+            "preferred_hours": [
+                9,
+                10,
+                11,
+                14,
+                15,
+                16]},
+        content_preferences={
+            "preferred_length": 500,
+            "preferred_quality": 0.8},
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow(),
     )
@@ -63,8 +88,9 @@ def personalization_engine(mock_cache_manager):
 
 
 @pytest.mark.asyncio
-async def test_personalize_ranking_success(personalization_engine, sample_article):
-    """Test successful personalization."""
+async def test_personalize_ranking_success(
+        personalization_engine, sample_article):
+     -> Dict[str, Any]:"""Test successful personalization."""
     user_id = "test_user"
 
     with patch.object(personalization_engine.user_profiles, "get_profile") as mock_get_profile:
@@ -79,8 +105,9 @@ async def test_personalize_ranking_success(personalization_engine, sample_articl
 
 
 @pytest.mark.asyncio
-async def test_personalize_ranking_no_profile(personalization_engine, sample_article):
-    """Test personalization with no user profile."""
+async def test_personalize_ranking_no_profile(
+        personalization_engine, sample_article):
+     -> Dict[str, Any]:"""Test personalization with no user profile."""
     user_id = "new_user"
 
     with patch.object(personalization_engine.user_profiles, "get_profile") as mock_get_profile:
@@ -94,7 +121,7 @@ async def test_personalize_ranking_no_profile(personalization_engine, sample_art
 
 
 @pytest.mark.asyncio
-async def test_compute_topic_affinity(personalization_engine, sample_article):
+async def test_compute_topic_affinity(personalization_engine, sample_article) -> Dict[str, Any]:
     """Test topic affinity computation."""
     user_preferences = {"technology": 0.9, "AI": 0.8, "science": 0.7}
 
@@ -106,7 +133,7 @@ async def test_compute_topic_affinity(personalization_engine, sample_article):
 
 
 @pytest.mark.asyncio
-async def test_compute_source_preference(personalization_engine):
+async def test_compute_source_preference(personalization_engine) -> Dict[str, Any]:
     """Test source preference computation."""
     source_id = "source_1"
     source_preferences = {"source_1": 0.8, "source_2": 0.6}
@@ -117,7 +144,7 @@ async def test_compute_source_preference(personalization_engine):
 
 
 @pytest.mark.asyncio
-async def test_compute_time_preference(personalization_engine, sample_article):
+async def test_compute_time_preference(personalization_engine, sample_article) -> Dict[str, Any]:
     """Test time preference computation."""
     reading_patterns = {"preferred_hours": [9, 10, 11, 14, 15, 16]}
 
@@ -129,7 +156,7 @@ async def test_compute_time_preference(personalization_engine, sample_article):
 
 
 @pytest.mark.asyncio
-async def test_user_profile_manager_get_profile(mock_cache_manager):
+async def test_user_profile_manager_get_profile(mock_cache_manager) -> Dict[str, Any]:
     """Test user profile retrieval."""
     profile_manager = UserProfileManager(mock_cache_manager)
 
@@ -143,7 +170,7 @@ async def test_user_profile_manager_get_profile(mock_cache_manager):
 
 
 @pytest.mark.asyncio
-async def test_user_profile_manager_update_profile(mock_cache_manager):
+async def test_user_profile_manager_update_profile(mock_cache_manager) -> Dict[str, Any]:
     """Test user profile update."""
     profile_manager = UserProfileManager(mock_cache_manager)
 
@@ -169,7 +196,7 @@ async def test_user_profile_manager_update_profile(mock_cache_manager):
 
 
 @pytest.mark.asyncio
-async def test_collaborative_filter_predict(mock_cache_manager):
+async def test_collaborative_filter_predict(mock_cache_manager) -> Dict[str, Any]:
     """Test collaborative filtering prediction."""
     cf = CollaborativeFilter(mock_cache_manager)
 
@@ -179,8 +206,9 @@ async def test_collaborative_filter_predict(mock_cache_manager):
 
 
 @pytest.mark.asyncio
-async def test_content_based_filter_similarity(mock_cache_manager, sample_article):
-    """Test content-based filtering similarity."""
+async def test_content_based_filter_similarity(
+        mock_cache_manager, sample_article):
+     -> Dict[str, Any]:"""Test content-based filtering similarity."""
     cb = ContentBasedFilter(mock_cache_manager)
 
     user_preferences = {"preferred_length": 500, "preferred_quality": 0.8}
@@ -191,8 +219,9 @@ async def test_content_based_filter_similarity(mock_cache_manager, sample_articl
 
 
 @pytest.mark.asyncio
-async def test_personalization_error_handling(personalization_engine, sample_article):
-    """Test personalization error handling."""
+async def test_personalization_error_handling(
+        personalization_engine, sample_article):
+     -> Dict[str, Any]:"""Test personalization error handling."""
     user_id = "test_user"
 
     with patch.object(personalization_engine.user_profiles, "get_profile") as mock_get_profile:
@@ -207,18 +236,22 @@ async def test_personalization_error_handling(personalization_engine, sample_art
 
 
 @pytest.mark.asyncio
-async def test_generate_explanation(personalization_engine):
+async def test_generate_explanation(personalization_engine) -> Dict[str, Any]:
     """Test explanation generation."""
     explanation = personalization_engine._generate_explanation(
-        topic_score=0.8, source_score=0.7, cf_score=0.6, cb_score=0.9, time_score=0.5, geo_score=0.5
-    )
+        topic_score=0.8,
+        source_score=0.7,
+        cf_score=0.6,
+        cb_score=0.9,
+        time_score=0.5,
+        geo_score=0.5)
 
     assert isinstance(explanation, str)
     assert len(explanation) > 0
 
 
 @pytest.mark.asyncio
-async def test_topic_analyzer_analyze_topics():
+async def test_topic_analyzer_analyze_topics() -> Dict[str, Any]:
     """Test topic analysis."""
     from src.personalization.engine import TopicAnalyzer
 
@@ -232,13 +265,16 @@ async def test_topic_analyzer_analyze_topics():
 
 
 @pytest.mark.asyncio
-async def test_topic_analyzer_similarity():
+async def test_topic_analyzer_similarity() -> Dict[str, Any]:
     """Test topic similarity computation."""
     from src.personalization.engine import TopicAnalyzer
 
     analyzer = TopicAnalyzer()
 
-    topics1 = [Topic(name="technology", confidence=0.8), Topic(name="AI", confidence=0.9)]
+    topics1 = [
+        Topic(
+            name="technology", confidence=0.8), Topic(
+            name="AI", confidence=0.9)]
 
     topics2 = [
         Topic(name="technology", confidence=0.7),
@@ -253,14 +289,21 @@ async def test_topic_analyzer_similarity():
 def test_personalization_weights():
     """Test personalization weight configuration."""
     # Test that weights sum to 1.0
-    weights = {"topic": 0.25, "source": 0.20, "cf": 0.20, "cb": 0.20, "time": 0.10, "geo": 0.05}
+    weights = {
+        "topic": 0.25,
+        "source": 0.20,
+        "cf": 0.20,
+        "cb": 0.20,
+        "time": 0.10,
+        "geo": 0.05}
 
     assert abs(sum(weights.values()) - 1.0) < 0.01
 
 
 @pytest.mark.asyncio
-async def test_personalization_performance(personalization_engine, sample_article):
-    """Test personalization performance."""
+async def test_personalization_performance(
+        personalization_engine, sample_article):
+     -> Dict[str, Any]:"""Test personalization performance."""
     import time
 
     user_id = "test_user"

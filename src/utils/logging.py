@@ -30,9 +30,7 @@ class CorrelationFilter(logging.Filter):
 class JSONFormatter(jsonlogger.JsonFormatter):
     """Custom JSON formatter with additional fields."""
 
-    def add_fields(
-        self, log_record: Dict[str, Any], record: logging.LogRecord, message_dict: Dict[str, Any]
-    ):
+    def add_fields(self, log_record: Dict[str, Any], record: logging.LogRecord, message_dict: Dict[str, Any]):
         """Add custom fields to the log record."""
         super().add_fields(log_record, record, message_dict)
 
@@ -76,11 +74,7 @@ def configure_logging():
             structlog.processors.StackInfoRenderer(),
             structlog.processors.format_exc_info,
             structlog.processors.UnicodeDecoder(),
-            (
-                structlog.processors.JSONRenderer()
-                if settings.LOG_FORMAT == "json"
-                else structlog.dev.ConsoleRenderer()
-            ),
+            (structlog.processors.JSONRenderer() if settings.LOG_FORMAT == "json" else structlog.dev.ConsoleRenderer()),
         ],
         wrapper_class=structlog.stdlib.BoundLogger,
         logger_factory=structlog.stdlib.LoggerFactory(),
@@ -221,9 +215,7 @@ def log_security_event(
     )
 
 
-def log_performance(
-    logger: structlog.BoundLogger, operation: str, duration: float, metadata: Dict[str, Any] = None
-):
+def log_performance(logger: structlog.BoundLogger, operation: str, duration: float, metadata: Dict[str, Any] = None):
     """Log performance metrics."""
     logger.info(
         f"Performance: {operation}",

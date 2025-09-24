@@ -23,11 +23,11 @@ class BaseStatisticalDetector:
         self.config = get_drift_config()
         self.is_initialized = False
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize the detector"""
         self.is_initialized = True
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup resources"""
         pass
 
@@ -110,7 +110,8 @@ class ChiSquareDetector(BaseStatisticalDetector):
             curr_counts = curr_counts.reindex(all_categories, fill_value=0)
 
             # Create contingency table
-            contingency_table = np.array([ref_counts.values, curr_counts.values])
+            contingency_table = np.array(
+                [ref_counts.values, curr_counts.values])
 
             # Perform chi-square test
             chi2, p_value, dof, expected = chi2_contingency(contingency_table)
@@ -158,11 +159,13 @@ class PopulationStabilityIndexDetector(BaseStatisticalDetector):
             is_significant = psi_score > self.psi_threshold
 
             # Normalize drift score
-            drift_score = min(psi_score / 1.0, 1.0)  # PSI > 1.0 is very high drift
+            # PSI > 1.0 is very high drift
+            drift_score = min(psi_score / 1.0, 1.0)
 
             return StatisticalTestResult(
                 test_name="psi",
-                p_value=1.0 - min(psi_score, 1.0),  # Convert to p-value-like metric
+                # Convert to p-value-like metric
+                p_value=1.0 - min(psi_score, 1.0),
                 statistic=psi_score,
                 is_significant=is_significant,
                 drift_score=drift_score,
@@ -171,18 +174,26 @@ class PopulationStabilityIndexDetector(BaseStatisticalDetector):
         except Exception as e:
             logger.error(f"PSI calculation failed: {str(e)}")
             return StatisticalTestResult(
-                test_name="psi", p_value=1.0, statistic=0.0, is_significant=False, drift_score=0.0
-            )
+                test_name="psi",
+                p_value=1.0,
+                statistic=0.0,
+                is_significant=False,
+                drift_score=0.0)
 
-    def calculate_psi(self, reference_data: pd.Series, current_data: pd.Series) -> float:
+    def calculate_psi(self, reference_data: pd.Series,
+                      current_data: pd.Series) -> float:
         """Calculate Population Stability Index"""
         try:
             if pd.api.types.is_numeric_dtype(reference_data):
                 # For numeric data, create bins
                 bins = self.create_bins(reference_data, current_data)
-                ref_bins = pd.cut(reference_data, bins=bins, include_lowest=True)
-                curr_bins = pd.cut(current_data, bins=bins, include_lowest=True)
-            else:
+                ref_bins = pd.cut(
+                    reference_data,
+                    bins=bins,
+                    include_lowest=True)
+                curr_bins = pd.cut(
+                    current_data, bins=bins, include_lowest=True)
+        else:
                 # For categorical data, use categories directly
                 ref_bins = reference_data
                 curr_bins = current_data
@@ -193,11 +204,13 @@ class PopulationStabilityIndexDetector(BaseStatisticalDetector):
 
             # Align categories
             all_categories = set(ref_props.index) | set(curr_props.index)
-            ref_props = ref_props.reindex(all_categories, fill_value=1e-6)  # Avoid log(0)
+            ref_props = ref_props.reindex(
+                all_categories, fill_value=1e-6)  # Avoid log(0)
             curr_props = curr_props.reindex(all_categories, fill_value=1e-6)
 
             # Calculate PSI
-            psi = np.sum((curr_props - ref_props) * np.log(curr_props / ref_props))
+            psi = np.sum((curr_props - ref_props) *
+                         np.log(curr_props / ref_props))
 
             return max(psi, 0.0)  # PSI should be non-negative
 
@@ -254,7 +267,8 @@ class WassersteinDetector(BaseStatisticalDetector):
 
             return StatisticalTestResult(
                 test_name="wasserstein",
-                p_value=1.0 - min(distance, 1.0),  # Convert to p-value-like metric
+                # Convert to p-value-like metric
+                p_value=1.0 - min(distance, 1.0),
                 statistic=distance,
                 is_significant=is_significant,
                 drift_score=drift_score,

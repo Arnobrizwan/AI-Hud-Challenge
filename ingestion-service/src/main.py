@@ -57,7 +57,7 @@ firestore_service: Optional[FirestoreService] = None
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> Dict[str, Any]:
     """Application lifespan manager."""
     global ingestion_service, pubsub_service, firestore_service
 
@@ -100,10 +100,10 @@ async def lifespan(app: FastAPI):
 
     try:
         if ingestion_service:
-            await ingestion_service.shutdown()
+    await ingestion_service.shutdown()
 
         if http_client:
-            await http_client.close()
+    await http_client.close()
 
         logger.info("Application shutdown complete")
 
@@ -135,25 +135,28 @@ app.add_middleware(
 # Dependency to get services
 def get_ingestion_service() -> IngestionService:
     if not ingestion_service:
-        raise HTTPException(status_code=503, detail="Ingestion service not available")
+        raise HTTPException(status_code=503,
+                            detail="Ingestion service not available")
     return ingestion_service
 
 
 def get_pubsub_service() -> PubSubService:
     if not pubsub_service:
-        raise HTTPException(status_code=503, detail="Pub/Sub service not available")
+        raise HTTPException(status_code=503,
+                            detail="Pub/Sub service not available")
     return pubsub_service
 
 
 def get_firestore_service() -> FirestoreService:
     if not firestore_service:
-        raise HTTPException(status_code=503, detail="Firestore service not available")
+        raise HTTPException(status_code=503,
+                            detail="Firestore service not available")
     return firestore_service
 
 
 # Health check endpoint
 @app.get("/health", response_model=HealthCheckResponse, tags=["Monitoring"])
-async def health_check():
+async def health_check() -> Dict[str, Any]:
     """Health check endpoint."""
     try:
         # Check service dependencies
@@ -189,10 +192,12 @@ async def health_check():
 
 # Metrics endpoint
 @app.get("/metrics", tags=["Monitoring"])
-async def metrics():
+async def metrics() -> Dict[str, Any]:
     """Prometheus metrics endpoint."""
     try:
-        return JSONResponse(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
+        return JSONResponse(
+            content=generate_latest(),
+            media_type=CONTENT_TYPE_LATEST)
     except Exception as e:
         logger.error(f"Error generating metrics: {e}")
         raise HTTPException(status_code=500, detail="Error generating metrics")
@@ -200,7 +205,7 @@ async def metrics():
 
 # Source management endpoints
 @app.get("/sources", response_model=SourceListResponse, tags=["Sources"])
-async def list_sources():
+async def list_sources() -> Dict[str, Any]:
     """List all configured sources."""
     try:
         sources = source_config_loader.load_sources()
@@ -239,7 +244,7 @@ async def list_sources():
 
 
 @app.get("/sources/{source_id}", tags=["Sources"])
-async def get_source(source_id: str):
+async def get_source(source_id: str) -> Dict[str, Any]:
     """Get source configuration by ID."""
     try:
         source = source_config_loader.get_source_by_id(source_id)
@@ -275,7 +280,7 @@ async def get_source(source_id: str):
 
 
 @app.put("/sources/{source_id}", tags=["Sources"])
-async def update_source(source_id: str, request: SourceConfigRequest):
+async def update_source(source_id: str, request: SourceConfigRequest) -> Dict[str, Any]:
     """Update source configuration."""
     try:
         success = source_config_loader.update_source_config(
@@ -343,7 +348,9 @@ async def ingest_all_sources(
     try:
         sources = source_config_loader.get_enabled_sources()
         if not sources:
-            raise HTTPException(status_code=400, detail="No enabled sources found")
+            raise HTTPException(
+                status_code=400,
+                detail="No enabled sources found")
 
         # Process all sources
         batches = await ingestion_svc.process_sources(sources)
@@ -365,14 +372,17 @@ async def ingest_all_sources(
         raise
     except Exception as e:
         logger.error(f"Error starting bulk ingestion: {e}")
-        raise HTTPException(status_code=500, detail="Error starting bulk ingestion")
+        raise HTTPException(status_code=500,
+                            detail="Error starting bulk ingestion")
 
 
 # Batch status endpoints
-@app.get("/batches/{batch_id}", response_model=BatchStatusResponse, tags=["Batches"])
+@app.get("/batches/{batch_id}",
+         response_model=BatchStatusResponse,
+         tags=["Batches"])
 async def get_batch_status(
-    batch_id: str, ingestion_svc: IngestionService = Depends(get_ingestion_service)
-):
+        batch_id: str,
+        ingestion_svc: IngestionService = Depends(get_ingestion_service)):
     """Get status of a processing batch."""
     try:
         batch = await ingestion_svc.get_batch_status(batch_id)
@@ -380,8 +390,9 @@ async def get_batch_status(
             raise HTTPException(status_code=404, detail="Batch not found")
 
         progress_percentage = (
-            (batch.processed_count / batch.total_count * 100) if batch.total_count > 0 else 0
-        )
+            (batch.processed_count /
+             batch.total_count *
+             100) if batch.total_count > 0 else 0)
 
         return BatchStatusResponse(
             batch_id=batch.batch_id,
@@ -401,11 +412,14 @@ async def get_batch_status(
         raise
     except Exception as e:
         logger.error(f"Error getting batch status: {e}")
-        raise HTTPException(status_code=500, detail="Error getting batch status")
+        raise HTTPException(
+            status_code=500,
+            detail="Error getting batch status")
 
 
 @app.get("/batches", tags=["Batches"])
-async def list_batches(ingestion_svc: IngestionService = Depends(get_ingestion_service)):
+async def list_batches(
+        ingestion_svc: IngestionService = Depends(get_ingestion_service)):
     """List all active processing batches."""
     try:
         batches = await ingestion_svc.get_active_batches()
@@ -436,8 +450,8 @@ async def list_batches(ingestion_svc: IngestionService = Depends(get_ingestion_s
 # Content search endpoints
 @app.post("/search", response_model=ContentSearchResponse, tags=["Content"])
 async def search_content(
-    request: ContentSearchRequest, firestore_svc: FirestoreService = Depends(get_firestore_service)
-):
+        request: ContentSearchRequest,
+        firestore_svc: FirestoreService = Depends(get_firestore_service)):
     """Search for content articles."""
     try:
         start_time = time.time()
@@ -496,18 +510,20 @@ async def get_source_metrics(
         if source_id:
             metrics = await ingestion_svc.get_processing_metrics(source_id)
             return metrics
-        else:
+    else:
             metrics = await ingestion_svc.get_processing_metrics()
             return metrics
 
     except Exception as e:
         logger.error(f"Error getting source metrics: {e}")
-        raise HTTPException(status_code=500, detail="Error getting source metrics")
+        raise HTTPException(
+            status_code=500,
+            detail="Error getting source metrics")
 
 
 # Root endpoint
 @app.get("/", tags=["Root"])
-async def root():
+async def root() -> Dict[str, Any]:
     """Root endpoint."""
     return {
         "message": f"Welcome to {settings.APP_NAME}",

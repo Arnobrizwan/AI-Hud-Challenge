@@ -41,17 +41,24 @@ class HealthChecker:
         if settings.HEALTH_CHECK_DEPENDENCIES:
             self.checks.extend(
                 [
-                    HealthCheck("redis", self._check_redis, timeout=3.0, critical=True),
-                    HealthCheck("memory", self._check_memory, timeout=1.0, critical=False),
-                    HealthCheck("disk", self._check_disk, timeout=1.0, critical=False),
-                ]
-            )
+                    HealthCheck(
+                        "redis", self._check_redis, timeout=3.0, critical=True), HealthCheck(
+                        "memory", self._check_memory, timeout=1.0, critical=False), HealthCheck(
+                        "disk", self._check_disk, timeout=1.0, critical=False), ])
 
     def register_check(
-        self, name: str, check_function: callable, timeout: float = 5.0, critical: bool = True
-    ):
+            self,
+            name: str,
+            check_function: callable,
+            timeout: float = 5.0,
+            critical: bool = True):
         """Register a custom health check."""
-        self.checks.append(HealthCheck(name, check_function, timeout, critical))
+        self.checks.append(
+            HealthCheck(
+                name,
+                check_function,
+                timeout,
+                critical))
 
     async def check_health(self) -> HealthCheckResponse:
         """Perform comprehensive health check."""
@@ -94,8 +101,9 @@ class HealthChecker:
 
             if result is True:
                 return DependencyStatus(
-                    name=check.name, status=HealthCheckStatus.HEALTHY, response_time=response_time
-                )
+                    name=check.name,
+                    status=HealthCheckStatus.HEALTHY,
+                    response_time=response_time)
             elif isinstance(result, dict) and result.get("status") == "degraded":
                 return DependencyStatus(
                     name=check.name,
@@ -148,12 +156,16 @@ class HealthChecker:
 
             # Consider degraded if memory usage > 80%
             if memory.percent > 80:
-                return {"status": "degraded", "message": f"High memory usage: {memory.percent}%"}
+                return {
+                    "status": "degraded",
+                    "message": f"High memory usage: {memory.percent}%"}
 
             return True
 
         except ImportError:
-            return {"status": "degraded", "message": "psutil not available for memory monitoring"}
+            return {
+                "status": "degraded",
+                "message": "psutil not available for memory monitoring"}
         except Exception as e:
             return False
 
@@ -167,30 +179,38 @@ class HealthChecker:
             # Consider degraded if disk usage > 85%
             usage_percent = (disk.used / disk.total) * 100
             if usage_percent > 85:
-                return {"status": "degraded", "message": f"High disk usage: {usage_percent:.1f}%"}
+                return {
+                    "status": "degraded",
+                    "message": f"High disk usage: {usage_percent:.1f}%"}
 
             return True
 
         except ImportError:
-            return {"status": "degraded", "message": "psutil not available for disk monitoring"}
+            return {
+                "status": "degraded",
+                "message": "psutil not available for disk monitoring"}
         except Exception as e:
             return False
 
     async def check_external_service(
-        self, name: str, url: str, timeout: float = 5.0, expected_status: int = 200
-    ) -> DependencyStatus:
+            self,
+            name: str,
+            url: str,
+            timeout: float = 5.0,
+            expected_status: int = 200) -> DependencyStatus:
         """Check external service health via HTTP."""
         start_time = time.time()
 
         try:
-            async with httpx.AsyncClient(timeout=timeout) as client:
+    async with httpx.AsyncClient(timeout=timeout) as client:
                 response = await client.get(url)
                 response_time = time.time() - start_time
 
                 if response.status_code == expected_status:
                     return DependencyStatus(
-                        name=name, status=HealthCheckStatus.HEALTHY, response_time=response_time
-                    )
+                        name=name,
+                        status=HealthCheckStatus.HEALTHY,
+                        response_time=response_time)
                 else:
                     return DependencyStatus(
                         name=name,
@@ -221,7 +241,9 @@ class HealthChecker:
 
     def is_ready(self, status: HealthCheckStatus) -> bool:
         """Check if service is ready to handle requests."""
-        return status in [HealthCheckStatus.HEALTHY, HealthCheckStatus.DEGRADED]
+        return status in [
+            HealthCheckStatus.HEALTHY,
+            HealthCheckStatus.DEGRADED]
 
 
 # Global health checker instance
@@ -246,8 +268,10 @@ async def check_liveness() -> bool:
 
 
 def register_health_check(
-    name: str, check_function: callable, timeout: float = 5.0, critical: bool = True
-):
+        name: str,
+        check_function: callable,
+        timeout: float = 5.0,
+        critical: bool = True):
     """Register a custom health check."""
     health_checker.register_check(name, check_function, timeout, critical)
 

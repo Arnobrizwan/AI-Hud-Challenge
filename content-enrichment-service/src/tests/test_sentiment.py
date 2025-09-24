@@ -48,27 +48,33 @@ class TestSentimentAnalyzer:
         )
 
     @pytest.mark.asyncio
-    async def test_analyze_sentiment_positive(self, analyzer, positive_content):
-        """Test sentiment analysis for positive content."""
+    async def test_analyze_sentiment_positive(
+            self, analyzer, positive_content):
+         -> Dict[str, Any]:"""Test sentiment analysis for positive content."""
         sentiment = await analyzer.analyze_sentiment(positive_content)
 
-        assert sentiment.sentiment in [SentimentLabel.POSITIVE, SentimentLabel.NEUTRAL]
+        assert sentiment.sentiment in [
+            SentimentLabel.POSITIVE,
+            SentimentLabel.NEUTRAL]
         assert sentiment.confidence > 0.0
         assert sentiment.subjectivity > 0.0  # Should be somewhat subjective
         assert sentiment.polarity > 0.0  # Should be positive
 
     @pytest.mark.asyncio
-    async def test_analyze_sentiment_negative(self, analyzer, negative_content):
-        """Test sentiment analysis for negative content."""
+    async def test_analyze_sentiment_negative(
+            self, analyzer, negative_content):
+         -> Dict[str, Any]:"""Test sentiment analysis for negative content."""
         sentiment = await analyzer.analyze_sentiment(negative_content)
 
-        assert sentiment.sentiment in [SentimentLabel.NEGATIVE, SentimentLabel.NEUTRAL]
+        assert sentiment.sentiment in [
+            SentimentLabel.NEGATIVE,
+            SentimentLabel.NEUTRAL]
         assert sentiment.confidence > 0.0
         assert sentiment.subjectivity > 0.0  # Should be somewhat subjective
         assert sentiment.polarity < 0.0  # Should be negative
 
     @pytest.mark.asyncio
-    async def test_analyze_sentiment_neutral(self, analyzer, neutral_content):
+    async def test_analyze_sentiment_neutral(self, analyzer, neutral_content) -> Dict[str, Any]:
         """Test sentiment analysis for neutral content."""
         sentiment = await analyzer.analyze_sentiment(neutral_content)
 
@@ -82,8 +88,9 @@ class TestSentimentAnalyzer:
         assert -0.2 < sentiment.polarity < 0.2  # Should be close to neutral
 
     @pytest.mark.asyncio
-    async def test_analyze_sentiment_with_emotions(self, analyzer, positive_content):
-        """Test sentiment analysis with emotion detection."""
+    async def test_analyze_sentiment_with_emotions(
+            self, analyzer, positive_content):
+         -> Dict[str, Any]:"""Test sentiment analysis with emotion detection."""
         sentiment = await analyzer.analyze_sentiment(positive_content)
 
         assert isinstance(sentiment.emotions, dict)
@@ -98,7 +105,7 @@ class TestSentimentAnalyzer:
     async def test_analyze_sentiment_batch(
         self, analyzer, positive_content, negative_content, neutral_content
     ):
-        """Test batch sentiment analysis."""
+         -> Dict[str, Any]:"""Test batch sentiment analysis."""
         contents = [positive_content, negative_content, neutral_content]
         sentiments = await analyzer.analyze_sentiment_batch(contents)
 
@@ -107,20 +114,23 @@ class TestSentimentAnalyzer:
         assert all(s.confidence > 0.0 for s in sentiments)
 
     @pytest.mark.asyncio
-    async def test_analyze_sentiment_error_handling(self, analyzer):
+    async def test_analyze_sentiment_error_handling(self, analyzer) -> Dict[str, Any]:
         """Test error handling in sentiment analysis."""
         # Test with empty content
         empty_content = ExtractedContent(
-            title="", content="", content_type=ContentType.ARTICLE, language="en"
-        )
+            title="",
+            content="",
+            content_type=ContentType.ARTICLE,
+            language="en")
 
         sentiment = await analyzer.analyze_sentiment(empty_content)
         assert sentiment.sentiment == SentimentLabel.NEUTRAL
         assert sentiment.confidence == 0.5
 
     @pytest.mark.asyncio
-    async def test_analyze_sentiment_fallback(self, analyzer, positive_content):
-        """Test fallback sentiment analysis when models fail."""
+    async def test_analyze_sentiment_fallback(
+            self, analyzer, positive_content):
+         -> Dict[str, Any]:"""Test fallback sentiment analysis when models fail."""
         with patch.object(analyzer, "model_loaded", False):
             sentiment = await analyzer.analyze_sentiment(positive_content)
 
@@ -166,15 +176,19 @@ class TestSentimentAnalyzer:
         assert "emotion_distribution" in stats
 
     @pytest.mark.asyncio
-    async def test_detect_sentiment_shift(self, analyzer):
+    async def test_detect_sentiment_shift(self, analyzer) -> Dict[str, Any]:
         """Test sentiment shift detection."""
         old_analysis = Mock(
-            sentiment=SentimentLabel.NEGATIVE, confidence=0.8, polarity=-0.7, subjectivity=0.6
-        )
+            sentiment=SentimentLabel.NEGATIVE,
+            confidence=0.8,
+            polarity=-0.7,
+            subjectivity=0.6)
 
         new_analysis = Mock(
-            sentiment=SentimentLabel.POSITIVE, confidence=0.9, polarity=0.8, subjectivity=0.7
-        )
+            sentiment=SentimentLabel.POSITIVE,
+            confidence=0.9,
+            polarity=0.8,
+            subjectivity=0.7)
 
         shift = await analyzer.detect_sentiment_shift(old_analysis, new_analysis)
 
@@ -183,10 +197,10 @@ class TestSentimentAnalyzer:
         assert shift["polarity_change"] > 0
         assert shift["confidence_change"] > 0
         assert "significant_changes" in shift
-        assert shift["has_significant_change"] == True
+        assert shift["has_significant_change"]
 
     @pytest.mark.asyncio
-    async def test_analyze_sentiment_multilingual(self, analyzer):
+    async def test_analyze_sentiment_multilingual(self, analyzer) -> Dict[str, Any]:
         """Test sentiment analysis with different languages."""
         # Test with Spanish content
         spanish_content = ExtractedContent(
@@ -203,8 +217,9 @@ class TestSentimentAnalyzer:
         assert isinstance(sentiment.emotions, dict)
 
     @pytest.mark.asyncio
-    async def test_analyze_sentiment_with_model_failure(self, analyzer, positive_content):
-        """Test sentiment analysis when transformer models fail."""
+    async def test_analyze_sentiment_with_model_failure(
+            self, analyzer, positive_content):
+         -> Dict[str, Any]:"""Test sentiment analysis when transformer models fail."""
         with patch.object(analyzer, "sentiment_pipeline") as mock_pipeline:
             mock_pipeline.side_effect = Exception("Model error")
 
@@ -222,7 +237,8 @@ class TestSentimentAnalyzer:
 
         assert isinstance(emotions, dict)
         assert len(emotions) > 0
-        assert all(isinstance(emotion, EmotionLabel) for emotion in emotions.keys())
+        assert all(isinstance(emotion, EmotionLabel)
+                   for emotion in emotions.keys())
         assert all(0.0 <= intensity <= 1.0 for intensity in emotions.values())
 
     def test_sentiment_keywords_fallback(self, analyzer):

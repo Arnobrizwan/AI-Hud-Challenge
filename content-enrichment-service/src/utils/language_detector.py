@@ -58,16 +58,23 @@ class LanguageDetector:
 
             # Validate detected language
             if detected_lang in self.supported_languages:
-                logger.info("Language detected", language=detected_lang, text_length=len(text))
+                logger.info(
+                    "Language detected",
+                    language=detected_lang,
+                    text_length=len(text))
                 return detected_lang
             else:
                 logger.warning(
-                    "Unsupported language detected", language=detected_lang, falling_back_to="en"
-                )
+                    "Unsupported language detected",
+                    language=detected_lang,
+                    falling_back_to="en")
                 return "en"
 
         except Exception as e:
-            logger.error("Language detection failed", error=str(e), falling_back_to="en")
+            logger.error(
+                "Language detection failed",
+                error=str(e),
+                falling_back_to="en")
             return "en"
 
     def _clean_text(self, text: str) -> str:
@@ -123,13 +130,17 @@ class LanguageDetector:
             # Count languages
             language_counts = {}
             for language in results.values():
-                language_counts[language] = language_counts.get(language, 0) + 1
+                language_counts[language] = language_counts.get(
+                    language, 0) + 1
 
             # Calculate percentages
             total_texts = len(texts)
             language_percentages = {
-                lang: (count / total_texts) * 100 for lang, count in language_counts.items()
-            }
+                lang: (
+                    count /
+                    total_texts) *
+                100 for lang,
+                count in language_counts.items()}
 
             return {
                 "total_texts": total_texts,
@@ -141,5 +152,7 @@ class LanguageDetector:
             }
 
         except Exception as e:
-            logger.error("Language statistics calculation failed", error=str(e))
+            logger.error(
+                "Language statistics calculation failed",
+                error=str(e))
             return {}

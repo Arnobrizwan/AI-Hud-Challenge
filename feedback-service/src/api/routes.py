@@ -48,8 +48,9 @@ analytics_router = APIRouter()
 # Feedback routes
 @feedback_router.post("/", response_model=ProcessingResult)
 async def submit_feedback(
-    feedback: FeedbackCreate, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)
-):
+        feedback: FeedbackCreate,
+        background_tasks: BackgroundTasks,
+        db: AsyncSession = Depends(get_db)):
     """Submit user feedback"""
 
     try:
@@ -93,7 +94,12 @@ async def get_feedback(
     try:
         # This would implement actual pagination and filtering
         # For now, return mock data
-        return PaginatedResponse(items=[], total=0, page=page, size=size, pages=0)
+        return PaginatedResponse(
+            items=[],
+            total=0,
+            page=page,
+            size=size,
+            pages=0)
 
     except Exception as e:
         logger.error("Error getting feedback", error=str(e))
@@ -120,7 +126,9 @@ async def get_feedback_stats(
 
 # Editorial workflow routes
 @editorial_router.post("/tasks", response_model=ReviewTask)
-async def create_review_task(task: ReviewTaskCreate, db: AsyncSession = Depends(get_db)):
+async def create_review_task(
+        task: ReviewTaskCreate,
+        db: AsyncSession = Depends(get_db)):
     """Create editorial review task"""
 
     try:
@@ -141,8 +149,9 @@ async def create_review_task(task: ReviewTaskCreate, db: AsyncSession = Depends(
 
 @editorial_router.post("/tasks/{task_id}/complete")
 async def complete_review_task(
-    task_id: UUID, review_result: ReviewResultCreate, db: AsyncSession = Depends(get_db)
-):
+        task_id: UUID,
+        review_result: ReviewResultCreate,
+        db: AsyncSession = Depends(get_db)):
     """Complete editorial review task"""
 
     try:
@@ -158,8 +167,9 @@ async def complete_review_task(
 
 @editorial_router.get("/tasks", response_model=List[ReviewTask])
 async def get_review_tasks(
-    user_id: Optional[UUID] = None, status: Optional[str] = None, db: AsyncSession = Depends(get_db)
-):
+        user_id: Optional[UUID] = None,
+        status: Optional[str] = None,
+        db: AsyncSession = Depends(get_db)):
     """Get review tasks"""
 
     try:
@@ -194,7 +204,9 @@ async def get_overdue_tasks(db: AsyncSession = Depends(get_db)):
 
 # Annotation routes
 @annotation_router.post("/tasks", response_model=AnnotationTask)
-async def create_annotation_task(task: AnnotationTaskCreate, db: AsyncSession = Depends(get_db)):
+async def create_annotation_task(
+        task: AnnotationTaskCreate,
+        db: AsyncSession = Depends(get_db)):
     """Create annotation task"""
 
     try:
@@ -216,8 +228,9 @@ async def create_annotation_task(task: AnnotationTaskCreate, db: AsyncSession = 
 
 @annotation_router.post("/tasks/{task_id}/submit")
 async def submit_annotation(
-    task_id: UUID, annotation: AnnotationCreate, db: AsyncSession = Depends(get_db)
-):
+        task_id: UUID,
+        annotation: AnnotationCreate,
+        db: AsyncSession = Depends(get_db)):
     """Submit annotation"""
 
     try:
@@ -317,13 +330,16 @@ async def get_metrics(
 
 
 # Background task functions
-async def process_feedback_background(feedback: UserFeedback):
+async def process_feedback_background(feedback: UserFeedback) -> Dict[str, Any]:
     """Background task for additional feedback processing"""
 
     try:
         # This would implement additional background processing
         # such as updating ML models, sending notifications, etc.
-        logger.info("Background feedback processing completed", feedback_id=str(feedback.id))
+        logger.info(
+            "Background feedback processing completed",
+            feedback_id=str(
+                feedback.id))
 
     except Exception as e:
         logger.error("Error in background feedback processing", error=str(e))

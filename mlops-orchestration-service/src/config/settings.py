@@ -2,7 +2,6 @@
 Configuration settings for MLOps Orchestration Service
 """
 
-import os
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
@@ -97,9 +96,7 @@ class Settings(BaseSettings):
     alert_manager_url: str = Field(default="http://localhost:9093", env="ALERT_MANAGER_URL")
 
     # Retraining
-    retraining_check_interval: int = Field(
-        default=300, env="RETRAINING_CHECK_INTERVAL"
-    )  # 5 minutes
+    retraining_check_interval: int = Field(default=300, env="RETRAINING_CHECK_INTERVAL")  # 5 minutes
     retraining_max_concurrent: int = Field(default=3, env="RETRAINING_MAX_CONCURRENT")
     retraining_timeout: int = Field(default=3600, env="RETRAINING_TIMEOUT")  # 1 hour
 
@@ -119,12 +116,8 @@ class Settings(BaseSettings):
     max_concurrent_deployments: int = Field(default=3, env="MAX_CONCURRENT_DEPLOYMENTS")
 
     # Pipeline Orchestration
-    default_orchestrator: OrchestratorType = Field(
-        default=OrchestratorType.AIRFLOW, env="DEFAULT_ORCHESTRATOR"
-    )
-    pipeline_execution_timeout: int = Field(
-        default=7200, env="PIPELINE_EXECUTION_TIMEOUT"
-    )  # 2 hours
+    default_orchestrator: OrchestratorType = Field(default=OrchestratorType.AIRFLOW, env="DEFAULT_ORCHESTRATOR")
+    pipeline_execution_timeout: int = Field(default=7200, env="PIPELINE_EXECUTION_TIMEOUT")  # 2 hours
     pipeline_retry_attempts: int = Field(default=3, env="PIPELINE_RETRY_ATTEMPTS")
 
     # A/B Testing
@@ -148,12 +141,8 @@ class Settings(BaseSettings):
     deployment_rollback_enabled: bool = Field(default=True, env="DEPLOYMENT_ROLLBACK_ENABLED")
 
     # Performance Requirements
-    pipeline_execution_latency_threshold: int = Field(
-        default=30, env="PIPELINE_EXECUTION_LATENCY_THRESHOLD"
-    )
-    model_deployment_time_threshold: int = Field(
-        default=300, env="MODEL_DEPLOYMENT_TIME_THRESHOLD"
-    )  # 5 minutes
+    pipeline_execution_latency_threshold: int = Field(default=30, env="PIPELINE_EXECUTION_LATENCY_THRESHOLD")
+    model_deployment_time_threshold: int = Field(default=300, env="MODEL_DEPLOYMENT_TIME_THRESHOLD")  # 5 minutes
     max_concurrent_experiments: int = Field(default=100, env="MAX_CONCURRENT_EXPERIMENTS")
 
     @validator("environment")

@@ -30,7 +30,8 @@ class ImageProcessor:
         self.max_width = max_width
         self.max_height = max_height
         self.quality = quality
-        self.supported_formats = supported_formats or ["JPEG", "PNG", "WebP", "GIF"]
+        self.supported_formats = supported_formats or [
+            "JPEG", "PNG", "WebP", "GIF"]
         self.cache_dir = "/tmp/image_cache"
 
     async def process_images_from_content(
@@ -82,8 +83,11 @@ class ImageProcessor:
             raise ImageProcessingError(f"Image processing failed: {str(e)}")
 
     async def process_single_image(
-        self, image_url: str, alt_text: str = "", title: str = "", optimize: bool = True
-    ) -> Optional[ProcessedImage]:
+            self,
+            image_url: str,
+            alt_text: str = "",
+            title: str = "",
+            optimize: bool = True) -> Optional[ProcessedImage]:
         """
         Process a single image with optimization.
 
@@ -121,7 +125,8 @@ class ImageProcessor:
             # Calculate quality score
             quality_score = await self._calculate_image_quality(processed_image)
 
-            # Generate optimized URL (in production, this would upload to cloud storage)
+            # Generate optimized URL (in production, this would upload to cloud
+            # storage)
             optimized_url = await self._generate_optimized_url(image_url, optimized_data)
 
             # Create processed image object
@@ -142,14 +147,15 @@ class ImageProcessor:
             return processed_image_obj
 
         except Exception as e:
-            logger.error(f"Single image processing failed for {image_url}: {str(e)}")
+            logger.error(
+                f"Single image processing failed for {image_url}: {str(e)}")
             return None
 
     async def _download_image(self, image_url: str) -> Optional[bytes]:
         """Download image from URL."""
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(image_url, timeout=30) as response:
+    async with aiohttp.ClientSession() as session:
+    async with session.get(image_url, timeout=30) as response:
                     if response.status == 200:
                         return await response.read()
                     else:
@@ -170,7 +176,8 @@ class ImageProcessor:
                 background = Image.new("RGB", image.size, (255, 255, 255))
                 if image.mode == "P":
                     image = image.convert("RGBA")
-                background.paste(image, mask=image.split()[-1] if image.mode == "RGBA" else None)
+                background.paste(image, mask=image.split()
+                                 [-1] if image.mode == "RGBA" else None)
                 image = background
             elif image.mode != "RGB":
                 image = image.convert("RGB")
@@ -207,7 +214,8 @@ class ImageProcessor:
                 return image
 
             # Resize image
-            resized_image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+            resized_image = image.resize(
+                (new_width, new_height), Image.Resampling.LANCZOS)
 
             return resized_image
 
@@ -242,7 +250,12 @@ class ImageProcessor:
             output = io.BytesIO()
 
             # Save with optimization
-            image.save(output, format="JPEG", quality=self.quality, optimize=True, progressive=True)
+            image.save(
+                output,
+                format="JPEG",
+                quality=self.quality,
+                optimize=True,
+                progressive=True)
 
             return output.getvalue()
 
@@ -287,7 +300,10 @@ class ImageProcessor:
             logger.warning(f"Quality calculation failed: {str(e)}")
             return 0.5
 
-    async def _generate_optimized_url(self, original_url: str, image_data: bytes) -> str:
+    async def _generate_optimized_url(
+            self,
+            original_url: str,
+            image_data: bytes) -> str:
         """Generate optimized image URL (placeholder implementation)."""
         try:
             # In production, this would upload to cloud storage and return the URL
@@ -295,7 +311,9 @@ class ImageProcessor:
             url_hash = hashlib.md5(image_data).hexdigest()[:8]
             parsed_url = urlparse(original_url)
             base_name = parsed_url.path.split("/")[-1]
-            name, ext = base_name.rsplit(".", 1) if "." in base_name else (base_name, "jpg")
+            name, ext = base_name.rsplit(
+                ".", 1) if "." in base_name else (
+                base_name, "jpg")
 
             return f"https://optimized-images.example.com/{name}_{url_hash}.{ext}"
 
@@ -338,16 +356,22 @@ class ImageProcessor:
             )
 
         except Exception as e:
-            logger.error(f"Thumbnail creation failed for {image_url}: {str(e)}")
+            logger.error(
+                f"Thumbnail creation failed for {image_url}: {str(e)}")
             return None
 
-    async def _generate_thumbnail_url(self, original_url: str, thumbnail_data: bytes) -> str:
+    async def _generate_thumbnail_url(
+            self,
+            original_url: str,
+            thumbnail_data: bytes) -> str:
         """Generate thumbnail URL."""
         try:
             url_hash = hashlib.md5(thumbnail_data).hexdigest()[:8]
             parsed_url = urlparse(original_url)
             base_name = parsed_url.path.split("/")[-1]
-            name, ext = base_name.rsplit(".", 1) if "." in base_name else (base_name, "jpg")
+            name, ext = base_name.rsplit(
+                ".", 1) if "." in base_name else (
+                base_name, "jpg")
 
             return f"https://thumbnails.example.com/{name}_{url_hash}_thumb.{ext}"
 
@@ -421,8 +445,13 @@ class ImageProcessor:
             }
 
         except Exception as e:
-            logger.warning(f"Image validation failed for {image_url}: {str(e)}")
-            return {"valid": False, "error": str(e), "size": 0, "format": "Unknown"}
+            logger.warning(
+                f"Image validation failed for {image_url}: {str(e)}")
+            return {
+                "valid": False,
+                "error": str(e),
+                "size": 0,
+                "format": "Unknown"}
 
     async def batch_process_images(
         self, image_urls: List[str], max_concurrent: int = 5
@@ -431,8 +460,9 @@ class ImageProcessor:
         try:
             semaphore = asyncio.Semaphore(max_concurrent)
 
-            async def process_with_semaphore(url: str) -> Optional[ProcessedImage]:
-                async with semaphore:
+            async def process_with_semaphore(
+                    url: str) -> Optional[ProcessedImage]:
+    async with semaphore:
                     return await self.process_single_image(url)
 
             tasks = [process_with_semaphore(url) for url in image_urls]

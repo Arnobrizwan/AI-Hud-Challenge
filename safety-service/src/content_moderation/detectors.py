@@ -30,11 +30,11 @@ class BaseContentDetector:
         self.config = get_content_config()
         self.is_initialized = False
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize the detector"""
         self.is_initialized = True
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup resources"""
         self.is_initialized = False
 
@@ -75,17 +75,20 @@ class ToxicityDetector(BaseContentDetector):
         """Analyze text for toxicity"""
         try:
             if not text:
-                return ModerationResult(score=0.0, confidence=1.0, detected_issues=[])
+                return ModerationResult(
+                    score=0.0, confidence=1.0, detected_issues=[])
 
             text_lower = text.lower()
             toxicity_score = 0.0
             detected_issues = []
 
             # Check for toxic keywords
-            keyword_matches = sum(1 for keyword in self.toxic_keywords if keyword in text_lower)
+            keyword_matches = sum(
+                1 for keyword in self.toxic_keywords if keyword in text_lower)
             if keyword_matches > 0:
                 toxicity_score += min(keyword_matches * 0.2, 0.6)
-                detected_issues.append(f"Toxic keywords detected: {keyword_matches}")
+                detected_issues.append(
+                    f"Toxic keywords detected: {keyword_matches}")
 
             # Check for toxic patterns
             pattern_matches = 0
@@ -95,10 +98,12 @@ class ToxicityDetector(BaseContentDetector):
 
             if pattern_matches > 0:
                 toxicity_score += min(pattern_matches * 0.3, 0.4)
-                detected_issues.append(f"Toxic patterns detected: {pattern_matches}")
+                detected_issues.append(
+                    f"Toxic patterns detected: {pattern_matches}")
 
             # Calculate confidence based on text length and matches
-            confidence = min(1.0, (keyword_matches + pattern_matches) / max(len(text.split()), 1))
+            confidence = min(
+                1.0, (keyword_matches + pattern_matches) / max(len(text.split()), 1))
 
             return ModerationResult(
                 score=min(toxicity_score, 1.0),
@@ -108,7 +113,8 @@ class ToxicityDetector(BaseContentDetector):
 
         except Exception as e:
             logger.error(f"Toxicity detection failed: {str(e)}")
-            return ModerationResult(score=0.0, confidence=0.0, detected_issues=[])
+            return ModerationResult(
+                score=0.0, confidence=0.0, detected_issues=[])
 
 
 class HateSpeechDetector(BaseContentDetector):
@@ -150,17 +156,20 @@ class HateSpeechDetector(BaseContentDetector):
         """Analyze text for hate speech"""
         try:
             if not text:
-                return ModerationResult(score=0.0, confidence=1.0, detected_issues=[])
+                return ModerationResult(
+                    score=0.0, confidence=1.0, detected_issues=[])
 
             text_lower = text.lower()
             hate_score = 0.0
             detected_issues = []
 
             # Check for hate keywords
-            keyword_matches = sum(1 for keyword in self.hate_keywords if keyword in text_lower)
+            keyword_matches = sum(
+                1 for keyword in self.hate_keywords if keyword in text_lower)
             if keyword_matches > 0:
                 hate_score += min(keyword_matches * 0.3, 0.7)
-                detected_issues.append(f"Hate speech keywords detected: {keyword_matches}")
+                detected_issues.append(
+                    f"Hate speech keywords detected: {keyword_matches}")
 
             # Check for hate patterns
             pattern_matches = 0
@@ -168,7 +177,8 @@ class HateSpeechDetector(BaseContentDetector):
                 matches = re.findall(pattern, text_lower, re.IGNORECASE)
                 if matches:
                     pattern_matches += len(matches)
-                    detected_issues.append(f"Hate speech patterns detected: {matches}")
+                    detected_issues.append(
+                        f"Hate speech patterns detected: {matches}")
 
             if pattern_matches > 0:
                 hate_score += min(pattern_matches * 0.2, 0.3)
@@ -181,24 +191,29 @@ class HateSpeechDetector(BaseContentDetector):
                     context_pattern = rf"\b(negative|bad|wrong|inferior|hate|dislike)\s+{group}\b"
                     if re.search(context_pattern, text_lower):
                         group_targeting += 1
-                        detected_issues.append(f"Protected group targeting detected: {group}")
+                        detected_issues.append(
+                            f"Protected group targeting detected: {group}")
 
             if group_targeting > 0:
                 hate_score += min(group_targeting * 0.4, 0.5)
 
             # Calculate confidence
-            confidence = min(
-                1.0,
-                (keyword_matches + pattern_matches + group_targeting) / max(len(text.split()), 1),
-            )
+            confidence = min(1.0, (keyword_matches +
+                                   pattern_matches +
+                                   group_targeting) /
+                             max(len(text.split()), 1), )
 
             return ModerationResult(
-                score=min(hate_score, 1.0), confidence=confidence, detected_issues=detected_issues
-            )
+                score=min(
+                    hate_score,
+                    1.0),
+                confidence=confidence,
+                detected_issues=detected_issues)
 
         except Exception as e:
             logger.error(f"Hate speech detection failed: {str(e)}")
-            return ModerationResult(score=0.0, confidence=0.0, detected_issues=[])
+            return ModerationResult(
+                score=0.0, confidence=0.0, detected_issues=[])
 
 
 class SpamDetector(BaseContentDetector):
@@ -237,17 +252,20 @@ class SpamDetector(BaseContentDetector):
         """Analyze text for spam"""
         try:
             if not text:
-                return ModerationResult(score=0.0, confidence=1.0, detected_issues=[])
+                return ModerationResult(
+                    score=0.0, confidence=1.0, detected_issues=[])
 
             text_lower = text.lower()
             spam_score = 0.0
             detected_issues = []
 
             # Check for spam keywords
-            keyword_matches = sum(1 for keyword in self.spam_keywords if keyword in text_lower)
+            keyword_matches = sum(
+                1 for keyword in self.spam_keywords if keyword in text_lower)
             if keyword_matches > 0:
                 spam_score += min(keyword_matches * 0.2, 0.5)
-                detected_issues.append(f"Spam keywords detected: {keyword_matches}")
+                detected_issues.append(
+                    f"Spam keywords detected: {keyword_matches}")
 
             # Check for spam patterns
             pattern_matches = 0
@@ -257,7 +275,8 @@ class SpamDetector(BaseContentDetector):
 
             if pattern_matches > 0:
                 spam_score += min(pattern_matches * 0.3, 0.4)
-                detected_issues.append(f"Spam patterns detected: {pattern_matches}")
+                detected_issues.append(
+                    f"Spam patterns detected: {pattern_matches}")
 
             # Check for excessive URLs
             url_count = len(re.findall(self.url_pattern, text))
@@ -269,7 +288,8 @@ class SpamDetector(BaseContentDetector):
             email_count = len(re.findall(self.email_pattern, text))
             if email_count > 2:
                 spam_score += min(email_count * 0.15, 0.2)
-                detected_issues.append(f"Excessive emails detected: {email_count}")
+                detected_issues.append(
+                    f"Excessive emails detected: {email_count}")
 
             # Check for repetitive content
             words = text_lower.split()
@@ -298,12 +318,16 @@ class SpamDetector(BaseContentDetector):
             )
 
             return ModerationResult(
-                score=min(spam_score, 1.0), confidence=confidence, detected_issues=detected_issues
-            )
+                score=min(
+                    spam_score,
+                    1.0),
+                confidence=confidence,
+                detected_issues=detected_issues)
 
         except Exception as e:
             logger.error(f"Spam detection failed: {str(e)}")
-            return ModerationResult(score=0.0, confidence=0.0, detected_issues=[])
+            return ModerationResult(
+                score=0.0, confidence=0.0, detected_issues=[])
 
 
 class MisinformationDetector(BaseContentDetector):
@@ -340,7 +364,8 @@ class MisinformationDetector(BaseContentDetector):
         """Analyze text for misinformation"""
         try:
             if not text:
-                return ModerationResult(score=0.0, confidence=1.0, detected_issues=[])
+                return ModerationResult(
+                    score=0.0, confidence=1.0, detected_issues=[])
 
             text_lower = text.lower()
             misinformation_score = 0.0
@@ -348,11 +373,11 @@ class MisinformationDetector(BaseContentDetector):
 
             # Check for misinformation keywords
             keyword_matches = sum(
-                1 for keyword in self.misinformation_keywords if keyword in text_lower
-            )
+                1 for keyword in self.misinformation_keywords if keyword in text_lower)
             if keyword_matches > 0:
                 misinformation_score += min(keyword_matches * 0.3, 0.6)
-                detected_issues.append(f"Misinformation keywords detected: {keyword_matches}")
+                detected_issues.append(
+                    f"Misinformation keywords detected: {keyword_matches}")
 
             # Check for unsubstantiated claims
             claim_matches = 0
@@ -362,7 +387,8 @@ class MisinformationDetector(BaseContentDetector):
 
             if claim_matches > 0:
                 misinformation_score += min(claim_matches * 0.2, 0.3)
-                detected_issues.append(f"Unsubstantiated claims detected: {claim_matches}")
+                detected_issues.append(
+                    f"Unsubstantiated claims detected: {claim_matches}")
 
             # Check for urgency patterns
             urgency_matches = 0
@@ -372,19 +398,22 @@ class MisinformationDetector(BaseContentDetector):
 
             if urgency_matches > 0:
                 misinformation_score += min(urgency_matches * 0.15, 0.2)
-                detected_issues.append(f"Urgency patterns detected: {urgency_matches}")
+                detected_issues.append(
+                    f"Urgency patterns detected: {urgency_matches}")
 
             # Check for excessive punctuation (often used in misinformation)
             if len(text) > 10:
                 exclamation_ratio = text.count("!") / len(text)
                 if exclamation_ratio > 0.05:  # 5% exclamation threshold
                     misinformation_score += 0.1
-                    detected_issues.append("Excessive exclamation marks detected")
+                    detected_issues.append(
+                        "Excessive exclamation marks detected")
 
             # Calculate confidence
-            confidence = min(
-                1.0, (keyword_matches + claim_matches + urgency_matches) / max(len(text.split()), 1)
-            )
+            confidence = min(1.0, (keyword_matches +
+                                   claim_matches +
+                                   urgency_matches) /
+                             max(len(text.split()), 1))
 
             return ModerationResult(
                 score=min(misinformation_score, 1.0),
@@ -394,7 +423,8 @@ class MisinformationDetector(BaseContentDetector):
 
         except Exception as e:
             logger.error(f"Misinformation detection failed: {str(e)}")
-            return ModerationResult(score=0.0, confidence=0.0, detected_issues=[])
+            return ModerationResult(
+                score=0.0, confidence=0.0, detected_issues=[])
 
 
 class AdultContentDetector(BaseContentDetector):
@@ -425,17 +455,20 @@ class AdultContentDetector(BaseContentDetector):
         """Analyze text for adult content"""
         try:
             if not text:
-                return ModerationResult(score=0.0, confidence=1.0, detected_issues=[])
+                return ModerationResult(
+                    score=0.0, confidence=1.0, detected_issues=[])
 
             text_lower = text.lower()
             adult_score = 0.0
             detected_issues = []
 
             # Check for adult keywords
-            keyword_matches = sum(1 for keyword in self.adult_keywords if keyword in text_lower)
+            keyword_matches = sum(
+                1 for keyword in self.adult_keywords if keyword in text_lower)
             if keyword_matches > 0:
                 adult_score += min(keyword_matches * 0.4, 0.8)
-                detected_issues.append(f"Adult content keywords detected: {keyword_matches}")
+                detected_issues.append(
+                    f"Adult content keywords detected: {keyword_matches}")
 
             # Check for adult patterns
             pattern_matches = 0
@@ -445,18 +478,24 @@ class AdultContentDetector(BaseContentDetector):
 
             if pattern_matches > 0:
                 adult_score += min(pattern_matches * 0.3, 0.2)
-                detected_issues.append(f"Adult content patterns detected: {pattern_matches}")
+                detected_issues.append(
+                    f"Adult content patterns detected: {pattern_matches}")
 
             # Calculate confidence
-            confidence = min(1.0, (keyword_matches + pattern_matches) / max(len(text.split()), 1))
+            confidence = min(
+                1.0, (keyword_matches + pattern_matches) / max(len(text.split()), 1))
 
             return ModerationResult(
-                score=min(adult_score, 1.0), confidence=confidence, detected_issues=detected_issues
-            )
+                score=min(
+                    adult_score,
+                    1.0),
+                confidence=confidence,
+                detected_issues=detected_issues)
 
         except Exception as e:
             logger.error(f"Adult content detection failed: {str(e)}")
-            return ModerationResult(score=0.0, confidence=0.0, detected_issues=[])
+            return ModerationResult(
+                score=0.0, confidence=0.0, detected_issues=[])
 
     async def analyze_image(self, image_url: str) -> ModerationResult:
         """Analyze image for adult content"""
@@ -467,7 +506,8 @@ class AdultContentDetector(BaseContentDetector):
             detected_issues = []
 
             # Check URL for adult content indicators
-            if any(keyword in image_url.lower() for keyword in self.adult_keywords):
+            if any(keyword in image_url.lower()
+                   for keyword in self.adult_keywords):
                 adult_score = 0.8
                 detected_issues.append("Adult content detected in image URL")
 
@@ -479,7 +519,8 @@ class AdultContentDetector(BaseContentDetector):
 
         except Exception as e:
             logger.error(f"Image adult content detection failed: {str(e)}")
-            return ModerationResult(score=0.0, confidence=0.0, detected_issues=[])
+            return ModerationResult(
+                score=0.0, confidence=0.0, detected_issues=[])
 
     async def analyze_video(self, video_url: str) -> ModerationResult:
         """Analyze video for adult content"""
@@ -490,7 +531,8 @@ class AdultContentDetector(BaseContentDetector):
             detected_issues = []
 
             # Check URL for adult content indicators
-            if any(keyword in video_url.lower() for keyword in self.adult_keywords):
+            if any(keyword in video_url.lower()
+                   for keyword in self.adult_keywords):
                 adult_score = 0.8
                 detected_issues.append("Adult content detected in video URL")
 
@@ -502,7 +544,8 @@ class AdultContentDetector(BaseContentDetector):
 
         except Exception as e:
             logger.error(f"Video adult content detection failed: {str(e)}")
-            return ModerationResult(score=0.0, confidence=0.0, detected_issues=[])
+            return ModerationResult(
+                score=0.0, confidence=0.0, detected_issues=[])
 
 
 class ViolenceDetector(BaseContentDetector):
@@ -539,17 +582,20 @@ class ViolenceDetector(BaseContentDetector):
         """Analyze text for violence"""
         try:
             if not text:
-                return ModerationResult(score=0.0, confidence=1.0, detected_issues=[])
+                return ModerationResult(
+                    score=0.0, confidence=1.0, detected_issues=[])
 
             text_lower = text.lower()
             violence_score = 0.0
             detected_issues = []
 
             # Check for violence keywords
-            keyword_matches = sum(1 for keyword in self.violence_keywords if keyword in text_lower)
+            keyword_matches = sum(
+                1 for keyword in self.violence_keywords if keyword in text_lower)
             if keyword_matches > 0:
                 violence_score += min(keyword_matches * 0.3, 0.7)
-                detected_issues.append(f"Violence keywords detected: {keyword_matches}")
+                detected_issues.append(
+                    f"Violence keywords detected: {keyword_matches}")
 
             # Check for violence patterns
             pattern_matches = 0
@@ -559,10 +605,12 @@ class ViolenceDetector(BaseContentDetector):
 
             if pattern_matches > 0:
                 violence_score += min(pattern_matches * 0.2, 0.3)
-                detected_issues.append(f"Violence patterns detected: {pattern_matches}")
+                detected_issues.append(
+                    f"Violence patterns detected: {pattern_matches}")
 
             # Calculate confidence
-            confidence = min(1.0, (keyword_matches + pattern_matches) / max(len(text.split()), 1))
+            confidence = min(
+                1.0, (keyword_matches + pattern_matches) / max(len(text.split()), 1))
 
             return ModerationResult(
                 score=min(violence_score, 1.0),
@@ -572,7 +620,8 @@ class ViolenceDetector(BaseContentDetector):
 
         except Exception as e:
             logger.error(f"Violence detection failed: {str(e)}")
-            return ModerationResult(score=0.0, confidence=0.0, detected_issues=[])
+            return ModerationResult(
+                score=0.0, confidence=0.0, detected_issues=[])
 
     async def analyze_image(self, image_url: str) -> ModerationResult:
         """Analyze image for violence"""
@@ -583,7 +632,8 @@ class ViolenceDetector(BaseContentDetector):
             detected_issues = []
 
             # Check URL for violence indicators
-            if any(keyword in image_url.lower() for keyword in self.violence_keywords):
+            if any(keyword in image_url.lower()
+                   for keyword in self.violence_keywords):
                 violence_score = 0.7
                 detected_issues.append("Violence detected in image URL")
 
@@ -595,7 +645,8 @@ class ViolenceDetector(BaseContentDetector):
 
         except Exception as e:
             logger.error(f"Image violence detection failed: {str(e)}")
-            return ModerationResult(score=0.0, confidence=0.0, detected_issues=[])
+            return ModerationResult(
+                score=0.0, confidence=0.0, detected_issues=[])
 
     async def analyze_video(self, video_url: str) -> ModerationResult:
         """Analyze video for violence"""
@@ -606,7 +657,8 @@ class ViolenceDetector(BaseContentDetector):
             detected_issues = []
 
             # Check URL for violence indicators
-            if any(keyword in video_url.lower() for keyword in self.violence_keywords):
+            if any(keyword in video_url.lower()
+                   for keyword in self.violence_keywords):
                 violence_score = 0.7
                 detected_issues.append("Violence detected in video URL")
 
@@ -618,7 +670,8 @@ class ViolenceDetector(BaseContentDetector):
 
         except Exception as e:
             logger.error(f"Video violence detection failed: {str(e)}")
-            return ModerationResult(score=0.0, confidence=0.0, detected_issues=[])
+            return ModerationResult(
+                score=0.0, confidence=0.0, detected_issues=[])
 
 
 class ExternalModerationAPIs:
@@ -629,11 +682,11 @@ class ExternalModerationAPIs:
         self.is_initialized = False
         self.enabled = self.config.external_apis
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize external APIs"""
         self.is_initialized = True
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup resources"""
         self.is_initialized = False
 

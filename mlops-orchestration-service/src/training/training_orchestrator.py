@@ -67,14 +67,17 @@ class ModelTrainingOrchestrator:
             logger.info("Model Training Orchestrator initialized successfully")
 
         except Exception as e:
-            logger.error(f"Failed to initialize Model Training Orchestrator: {str(e)}")
+            logger.error(
+                f"Failed to initialize Model Training Orchestrator: {str(e)}")
             raise
 
-    async def execute_training_pipeline(self, training_config: TrainingConfig) -> TrainingResult:
+    async def execute_training_pipeline(
+            self, training_config: TrainingConfig) -> TrainingResult:
         """Execute complete model training pipeline"""
 
         try:
-            logger.info(f"Starting training pipeline for model: {training_config.model_name}")
+            logger.info(
+                f"Starting training pipeline for model: {training_config.model_name}")
 
             # Create training result
             training_result = TrainingResult(
@@ -120,7 +123,8 @@ class ModelTrainingOrchestrator:
             training_result.evaluation_result = evaluation_result
 
             # Register model if meets criteria
-            if evaluation_result.meets_quality_threshold(training_config.quality_threshold):
+            if evaluation_result.meets_quality_threshold(
+                    training_config.quality_threshold):
                 model_version = await self._register_model(
                     model_result, evaluation_result, experiment.id, training_config
                 )
@@ -143,10 +147,12 @@ class ModelTrainingOrchestrator:
             logger.error(f"Training pipeline failed: {str(e)}")
             if training_result.id in self._active_training_jobs:
                 self._active_training_jobs[training_result.id].status = "failed"
-                self._active_training_jobs[training_result.id].error_message = str(e)
+                self._active_training_jobs[training_result.id].error_message = str(
+                    e)
             raise TrainingError(f"Training pipeline failed: {str(e)}")
 
-    async def prepare_training_data(self, config: TrainingConfig) -> TrainingData:
+    async def prepare_training_data(
+            self, config: TrainingConfig) -> TrainingData:
         """Prepare training data from various sources"""
 
         try:
@@ -174,7 +180,8 @@ class ModelTrainingOrchestrator:
                 train_set=train_data,
                 validation_set=val_data,
                 test_set=test_data,
-                feature_count=feature_data.shape[1] - 1,  # Assuming last column is target
+                # Assuming last column is target
+                feature_count=feature_data.shape[1] - 1,
                 feature_names=list(feature_data.columns[:-1]),
                 target_name=feature_data.columns[-1],
             )
@@ -183,20 +190,22 @@ class ModelTrainingOrchestrator:
             logger.error(f"Failed to prepare training data: {str(e)}")
             raise TrainingError(f"Data preparation failed: {str(e)}")
 
-    async def _create_experiment(self, config: TrainingConfig) -> Dict[str, Any]:
-        """Create MLflow experiment for training"""
-
+    async def _create_experiment(
+            self, config: TrainingConfig) -> Dict[str, Any]:
+    """Create MLflow experiment for training"""
         experiment_name = f"{config.model_name}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
 
         experiment = {
-            "id": str(uuid4()),
+            "id": str(
+                uuid4()),
             "name": experiment_name,
             "description": config.description or f"Training experiment for {config.model_name}",
             "created_at": datetime.utcnow(),
             "tags": {
                 "model_name": config.model_name,
                 "experiment_type": "training",
-                "hyperparameter_tuning": str(config.enable_hyperparameter_tuning),
+                "hyperparameter_tuning": str(
+                    config.enable_hyperparameter_tuning),
             },
         }
 
@@ -208,8 +217,7 @@ class ModelTrainingOrchestrator:
     async def _optimize_hyperparameters(
         self, config: TrainingConfig, training_data: TrainingData, experiment_id: str
     ) -> Dict[str, Any]:
-        """Optimize hyperparameters using Optuna"""
-
+    """Optimize hyperparameters using Optuna"""
         def objective(trial):
             # Sample hyperparameters
             params = {}
@@ -251,17 +259,20 @@ class ModelTrainingOrchestrator:
         # Create study
         study = optuna.create_study(
             direction=(
-                "maximize"
-                if config.optimization_metric in ["accuracy", "f1", "precision", "recall"]
-                else "minimize"
-            ),
-            sampler=optuna.samplers.TPESampler(seed=42),
+                "maximize" if config.optimization_metric in [
+                    "accuracy",
+                    "f1",
+                    "precision",
+                    "recall"] else "minimize"),
+            sampler=optuna.samplers.TPESampler(
+                seed=42),
         )
 
         # Optimize
         study.optimize(
-            objective, n_trials=config.hyperparameter_trials, timeout=config.hyperparameter_timeout
-        )
+            objective,
+            n_trials=config.hyperparameter_trials,
+            timeout=config.hyperparameter_timeout)
 
         # Store trials
         self._hyperparameter_trials[experiment_id] = [
@@ -274,12 +285,15 @@ class ModelTrainingOrchestrator:
             for trial in study.trials
         ]
 
-        logger.info(f"Hyperparameter optimization completed. Best value: {study.best_value}")
+        logger.info(
+            f"Hyperparameter optimization completed. Best value: {study.best_value}")
         return study.best_params
 
     async def _train_model(
-        self, config: TrainingConfig, training_data: TrainingData, experiment_id: str
-    ) -> ModelTrainingResult:
+            self,
+            config: TrainingConfig,
+            training_data: TrainingData,
+            experiment_id: str) -> ModelTrainingResult:
         """Execute model training with monitoring"""
 
         try:
@@ -298,8 +312,8 @@ class ModelTrainingOrchestrator:
             if hasattr(model, "fit"):
                 # Scikit-learn style training
                 trained_model = model.fit(
-                    training_data.train_set.features, training_data.train_set.labels
-                )
+                    training_data.train_set.features,
+                    training_data.train_set.labels)
 
                 # Get training history if available
                 training_history = getattr(trained_model, "history", {})
@@ -354,7 +368,8 @@ class ModelTrainingOrchestrator:
 
             # Make predictions
             train_predictions = model.predict(training_data.train_set.features)
-            val_predictions = model.predict(training_data.validation_set.features)
+            val_predictions = model.predict(
+                training_data.validation_set.features)
             test_predictions = model.predict(training_data.test_set.features)
 
             # Calculate metrics
@@ -366,14 +381,16 @@ class ModelTrainingOrchestrator:
                 ("test", test_predictions, training_data.test_set.labels),
             ]:
                 if config.task_type == "classification":
-                    metrics[f"{split_name}_accuracy"] = accuracy_score(labels, predictions)
+                    metrics[f"{split_name}_accuracy"] = accuracy_score(
+                        labels, predictions)
                     metrics[f"{split_name}_precision"] = precision_score(
                         labels, predictions, average="weighted"
                     )
                     metrics[f"{split_name}_recall"] = recall_score(
                         labels, predictions, average="weighted"
                     )
-                    metrics[f"{split_name}_f1"] = f1_score(labels, predictions, average="weighted")
+                    metrics[f"{split_name}_f1"] = f1_score(
+                        labels, predictions, average="weighted")
                 else:
                     # Regression metrics
                     mse = np.mean((labels - predictions) ** 2)
@@ -416,8 +433,7 @@ class ModelTrainingOrchestrator:
         experiment_id: str,
         config: TrainingConfig,
     ) -> Dict[str, Any]:
-        """Register trained model in model registry"""
-
+    """Register trained model in model registry"""
         try:
             logger.info("Registering trained model...")
 
@@ -458,9 +474,8 @@ class ModelTrainingOrchestrator:
         if config.early_stopping_patience:
             callbacks.append(
                 EarlyStoppingCallback(
-                    patience=config.early_stopping_patience, monitor=config.early_stopping_monitor
-                )
-            )
+                    patience=config.early_stopping_patience,
+                    monitor=config.early_stopping_monitor))
 
         # Model checkpoint callback
         callbacks.append(
@@ -468,28 +483,30 @@ class ModelTrainingOrchestrator:
                 filepath=f"checkpoints/{experiment_id}/model_{{epoch:02d}}.pkl",
                 save_best_only=True,
                 monitor=config.early_stopping_monitor,
-            )
-        )
+            ))
 
         return callbacks
 
     async def _custom_training_loop(
-        self, model: Any, training_data: TrainingData, config: TrainingConfig, callbacks: List[Any]
-    ) -> Any:
+            self,
+            model: Any,
+            training_data: TrainingData,
+            config: TrainingConfig,
+            callbacks: List[Any]) -> Any:
         """Custom training loop for non-scikit-learn models"""
 
         # This would be implemented based on the specific model framework
         # For now, return the model as-is
         return model
 
-    async def _log_training_metrics(self, experiment_id: str, metrics: Dict[str, float]) -> None:
+    async def _log_training_metrics(
+            self, experiment_id: str, metrics: Dict[str, float]) -> None:
         """Log training metrics to MLflow"""
 
         await self.model_registry.log_metrics(experiment_id, metrics)
 
-    def _split_data(
-        self, data: pd.DataFrame, train_size: float, val_size: float, test_size: float
-    ) -> Tuple[Any, Any, Any]:
+    def _split_data(self, data: pd.DataFrame, train_size: float,
+                    val_size: float, test_size: float) -> Tuple[Any, Any, Any]:
         """Split data into train/validation/test sets"""
 
         # Simple random split
@@ -503,7 +520,8 @@ class ModelTrainingOrchestrator:
 
         return train_data, val_data, test_data
 
-    async def _load_training_data(self, data_sources: List[Dict[str, Any]]) -> pd.DataFrame:
+    async def _load_training_data(
+            self, data_sources: List[Dict[str, Any]]) -> pd.DataFrame:
         """Load training data from configured sources"""
 
         # This would implement loading from various data sources

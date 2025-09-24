@@ -3,12 +3,11 @@ API models for the ingestion service.
 """
 
 from datetime import datetime
-from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, validator
 
-from .content import ContentType, ProcessingStatus, SourceType
+from .content import ContentType, ProcessingStatus
 
 
 class APIResponse(BaseModel):
@@ -37,9 +36,7 @@ class IngestionRequest(BaseModel):
 
     source_id: str = Field(..., description="Source identifier")
     url: Optional[str] = Field(None, description="Specific URL to ingest")
-    force_refresh: bool = Field(
-        default=False, description="Force refresh even if recently processed"
-    )
+    force_refresh: bool = Field(default=False, description="Force refresh even if recently processed")
     batch_size: Optional[int] = Field(None, description="Batch size for processing")
     priority: Optional[int] = Field(None, description="Processing priority")
 

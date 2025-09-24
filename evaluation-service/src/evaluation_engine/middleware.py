@@ -8,7 +8,6 @@ import time
 from fastapi import Request, Response
 from fastapi.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.base import RequestResponseEndpoint
-from starlette.types import ASGIApp
 
 logger = logging.getLogger(__name__)
 

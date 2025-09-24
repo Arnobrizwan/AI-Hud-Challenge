@@ -1,7 +1,6 @@
 """Configuration settings for the deduplication service."""
 
-import os
-from typing import List, Optional
+from typing import List
 
 from pydantic import BaseSettings, Field
 
@@ -80,9 +79,7 @@ class Settings(BaseSettings):
 
     # CORS
     allowed_origins: List[str] = Field(default=["*"], env="ALLOWED_ORIGINS")
-    allowed_methods: List[str] = Field(
-        default=["GET", "POST", "PUT", "DELETE"], env="ALLOWED_METHODS"
-    )
+    allowed_methods: List[str] = Field(default=["GET", "POST", "PUT", "DELETE"], env="ALLOWED_METHODS")
     allowed_headers: List[str] = Field(default=["*"], env="ALLOWED_HEADERS")
 
     # Cache settings

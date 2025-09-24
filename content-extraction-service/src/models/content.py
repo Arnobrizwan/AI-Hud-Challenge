@@ -5,9 +5,9 @@ Content models for extraction and cleanup.
 import hashlib
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field, HttpUrl, validator
+from pydantic import BaseModel, Field, validator
 
 
 class ContentType(str, Enum):
@@ -156,9 +156,7 @@ class QualityMetrics(BaseModel):
     content_freshness: float = Field(..., description="Content freshness score")
     overall_quality: float = Field(..., description="Overall quality score")
 
-    @validator(
-        "readability_score", "spam_score", "duplicate_score", "content_freshness", "overall_quality"
-    )
+    @validator("readability_score", "spam_score", "duplicate_score", "content_freshness", "overall_quality")
     def validate_scores(cls, v):
         """Validate score values."""
         if not 0.0 <= v <= 100.0:
@@ -178,9 +176,7 @@ class ExtractionStats(BaseModel):
 
     extraction_time_ms: int = Field(..., description="Total extraction time in milliseconds")
     html_fetch_time_ms: int = Field(..., description="HTML fetch time in milliseconds")
-    content_extraction_time_ms: int = Field(
-        ..., description="Content extraction time in milliseconds"
-    )
+    content_extraction_time_ms: int = Field(..., description="Content extraction time in milliseconds")
     image_processing_time_ms: int = Field(..., description="Image processing time in milliseconds")
     quality_analysis_time_ms: int = Field(..., description="Quality analysis time in milliseconds")
     total_processing_time_ms: int = Field(..., description="Total processing time in milliseconds")
@@ -226,12 +222,8 @@ class ExtractedContent(BaseModel):
     extraction_method: ExtractionMethod = Field(..., description="Extraction method used")
     content_type: ContentType = Field(..., description="Content type")
     content_hash: str = Field(..., description="Content hash for deduplication")
-    extraction_timestamp: datetime = Field(
-        default_factory=datetime.utcnow, description="Extraction timestamp"
-    )
-    processing_status: ProcessingStatus = Field(
-        default=ProcessingStatus.PENDING, description="Processing status"
-    )
+    extraction_timestamp: datetime = Field(default_factory=datetime.utcnow, description="Extraction timestamp")
+    processing_status: ProcessingStatus = Field(default=ProcessingStatus.PENDING, description="Processing status")
     extraction_stats: ExtractionStats = Field(..., description="Extraction statistics")
     raw_html: Optional[str] = Field(None, description="Raw HTML content")
     cleaned_html: Optional[str] = Field(None, description="Cleaned HTML content")
@@ -305,17 +297,13 @@ class ExtractionRequest(BaseModel):
 
     url: str = Field(..., description="URL to extract content from")
     content_type: Optional[ContentType] = Field(None, description="Expected content type")
-    extraction_method: Optional[ExtractionMethod] = Field(
-        None, description="Preferred extraction method"
-    )
+    extraction_method: Optional[ExtractionMethod] = Field(None, description="Preferred extraction method")
     force_refresh: bool = Field(default=False, description="Force refresh even if cached")
     include_images: bool = Field(default=True, description="Include image processing")
     include_videos: bool = Field(default=True, description="Include video metadata")
     quality_threshold: float = Field(default=0.3, description="Minimum quality threshold")
     language_hint: Optional[str] = Field(None, description="Language hint for detection")
-    custom_selectors: Dict[str, str] = Field(
-        default_factory=dict, description="Custom CSS selectors"
-    )
+    custom_selectors: Dict[str, str] = Field(default_factory=dict, description="Custom CSS selectors")
     timeout: Optional[int] = Field(None, description="Request timeout in seconds")
 
     @validator("url")
@@ -348,12 +336,8 @@ class BatchExtractionRequest(BaseModel):
     """Request for batch content extraction."""
 
     urls: List[str] = Field(..., description="URLs to extract content from")
-    content_types: List[ContentType] = Field(
-        default_factory=list, description="Expected content types"
-    )
-    extraction_methods: List[ExtractionMethod] = Field(
-        default_factory=list, description="Preferred extraction methods"
-    )
+    content_types: List[ContentType] = Field(default_factory=list, description="Expected content types")
+    extraction_methods: List[ExtractionMethod] = Field(default_factory=list, description="Preferred extraction methods")
     force_refresh: bool = Field(default=False, description="Force refresh even if cached")
     include_images: bool = Field(default=True, description="Include image processing")
     quality_threshold: float = Field(default=0.3, description="Minimum quality threshold")

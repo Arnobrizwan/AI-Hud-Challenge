@@ -18,19 +18,22 @@ class QueryOptimizer:
     def __init__(self):
         self._initialized = False
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize query optimizer"""
         self._initialized = True
         logger.info("Query Optimizer initialized")
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup query optimizer"""
         self._initialized = False
         logger.info("Query Optimizer cleanup complete")
 
-    async def optimize_multi_store_query(self, query: MultiStoreQuery) -> OptimizedQuery:
+    async def optimize_multi_store_query(
+            self, query: MultiStoreQuery) -> OptimizedQuery:
         """Optimize queries across multiple data stores"""
         # Placeholder implementation
         return OptimizedQuery(
-            original_query=query, optimized_strategy={}, estimated_cost=0.0, estimated_duration=0
-        )
+            original_query=query,
+            optimized_strategy={},
+            estimated_cost=0.0,
+            estimated_duration=0)

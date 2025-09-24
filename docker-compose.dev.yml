@@ -1,0 +1,302 @@
+# docker-compose.dev.yml - Complete local development stack
+version: '3.8'
+
+services:
+  # ==================== INFRASTRUCTURE ====================
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+    volumes: ["redis_data:/data"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  postgres:
+    image: pgvector/pgvector:pg15
+    environment:
+      POSTGRES_DB: newshub
+      POSTGRES_USER: newshub
+      POSTGRES_PASSWORD: dev_password
+    ports: ["5432:5432"]
+    volumes: 
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U newshub"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  elasticsearch:
+    image: elasticsearch:8.8.0
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports: ["9200:9200"]
+    volumes: ["elasticsearch_data:/usr/share/elasticsearch/data"]
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports: ["9090:9090"]
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+
+  grafana:
+    image: grafana/grafana:latest
+    ports: ["3001:3000"]
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/datasources:/etc/grafana/provisioning/datasources
+
+  mlflow:
+    image: python:3.11-slim
+    ports: ["5000:5000"]
+    command: >
+      sh -c "pip install mlflow psycopg2-binary &&
+             mlflow server --host 0.0.0.0 --port 5000 
+             --backend-store-uri postgresql://newshub:dev_password@postgres:5432/newshub
+             --default-artifact-root ./mlflow-artifacts"
+    volumes: ["mlflow_data:/mlflow"]
+    depends_on: [postgres]
+
+  # ==================== CORE SERVICES (1-8) ====================
+  foundations-guards:
+    build: 
+      context: ./safety-service
+      dockerfile: Dockerfile.dev
+    ports: ["8001:8000"]
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql://newshub:dev_password@postgres:5432/newshub
+    depends_on: [redis, postgres]
+    volumes: ["./safety-service:/app"]
+
+  ingestion-normalization:
+    build: 
+      context: ./ingestion-service
+      dockerfile: Dockerfile.dev
+    ports: ["8002:8000"]
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql://newshub:dev_password@postgres:5432/newshub
+    depends_on: [redis, postgres, foundations-guards]
+    volumes: ["./ingestion-service:/app"]
+
+  content-extraction:
+    build:
+      context: ./content-extraction-service
+      dockerfile: Dockerfile.dev
+    ports: ["8003:8000"]
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql://newshub:dev_password@postgres:5432/newshub
+    depends_on: [redis, postgres]
+    volumes: ["./content-extraction-service:/app"]
+
+  enrichment:
+    build:
+      context: ./content-enrichment-service
+      dockerfile: Dockerfile.dev
+    ports: ["8004:8000"]
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql://newshub:dev_password@postgres:5432/newshub
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    depends_on: [redis, postgres, elasticsearch]
+    volumes: ["./content-enrichment-service:/app"]
+
+  deduplication:
+    build:
+      context: ./deduplication-service
+      dockerfile: Dockerfile.dev
+    ports: ["8005:8000"]
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql://newshub:dev_password@postgres:5432/newshub
+    depends_on: [redis, postgres]
+    volumes: ["./deduplication-service:/app"]
+
+  ranking:
+    build:
+      context: ./src
+      dockerfile: Dockerfile.dev
+    ports: ["8006:8000"]
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql://newshub:dev_password@postgres:5432/newshub
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    depends_on: [redis, postgres, mlflow]
+    volumes: ["./src:/app"]
+
+  summarization:
+    build:
+      context: ./summarization-service
+      dockerfile: Dockerfile.dev
+    ports: ["8007:8000"]
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql://newshub:dev_password@postgres:5432/newshub
+    depends_on: [redis, postgres]
+    volumes: ["./summarization-service:/app"]
+
+  personalization:
+    build:
+      context: ./personalization-service
+      dockerfile: Dockerfile.dev
+    ports: ["8008:8000"]
+    environment:
+      - REDIS_URL=redis://redis:6379  
+      - DATABASE_URL=postgresql://newshub:dev_password@postgres:5432/newshub
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    depends_on: [redis, postgres, mlflow]
+    volumes: ["./personalization-service:/app"]
+
+  # ==================== INTELLIGENCE SERVICES (9-12) ====================
+  notification-decisioning:
+    build:
+      context: ./notification-service
+      dockerfile: Dockerfile.dev
+    ports: ["8009:8000"]
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql://newshub:dev_password@postgres:5432/newshub
+    depends_on: [redis, postgres]
+    volumes: ["./notification-service:/app"]
+
+  feedback-human-loop:
+    build:
+      context: ./feedback-service
+      dockerfile: Dockerfile.dev
+    ports: ["8010:8000"]
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql://newshub:dev_password@postgres:5432/newshub
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    depends_on: [redis, postgres, mlflow]
+    volumes: ["./feedback-service:/app"]
+
+  evaluation-suite:
+    build:
+      context: ./evaluation-service
+      dockerfile: Dockerfile.dev
+    ports: ["8011:8000"]
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql://newshub:dev_password@postgres:5432/newshub
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    depends_on: [redis, postgres, mlflow]
+    volumes: ["./evaluation-service:/app"]
+
+  mlops-orchestration:
+    build:
+      context: ./mlops-orchestration-service
+      dockerfile: Dockerfile.dev
+    ports: ["8012:8000"]
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql://newshub:dev_password@postgres:5432/newshub
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    depends_on: [redis, postgres, mlflow]
+    volumes: ["./mlops-orchestration-service:/app"]
+
+  # ==================== PLATFORM SERVICES (13-16) ====================
+  drift-abuse-safety:
+    build:
+      context: ./safety-service
+      dockerfile: Dockerfile.dev
+    ports: ["8013:8000"]
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql://newshub:dev_password@postgres:5432/newshub
+    depends_on: [redis, postgres]
+    volumes: ["./safety-service:/app"]
+
+  storage-indexing:
+    build:
+      context: ./storage-service
+      dockerfile: Dockerfile.dev
+    ports: ["8014:8000"]
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql://newshub:dev_password@postgres:5432/newshub
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    depends_on: [redis, postgres, elasticsearch]
+    volumes: ["./storage-service:/app"]
+
+  realtime-interfaces:
+    build:
+      context: ./realtime-interface-service
+      dockerfile: Dockerfile.dev
+    ports: ["8015:8000"]
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql://newshub:dev_password@postgres:5432/newshub
+    depends_on: [redis, postgres]
+    volumes: ["./realtime-interface-service:/app"]
+
+  observability-runbooks:
+    build:
+      context: ./observability-service
+      dockerfile: Dockerfile.dev
+    ports: ["8016:8000"]
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql://newshub:dev_password@postgres:5432/newshub
+      - PROMETHEUS_URL=http://prometheus:9090
+    depends_on: [redis, postgres, prometheus]
+    volumes: ["./observability-service:/app"]
+
+  # ==================== API GATEWAY & UI ====================
+  api-gateway:
+    build:
+      context: ./src
+      dockerfile: Dockerfile.dev
+    ports: ["8000:8000"]
+    environment:
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - foundations-guards
+      - ingestion-normalization
+      - content-extraction
+      - enrichment
+      - deduplication
+      - ranking
+      - summarization
+      - personalization
+      - notification-decisioning
+      - feedback-human-loop
+      - evaluation-suite
+      - mlops-orchestration
+      - drift-abuse-safety
+      - storage-indexing
+      - realtime-interfaces
+      - observability-runbooks
+    volumes: ["./src:/app"]
+
+  admin-ui:
+    build:
+      context: ./feedback-service/frontend
+      dockerfile: Dockerfile.dev
+    ports: ["3000:3000"]
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+    volumes: ["./feedback-service/frontend:/app"]
+
+volumes:
+  redis_data:
+  postgres_data:
+  elasticsearch_data:
+  prometheus_data:
+  grafana_data:
+  mlflow_data:
+
+networks:
+  default:
+    name: news-hub-network

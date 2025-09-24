@@ -19,7 +19,8 @@ logger = structlog.get_logger()
 class ABTestingFramework:
     """A/B testing framework for personalization algorithms."""
 
-    def __init__(self, redis_client: RedisClient, postgres_client: PostgreSQLClient):
+    def __init__(self, redis_client: RedisClient,
+                 postgres_client: PostgreSQLClient):
         self.redis = redis_client
         self.postgres = postgres_client
         self.cache_ttl = 3600  # 1 hour
@@ -47,14 +48,16 @@ class ABTestingFramework:
                 experiment.status,
             )
 
-            logger.info(f"Created A/B test experiment: {experiment.experiment_id}")
+            logger.info(
+                f"Created A/B test experiment: {experiment.experiment_id}")
             return experiment.experiment_id
 
         except Exception as e:
             logger.error(f"Failed to create experiment: {e}")
             raise
 
-    async def get_algorithm_variant(self, user_id: str, experiment: str) -> str:
+    async def get_algorithm_variant(
+            self, user_id: str, experiment: str) -> str:
         """Get algorithm variant for a user in an experiment."""
         # Check if user is already assigned
         cached_variant = await self.redis.get(f"ab_test:{experiment}:{user_id}")
@@ -78,7 +81,8 @@ class ABTestingFramework:
 
         return variant
 
-    async def _get_experiment(self, experiment_id: str) -> Optional[Dict[str, Any]]:
+    async def _get_experiment(
+            self, experiment_id: str) -> Optional[Dict[str, Any]]:
         """Get experiment details from database."""
         query = """
         SELECT * FROM ab_experiments WHERE experiment_id = $1
@@ -101,7 +105,8 @@ class ABTestingFramework:
 
         return True
 
-    async def _assign_user_to_variant(self, user_id: str, experiment_data: Dict[str, Any]) -> str:
+    async def _assign_user_to_variant(
+            self, user_id: str, experiment_data: Dict[str, Any]) -> str:
         """Assign user to a variant based on traffic allocation."""
         variants = experiment_data["variants"]
         traffic_allocation = experiment_data["traffic_allocation"]
@@ -130,8 +135,12 @@ class ABTestingFramework:
         hash_int = int(hash_obj.hexdigest()[:8], 16)
         return hash_int / (2**32)
 
-    async def _record_user_assignment(self, user_id: str, experiment_id: str, variant: str):
-        """Record user assignment to variant."""
+    async def _record_user_assignment(
+            self,
+            user_id: str,
+            experiment_id: str,
+            variant: str):
+         -> Dict[str, Any]:"""Record user assignment to variant."""
         query = """
         INSERT INTO user_experiments (user_id, experiment_id, variant, assigned_at)
         VALUES ($1, $2, $3, $4)
@@ -141,10 +150,13 @@ class ABTestingFramework:
 
         await self.postgres.execute(query, user_id, experiment_id, variant, datetime.utcnow())
 
-    async def record_experiment_event(
-        self, user_id: str, experiment_id: str, event_type: str, event_data: Dict[str, Any] = None
-    ):
-        """Record an event for an experiment."""
+    async def record_experiment_event(self,
+                                      user_id: str,
+                                      experiment_id: str,
+                                      event_type: str,
+                                      event_data: Dict[str,
+                                                       Any] = None):
+         -> Dict[str, Any]:"""Record an event for an experiment."""
         try:
             # Get user's variant
             variant = await self.get_algorithm_variant(user_id, experiment_id)
@@ -162,13 +174,15 @@ class ABTestingFramework:
             # Store in Redis for real-time analytics
             await self.redis.lpush(f"experiment_events:{experiment_id}", event)
 
-            logger.info(f"Recorded experiment event: {event_type} for user {user_id}")
+            logger.info(
+                f"Recorded experiment event: {event_type} for user {user_id}")
 
         except Exception as e:
             logger.error(f"Failed to record experiment event: {e}")
 
-    async def get_experiment_results(self, experiment_id: str) -> Dict[str, Any]:
-        """Get experiment results and statistics."""
+    async def get_experiment_results(
+            self, experiment_id: str) -> Dict[str, Any]:
+    """Get experiment results and statistics."""
         try:
             # Get experiment details
             experiment = await self._get_experiment(experiment_id)
@@ -184,7 +198,8 @@ class ABTestingFramework:
             # Calculate metrics for each variant
             variant_metrics = {}
             for variant in experiment["variants"].keys():
-                variant_users = [a for a in assignments if a["variant"] == variant]
+                variant_users = [
+                    a for a in assignments if a["variant"] == variant]
                 variant_events = [e for e in events if e["variant"] == variant]
 
                 metrics = await self._calculate_variant_metrics(variant_users, variant_events)
@@ -207,7 +222,8 @@ class ABTestingFramework:
             logger.error(f"Failed to get experiment results: {e}")
             return {"error": str(e)}
 
-    async def _get_user_assignments(self, experiment_id: str) -> List[Dict[str, Any]]:
+    async def _get_user_assignments(
+            self, experiment_id: str) -> List[Dict[str, Any]]:
         """Get user assignments for an experiment."""
         query = """
         SELECT user_id, variant, assigned_at
@@ -217,7 +233,8 @@ class ABTestingFramework:
 
         return await self.postgres.fetch_all(query, experiment_id)
 
-    async def _get_experiment_events(self, experiment_id: str) -> List[Dict[str, Any]]:
+    async def _get_experiment_events(
+            self, experiment_id: str) -> List[Dict[str, Any]]:
         """Get events for an experiment."""
         # Get events from Redis
         events = await self.redis.lrange(f"experiment_events:{experiment_id}", 0, -1)
@@ -235,7 +252,7 @@ class ABTestingFramework:
     async def _calculate_variant_metrics(
         self, users: List[Dict[str, Any]], events: List[Dict[str, Any]]
     ) -> Dict[str, Any]:
-        """Calculate metrics for a variant."""
+    """Calculate metrics for a variant."""
         if not users:
             return {}
 
@@ -267,7 +284,7 @@ class ABTestingFramework:
     async def _calculate_statistical_significance(
         self, variant_metrics: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Calculate statistical significance between variants."""
+    """Calculate statistical significance between variants."""
         if len(variant_metrics) < 2:
             return {"error": "Need at least 2 variants for significance testing"}
 
@@ -300,7 +317,8 @@ class ABTestingFramework:
                 "confidence_level": 0.95,
             }
         else:
-            significance = {"error": "Insufficient data for significance testing"}
+            significance = {
+                "error": "Insufficient data for significance testing"}
 
         return significance
 
@@ -308,7 +326,7 @@ class ABTestingFramework:
         """Stop an experiment."""
         try:
             query = """
-            UPDATE ab_experiments 
+            UPDATE ab_experiments
             SET status = 'stopped', end_date = $1
             WHERE experiment_id = $2
             """
@@ -328,8 +346,8 @@ class ABTestingFramework:
     async def get_active_experiments(self) -> List[Dict[str, Any]]:
         """Get all active experiments."""
         query = """
-        SELECT * FROM ab_experiments 
-        WHERE status = 'active' 
+        SELECT * FROM ab_experiments
+        WHERE status = 'active'
         AND (start_date IS NULL OR start_date <= $1)
         AND (end_date IS NULL OR end_date >= $1)
         """

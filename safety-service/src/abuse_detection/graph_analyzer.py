@@ -37,7 +37,7 @@ class GraphBasedAbuseDetector:
         self.suspicious_patterns = set()
         self.known_abusers = set()
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize the graph analyzer"""
         try:
             self.is_initialized = True
@@ -47,7 +47,7 @@ class GraphBasedAbuseDetector:
             logger.error(f"Failed to initialize graph analyzer: {str(e)}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup resources"""
         try:
             self.user_graph.clear()
@@ -73,7 +73,7 @@ class GraphBasedAbuseDetector:
         try:
             # Update graph with new connection data
             if connection_data:
-                await self.update_user_connections(user_id, connection_data)
+    await self.update_user_connections(user_id, connection_data)
 
             # Calculate graph-based signals
             suspicious_connections = await self.count_suspicious_connections(user_id)
@@ -96,7 +96,8 @@ class GraphBasedAbuseDetector:
             logger.error(f"Graph analysis failed: {str(e)}")
             return GraphSignals(abuse_probability=0.0)
 
-    async def update_user_connections(self, user_id: str, connection_data: Dict[str, Any]) -> None:
+    async def update_user_connections(
+            self, user_id: str, connection_data: Dict[str, Any]) -> None:
         """Update user's connections in the graph"""
         try:
             # Add user node if not exists
@@ -106,7 +107,8 @@ class GraphBasedAbuseDetector:
 
             # Update user attributes
             if "user_attributes" in connection_data:
-                self.user_attributes[user_id].update(connection_data["user_attributes"])
+                self.user_attributes[user_id].update(
+                    connection_data["user_attributes"])
 
             # Add connections
             if "connections" in connection_data:
@@ -118,7 +120,8 @@ class GraphBasedAbuseDetector:
 
                         # Store edge attributes
                         edge_key = tuple(sorted([user_id, connected_user]))
-                        self.edge_attributes[edge_key] = connection.get("attributes", {})
+                        self.edge_attributes[edge_key] = connection.get(
+                            "attributes", {})
 
             # Update known abusers
             if connection_data.get("is_abuser", False):
@@ -184,16 +187,21 @@ class GraphBasedAbuseDetector:
             normalized_features = self.scaler.fit_transform(features_array)
 
             # Perform clustering
-            cluster_labels = self.clustering_model.fit_predict(normalized_features)
+            cluster_labels = self.clustering_model.fit_predict(
+                normalized_features)
 
             # Check for anomalies (outliers or very small clusters)
-            unique_labels, counts = np.unique(cluster_labels, return_counts=True)
+            unique_labels, counts = np.unique(
+                cluster_labels, return_counts=True)
 
-            # Anomaly if user's neighbors form very small clusters or are mostly outliers
+            # Anomaly if user's neighbors form very small clusters or are
+            # mostly outliers
             outlier_count = np.sum(cluster_labels == -1)  # DBSCAN outliers
-            small_cluster_count = np.sum(counts[counts > 0] < 3)  # Clusters with < 3 members
+            # Clusters with < 3 members
+            small_cluster_count = np.sum(counts[counts > 0] < 3)
 
-            anomaly_ratio = (outlier_count + small_cluster_count) / len(neighbors)
+            anomaly_ratio = (
+                outlier_count + small_cluster_count) / len(neighbors)
 
             return anomaly_ratio > self.config.cluster_anomaly_threshold
 
@@ -225,9 +233,12 @@ class GraphBasedAbuseDetector:
                 return False
 
             # Check for anomalies
-            degree_anomaly = self.is_statistical_anomaly(user_degree, all_degrees)
-            betweenness_anomaly = self.is_statistical_anomaly(user_betweenness, all_betweenness)
-            closeness_anomaly = self.is_statistical_anomaly(user_closeness, all_closeness)
+            degree_anomaly = self.is_statistical_anomaly(
+                user_degree, all_degrees)
+            betweenness_anomaly = self.is_statistical_anomaly(
+                user_betweenness, all_betweenness)
+            closeness_anomaly = self.is_statistical_anomaly(
+                user_closeness, all_closeness)
 
             # Anomaly if any centrality measure is unusual
             return degree_anomaly or betweenness_anomaly or closeness_anomaly
@@ -318,7 +329,10 @@ class GraphBasedAbuseDetector:
             features.append(user_attrs.get("reputation_score", 0.5))
 
             # Verification status
-            features.append(1.0 if user_attrs.get("is_verified", False) else 0.0)
+            features.append(
+                1.0 if user_attrs.get(
+                    "is_verified",
+                    False) else 0.0)
 
             # Suspicious patterns count
             features.append(len(user_attrs.get("suspicious_patterns", [])))
@@ -332,7 +346,10 @@ class GraphBasedAbuseDetector:
             logger.error(f"Feature extraction failed: {str(e)}")
             return [0.0] * 6
 
-    def is_statistical_anomaly(self, value: float, distribution: List[float]) -> bool:
+    def is_statistical_anomaly(
+            self,
+            value: float,
+            distribution: List[float]) -> bool:
         """Check if a value is statistically anomalous"""
         try:
             if not distribution:
@@ -355,8 +372,10 @@ class GraphBasedAbuseDetector:
             return False
 
     def calculate_abuse_probability(
-        self, suspicious_connections: int, cluster_anomaly: bool, centrality_anomaly: bool
-    ) -> float:
+            self,
+            suspicious_connections: int,
+            cluster_anomaly: bool,
+            centrality_anomaly: bool) -> float:
         """Calculate overall abuse probability from graph signals"""
         try:
             # Weight different signals
@@ -370,7 +389,9 @@ class GraphBasedAbuseDetector:
             score = 0.0
 
             # Suspicious connections score
-            suspicious_score = min(suspicious_connections / 5.0, 1.0)  # Normalize to [0, 1]
+            suspicious_score = min(
+                suspicious_connections / 5.0,
+                1.0)  # Normalize to [0, 1]
             score += suspicious_score * weights["suspicious_connections"]
 
             # Cluster anomaly score
@@ -405,8 +426,9 @@ class GraphBasedAbuseDetector:
 
             # Calculate clustering coefficient
             try:
-                stats["average_clustering"] = nx.average_clustering(self.user_graph)
-            except:
+                stats["average_clustering"] = nx.average_clustering(
+                    self.user_graph)
+            except BaseException:
                 stats["average_clustering"] = 0.0
 
             return stats
@@ -439,7 +461,8 @@ class GraphBasedAbuseDetector:
             normalized_features = self.scaler.fit_transform(features_array)
 
             # Perform clustering
-            cluster_labels = self.clustering_model.fit_predict(normalized_features)
+            cluster_labels = self.clustering_model.fit_predict(
+                normalized_features)
 
             # Group users by cluster
             clusters = defaultdict(list)
@@ -448,8 +471,9 @@ class GraphBasedAbuseDetector:
 
             # Return clusters with more than 2 members (excluding outliers)
             abuse_clusters = [
-                cluster for label, cluster in clusters.items() if label != -1 and len(cluster) > 2
-            ]
+                cluster for label,
+                cluster in clusters.items() if label != -
+                1 and len(cluster) > 2]
 
             return abuse_clusters
 

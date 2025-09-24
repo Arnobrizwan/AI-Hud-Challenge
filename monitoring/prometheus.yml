@@ -1,0 +1,124 @@
+# monitoring/prometheus.yml
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - "alert_rules.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Infrastructure services
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    metrics_path: '/metrics'
+
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres:5432']
+    metrics_path: '/metrics'
+
+  - job_name: 'elasticsearch'
+    static_configs:
+      - targets: ['elasticsearch:9200']
+    metrics_path: '/_prometheus/metrics'
+
+  # Core services (1-8)
+  - job_name: 'foundations-guards'
+    static_configs:
+      - targets: ['foundations-guards:8000']
+    metrics_path: '/metrics'
+
+  - job_name: 'ingestion-normalization'
+    static_configs:
+      - targets: ['ingestion-normalization:8000']
+    metrics_path: '/metrics'
+
+  - job_name: 'content-extraction'
+    static_configs:
+      - targets: ['content-extraction:8000']
+    metrics_path: '/metrics'
+
+  - job_name: 'enrichment'
+    static_configs:
+      - targets: ['enrichment:8000']
+    metrics_path: '/metrics'
+
+  - job_name: 'deduplication'
+    static_configs:
+      - targets: ['deduplication:8000']
+    metrics_path: '/metrics'
+
+  - job_name: 'ranking'
+    static_configs:
+      - targets: ['ranking:8000']
+    metrics_path: '/metrics'
+
+  - job_name: 'summarization'
+    static_configs:
+      - targets: ['summarization:8000']
+    metrics_path: '/metrics'
+
+  - job_name: 'personalization'
+    static_configs:
+      - targets: ['personalization:8000']
+    metrics_path: '/metrics'
+
+  # Intelligence services (9-12)
+  - job_name: 'notification-decisioning'
+    static_configs:
+      - targets: ['notification-decisioning:8000']
+    metrics_path: '/metrics'
+
+  - job_name: 'feedback-human-loop'
+    static_configs:
+      - targets: ['feedback-human-loop:8000']
+    metrics_path: '/metrics'
+
+  - job_name: 'evaluation-suite'
+    static_configs:
+      - targets: ['evaluation-suite:8000']
+    metrics_path: '/metrics'
+
+  - job_name: 'mlops-orchestration'
+    static_configs:
+      - targets: ['mlops-orchestration:8000']
+    metrics_path: '/metrics'
+
+  # Platform services (13-16)
+  - job_name: 'drift-abuse-safety'
+    static_configs:
+      - targets: ['drift-abuse-safety:8000']
+    metrics_path: '/metrics'
+
+  - job_name: 'storage-indexing'
+    static_configs:
+      - targets: ['storage-indexing:8000']
+    metrics_path: '/metrics'
+
+  - job_name: 'realtime-interfaces'
+    static_configs:
+      - targets: ['realtime-interfaces:8000']
+    metrics_path: '/metrics'
+
+  - job_name: 'observability-runbooks'
+    static_configs:
+      - targets: ['observability-runbooks:8000']
+    metrics_path: '/metrics'
+
+  # API Gateway
+  - job_name: 'api-gateway'
+    static_configs:
+      - targets: ['api-gateway:8000']
+    metrics_path: '/metrics'

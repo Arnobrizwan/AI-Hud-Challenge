@@ -3,9 +3,8 @@ Safety Engine Configuration
 Configuration management for the safety monitoring system
 """
 
-import os
 from functools import lru_cache
-from typing import Any, Dict, List, Optional
+from typing import Dict, List
 
 from pydantic import Field
 from pydantic_settings import BaseSettings
@@ -22,9 +21,7 @@ class SafetySettings(BaseSettings):
     log_level: str = Field(default="INFO", env="LOG_LEVEL")
 
     # Database Configuration
-    database_url: str = Field(
-        env="DATABASE_URL", default="postgresql://user:password@localhost:5432/safety_db"
-    )
+    database_url: str = Field(env="DATABASE_URL", default="postgresql://user:password@localhost:5432/safety_db")
     redis_url: str = Field(env="REDIS_URL", default="redis://localhost:6379/0")
 
     # Safety Thresholds
@@ -48,18 +45,14 @@ class SafetySettings(BaseSettings):
 
     # Abuse Detection Configuration
     abuse_detection_enabled: bool = Field(default=True, env="ABUSE_DETECTION_ENABLED")
-    behavioral_analysis_window: int = Field(
-        default=86400, env="BEHAVIORAL_ANALYSIS_WINDOW"
-    )  # seconds
+    behavioral_analysis_window: int = Field(default=86400, env="BEHAVIORAL_ANALYSIS_WINDOW")  # seconds
     graph_analysis_depth: int = Field(default=3, env="GRAPH_ANALYSIS_DEPTH")
     reputation_decay_rate: float = Field(default=0.1, env="REPUTATION_DECAY_RATE")
 
     # Content Moderation Configuration
     content_moderation_enabled: bool = Field(default=True, env="CONTENT_MODERATION_ENABLED")
     external_moderation_apis: bool = Field(default=False, env="EXTERNAL_MODERATION_APIS")
-    moderation_confidence_threshold: float = Field(
-        default=0.8, env="MODERATION_CONFIDENCE_THRESHOLD"
-    )
+    moderation_confidence_threshold: float = Field(default=0.8, env="MODERATION_CONFIDENCE_THRESHOLD")
     auto_moderation_enabled: bool = Field(default=True, env="AUTO_MODERATION_ENABLED")
 
     # Anomaly Detection Configuration

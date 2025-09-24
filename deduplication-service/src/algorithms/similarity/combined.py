@@ -1,11 +1,9 @@
 """Combined similarity calculator with multiple similarity metrics."""
 
 import asyncio
-from typing import Dict, List, Optional, Tuple
-from uuid import UUID
+from typing import Dict, List, Optional
 
 from ...models.schemas import NormalizedArticle, SimilarityScore
-from ..lsh.minhash import MinHashGenerator
 from .semantic import ContentSimilarityCalculator, SemanticSimilarityCalculator
 
 
@@ -38,9 +36,7 @@ class CombinedSimilarityCalculator:
         self.content_weight = content_weight / total_weight
         self.entity_weight = entity_weight / total_weight
 
-    async def compute_similarity(
-        self, article1: NormalizedArticle, article2: NormalizedArticle
-    ) -> SimilarityScore:
+    async def compute_similarity(self, article1: NormalizedArticle, article2: NormalizedArticle) -> SimilarityScore:
         """Compute combined similarity between two articles.
 
         Args:
@@ -53,23 +49,15 @@ class CombinedSimilarityCalculator:
         # Compute individual similarities
         title_sim = await self.content_calc.compute_title_similarity(article1.title, article2.title)
 
-        content_sim = await self.content_calc.compute_content_similarity(
-            article1.content, article2.content
-        )
+        content_sim = await self.content_calc.compute_content_similarity(article1.content, article2.content)
 
         semantic_sim = await self.semantic_calc.compute_similarity(article1, article2)
 
-        entity_sim = await self.semantic_calc.compute_entity_similarity(
-            article1.entities, article2.entities
-        )
+        entity_sim = await self.semantic_calc.compute_entity_similarity(article1.entities, article2.entities)
 
-        topic_sim = await self.semantic_calc.compute_topic_similarity(
-            article1.topics, article2.topics
-        )
+        topic_sim = await self.semantic_calc.compute_topic_similarity(article1.topics, article2.topics)
 
-        location_sim = await self.semantic_calc.compute_location_similarity(
-            article1.locations, article2.locations
-        )
+        location_sim = await self.semantic_calc.compute_location_similarity(article1.locations, article2.locations)
 
         # Compute weighted similarity
         weighted_similarity = (
@@ -106,9 +94,7 @@ class CombinedSimilarityCalculator:
             return []
 
         # Compute similarities in parallel
-        tasks = [
-            self.compute_similarity(target_article, candidate) for candidate in candidate_articles
-        ]
+        tasks = [self.compute_similarity(target_article, candidate) for candidate in candidate_articles]
 
         similarities = await asyncio.gather(*tasks)
 
@@ -162,23 +148,15 @@ class CombinedSimilarityCalculator:
         # Compute all similarity metrics
         title_sim = await self.content_calc.compute_title_similarity(article1.title, article2.title)
 
-        content_sim = await self.content_calc.compute_content_similarity(
-            article1.content, article2.content
-        )
+        content_sim = await self.content_calc.compute_content_similarity(article1.content, article2.content)
 
         semantic_sim = await self.semantic_calc.compute_similarity(article1, article2)
 
-        entity_sim = await self.semantic_calc.compute_entity_similarity(
-            article1.entities, article2.entities
-        )
+        entity_sim = await self.semantic_calc.compute_entity_similarity(article1.entities, article2.entities)
 
-        topic_sim = await self.semantic_calc.compute_topic_similarity(
-            article1.topics, article2.topics
-        )
+        topic_sim = await self.semantic_calc.compute_topic_similarity(article1.topics, article2.topics)
 
-        location_sim = await self.semantic_calc.compute_location_similarity(
-            article1.locations, article2.locations
-        )
+        location_sim = await self.semantic_calc.compute_location_similarity(article1.locations, article2.locations)
 
         # Compute combined scores
         weighted_similarity = (
@@ -265,9 +243,7 @@ class SimilarityThresholdManager:
             or title_similarity >= self.title_threshold
         )
 
-    def is_duplicate(
-        self, combined_similarity: float, title_similarity: float, content_similarity: float
-    ) -> bool:
+    def is_duplicate(self, combined_similarity: float, title_similarity: float, content_similarity: float) -> bool:
         """Check if articles are duplicates based on thresholds.
 
         Args:

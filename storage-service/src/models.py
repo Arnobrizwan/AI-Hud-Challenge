@@ -4,9 +4,8 @@ Data models for Storage, Indexing & Retrieval Service
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
-import numpy as np
 from pydantic import BaseModel, Field
 
 

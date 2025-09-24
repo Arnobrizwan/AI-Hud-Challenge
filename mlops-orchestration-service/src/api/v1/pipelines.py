@@ -4,7 +4,6 @@ Pipeline API endpoints - REST API for ML pipeline management
 
 from datetime import datetime
 from typing import Any, Dict, List, Optional
-from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from pydantic import BaseModel
@@ -112,9 +111,7 @@ async def list_pipelines(
         end_idx = start_idx + page_size
         paginated_pipelines = pipelines[start_idx:end_idx]
 
-        return PipelineListResponse(
-            pipelines=paginated_pipelines, total=total, page=page, page_size=page_size
-        )
+        return PipelineListResponse(pipelines=paginated_pipelines, total=total, page=page, page_size=page_size)
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to list pipelines: {str(e)}")
@@ -178,18 +175,14 @@ async def list_pipeline_executions(
         end_idx = start_idx + page_size
         paginated_executions = executions[start_idx:end_idx]
 
-        return ExecutionListResponse(
-            executions=paginated_executions, total=total, page=page, page_size=page_size
-        )
+        return ExecutionListResponse(executions=paginated_executions, total=total, page=page, page_size=page_size)
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to list executions: {str(e)}")
 
 
 @router.get("/executions/{execution_id}", response_model=PipelineExecution)
-async def get_pipeline_execution(
-    execution_id: str, orchestrator: MLOpsPipelineOrchestrator = Depends()
-):
+async def get_pipeline_execution(execution_id: str, orchestrator: MLOpsPipelineOrchestrator = Depends()):
     """Get pipeline execution by ID"""
 
     execution = await orchestrator.get_pipeline_execution(execution_id)
@@ -224,7 +217,7 @@ async def update_pipeline_status(
     """Update pipeline status"""
 
     try:
-        await orchestrator.update_pipeline_status(pipeline_id, status)
+    await orchestrator.update_pipeline_status(pipeline_id, status)
 
         return {"message": f"Pipeline status updated to '{status.value}'"}
 

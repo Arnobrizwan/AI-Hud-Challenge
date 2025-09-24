@@ -45,7 +45,7 @@ class AbuseDetectionSystem:
         self.reputation_system = ReputationSystem()
         self.captcha_challenger = CaptchaChallenger()
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize the abuse detection system"""
         try:
             # Initialize all components
@@ -60,13 +60,14 @@ class AbuseDetectionSystem:
             logger.info("Abuse detection system initialized")
 
         except Exception as e:
-            logger.error(f"Failed to initialize abuse detection system: {str(e)}")
+            logger.error(
+                f"Failed to initialize abuse detection system: {str(e)}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup resources"""
         try:
-            await self.behavioral_analyzer.cleanup()
+    await self.behavioral_analyzer.cleanup()
             await self.graph_analyzer.cleanup()
             await self.ml_classifier.cleanup()
             await self.rule_engine.cleanup()
@@ -77,9 +78,12 @@ class AbuseDetectionSystem:
             logger.info("Abuse detection system cleanup completed")
 
         except Exception as e:
-            logger.error(f"Error during abuse detection system cleanup: {str(e)}")
+            logger.error(
+                f"Error during abuse detection system cleanup: {str(e)}")
 
-    async def detect_abuse(self, abuse_request: AbuseDetectionRequest) -> AbuseDetectionResult:
+    async def detect_abuse(
+            self,
+            abuse_request: AbuseDetectionRequest) -> AbuseDetectionResult:
         """Comprehensive abuse detection"""
 
         if not self.is_initialized:
@@ -100,8 +104,7 @@ class AbuseDetectionSystem:
             )
 
             behavioral_signals, graph_signals, ml_prediction, rule_violations, reputation_score = (
-                detection_results
-            )
+                detection_results)
 
             # Handle exceptions
             behavioral_signals = (
@@ -124,10 +127,12 @@ class AbuseDetectionSystem:
                     model_version="unknown",
                 )
             )
-            rule_violations = rule_violations if not isinstance(rule_violations, Exception) else []
+            rule_violations = rule_violations if not isinstance(
+                rule_violations, Exception) else []
             reputation_score = (
-                reputation_score if not isinstance(reputation_score, Exception) else 1.0
-            )
+                reputation_score if not isinstance(
+                    reputation_score,
+                    Exception) else 1.0)
 
             # Calculate abuse score
             abuse_score = self.calculate_abuse_score(
@@ -141,7 +146,8 @@ class AbuseDetectionSystem:
             )
 
             # Determine threat level
-            threat_level = self.determine_threat_level(abuse_score, rule_violations)
+            threat_level = self.determine_threat_level(
+                abuse_score, rule_violations)
 
             # Generate response recommendations
             response_actions = await self.generate_abuse_response(
@@ -165,7 +171,10 @@ class AbuseDetectionSystem:
             logger.error(f"Abuse detection failed: {str(e)}")
             raise
 
-    async def analyze_behavior(self, user_id: str, activity_data: Any) -> BehavioralSignals:
+    async def analyze_behavior(
+            self,
+            user_id: str,
+            activity_data: Any) -> BehavioralSignals:
         """Analyze user behavior for anomalies"""
         try:
             return await self.behavioral_analyzer.analyze_behavior(
@@ -177,7 +186,10 @@ class AbuseDetectionSystem:
             logger.error(f"Behavioral analysis failed: {str(e)}")
             return BehavioralSignals(anomaly_score=0.0)
 
-    async def analyze_graph(self, user_id: str, activity_data: Any) -> GraphSignals:
+    async def analyze_graph(
+            self,
+            user_id: str,
+            activity_data: Any) -> GraphSignals:
         """Analyze user graph for abuse patterns"""
         try:
             return await self.graph_analyzer.analyze_user_graph(
@@ -203,7 +215,10 @@ class AbuseDetectionSystem:
                 model_version="unknown",
             )
 
-    async def check_rules(self, user_id: str, activity_data: Any) -> List[RuleViolation]:
+    async def check_rules(
+            self,
+            user_id: str,
+            activity_data: Any) -> List[RuleViolation]:
         """Check abuse rules"""
         try:
             return await self.rule_engine.check_abuse_rules(
@@ -235,7 +250,9 @@ class AbuseDetectionSystem:
 
             # Normalize rule violations (0-1 scale)
             rule_violations = signals.get("rule_violations", 0)
-            normalized_violations = min(rule_violations / 10.0, 1.0)  # Cap at 10 violations
+            normalized_violations = min(
+                rule_violations / 10.0,
+                1.0)  # Cap at 10 violations
 
             # Calculate weighted score
             weighted_score = 0.0
@@ -270,8 +287,8 @@ class AbuseDetectionSystem:
         try:
             # Count high-severity violations
             high_severity_violations = sum(
-                1 for v in rule_violations if v.severity in ["high", "critical"]
-            )
+                1 for v in rule_violations if v.severity in [
+                    "high", "critical"])
 
             # Determine threat level
             if abuse_score >= 0.9 or high_severity_violations >= 3:
@@ -288,8 +305,10 @@ class AbuseDetectionSystem:
             return "low"
 
     async def generate_abuse_response(
-        self, abuse_score: float, threat_level: str, rule_violations: List[RuleViolation]
-    ) -> List[MitigationAction]:
+            self,
+            abuse_score: float,
+            threat_level: str,
+            rule_violations: List[RuleViolation]) -> List[MitigationAction]:
         """Generate response actions based on abuse detection"""
         try:
             response_actions = []
@@ -304,8 +323,7 @@ class AbuseDetectionSystem:
                             "duration_minutes": 60 if threat_level == "medium" else 1440,
                         },
                         priority=1,
-                    )
-                )
+                    ))
 
             # CAPTCHA challenge for high+ threat
             if threat_level in ["high", "critical"]:
@@ -317,8 +335,7 @@ class AbuseDetectionSystem:
                             "required_success_rate": 0.8,
                         },
                         priority=2,
-                    )
-                )
+                    ))
 
             # Content restrictions for high+ threat
             if threat_level in ["high", "critical"]:
@@ -338,10 +355,11 @@ class AbuseDetectionSystem:
                 response_actions.append(
                     MitigationAction(
                         action_type="temporary_suspension",
-                        parameters={"duration_hours": 24, "reason": "Critical abuse detected"},
+                        parameters={
+                            "duration_hours": 24,
+                            "reason": "Critical abuse detected"},
                         priority=4,
-                    )
-                )
+                    ))
 
             # Manual review for high+ threat
             if threat_level in ["high", "critical"]:
@@ -350,11 +368,13 @@ class AbuseDetectionSystem:
                         action_type="account_review",
                         parameters={
                             "priority": "high" if threat_level == "critical" else "medium",
-                            "review_categories": ["behavioral", "content", "network"],
+                            "review_categories": [
+                                "behavioral",
+                                "content",
+                                "network"],
                         },
                         priority=5,
-                    )
-                )
+                    ))
 
             return response_actions
 
@@ -372,15 +392,15 @@ class AbuseDetectionSystem:
             for action in mitigation_actions:
                 try:
                     if action.action_type == "rate_limit":
-                        await self.apply_rate_limiting(user_id, action.parameters)
+    await self.apply_rate_limiting(user_id, action.parameters)
                     elif action.action_type == "captcha_challenge":
-                        await self.captcha_challenger.challenge_user(user_id)
+    await self.captcha_challenger.challenge_user(user_id)
                     elif action.action_type == "temporary_suspension":
-                        await self.apply_temporary_suspension(user_id, action.parameters)
+    await self.apply_temporary_suspension(user_id, action.parameters)
                     elif action.action_type == "content_restriction":
-                        await self.apply_content_restrictions(user_id, action.parameters)
+    await self.apply_content_restrictions(user_id, action.parameters)
                     elif action.action_type == "account_review":
-                        await self.trigger_manual_review(user_id, action.parameters)
+    await self.trigger_manual_review(user_id, action.parameters)
 
                     applied_actions.append(action)
 
@@ -399,17 +419,20 @@ class AbuseDetectionSystem:
             logger.error(f"Abuse mitigation application failed: {str(e)}")
             raise
 
-    async def apply_rate_limiting(self, user_id: str, parameters: Dict[str, Any]) -> None:
+    async def apply_rate_limiting(
+            self, user_id: str, parameters: Dict[str, Any]) -> None:
         """Apply rate limiting to user"""
         try:
             # This would integrate with the rate limiting system
-            logger.info(f"Applying rate limiting to user {user_id} with parameters {parameters}")
+            logger.info(
+                f"Applying rate limiting to user {user_id} with parameters {parameters}")
             # Implementation would go here
         except Exception as e:
             logger.error(f"Rate limiting application failed: {str(e)}")
             raise
 
-    async def apply_temporary_suspension(self, user_id: str, parameters: Dict[str, Any]) -> None:
+    async def apply_temporary_suspension(
+            self, user_id: str, parameters: Dict[str, Any]) -> None:
         """Apply temporary suspension to user"""
         try:
             # This would integrate with user management system
@@ -421,7 +444,8 @@ class AbuseDetectionSystem:
             logger.error(f"Temporary suspension application failed: {str(e)}")
             raise
 
-    async def apply_content_restrictions(self, user_id: str, parameters: Dict[str, Any]) -> None:
+    async def apply_content_restrictions(
+            self, user_id: str, parameters: Dict[str, Any]) -> None:
         """Apply content restrictions to user"""
         try:
             # This would integrate with content management system
@@ -433,11 +457,13 @@ class AbuseDetectionSystem:
             logger.error(f"Content restrictions application failed: {str(e)}")
             raise
 
-    async def trigger_manual_review(self, user_id: str, parameters: Dict[str, Any]) -> None:
+    async def trigger_manual_review(
+            self, user_id: str, parameters: Dict[str, Any]) -> None:
         """Trigger manual review for user"""
         try:
             # This would integrate with review queue system
-            logger.info(f"Triggering manual review for user {user_id} with parameters {parameters}")
+            logger.info(
+                f"Triggering manual review for user {user_id} with parameters {parameters}")
             # Implementation would go here
         except Exception as e:
             logger.error(f"Manual review triggering failed: {str(e)}")

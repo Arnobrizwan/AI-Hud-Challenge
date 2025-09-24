@@ -25,11 +25,11 @@ class HeadlineOptimizer:
 
     def __init__(self):
         self.engagement_keywords = {
-            "urgent": ["breaking", "urgent", "important", "alert", "crisis"],
-            "curiosity": ["mystery", "secret", "revealed", "discovered", "shocking"],
-            "action": ["action", "urgent", "now", "immediately", "critical"],
-            "personal": ["you", "your", "personal", "customized", "tailored"],
-        }
+            "urgent": [
+                "breaking", "urgent", "important", "alert", "crisis"], "curiosity": [
+                "mystery", "secret", "revealed", "discovered", "shocking"], "action": [
+                "action", "urgent", "now", "immediately", "critical"], "personal": [
+                    "you", "your", "personal", "customized", "tailored"], }
 
         self.emoji_mapping = {
             "breaking_news": "🚨",
@@ -55,11 +55,13 @@ class HeadlineOptimizer:
             optimized = title.strip()
 
             # Add urgency words if not present
-            if not any(word in optimized.lower() for word in self.engagement_keywords["urgent"]):
+            if not any(word in optimized.lower()
+                       for word in self.engagement_keywords["urgent"]):
                 optimized = f"Breaking: {optimized}"
 
             # Add curiosity words
-            if not any(word in optimized.lower() for word in self.engagement_keywords["curiosity"]):
+            if not any(word in optimized.lower()
+                       for word in self.engagement_keywords["curiosity"]):
                 # Add a curiosity hook
                 if len(optimized) < max_length - 10:
                     optimized = f"Shocking: {optimized}"
@@ -83,11 +85,13 @@ class HeadlineOptimizer:
 
             # Add urgent prefix if not present
             urgent_prefixes = ["URGENT:", "BREAKING:", "ALERT:", "CRITICAL:"]
-            if not any(prefix in optimized.upper() for prefix in urgent_prefixes):
+            if not any(prefix in optimized.upper()
+                       for prefix in urgent_prefixes):
                 optimized = f"URGENT: {optimized}"
 
             # Add action words
-            if not any(word in optimized.lower() for word in self.engagement_keywords["action"]):
+            if not any(word in optimized.lower()
+                       for word in self.engagement_keywords["action"]):
                 if len(optimized) < max_length - 8:
                     optimized = f"{optimized} - Action Required"
 
@@ -102,8 +106,10 @@ class HeadlineOptimizer:
             return title[:max_length]
 
     async def personalize(
-        self, title: str, user_prefs: NotificationPreferences, max_length: int = 60
-    ) -> str:
+            self,
+            title: str,
+            user_prefs: NotificationPreferences,
+            max_length: int = 60) -> str:
         """Personalize title based on user preferences."""
 
         try:
@@ -111,7 +117,8 @@ class HeadlineOptimizer:
             optimized = title.strip()
 
             # Add personal touch
-            if not any(word in optimized.lower() for word in self.engagement_keywords["personal"]):
+            if not any(word in optimized.lower()
+                       for word in self.engagement_keywords["personal"]):
                 if len(optimized) < max_length - 8:
                     optimized = f"Your {optimized}"
 
@@ -130,7 +137,11 @@ class HeadlineOptimizer:
             logger.error(f"Error personalizing title: {e}")
             return title[:max_length]
 
-    def optimize_for_ab_test(self, title: str, variant: str, max_length: int = 60) -> str:
+    def optimize_for_ab_test(
+            self,
+            title: str,
+            variant: str,
+            max_length: int = 60) -> str:
         """Optimize title for A/B test variant."""
 
         if variant == "engaging":
@@ -140,7 +151,11 @@ class HeadlineOptimizer:
         elif variant == "personalized":
             # Use default preferences for personalization
             default_prefs = NotificationPreferences(user_id="default")
-            return asyncio.run(self.personalize(title, default_prefs, max_length))
+            return asyncio.run(
+                self.personalize(
+                    title,
+                    default_prefs,
+                    max_length))
         else:
             return title[:max_length]
 
@@ -166,7 +181,11 @@ class EmojiManager:
             "default": "📢",
         }
 
-        self.urgency_emojis = {"urgent": "🚨", "high": "⚡", "medium": "📢", "low": "💬"}
+        self.urgency_emojis = {
+            "urgent": "🚨",
+            "high": "⚡",
+            "medium": "📢",
+            "low": "💬"}
 
     async def add_appropriate_emoji(
         self, title: str, category: str, priority: str = "medium"
@@ -179,13 +198,16 @@ class EmojiManager:
                 return title
 
             # Get emoji for category
-            category_emoji = self.category_emojis.get(category, self.category_emojis["default"])
+            category_emoji = self.category_emojis.get(
+                category, self.category_emojis["default"])
 
             # Get emoji for priority
-            priority_emoji = self.urgency_emojis.get(priority, self.urgency_emojis["medium"])
+            priority_emoji = self.urgency_emojis.get(
+                priority, self.urgency_emojis["medium"])
 
             # Choose emoji based on priority
-            emoji = priority_emoji if priority in ["urgent", "high"] else category_emoji
+            emoji = priority_emoji if priority in [
+                "urgent", "high"] else category_emoji
 
             # Add emoji to beginning of title
             return f"{emoji} {title}"
@@ -196,7 +218,8 @@ class EmojiManager:
 
     def get_emoji_for_category(self, category: str) -> str:
         """Get emoji for specific category."""
-        return self.category_emojis.get(category, self.category_emojis["default"])
+        return self.category_emojis.get(
+            category, self.category_emojis["default"])
 
     def get_emoji_for_priority(self, priority: str) -> str:
         """Get emoji for specific priority."""
@@ -228,7 +251,8 @@ class BodyGenerator:
 
         try:
             # Get template based on strategy
-            template = self.body_templates.get(strategy_variant, self.body_templates["default"])
+            template = self.body_templates.get(
+                strategy_variant, self.body_templates["default"])
 
             # Generate summary
             summary_length = "short" if max_length < 100 else "medium"
@@ -329,7 +353,8 @@ class NotificationContentOptimizer:
                 error=str(e),
                 exc_info=True,
             )
-            raise ContentOptimizationError(f"Failed to optimize content: {str(e)}")
+            raise ContentOptimizationError(
+                f"Failed to optimize content: {str(e)}")
 
     async def _optimize_title(
         self,
@@ -347,7 +372,7 @@ class NotificationContentOptimizer:
                 return await self.headline_optimizer.add_urgency(title, max_length)
             elif strategy_variant == "personalized":
                 return await self.headline_optimizer.personalize(title, user_prefs, max_length)
-            else:
+        else:
                 # Default optimization
                 return title[:max_length]
 
@@ -369,7 +394,6 @@ class NotificationContentOptimizer:
 
     async def get_optimization_analytics(self, user_id: str) -> Dict[str, Any]:
         """Get content optimization analytics for user."""
-
         try:
             analytics = {
                 "user_id": user_id,

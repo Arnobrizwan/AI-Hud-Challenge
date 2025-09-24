@@ -81,19 +81,23 @@ class DataLoaderRegistry:
         """Create article DataLoader"""
         # This would implement batching for article queries
         # For now, return a simple loader
-        return lambda keys: asyncio.gather(*[self.load_article(key) for key in keys])
+        return lambda keys: asyncio.gather(
+            *[self.load_article(key) for key in keys])
 
     def create_user_loader(self):
         """Create user DataLoader"""
-        return lambda keys: asyncio.gather(*[self.load_user(key) for key in keys])
+        return lambda keys: asyncio.gather(
+            *[self.load_user(key) for key in keys])
 
     def create_category_loader(self):
         """Create category DataLoader"""
-        return lambda keys: asyncio.gather(*[self.load_category(key) for key in keys])
+        return lambda keys: asyncio.gather(
+            *[self.load_category(key) for key in keys])
 
     def create_notification_loader(self):
         """Create notification DataLoader"""
-        return lambda keys: asyncio.gather(*[self.load_notification(key) for key in keys])
+        return lambda keys: asyncio.gather(
+            *[self.load_notification(key) for key in keys])
 
     async def load_article(self, article_id: str) -> Dict[str, Any]:
         """Load single article"""
@@ -107,7 +111,10 @@ class DataLoaderRegistry:
 
     async def load_user(self, user_id: str) -> Dict[str, Any]:
         """Load single user"""
-        return {"id": user_id, "name": f"User {user_id}", "email": f"user{user_id}@example.com"}
+        return {
+            "id": user_id,
+            "name": f"User {user_id}",
+            "email": f"user{user_id}@example.com"}
 
     async def load_category(self, category_id: str) -> Dict[str, Any]:
         """Load single category"""
@@ -143,18 +150,25 @@ class GraphQLSubscriptionManager:
         while True:
             # Simulate article updates
             article = {
-                "id": str(uuid.uuid4()),
+                "id": str(
+                    uuid.uuid4()),
                 "title": f"Breaking News {datetime.utcnow().strftime('%H:%M:%S')}",
                 "content": f"Content for breaking news at {datetime.utcnow()}",
                 "publishedAt": datetime.utcnow().isoformat(),
-                "categories": ["news", "breaking"],
+                "categories": [
+                    "news",
+                    "breaking"],
                 "similarity": 0.95,
-                "engagement": {"likes": 42, "shares": 15, "comments": 8},
+                "engagement": {
+                    "likes": 42,
+                    "shares": 15,
+                    "comments": 8},
             }
             yield article
             await asyncio.sleep(5)  # Update every 5 seconds
 
-    async def subscribe_to_trending_topics(self) -> AsyncIterator[List[Dict[str, Any]]]:
+    async def subscribe_to_trending_topics(
+            self) -> AsyncIterator[List[Dict[str, Any]]]:
         """Subscribe to trending topics updates"""
         while True:
             topics = [
@@ -165,7 +179,8 @@ class GraphQLSubscriptionManager:
             yield topics
             await asyncio.sleep(10)  # Update every 10 seconds
 
-    async def subscribe_to_user_notifications(self, user_id: str) -> AsyncIterator[Dict[str, Any]]:
+    async def subscribe_to_user_notifications(
+            self, user_id: str) -> AsyncIterator[Dict[str, Any]]:
         """Subscribe to user notifications"""
         while True:
             notification = {
@@ -299,20 +314,22 @@ class GraphQLRealtimeExecutor:
             fields={
                 "article": GraphQLField(
                     type_=article_type,
-                    args={"id": GraphQLArgument(GraphQLID)},
+                    args={
+                        "id": GraphQLArgument(GraphQLID)},
                     resolver=self.resolve_article,
                 ),
                 "articles": GraphQLField(
                     type_=GraphQLList(article_type),
-                    args={"filters": GraphQLArgument(article_filters_input)},
+                    args={
+                        "filters": GraphQLArgument(article_filters_input)},
                     resolver=self.resolve_articles,
                 ),
                 "trendingTopics": GraphQLField(
-                    type_=GraphQLList(topic_type), resolver=self.resolve_trending_topics
-                ),
+                    type_=GraphQLList(topic_type),
+                    resolver=self.resolve_trending_topics),
                 "userPreferences": GraphQLField(
-                    type_=user_preferences_type, resolver=self.resolve_user_preferences
-                ),
+                    type_=user_preferences_type,
+                    resolver=self.resolve_user_preferences),
             },
         )
 
@@ -322,12 +339,14 @@ class GraphQLRealtimeExecutor:
             fields={
                 "updateUserPreferences": GraphQLField(
                     type_=user_preferences_type,
-                    args={"preferences": GraphQLArgument(user_preferences_input)},
+                    args={
+                        "preferences": GraphQLArgument(user_preferences_input)},
                     resolver=self.resolve_update_preferences,
                 ),
                 "saveArticle": GraphQLField(
                     type_=GraphQLBoolean,
-                    args={"articleId": GraphQLArgument(GraphQLID)},
+                    args={
+                        "articleId": GraphQLArgument(GraphQLID)},
                     resolver=self.resolve_save_article,
                 ),
                 "shareArticle": GraphQLField(
@@ -347,7 +366,8 @@ class GraphQLRealtimeExecutor:
             fields={
                 "articleUpdates": GraphQLField(
                     type_=article_type,
-                    args={"filters": GraphQLArgument(article_filters_input)},
+                    args={
+                        "filters": GraphQLArgument(article_filters_input)},
                     resolver=self.resolve_article_updates,
                 ),
                 "trendingTopics": GraphQLField(
@@ -355,19 +375,21 @@ class GraphQLRealtimeExecutor:
                     resolver=self.resolve_trending_topics_subscription,
                 ),
                 "userNotifications": GraphQLField(
-                    type_=notification_type, resolver=self.resolve_user_notifications
-                ),
+                    type_=notification_type,
+                    resolver=self.resolve_user_notifications),
                 "collaborationEvents": GraphQLField(
                     type_=collaboration_event_type,
-                    args={"sessionId": GraphQLArgument(GraphQLString)},
+                    args={
+                        "sessionId": GraphQLArgument(GraphQLString)},
                     resolver=self.resolve_collaboration_events,
                 ),
             },
         )
 
         return GraphQLSchema(
-            query=query_type, mutation=mutation_type, subscription=subscription_type
-        )
+            query=query_type,
+            mutation=mutation_type,
+            subscription=subscription_type)
 
     # Query resolvers
     async def resolve_article(self, root, info, id: str) -> Dict[str, Any]:
@@ -381,7 +403,8 @@ class GraphQLRealtimeExecutor:
         # This would implement filtering logic
         return [await self.data_loaders.load_article(f"article_{i}") for i in range(10)]
 
-    async def resolve_trending_topics(self, root, info) -> List[Dict[str, Any]]:
+    async def resolve_trending_topics(
+            self, root, info) -> List[Dict[str, Any]]:
         """Resolve trending topics query"""
         return [
             {"id": "1", "name": "AI Technology", "trend_score": 0.95},
@@ -402,7 +425,7 @@ class GraphQLRealtimeExecutor:
     async def resolve_update_preferences(
         self, root, info, preferences: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Resolve update user preferences mutation"""
+    """Resolve update user preferences mutation"""
         # This would save preferences to database
         logger.info(f"Updating preferences for user: {preferences}")
         return preferences
@@ -416,7 +439,7 @@ class GraphQLRealtimeExecutor:
     async def resolve_share_article(
         self, root, info, article_id: str, platform: str
     ) -> Dict[str, Any]:
-        """Resolve share article mutation"""
+    """Resolve share article mutation"""
         # This would implement sharing logic
         return {
             "success": True,
@@ -443,7 +466,8 @@ class GraphQLRealtimeExecutor:
         async for topics in self.subscription_manager.subscribe_to_trending_topics():
             yield topics
 
-    async def resolve_user_notifications(self, root, info) -> AsyncIterator[Dict[str, Any]]:
+    async def resolve_user_notifications(
+            self, root, info) -> AsyncIterator[Dict[str, Any]]:
         """Resolve user notifications subscription"""
         async for notification in self.subscription_manager.subscribe_to_user_notifications(
             info.context.user_id
@@ -466,8 +490,9 @@ class GraphQLRealtimeExecutor:
             yield event
             await asyncio.sleep(2)
 
-    async def personalize_article(self, article: Dict[str, Any], user_id: str) -> Dict[str, Any]:
-        """Apply personalization to article"""
+    async def personalize_article(
+            self, article: Dict[str, Any], user_id: str) -> Dict[str, Any]:
+    """Apply personalization to article"""
         # This would implement personalization logic
         # For now, just add user-specific data
         article["personalized"] = True
@@ -489,8 +514,10 @@ class GraphQLRealtimeExecutor:
             context = SubscriptionContext(
                 user_id=user_id,
                 request=GraphQLSubscriptionRequest(
-                    query=query, variables=variables, operation_name=operation_name, user_id=user_id
-                ),
+                    query=query,
+                    variables=variables,
+                    operation_name=operation_name,
+                    user_id=user_id),
                 data_loaders=self.data_loaders.create_loaders(),
                 redis_client=self.redis_client,
             )
@@ -558,7 +585,7 @@ class GraphQLRealtimeExecutor:
             logger.error(f"Error executing GraphQL subscription: {str(e)}")
             yield {"errors": [{"message": str(e)}]}
 
-    async def handle_subscription_websocket(self, websocket: WebSocket):
+    async def handle_subscription_websocket(self, websocket: WebSocket) -> Dict[str, Any]:
         """Handle GraphQL subscription WebSocket connection"""
         await websocket.accept()
 
@@ -583,7 +610,7 @@ class GraphQLRealtimeExecutor:
 
                         # Execute subscription and send results
                         async for result in self.execute_subscription(subscription_request):
-                            await websocket.send_text(
+    await websocket.send_text(
                                 json.dumps(
                                     {"type": "data", "id": data.get("id"), "payload": result}
                                 )
@@ -596,11 +623,11 @@ class GraphQLRealtimeExecutor:
                         )
 
                 except json.JSONDecodeError:
-                    await websocket.send_text(
+    await websocket.send_text(
                         json.dumps({"type": "error", "message": "Invalid JSON"})
                     )
                 except Exception as e:
-                    await websocket.send_text(json.dumps({"type": "error", "message": str(e)}))
+    await websocket.send_text(json.dumps({"type": "error", "message": str(e)}))
 
         except WebSocketDisconnect:
             logger.info("GraphQL subscription WebSocket disconnected")

@@ -71,12 +71,14 @@ class SLIResultResponse(BaseModel):
 
 
 @router.post("/definitions", response_model=SLODefinitionResponse)
-async def create_slo_definition(slo_request: SLODefinitionRequest):
+async def create_slo_definition(slo_request: SLODefinitionRequest) -> Dict[str, Any]:
     """Create new SLO definition"""
 
     try:
         if not observability_engine or not observability_engine.slo_monitor:
-            raise HTTPException(status_code=503, detail="SLO monitor not available")
+            raise HTTPException(
+                status_code=503,
+                detail="SLO monitor not available")
 
         # Create SLO definition
         slo_definition = {
@@ -108,19 +110,24 @@ async def create_slo_definition(slo_request: SLODefinitionRequest):
 
     except Exception as e:
         logger.error(f"Failed to create SLO definition: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to create SLO definition: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to create SLO definition: {str(e)}")
 
 
 @router.get("/definitions", response_model=List[SLODefinitionResponse])
-async def get_slo_definitions():
+async def get_slo_definitions() -> Dict[str, Any]:
     """Get all SLO definitions"""
 
     try:
         if not observability_engine or not observability_engine.slo_monitor:
-            raise HTTPException(status_code=503, detail="SLO monitor not available")
+            raise HTTPException(
+                status_code=503,
+                detail="SLO monitor not available")
 
         # Get SLO definitions
-        slo_definitions = list(observability_engine.slo_monitor.slo_definitions.values())
+        slo_definitions = list(
+            observability_engine.slo_monitor.slo_definitions.values())
 
         # Convert to response format
         definitions = []
@@ -132,34 +139,39 @@ async def get_slo_definitions():
                     description=slo.description,
                     target_percentage=slo.target_percentage,
                     evaluation_window=slo.evaluation_window,
-                    sli_definitions=[sli.__dict__ for sli in slo.sli_definitions],
+                    sli_definitions=[
+                        sli.__dict__ for sli in slo.sli_definitions],
                     error_budget_policy=slo.error_budget_policy,
                     alerting_thresholds=slo.alerting_thresholds,
                     created_at=slo.created_at.isoformat(),
                     enabled=slo.enabled,
-                )
-            )
+                ))
 
         return definitions
 
     except Exception as e:
         logger.error(f"Failed to get SLO definitions: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to get SLO definitions: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get SLO definitions: {str(e)}")
 
 
 @router.get("/definitions/{slo_id}", response_model=SLODefinitionResponse)
-async def get_slo_definition(slo_id: str):
+async def get_slo_definition(slo_id: str) -> Dict[str, Any]:
     """Get specific SLO definition by ID"""
 
     try:
         if not observability_engine or not observability_engine.slo_monitor:
-            raise HTTPException(status_code=503, detail="SLO monitor not available")
+            raise HTTPException(
+                status_code=503,
+                detail="SLO monitor not available")
 
         # Get SLO definition
         slo = observability_engine.slo_monitor.slo_definitions.get(slo_id)
 
         if not slo:
-            raise HTTPException(status_code=404, detail=f"SLO definition {slo_id} not found")
+            raise HTTPException(status_code=404,
+                                detail=f"SLO definition {slo_id} not found")
 
         return SLODefinitionResponse(
             id=slo.id,
@@ -179,20 +191,26 @@ async def get_slo_definition(slo_id: str):
     except Exception as e:
         logger.error(f"Failed to get SLO definition {slo_id}: {str(e)}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to get SLO definition {slo_id}: {str(e)}"
-        )
+            status_code=500,
+            detail=f"Failed to get SLO definition {slo_id}: {str(e)}")
 
 
 @router.get("/status", response_model=List[SLOStatusResponse])
-async def get_slo_status(time_window: int = Query(3600, description="Time window in seconds")):
+async def get_slo_status(
+    time_window: int = Query(
+        3600,
+        description="Time window in seconds")):
     """Get SLO status for all SLOs"""
 
     try:
         if not observability_engine or not observability_engine.slo_monitor:
-            raise HTTPException(status_code=503, detail="SLO monitor not available")
+            raise HTTPException(
+                status_code=503,
+                detail="SLO monitor not available")
 
         # Get SLO status for all SLOs
-        slo_definitions = list(observability_engine.slo_monitor.slo_definitions.keys())
+        slo_definitions = list(
+            observability_engine.slo_monitor.slo_definitions.keys())
         time_window_delta = timedelta(seconds=time_window)
 
         status_responses = []
@@ -206,36 +224,41 @@ async def get_slo_status(time_window: int = Query(3600, description="Time window
                     SLOStatusResponse(
                         slo_id=status.slo_id,
                         overall_status=status.overall_status.value,
-                        sli_results=[result.__dict__ for result in status.sli_results],
+                        sli_results=[
+                            result.__dict__ for result in status.sli_results],
                         error_budget_remaining=status.error_budget_remaining,
                         error_budget_consumed=status.error_budget_consumed,
                         burn_rate=status.burn_rate,
                         time_to_breach=(
-                            status.time_to_breach.isoformat() if status.time_to_breach else None
-                        ),
+                            status.time_to_breach.isoformat() if status.time_to_breach else None),
                         calculated_at=status.calculated_at.isoformat(),
                         recommendations=status.recommendations,
-                    )
-                )
+                    ))
             except Exception as e:
-                logger.error(f"Failed to get status for SLO {slo_id}: {str(e)}")
+                logger.error(
+                    f"Failed to get status for SLO {slo_id}: {str(e)}")
 
         return status_responses
 
     except Exception as e:
         logger.error(f"Failed to get SLO status: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to get SLO status: {str(e)}")
+        raise HTTPException(status_code=500,
+                            detail=f"Failed to get SLO status: {str(e)}")
 
 
 @router.get("/status/{slo_id}", response_model=SLOStatusResponse)
 async def get_slo_status_by_id(
-    slo_id: str, time_window: int = Query(3600, description="Time window in seconds")
-):
+    slo_id: str,
+    time_window: int = Query(
+        3600,
+        description="Time window in seconds")):
     """Get SLO status for specific SLO"""
 
     try:
         if not observability_engine or not observability_engine.slo_monitor:
-            raise HTTPException(status_code=503, detail="SLO monitor not available")
+            raise HTTPException(
+                status_code=503,
+                detail="SLO monitor not available")
 
         # Get SLO status
         time_window_delta = timedelta(seconds=time_window)
@@ -246,7 +269,8 @@ async def get_slo_status_by_id(
         return SLOStatusResponse(
             slo_id=status.slo_id,
             overall_status=status.overall_status.value,
-            sli_results=[result.__dict__ for result in status.sli_results],
+            sli_results=[
+                result.__dict__ for result in status.sli_results],
             error_budget_remaining=status.error_budget_remaining,
             error_budget_consumed=status.error_budget_consumed,
             burn_rate=status.burn_rate,
@@ -258,40 +282,45 @@ async def get_slo_status_by_id(
     except Exception as e:
         logger.error(f"Failed to get SLO status for {slo_id}: {str(e)}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to get SLO status for {slo_id}: {str(e)}"
-        )
+            status_code=500,
+            detail=f"Failed to get SLO status for {slo_id}: {str(e)}")
 
 
 @router.get("/overview")
-async def get_slo_overview():
+async def get_slo_overview() -> Dict[str, Any]:
     """Get SLO overview and dashboard data"""
 
     try:
         if not observability_engine or not observability_engine.slo_monitor:
-            raise HTTPException(status_code=503, detail="SLO monitor not available")
+            raise HTTPException(
+                status_code=503,
+                detail="SLO monitor not available")
 
         # Get overall SLO status
         overall_status = await observability_engine.slo_monitor.get_overall_slo_status()
 
-        return {"slo_overview": overall_status, "generated_at": datetime.utcnow().isoformat()}
+        return {"slo_overview": overall_status,
+                "generated_at": datetime.utcnow().isoformat()}
 
     except Exception as e:
         logger.error(f"Failed to get SLO overview: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to get SLO overview: {str(e)}")
+        raise HTTPException(status_code=500,
+                            detail=f"Failed to get SLO overview: {str(e)}")
 
 
 @router.get("/error-budgets")
-async def get_error_budgets():
+async def get_error_budgets() -> Dict[str, Any]:
     """Get error budget information for all SLOs"""
 
     try:
         if not observability_engine or not observability_engine.slo_monitor:
-            raise HTTPException(status_code=503, detail="SLO monitor not available")
+            raise HTTPException(
+                status_code=503,
+                detail="SLO monitor not available")
 
         # Get error budgets
         error_budgets = list(
-            observability_engine.slo_monitor.error_budget_manager.error_budgets.values()
-        )
+            observability_engine.slo_monitor.error_budget_manager.error_budgets.values())
 
         # Convert to response format
         budget_responses = []
@@ -304,11 +333,9 @@ async def get_error_budgets():
                     "remaining_budget": budget.remaining_budget,
                     "burn_rate": budget.burn_rate,
                     "time_to_exhaustion": (
-                        budget.time_to_exhaustion.isoformat() if budget.time_to_exhaustion else None
-                    ),
+                        budget.time_to_exhaustion.isoformat() if budget.time_to_exhaustion else None),
                     "last_updated": budget.last_updated.isoformat(),
-                }
-            )
+                })
 
         return {
             "error_budgets": budget_responses,
@@ -318,24 +345,28 @@ async def get_error_budgets():
 
     except Exception as e:
         logger.error(f"Failed to get error budgets: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to get error budgets: {str(e)}")
+        raise HTTPException(status_code=500,
+                            detail=f"Failed to get error budgets: {str(e)}")
 
 
 @router.get("/error-budgets/{slo_id}")
-async def get_error_budget_by_slo(slo_id: str):
+async def get_error_budget_by_slo(slo_id: str) -> Dict[str, Any]:
     """Get error budget for specific SLO"""
 
     try:
         if not observability_engine or not observability_engine.slo_monitor:
-            raise HTTPException(status_code=503, detail="SLO monitor not available")
+            raise HTTPException(
+                status_code=503,
+                detail="SLO monitor not available")
 
         # Get error budget
         error_budget = observability_engine.slo_monitor.error_budget_manager.error_budgets.get(
-            slo_id
-        )
+            slo_id)
 
         if not error_budget:
-            raise HTTPException(status_code=404, detail=f"Error budget for SLO {slo_id} not found")
+            raise HTTPException(
+                status_code=404,
+                detail=f"Error budget for SLO {slo_id} not found")
 
         return {
             "slo_id": error_budget.slo_id,
@@ -356,19 +387,23 @@ async def get_error_budget_by_slo(slo_id: str):
     except Exception as e:
         logger.error(f"Failed to get error budget for SLO {slo_id}: {str(e)}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to get error budget for SLO {slo_id}: {str(e)}"
-        )
+            status_code=500,
+            detail=f"Failed to get error budget for SLO {slo_id}: {str(e)}")
 
 
 @router.get("/sli/{sli_id}")
 async def get_sli_status(
-    sli_id: str, time_window: int = Query(3600, description="Time window in seconds")
-):
+    sli_id: str,
+    time_window: int = Query(
+        3600,
+        description="Time window in seconds")):
     """Get SLI status for specific SLI"""
 
     try:
         if not observability_engine or not observability_engine.slo_monitor:
-            raise HTTPException(status_code=503, detail="SLO monitor not available")
+            raise HTTPException(
+                status_code=503,
+                detail="SLO monitor not available")
 
         # Find SLI definition
         sli_definition = None
@@ -381,7 +416,9 @@ async def get_sli_status(
                 break
 
         if not sli_definition:
-            raise HTTPException(status_code=404, detail=f"SLI {sli_id} not found")
+            raise HTTPException(
+                status_code=404,
+                detail=f"SLI {sli_id} not found")
 
         # Calculate SLI
         time_window_delta = timedelta(seconds=time_window)
@@ -404,23 +441,27 @@ async def get_sli_status(
     except Exception as e:
         logger.error(f"Failed to get SLI status for {sli_id}: {str(e)}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to get SLI status for {sli_id}: {str(e)}"
-        )
+            status_code=500,
+            detail=f"Failed to get SLI status for {sli_id}: {str(e)}")
 
 
 @router.post("/{slo_id}/monitor")
-async def trigger_slo_monitoring(slo_id: str):
+async def trigger_slo_monitoring(slo_id: str) -> Dict[str, Any]:
     """Trigger immediate SLO monitoring for specific SLO"""
 
     try:
         if not observability_engine or not observability_engine.slo_monitor:
-            raise HTTPException(status_code=503, detail="SLO monitor not available")
+            raise HTTPException(
+                status_code=503,
+                detail="SLO monitor not available")
 
         # Get SLO definition
         slo = observability_engine.slo_monitor.slo_definitions.get(slo_id)
 
         if not slo:
-            raise HTTPException(status_code=404, detail=f"SLO {slo_id} not found")
+            raise HTTPException(
+                status_code=404,
+                detail=f"SLO {slo_id} not found")
 
         # Trigger monitoring
         await observability_engine.slo_monitor.monitor_slo(slo)
@@ -435,21 +476,25 @@ async def trigger_slo_monitoring(slo_id: str):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Failed to trigger SLO monitoring for {slo_id}: {str(e)}")
+        logger.error(
+            f"Failed to trigger SLO monitoring for {slo_id}: {str(e)}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to trigger SLO monitoring for {slo_id}: {str(e)}"
-        )
+            status_code=500,
+            detail=f"Failed to trigger SLO monitoring for {slo_id}: {str(e)}")
 
 
 @router.get("/trends")
 async def get_slo_trends(
-    time_window: int = Query(86400, description="Time window in seconds (default: 24 hours)")
-):
+    time_window: int = Query(
+        86400,
+        description="Time window in seconds (default: 24 hours)")):
     """Get SLO trends over time"""
 
     try:
         if not observability_engine or not observability_engine.slo_monitor:
-            raise HTTPException(status_code=503, detail="SLO monitor not available")
+            raise HTTPException(
+                status_code=503,
+                detail="SLO monitor not available")
 
         # This would query historical SLO data
         # For now, return mock trends
@@ -457,9 +502,18 @@ async def get_slo_trends(
         trends = {
             "time_window_seconds": time_window,
             "trends": {
-                "availability": {"current": 99.9, "trend": "stable", "change_percent": 0.1},
-                "latency": {"current": 150.5, "trend": "improving", "change_percent": -5.2},
-                "error_rate": {"current": 0.1, "trend": "stable", "change_percent": 0.0},
+                "availability": {
+                    "current": 99.9,
+                    "trend": "stable",
+                    "change_percent": 0.1},
+                "latency": {
+                    "current": 150.5,
+                    "trend": "improving",
+                    "change_percent": -5.2},
+                "error_rate": {
+                    "current": 0.1,
+                    "trend": "stable",
+                    "change_percent": 0.0},
             },
             "generated_at": datetime.utcnow().isoformat(),
         }
@@ -468,16 +522,19 @@ async def get_slo_trends(
 
     except Exception as e:
         logger.error(f"Failed to get SLO trends: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to get SLO trends: {str(e)}")
+        raise HTTPException(status_code=500,
+                            detail=f"Failed to get SLO trends: {str(e)}")
 
 
 @router.get("/alerts")
-async def get_slo_alerts():
+async def get_slo_alerts() -> Dict[str, Any]:
     """Get SLO-related alerts"""
 
     try:
         if not observability_engine or not observability_engine.slo_monitor:
-            raise HTTPException(status_code=503, detail="SLO monitor not available")
+            raise HTTPException(
+                status_code=503,
+                detail="SLO monitor not available")
 
         # This would get SLO-related alerts
         # For now, return mock alerts
@@ -502,16 +559,19 @@ async def get_slo_alerts():
 
     except Exception as e:
         logger.error(f"Failed to get SLO alerts: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to get SLO alerts: {str(e)}")
+        raise HTTPException(status_code=500,
+                            detail=f"Failed to get SLO alerts: {str(e)}")
 
 
 @router.get("/recommendations")
-async def get_slo_recommendations():
+async def get_slo_recommendations() -> Dict[str, Any]:
     """Get SLO improvement recommendations"""
 
     try:
         if not observability_engine or not observability_engine.slo_monitor:
-            raise HTTPException(status_code=503, detail="SLO monitor not available")
+            raise HTTPException(
+                status_code=503,
+                detail="SLO monitor not available")
 
         # Get overall SLO status for recommendations
         overall_status = await observability_engine.slo_monitor.get_overall_slo_status()
@@ -531,8 +591,7 @@ async def get_slo_recommendations():
                         "Investigate root causes of SLO breaches",
                         "Implement better monitoring and alerting",
                     ],
-                }
-            )
+                })
 
         # Add more recommendations based on specific SLO statuses
         slo_statuses = overall_status.get("slo_statuses", [])
@@ -549,8 +608,7 @@ async def get_slo_recommendations():
                             "Implement immediate fixes",
                             "Review SLO definition if needed",
                         ],
-                    }
-                )
+                    })
 
         return {
             "recommendations": recommendations,
@@ -560,4 +618,6 @@ async def get_slo_recommendations():
 
     except Exception as e:
         logger.error(f"Failed to get SLO recommendations: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to get SLO recommendations: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get SLO recommendations: {str(e)}")

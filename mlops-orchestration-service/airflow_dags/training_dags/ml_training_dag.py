@@ -7,9 +7,7 @@ from datetime import datetime, timedelta
 from typing import Any, Dict
 
 from airflow import DAG
-from airflow.models import Variable
 from airflow.operators.bash import BashOperator
-from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
 from airflow.sensors.filesystem import FileSensor
 from airflow.utils.dates import days_ago
@@ -58,7 +56,6 @@ def create_ml_training_dag(pipeline_config: Dict[str, Any]) -> DAG:
 
     # Task 2: Data Validation
     with TaskGroup("data_validation", dag=dag) as data_validation_group:
-
         # Check data availability
         check_data_availability = FileSensor(
             task_id="check_data_availability",
@@ -88,7 +85,6 @@ def create_ml_training_dag(pipeline_config: Dict[str, Any]) -> DAG:
 
     # Task 3: Feature Engineering
     with TaskGroup("feature_engineering", dag=dag) as feature_engineering_group:
-
         # Extract features
         extract_features = PythonOperator(
             task_id="extract_features",
@@ -117,7 +113,6 @@ def create_ml_training_dag(pipeline_config: Dict[str, Any]) -> DAG:
 
     # Task 4: Model Training
     with TaskGroup("model_training", dag=dag) as model_training_group:
-
         # Hyperparameter tuning (if enabled)
         if pipeline_config.get("enable_hyperparameter_tuning", False):
             hyperparameter_tuning = PythonOperator(
@@ -152,7 +147,6 @@ def create_ml_training_dag(pipeline_config: Dict[str, Any]) -> DAG:
 
     # Task 5: Model Evaluation
     with TaskGroup("model_evaluation", dag=dag) as model_evaluation_group:
-
         # Evaluate model
         evaluate_model = PythonOperator(
             task_id="evaluate_model",
@@ -236,9 +230,7 @@ def create_ml_training_dag(pipeline_config: Dict[str, Any]) -> DAG:
         register_model >> setup_monitoring
 
     # Add cleanup to all paths
-    if pipeline_config.get("include_deployment", False) and pipeline_config.get(
-        "include_monitoring", False
-    ):
+    if pipeline_config.get("include_deployment", False) and pipeline_config.get("include_monitoring", False):
         setup_monitoring >> cleanup
     elif pipeline_config.get("include_deployment", False):
         deploy_model >> cleanup
@@ -253,7 +245,6 @@ def create_ml_training_dag(pipeline_config: Dict[str, Any]) -> DAG:
 # Task functions
 def validate_training_data(config: Dict[str, Any]) -> None:
     """Validate training data quality"""
-    import numpy as np
     import pandas as pd
     from mlops_orchestration_service.src.utils.data_validation import DataValidator
 
@@ -311,9 +302,7 @@ def transform_features(config: Dict[str, Any]) -> None:
     features = pd.read_csv(features_path)
 
     transformer = FeatureTransformer()
-    transformed_features = transformer.transform_features(
-        features, config.get("transformation_pipeline", [])
-    )
+    transformed_features = transformer.transform_features(features, config.get("transformation_pipeline", []))
 
     # Save transformed features
     transformed_path = f"/tmp/transformed_features_{config['model_name']}.csv"

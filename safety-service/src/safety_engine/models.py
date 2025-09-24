@@ -5,7 +5,7 @@ Comprehensive data models for safety monitoring and response
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
 from pydantic import BaseModel, Field

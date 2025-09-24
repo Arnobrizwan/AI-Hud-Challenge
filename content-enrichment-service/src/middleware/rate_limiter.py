@@ -23,7 +23,7 @@ class RateLimiter:
         self.local_cache = {}  # Fallback local cache
         self.cache_ttl = 60  # 1 minute TTL for local cache
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize Redis connection."""
         try:
             self.redis_client = redis.from_url(
@@ -37,7 +37,9 @@ class RateLimiter:
             logger.info("Rate limiter initialized with Redis")
 
         except Exception as e:
-            logger.warning("Failed to initialize Redis for rate limiting", error=str(e))
+            logger.warning(
+                "Failed to initialize Redis for rate limiting",
+                error=str(e))
             self.redis_client = None
 
     async def check_rate_limit(self, identifier: str) -> bool:
@@ -45,11 +47,14 @@ class RateLimiter:
         try:
             if self.redis_client:
                 return await self._check_redis_rate_limit(identifier)
-            else:
+        else:
                 return await self._check_local_rate_limit(identifier)
 
         except Exception as e:
-            logger.error("Rate limit check failed", identifier=identifier, error=str(e))
+            logger.error(
+                "Rate limit check failed",
+                identifier=identifier,
+                error=str(e))
             return True  # Allow request if rate limiting fails
 
     async def _check_redis_rate_limit(self, identifier: str) -> bool:
@@ -68,7 +73,9 @@ class RateLimiter:
             pipe.zcard(f"rate_limit:{identifier}")
 
             # Add current request
-            pipe.zadd(f"rate_limit:{identifier}", {str(current_time): current_time})
+            pipe.zadd(
+                f"rate_limit:{identifier}", {
+                    str(current_time): current_time})
 
             # Set expiration
             pipe.expire(f"rate_limit:{identifier}", settings.rate_limit_window)
@@ -108,7 +115,8 @@ class RateLimiter:
                 self.local_cache[identifier] = []
 
             # Check if under limit
-            if len(self.local_cache[identifier]) >= settings.rate_limit_requests:
+            if len(self.local_cache[identifier]
+                   ) >= settings.rate_limit_requests:
                 logger.warning(
                     "Local rate limit exceeded",
                     identifier=identifier,
@@ -142,7 +150,10 @@ class RateLimiter:
                     "current_requests": current_count,
                     "limit": settings.rate_limit_requests,
                     "window_seconds": settings.rate_limit_window,
-                    "remaining": max(0, settings.rate_limit_requests - current_count),
+                    "remaining": max(
+                        0,
+                        settings.rate_limit_requests -
+                        current_count),
                 }
             else:
                 current_time = time.time()
@@ -163,7 +174,10 @@ class RateLimiter:
                     "current_requests": current_count,
                     "limit": settings.rate_limit_requests,
                     "window_seconds": settings.rate_limit_window,
-                    "remaining": max(0, settings.rate_limit_requests - current_count),
+                    "remaining": max(
+                        0,
+                        settings.rate_limit_requests -
+                        current_count),
                 }
 
         except Exception as e:
@@ -179,7 +193,7 @@ class RateLimiter:
         """Reset rate limit for an identifier."""
         try:
             if self.redis_client:
-                await self.redis_client.delete(f"rate_limit:{identifier}")
+    await self.redis_client.delete(f"rate_limit:{identifier}")
             else:
                 if identifier in self.local_cache:
                     del self.local_cache[identifier]
@@ -191,11 +205,11 @@ class RateLimiter:
             logger.error("Rate limit reset failed", error=str(e))
             return False
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup resources."""
         try:
             if self.redis_client:
-                await self.redis_client.close()
+    await self.redis_client.close()
                 logger.info("Rate limiter cleanup completed")
         except Exception as e:
             logger.error("Rate limiter cleanup failed", error=str(e))
@@ -207,7 +221,7 @@ class RateLimitMiddleware:
     def __init__(self, rate_limiter: RateLimiter):
         self.rate_limiter = rate_limiter
 
-    async def __call__(self, request: Request, call_next):
+    async def __call__(self, request: Request, call_next) -> Dict[str, Any]:
         """Process request with rate limiting."""
         try:
             # Get client identifier
@@ -233,7 +247,8 @@ class RateLimitMiddleware:
             # Add rate limit headers
             rate_info = await self.rate_limiter.get_rate_limit_info(identifier)
             response.headers["X-RateLimit-Limit"] = str(rate_info["limit"])
-            response.headers["X-RateLimit-Remaining"] = str(rate_info["remaining"])
+            response.headers["X-RateLimit-Remaining"] = str(
+                rate_info["remaining"])
             response.headers["X-RateLimit-Reset"] = str(
                 int(time.time()) + settings.rate_limit_window
             )

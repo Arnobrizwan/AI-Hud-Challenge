@@ -39,7 +39,7 @@ class CacheCoordinator:
         self.cache_policies: Optional[CachePolicies] = None
         self._initialized = False
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize cache coordination components"""
         if self._initialized:
             return
@@ -70,7 +70,7 @@ class CacheCoordinator:
             logger.error(f"Failed to initialize Cache Coordinator: {e}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup cache coordination components"""
         logger.info("Cleaning up Cache Coordinator...")
 
@@ -86,12 +86,15 @@ class CacheCoordinator:
             cleanup_tasks.append(self.cache_policies.cleanup())
 
         if cleanup_tasks:
-            await asyncio.gather(*cleanup_tasks, return_exceptions=True)
+    await asyncio.gather(*cleanup_tasks, return_exceptions=True)
 
         self._initialized = False
         logger.info("Cache Coordinator cleanup complete")
 
-    async def get_cached_data(self, cache_key: str, cache_config: CacheConfig) -> CachedData:
+    async def get_cached_data(
+            self,
+            cache_key: str,
+            cache_config: CacheConfig) -> CachedData:
         """Multi-layer cache retrieval"""
         if not self._initialized:
             raise RuntimeError("Cache Coordinator not initialized")
@@ -105,8 +108,9 @@ class CacheCoordinator:
                 if memory_data:
                     logger.debug(f"Cache hit in memory for key: {cache_key}")
                     return CachedData(
-                        data=memory_data, cache_level=CacheLevel.MEMORY, cache_hit=True
-                    )
+                        data=memory_data,
+                        cache_level=CacheLevel.MEMORY,
+                        cache_hit=True)
 
             # L2: Redis cache (fast, shared)
             if cache_config.use_redis_cache and self.redis_manager:
@@ -114,19 +118,25 @@ class CacheCoordinator:
                 if redis_data:
                     # Populate memory cache
                     if cache_config.use_memory_cache and self.memory_cache:
-                        await self.memory_cache.set(
+    await self.memory_cache.set(
                             cache_key, redis_data, ttl=cache_config.memory_ttl
                         )
 
                     logger.debug(f"Cache hit in Redis for key: {cache_key}")
-                    return CachedData(data=redis_data, cache_level=CacheLevel.REDIS, cache_hit=True)
+                    return CachedData(
+                        data=redis_data,
+                        cache_level=CacheLevel.REDIS,
+                        cache_hit=True)
 
             # L3: CDN cache (for public content)
             if cache_config.use_cdn_cache and cache_config.is_public and self.cdn_manager:
                 cdn_data = await self.cdn_manager.get_cached_content(cache_key)
                 if cdn_data:
                     logger.debug(f"Cache hit in CDN for key: {cache_key}")
-                    return CachedData(data=cdn_data, cache_level=CacheLevel.CDN, cache_hit=True)
+                    return CachedData(
+                        data=cdn_data,
+                        cache_level=CacheLevel.CDN,
+                        cache_hit=True)
 
             logger.debug(f"Cache miss for key: {cache_key}")
             return CachedData(cache_hit=False)
@@ -135,7 +145,11 @@ class CacheCoordinator:
             logger.error(f"Failed to get cached data for key {cache_key}: {e}")
             return CachedData(cache_hit=False)
 
-    async def cache_data(self, cache_key: str, data: Any, cache_config: CacheConfig) -> CacheResult:
+    async def cache_data(
+            self,
+            cache_key: str,
+            data: Any,
+            cache_config: CacheConfig) -> CacheResult:
         """Multi-layer cache storage"""
         if not self._initialized:
             raise RuntimeError("Cache Coordinator not initialized")
@@ -148,9 +162,8 @@ class CacheCoordinator:
 
             # Cache in memory
             if cache_config.use_memory_cache and self.memory_cache:
-                cache_operations.append(
-                    self.memory_cache.set(cache_key, data, ttl=cache_config.memory_ttl)
-                )
+                cache_operations.append(self.memory_cache.set(
+                    cache_key, data, ttl=cache_config.memory_ttl))
                 cached_levels.append(CacheLevel.MEMORY)
 
             # Cache in Redis
@@ -159,20 +172,20 @@ class CacheCoordinator:
                 if isinstance(data, dict) and "id" in data:
                     article = RetrievedArticle(**data)
                     cache_operations.append(
-                        self.redis_manager.cache_article(article, ttl=cache_config.redis_ttl)
-                    )
+                        self.redis_manager.cache_article(
+                            article, ttl=cache_config.redis_ttl))
                 else:
                     # For non-article data, use a generic caching method
                     cache_operations.append(
-                        self._cache_generic_data(cache_key, data, cache_config.redis_ttl)
-                    )
+                        self._cache_generic_data(
+                            cache_key, data, cache_config.redis_ttl))
                 cached_levels.append(CacheLevel.REDIS)
 
             # Cache in CDN
             if cache_config.use_cdn_cache and cache_config.is_public and self.cdn_manager:
                 cache_operations.append(
-                    self.cdn_manager.cache_content(cache_key, data, cache_config.cdn_ttl)
-                )
+                    self.cdn_manager.cache_content(
+                        cache_key, data, cache_config.cdn_ttl))
                 cached_levels.append(CacheLevel.CDN)
 
             # Execute cache operations
@@ -184,9 +197,11 @@ class CacheCoordinator:
                 if not isinstance(result, Exception):
                     successful_levels.append(cached_levels[i])
                 else:
-                    logger.warning(f"Cache operation failed for level {cached_levels[i]}: {result}")
+                    logger.warning(
+                        f"Cache operation failed for level {cached_levels[i]}: {result}")
 
-            logger.debug(f"Cached data for key {cache_key} in {len(successful_levels)} levels")
+            logger.debug(
+                f"Cached data for key {cache_key} in {len(successful_levels)} levels")
 
             return CacheResult(
                 cache_key=cache_key,
@@ -198,7 +213,10 @@ class CacheCoordinator:
             logger.error(f"Failed to cache data for key {cache_key}: {e}")
             raise
 
-    async def cache_article(self, article: Article, ttl: int = 3600) -> CacheResult:
+    async def cache_article(
+            self,
+            article: Article,
+            ttl: int = 3600) -> CacheResult:
         """Cache article with intelligent TTL"""
         if not self._initialized:
             raise RuntimeError("Cache Coordinator not initialized")
@@ -217,7 +235,8 @@ class CacheCoordinator:
             logger.error(f"Failed to cache article {article.id}: {e}")
             raise
 
-    async def get_cached_article(self, article_id: str) -> Optional[RetrievedArticle]:
+    async def get_cached_article(
+            self, article_id: str) -> Optional[RetrievedArticle]:
         """Get cached article"""
         if not self._initialized:
             raise RuntimeError("Cache Coordinator not initialized")
@@ -237,7 +256,8 @@ class CacheCoordinator:
 
             cached_data = await self.get_cached_data(cache_key, cache_config)
 
-            if cached_data.cache_hit and isinstance(cached_data.data, RetrievedArticle):
+            if cached_data.cache_hit and isinstance(
+                    cached_data.data, RetrievedArticle):
                 return cached_data.data
 
             return None
@@ -261,7 +281,8 @@ class CacheCoordinator:
             return await self.cache_data(cache_key, article, cache_config)
 
         except Exception as e:
-            logger.error(f"Failed to update cache for article {article.id}: {e}")
+            logger.error(
+                f"Failed to update cache for article {article.id}: {e}")
             raise
 
     async def invalidate_cache(
@@ -282,32 +303,36 @@ class CacheCoordinator:
                 for pattern in invalidation_request.key_patterns:
                     # Memory cache invalidation
                     if self.memory_cache:
-                        invalidation_tasks.append(self.memory_cache.delete_pattern(pattern))
+                        invalidation_tasks.append(
+                            self.memory_cache.delete_pattern(pattern))
 
                     # Redis cache invalidation
                     if self.redis_manager:
-                        invalidation_tasks.append(self.redis_manager.invalidate_pattern(pattern))
+                        invalidation_tasks.append(
+                            self.redis_manager.invalidate_pattern(pattern))
 
                     # CDN cache invalidation
                     if self.cdn_manager:
-                        invalidation_tasks.append(self.cdn_manager.purge_pattern(pattern))
+                        invalidation_tasks.append(
+                            self.cdn_manager.purge_pattern(pattern))
 
             # Invalidate by tags
             if invalidation_request.cache_tags:
                 for tag in invalidation_request.cache_tags:
                     # Memory cache invalidation by tag
                     if self.memory_cache:
-                        invalidation_tasks.append(self.memory_cache.delete_by_tag(tag))
+                        invalidation_tasks.append(
+                            self.memory_cache.delete_by_tag(tag))
 
                     # Redis cache invalidation by tag
                     if self.redis_manager:
                         invalidation_tasks.append(
-                            self.redis_manager.invalidate_pattern(f"tag:{tag}:*")
-                        )
+                            self.redis_manager.invalidate_pattern(f"tag:{tag}:*"))
 
                     # CDN cache invalidation by tag
                     if self.cdn_manager:
-                        invalidation_tasks.append(self.cdn_manager.purge_by_tag(tag))
+                        invalidation_tasks.append(
+                            self.cdn_manager.purge_by_tag(tag))
 
             # Execute invalidation
             if invalidation_tasks:
@@ -317,14 +342,18 @@ class CacheCoordinator:
 
                 # Count successful invalidations
                 for result in invalidation_results:
-                    if not isinstance(result, Exception) and isinstance(result, int):
+                    if not isinstance(
+                            result,
+                            Exception) and isinstance(
+                            result,
+                            int):
                         total_invalidated += result
 
             logger.info(f"Invalidated {total_invalidated} cache entries")
 
             return InvalidationResult(
-                invalidated_keys=total_invalidated, invalidation_timestamp=datetime.utcnow()
-            )
+                invalidated_keys=total_invalidated,
+                invalidation_timestamp=datetime.utcnow())
 
         except Exception as e:
             logger.error(f"Failed to invalidate cache: {e}")
@@ -378,7 +407,8 @@ class CacheCoordinator:
         """Generate cache key for article"""
         return f"article:{article_id}"
 
-    def _generate_search_cache_key(self, query: str, filters: Dict[str, Any] = None) -> str:
+    def _generate_search_cache_key(
+            self, query: str, filters: Dict[str, Any] = None) -> str:
         """Generate cache key for search results"""
         key_data = f"search:{query}"
         if filters:
@@ -400,7 +430,8 @@ class CacheCoordinator:
             # Determine TTL based on article age and source
             base_ttl = 3600  # 1 hour
             if article.published_at:
-                age_hours = (datetime.utcnow() - article.published_at).total_seconds() / 3600
+                age_hours = (
+                    datetime.utcnow() - article.published_at).total_seconds() / 3600
                 if age_hours > 24:  # Older articles get longer cache
                     base_ttl = 86400  # 24 hours
                 elif age_hours > 1:  # Recent articles get shorter cache
@@ -420,7 +451,11 @@ class CacheCoordinator:
             logger.warning(f"Failed to get optimal cache config: {e}")
             return CacheConfig()
 
-    async def _cache_generic_data(self, cache_key: str, data: Any, ttl: int) -> bool:
+    async def _cache_generic_data(
+            self,
+            cache_key: str,
+            data: Any,
+            ttl: int) -> bool:
         """Cache generic data in Redis"""
         try:
             if self.redis_manager and self.redis_manager.redis_client:

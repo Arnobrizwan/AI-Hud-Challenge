@@ -24,9 +24,7 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
             logger.warning(f"HTTP error: {e.status_code} - {e.detail}")
             return JSONResponse(
                 status_code=e.status_code,
-                content={
-                    "error": {"code": e.status_code, "message": e.detail, "type": "http_error"}
-                },
+                content={"error": {"code": e.status_code, "message": e.detail, "type": "http_error"}},
             )
 
         except Exception as e:

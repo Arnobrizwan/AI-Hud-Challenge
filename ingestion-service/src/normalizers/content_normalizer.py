@@ -5,8 +5,7 @@ Content normalization and processing logic.
 import hashlib
 import logging
 import re
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import List, Tuple
 
 from src.models.content import ContentType, NormalizedArticle, ProcessingStatus
 from src.utils.content_parser import ContentParser
@@ -100,9 +99,7 @@ class ContentNormalizer:
 
         # Normalize tags
         if article.tags:
-            article.tags = [
-                self._clean_text(tag) for tag in article.tags if tag and self._clean_text(tag)
-            ]
+            article.tags = [self._clean_text(tag) for tag in article.tags if tag and self._clean_text(tag)]
             article.tags = list(set(article.tags))  # Remove duplicates
 
         # Normalize published date
@@ -216,16 +213,12 @@ class ContentNormalizer:
         # Check minimum requirements
         if article.word_count < self.min_word_count:
             article.processing_status = ProcessingStatus.SKIPPED
-            article.ingestion_metadata["error_message"] = (
-                f"Article too short: {article.word_count} words"
-            )
+            article.ingestion_metadata["error_message"] = f"Article too short: {article.word_count} words"
             return article
 
         if article.word_count > self.max_word_count:
             article.processing_status = ProcessingStatus.SKIPPED
-            article.ingestion_metadata["error_message"] = (
-                f"Article too long: {article.word_count} words"
-            )
+            article.ingestion_metadata["error_message"] = f"Article too long: {article.word_count} words"
             return article
 
         if not article.title or len(article.title) < self.min_title_length:
@@ -347,9 +340,7 @@ class ContentNormalizer:
 
         return duplicates
 
-    def _calculate_similarity(
-        self, article1: NormalizedArticle, article2: NormalizedArticle
-    ) -> float:
+    def _calculate_similarity(self, article1: NormalizedArticle, article2: NormalizedArticle) -> float:
         """Calculate similarity between two articles."""
         # Title similarity
         title_similarity = self._text_similarity(article1.title, article2.title)
@@ -437,9 +428,7 @@ class ContentNormalizer:
 
             # Extract additional image URLs
             if not article.image_url and article.content:
-                article.image_url = self.content_parser.extract_image_url(
-                    article.content, article.url
-                )
+                article.image_url = self.content_parser.extract_image_url(article.content, article.url)
 
             # Extract additional summary
             if not article.summary and article.content:

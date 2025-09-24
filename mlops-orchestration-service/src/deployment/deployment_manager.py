@@ -4,20 +4,15 @@ Supports blue-green, canary, rolling, and standard deployment strategies
 """
 
 import asyncio
-import logging
-from datetime import datetime, timedelta
-from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-from pydantic import BaseModel, Field
 
 from src.config.settings import Settings
 from src.infrastructure.kubernetes_client import KubernetesClient
 from src.infrastructure.load_balancer import LoadBalancer
 from src.models.deployment_models import (
-    ABTestConfig,
-    BlueGreenConfig,
     CanaryConfig,
     DeploymentConfig,
     DeploymentInfo,
@@ -133,9 +128,7 @@ class ModelDeploymentManager:
                 self._active_deployments[deployment.id].error_message = str(e)
             raise DeploymentError(f"Model deployment failed: {str(e)}")
 
-    async def _blue_green_deployment(
-        self, deployment: ModelDeployment, config: DeploymentConfig
-    ) -> DeploymentInfo:
+    async def _blue_green_deployment(self, deployment: ModelDeployment, config: DeploymentConfig) -> DeploymentInfo:
         """Execute blue-green deployment"""
 
         try:
@@ -152,10 +145,8 @@ class ModelDeploymentManager:
             # Test blue deployment
             health_check = await self._test_deployment_health(blue_endpoint, config)
             if not health_check.is_healthy:
-                await self._cleanup_endpoint(blue_endpoint)
-                raise DeploymentError(
-                    f"Blue deployment health check failed: {health_check.failure_reason}"
-                )
+    await self._cleanup_endpoint(blue_endpoint)
+                raise DeploymentError(f"Blue deployment health check failed: {health_check.failure_reason}")
 
             # Switch traffic to blue (now becomes green)
             await self.load_balancer.switch_traffic(
@@ -164,7 +155,7 @@ class ModelDeploymentManager:
 
             # Cleanup old green deployment
             if current_endpoint:
-                await self._cleanup_endpoint(current_endpoint)
+    await self._cleanup_endpoint(current_endpoint)
 
             return DeploymentInfo(
                 endpoint_url=blue_endpoint.endpoint_name,
@@ -178,9 +169,7 @@ class ModelDeploymentManager:
             logger.error(f"Blue-green deployment failed: {str(e)}")
             raise DeploymentError(f"Blue-green deployment failed: {str(e)}")
 
-    async def _canary_deployment(
-        self, deployment: ModelDeployment, config: DeploymentConfig
-    ) -> DeploymentInfo:
+    async def _canary_deployment(self, deployment: ModelDeployment, config: DeploymentConfig) -> DeploymentInfo:
         """Execute canary deployment with gradual traffic shift"""
 
         try:
@@ -203,9 +192,7 @@ class ModelDeploymentManager:
                 "canary": canary_config.initial_traffic_percentage,
             }
 
-            await self.load_balancer.update_traffic_split(
-                deployment.model_name, current_traffic_split
-            )
+            await self.load_balancer.update_traffic_split(deployment.model_name, current_traffic_split)
 
             # Set up canary monitoring
             canary_monitor = CanaryMonitor(
@@ -233,12 +220,8 @@ class ModelDeploymentManager:
 
                 if not health_check.is_healthy:
                     # Rollback on failure
-                    await self._rollback_canary_deployment(
-                        deployment, stable_endpoint, canary_endpoint
-                    )
-                    raise DeploymentError(
-                        f"Canary deployment failed: {health_check.failure_reason}"
-                    )
+                    await self._rollback_canary_deployment(deployment, stable_endpoint, canary_endpoint)
+                    raise DeploymentError(f"Canary deployment failed: {health_check.failure_reason}")
 
             # Promote canary to stable
             await self._promote_canary_to_stable(deployment, canary_endpoint)
@@ -255,9 +238,7 @@ class ModelDeploymentManager:
             logger.error(f"Canary deployment failed: {str(e)}")
             raise DeploymentError(f"Canary deployment failed: {str(e)}")
 
-    async def _rolling_deployment(
-        self, deployment: ModelDeployment, config: DeploymentConfig
-    ) -> DeploymentInfo:
+    async def _rolling_deployment(self, deployment: ModelDeployment, config: DeploymentConfig) -> DeploymentInfo:
         """Execute rolling deployment"""
 
         try:
@@ -283,9 +264,7 @@ class ModelDeploymentManager:
             # Gradually replace old instances
             for i, old_instance in enumerate(current_instances):
                 # Add new instance to load balancer
-                await self.load_balancer.add_instance(
-                    deployment.model_name, new_instances[i % len(new_instances)]
-                )
+                await self.load_balancer.add_instance(deployment.model_name, new_instances[i % len(new_instances)])
 
                 # Remove old instance from load balancer
                 await self.load_balancer.remove_instance(deployment.model_name, old_instance)
@@ -308,9 +287,7 @@ class ModelDeploymentManager:
             logger.error(f"Rolling deployment failed: {str(e)}")
             raise DeploymentError(f"Rolling deployment failed: {str(e)}")
 
-    async def _ab_test_deployment(
-        self, deployment: ModelDeployment, config: DeploymentConfig
-    ) -> DeploymentInfo:
+    async def _ab_test_deployment(self, deployment: ModelDeployment, config: DeploymentConfig) -> DeploymentInfo:
         """Execute A/B test deployment"""
 
         try:
@@ -366,26 +343,20 @@ class ModelDeploymentManager:
             logger.error(f"A/B test deployment failed: {str(e)}")
             raise DeploymentError(f"A/B test deployment failed: {str(e)}")
 
-    async def _standard_deployment(
-        self, deployment: ModelDeployment, config: DeploymentConfig
-    ) -> DeploymentInfo:
+    async def _standard_deployment(self, deployment: ModelDeployment, config: DeploymentConfig) -> DeploymentInfo:
         """Execute standard deployment"""
 
         try:
             logger.info(f"Starting standard deployment for {deployment.model_name}")
 
             # Deploy model version
-            endpoint = await self._deploy_model_version(
-                deployment.model_name, deployment.model_version, config
-            )
+            endpoint = await self._deploy_model_version(deployment.model_name, deployment.model_version, config)
 
             # Test deployment
             health_check = await self._test_deployment_health(endpoint, config)
             if not health_check.is_healthy:
-                await self._cleanup_endpoint(endpoint)
-                raise DeploymentError(
-                    f"Deployment health check failed: {health_check.failure_reason}"
-                )
+    await self._cleanup_endpoint(endpoint)
+                raise DeploymentError(f"Deployment health check failed: {health_check.failure_reason}")
 
             return DeploymentInfo(
                 endpoint_url=endpoint.endpoint_name,

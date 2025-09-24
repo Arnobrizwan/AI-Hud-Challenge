@@ -42,22 +42,24 @@ class ABTestManager:
         self.user_assignments: Dict[str, str] = {}  # user_id -> variant_id
         self._initialized = False
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize A/B testing framework"""
         try:
             logger.info("Initializing A/B testing framework...")
 
-            # Load existing tests from storage (in production, this would be from a database)
+            # Load existing tests from storage (in production, this would be
+            # from a database)
             await self._load_existing_tests()
 
             self._initialized = True
             logger.info("A/B testing framework initialized successfully")
 
         except Exception as e:
-            logger.error(f"Failed to initialize A/B testing framework: {str(e)}")
+            logger.error(
+                f"Failed to initialize A/B testing framework: {str(e)}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Clean up resources"""
         try:
             # Save test data (in production, this would be to a database)
@@ -65,16 +67,18 @@ class ABTestManager:
         except Exception as e:
             logger.error(f"Error during cleanup: {str(e)}")
 
-    async def create_test(
-        self, test_name: str, variants: List[A / BTestVariant], duration_days: int = 7
-    ) -> str:
+    async def create_test(self,
+                          test_name: str,
+                          variants: List[A / BTestVariant],
+                          duration_days: int = 7) -> str:
         """Create a new A/B test"""
         try:
             test_id = str(uuid.uuid4())
 
             # Validate variants
             if len(variants) < 2:
-                raise ValueError("At least 2 variants required for A/B testing")
+                raise ValueError(
+                    "At least 2 variants required for A/B testing")
 
             # Check traffic allocation
             total_traffic = sum(v.traffic_percentage for v in variants)
@@ -103,7 +107,10 @@ class ABTestManager:
             logger.error(f"Failed to create A/B test: {str(e)}")
             raise
 
-    async def assign_variant(self, test_id: str, user_id: str) -> Optional[str]:
+    async def assign_variant(
+            self,
+            test_id: str,
+            user_id: str) -> Optional[str]:
         """Assign a variant to a user for a specific test"""
         try:
             if test_id not in self.active_tests:
@@ -128,7 +135,8 @@ class ABTestManager:
             if variant_id:
                 self.user_assignments[user_key] = variant_id
                 test["total_participants"] += 1
-                logger.info(f"Assigned variant {variant_id} to user {user_id} for test {test_id}")
+                logger.info(
+                    f"Assigned variant {variant_id} to user {user_id} for test {test_id}")
 
             return variant_id
 
@@ -136,7 +144,8 @@ class ABTestManager:
             logger.error(f"Failed to assign variant: {str(e)}")
             return None
 
-    async def _select_variant(self, variants: List[Dict[str, Any]]) -> Optional[str]:
+    async def _select_variant(
+            self, variants: List[Dict[str, Any]]) -> Optional[str]:
         """Select a variant based on traffic allocation"""
         try:
             # Generate random number
@@ -156,7 +165,11 @@ class ABTestManager:
             logger.error(f"Variant selection failed: {str(e)}")
             return None
 
-    async def record_metrics(self, test_id: str, variant_id: str, metrics: TestMetrics) -> bool:
+    async def record_metrics(
+            self,
+            test_id: str,
+            variant_id: str,
+            metrics: TestMetrics) -> bool:
         """Record metrics for a test variant"""
         try:
             if test_id not in self.test_results:
@@ -176,14 +189,16 @@ class ABTestManager:
 
             self.test_results[test_id].append(metrics_dict)
 
-            logger.info(f"Recorded metrics for test {test_id}, variant {variant_id}")
+            logger.info(
+                f"Recorded metrics for test {test_id}, variant {variant_id}")
             return True
 
         except Exception as e:
             logger.error(f"Failed to record metrics: {str(e)}")
             return False
 
-    async def get_test_results(self, test_id: str) -> Optional[A / BTestResult]:
+    async def get_test_results(self,
+                               test_id: str) -> Optional[A / BTestResult]:
         """Get A/B test results and analysis"""
         try:
             if test_id not in self.active_tests:
@@ -233,28 +248,24 @@ class ABTestManager:
             logger.error(f"Failed to get test results: {str(e)}")
             return None
 
-    def _calculate_variant_stats(self, metrics_list: List[Dict[str, Any]]) -> Dict[str, float]:
+    def _calculate_variant_stats(
+            self, metrics_list: List[Dict[str, Any]]) -> Dict[str, float]:
         """Calculate statistics for a variant"""
         try:
             if not metrics_list:
                 return {}
 
             # Extract metrics
-            quality_scores = [
-                m["quality_score"] for m in metrics_list if m["quality_score"] is not None
-            ]
-            processing_times = [
-                m["processing_time"] for m in metrics_list if m["processing_time"] is not None
-            ]
-            user_satisfaction = [
-                m["user_satisfaction"] for m in metrics_list if m["user_satisfaction"] is not None
-            ]
-            click_through_rates = [
-                m["click_through_rate"] for m in metrics_list if m["click_through_rate"] is not None
-            ]
-            engagement_scores = [
-                m["engagement_score"] for m in metrics_list if m["engagement_score"] is not None
-            ]
+            quality_scores = [m["quality_score"]
+                              for m in metrics_list if m["quality_score"] is not None]
+            processing_times = [m["processing_time"]
+                                for m in metrics_list if m["processing_time"] is not None]
+            user_satisfaction = [m["user_satisfaction"]
+                                 for m in metrics_list if m["user_satisfaction"] is not None]
+            click_through_rates = [m["click_through_rate"]
+                                   for m in metrics_list if m["click_through_rate"] is not None]
+            engagement_scores = [m["engagement_score"]
+                                 for m in metrics_list if m["engagement_score"] is not None]
 
             stats = {}
 
@@ -290,7 +301,8 @@ class ABTestManager:
             logger.error(f"Failed to calculate variant stats: {str(e)}")
             return {}
 
-    def _determine_winning_variant(self, variant_stats: Dict[str, Dict[str, float]]) -> str:
+    def _determine_winning_variant(
+            self, variant_stats: Dict[str, Dict[str, float]]) -> str:
         """Determine the winning variant based on metrics"""
         try:
             if not variant_stats:
@@ -311,7 +323,8 @@ class ABTestManager:
                 # Processing time (20% weight, lower is better)
                 if "avg_processing_time" in stats:
                     # Normalize processing time (assume max 10 seconds)
-                    normalized_time = max(0, 1 - (stats["avg_processing_time"] / 10))
+                    normalized_time = max(
+                        0, 1 - (stats["avg_processing_time"] / 10))
                     score += normalized_time * 0.2
                     weight += 0.2
 
@@ -332,20 +345,24 @@ class ABTestManager:
                     variant_scores[variant_id] = 0.0
 
             # Return variant with highest score
-            return max(variant_scores, key=variant_scores.get) if variant_scores else ""
+            return max(
+                variant_scores,
+                key=variant_scores.get) if variant_scores else ""
 
         except Exception as e:
             logger.error(f"Failed to determine winning variant: {str(e)}")
             return ""
 
-    def _calculate_confidence_level(self, variant_stats: Dict[str, Dict[str, float]]) -> float:
+    def _calculate_confidence_level(
+            self, variant_stats: Dict[str, Dict[str, float]]) -> float:
         """Calculate statistical confidence level"""
         try:
             if len(variant_stats) < 2:
                 return 0.0
 
             # Simple confidence calculation based on sample size and variance
-            total_samples = sum(stats.get("sample_size", 0) for stats in variant_stats.values())
+            total_samples = sum(stats.get("sample_size", 0)
+                                for stats in variant_stats.values())
 
             if total_samples < 30:
                 return 0.5  # Low confidence for small samples
@@ -380,7 +397,8 @@ class ABTestManager:
         try:
             active_tests = []
             for test_id, test in self.active_tests.items():
-                if test["status"] == "active" and datetime.now() <= test["end_date"]:
+                if test["status"] == "active" and datetime.now(
+                ) <= test["end_date"]:
                     active_tests.append(
                         {
                             "test_id": test_id,
@@ -397,13 +415,13 @@ class ABTestManager:
             logger.error(f"Failed to get active tests: {str(e)}")
             return []
 
-    async def _load_existing_tests(self):
+    async def _load_existing_tests(self) -> Dict[str, Any]:
         """Load existing tests from storage"""
         # In production, this would load from a database
         # For now, we'll start with empty tests
         pass
 
-    async def _save_test_data(self):
+    async def _save_test_data(self) -> Dict[str, Any]:
         """Save test data to storage"""
         # In production, this would save to a database
         # For now, we'll just log the data

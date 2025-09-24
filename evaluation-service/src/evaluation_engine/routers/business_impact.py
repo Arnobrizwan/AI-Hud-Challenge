@@ -156,7 +156,7 @@ async def calculate_roi(
 
 
 @business_impact_router.get("/metrics")
-async def get_business_metrics():
+async def get_business_metrics() -> Dict[str, Any]:
     """Get available business metrics"""
 
     try:

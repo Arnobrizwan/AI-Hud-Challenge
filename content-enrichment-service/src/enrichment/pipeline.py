@@ -78,9 +78,7 @@ class ContentEnrichmentPipeline:
 
         try:
             # Detect language if not provided
-            detected_language = language_hint or await self.language_detector.detect(
-                content.content
-            )
+            detected_language = language_hint or await self.language_detector.detect(content.content)
 
             # Prepare parallel tasks
             tasks = []
@@ -107,16 +105,12 @@ class ContentEnrichmentPipeline:
                 task_names.append("trust_score")
 
             # Execute tasks in parallel
-            logger.info(
-                "Starting parallel enrichment tasks", content_id=content.id, task_count=len(tasks)
-            )
+            logger.info("Starting parallel enrichment tasks", content_id=content.id, task_count=len(tasks))
 
             results = await asyncio.gather(*tasks, return_exceptions=True)
 
             # Process results
-            entities, topics, sentiment, signals, trust_score = self._process_results(
-                results, task_names
-            )
+            entities, topics, sentiment, signals, trust_score = self._process_results(results, task_names)
 
             processing_time = int((time.time() - start_time) * 1000)
 
@@ -147,9 +141,7 @@ class ContentEnrichmentPipeline:
             return enriched_content
 
         except Exception as e:
-            logger.error(
-                "Content enrichment failed", content_id=content.id, error=str(e), exc_info=True
-            )
+            logger.error("Content enrichment failed", content_id=content.id, error=str(e), exc_info=True)
             raise
 
     async def _extract_entities(self, content: ExtractedContent, language: str) -> List[Any]:
@@ -177,9 +169,7 @@ class ContentEnrichmentPipeline:
             # Return neutral sentiment as fallback
             from ..models.content import SentimentAnalysis, SentimentLabel
 
-            return SentimentAnalysis(
-                sentiment=SentimentLabel.NEUTRAL, confidence=0.5, subjectivity=0.5, polarity=0.0
-            )
+            return SentimentAnalysis(sentiment=SentimentLabel.NEUTRAL, confidence=0.5, subjectivity=0.5, polarity=0.0)
 
     async def _extract_signals(self, content: ExtractedContent, language: str) -> Any:
         """Extract content quality signals."""
@@ -219,9 +209,7 @@ class ContentEnrichmentPipeline:
                 content_quality=0.5,
             )
 
-    def _process_results(
-        self, results: List[Any], task_names: List[str]
-    ) -> Tuple[List[Any], List[Any], Any, Any, Any]:
+    def _process_results(self, results: List[Any], task_names: List[str]) -> Tuple[List[Any], List[Any], Any, Any, Any]:
         """Process parallel task results."""
         entities = None
         topics = None
@@ -263,9 +251,7 @@ class ContentEnrichmentPipeline:
 
         for i in range(0, len(contents), batch_size):
             batch = contents[i : i + batch_size]
-            batch_tasks = [
-                self.enrich_content(content, processing_mode, **kwargs) for content in batch
-            ]
+            batch_tasks = [self.enrich_content(content, processing_mode, **kwargs) for content in batch]
 
             batch_results = await asyncio.gather(*batch_tasks, return_exceptions=True)
 

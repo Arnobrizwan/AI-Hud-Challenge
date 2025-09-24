@@ -31,7 +31,7 @@ class PostgreSQLClient:
 
             # Test connection
             async with self.pool.acquire() as conn:
-                await conn.fetchval("SELECT 1")
+    await conn.fetchval("SELECT 1")
 
             logger.info("Connected to PostgreSQL successfully")
 
@@ -42,7 +42,7 @@ class PostgreSQLClient:
     async def disconnect(self) -> None:
         """Disconnect from PostgreSQL."""
         if self.pool:
-            await self.pool.close()
+    await self.pool.close()
             logger.info("Disconnected from PostgreSQL")
 
     async def execute(self, query: str, *args) -> str:
@@ -98,7 +98,7 @@ class PostgreSQLClient:
                 logger.error(f"Error fetching value: {e}")
                 raise
 
-    async def transaction(self):
+    async def transaction(self) -> Dict[str, Any]:
         """Get a transaction context manager."""
         if not self.pool:
             raise RuntimeError("Database not connected")
@@ -112,7 +112,7 @@ class PostgreSQLClient:
 
         async with self.pool.acquire() as conn:
             try:
-                await conn.executemany(query, args_list)
+    await conn.executemany(query, args_list)
             except Exception as e:
                 logger.error(f"Error executing many queries: {e}")
                 raise
@@ -155,7 +155,7 @@ class PostgreSQLClient:
     async def get_table_stats(self, table_name: str) -> Dict[str, Any]:
         """Get table statistics."""
         query = """
-        SELECT 
+        SELECT
             schemaname,
             tablename,
             attname,
@@ -172,7 +172,7 @@ class PostgreSQLClient:
     async def get_database_size(self) -> Dict[str, Any]:
         """Get database size information."""
         query = """
-        SELECT 
+        SELECT
             pg_database_size(current_database()) as database_size,
             pg_size_pretty(pg_database_size(current_database())) as database_size_pretty
         """
@@ -183,7 +183,7 @@ class PostgreSQLClient:
     async def get_table_sizes(self) -> List[Dict[str, Any]]:
         """Get table sizes."""
         query = """
-        SELECT 
+        SELECT
             schemaname,
             tablename,
             pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) as size,
@@ -198,7 +198,7 @@ class PostgreSQLClient:
     async def get_connection_info(self) -> Dict[str, Any]:
         """Get connection information."""
         query = """
-        SELECT 
+        SELECT
             current_database() as database_name,
             current_user as user_name,
             inet_server_addr() as server_address,
@@ -237,7 +237,7 @@ class PostgreSQLClient:
         """Create index if it doesn't exist."""
         unique_keyword = "UNIQUE" if unique else ""
         query = f"""
-        CREATE INDEX IF NOT EXISTS {index_name} 
+        CREATE INDEX IF NOT EXISTS {index_name}
         ON {table} {unique_keyword} ({columns})
         """
 

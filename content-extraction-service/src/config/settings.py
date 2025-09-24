@@ -3,7 +3,7 @@ Configuration management for the Content Extraction & Cleanup microservice.
 """
 
 from functools import lru_cache
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 from pydantic import Field, validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -12,9 +12,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     """Application configuration with environment variable support."""
 
-    model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", case_sensitive=True, extra="ignore"
-    )
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", case_sensitive=True, extra="ignore")
 
     # Application Settings
     APP_NAME: str = "Content Extraction & Cleanup Service"
@@ -30,9 +28,7 @@ class Settings(BaseSettings):
     # Google Cloud Configuration
     GCP_PROJECT_ID: str = Field(description="GCP Project ID")
     GCP_REGION: str = Field(default="us-central1", description="GCP Region")
-    GOOGLE_APPLICATION_CREDENTIALS: Optional[str] = Field(
-        default=None, description="Path to GCP credentials"
-    )
+    GOOGLE_APPLICATION_CREDENTIALS: Optional[str] = Field(default=None, description="Path to GCP credentials")
 
     # Cloud Storage Configuration
     CLOUD_STORAGE_BUCKET: str = Field(
@@ -41,9 +37,7 @@ class Settings(BaseSettings):
     CACHE_RETENTION_DAYS: int = Field(default=30, description="Cache retention period in days")
 
     # Cloud Tasks Configuration
-    CLOUD_TASKS_QUEUE: str = Field(
-        default="content-extraction-queue", description="Cloud Tasks queue name"
-    )
+    CLOUD_TASKS_QUEUE: str = Field(default="content-extraction-queue", description="Cloud Tasks queue name")
     TASK_RETRY_ATTEMPTS: int = Field(default=3, description="Number of task retry attempts")
     TASK_RETRY_DELAY: int = Field(default=60, description="Task retry delay in seconds")
 
@@ -52,27 +46,19 @@ class Settings(BaseSettings):
     DOCUMENT_AI_LOCATION: str = Field(default="us", description="Document AI location")
 
     # Firestore Configuration
-    FIRESTORE_COLLECTION_EXTRACTIONS: str = Field(
-        default="extractions", description="Firestore extractions collection"
-    )
-    FIRESTORE_COLLECTION_TASKS: str = Field(
-        default="tasks", description="Firestore tasks collection"
-    )
+    FIRESTORE_COLLECTION_EXTRACTIONS: str = Field(default="extractions", description="Firestore extractions collection")
+    FIRESTORE_COLLECTION_TASKS: str = Field(default="tasks", description="Firestore tasks collection")
 
     # Redis Configuration
     REDIS_URL: str = Field(default="redis://localhost:6379/0", description="Redis connection URL")
     REDIS_MAX_CONNECTIONS: int = Field(default=20, description="Max Redis connections")
 
     # Content Processing Configuration
-    MAX_CONTENT_LENGTH: int = Field(
-        default=10485760, description="Max content length in bytes (10MB)"
-    )
+    MAX_CONTENT_LENGTH: int = Field(default=10485760, description="Max content length in bytes (10MB)")
     MAX_IMAGE_SIZE: int = Field(default=5242880, description="Max image size in bytes (5MB)")
     MAX_IMAGES_PER_ARTICLE: int = Field(default=20, description="Max images per article")
     MIN_CONTENT_LENGTH: int = Field(default=100, description="Min content length in characters")
-    MAX_CONTENT_LENGTH_CHARS: int = Field(
-        default=100000, description="Max content length in characters"
-    )
+    MAX_CONTENT_LENGTH_CHARS: int = Field(default=100000, description="Max content length in characters")
 
     # Quality Scoring Configuration
     MIN_QUALITY_SCORE: float = Field(default=0.3, description="Minimum quality score threshold")
@@ -83,9 +69,7 @@ class Settings(BaseSettings):
     IMAGE_QUALITY: int = Field(default=85, description="JPEG quality for image optimization")
     IMAGE_MAX_WIDTH: int = Field(default=1920, description="Max image width")
     IMAGE_MAX_HEIGHT: int = Field(default=1080, description="Max image height")
-    IMAGE_FORMATS: List[str] = Field(
-        default=["JPEG", "PNG", "WebP"], description="Supported image formats"
-    )
+    IMAGE_FORMATS: List[str] = Field(default=["JPEG", "PNG", "WebP"], description="Supported image formats")
 
     # Playwright Configuration
     PLAYWRIGHT_HEADLESS: bool = Field(default=True, description="Run Playwright in headless mode")
@@ -168,9 +152,7 @@ class Settings(BaseSettings):
 
     # Anti-bot Detection Configuration
     ENABLE_ANTI_BOT_DETECTION: bool = Field(default=True, description="Enable anti-bot detection")
-    ANTI_BOT_DELAY: float = Field(
-        default=1.0, description="Delay between requests to avoid detection"
-    )
+    ANTI_BOT_DELAY: float = Field(default=1.0, description="Delay between requests to avoid detection")
     ROTATE_USER_AGENTS: bool = Field(default=True, description="Rotate user agents")
 
     # Cookie Consent Configuration

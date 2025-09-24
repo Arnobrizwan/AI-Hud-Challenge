@@ -2,7 +2,6 @@
 Configuration management for notification decisioning service.
 """
 
-import os
 from functools import lru_cache
 from typing import List, Optional
 
@@ -18,9 +17,7 @@ class Settings(BaseSettings):
     DEBUG: bool = Field(default=False, env="DEBUG")
 
     # Database settings
-    DATABASE_URL: str = Field(
-        default="postgresql://user:password@localhost/notification_db", env="DATABASE_URL"
-    )
+    DATABASE_URL: str = Field(default="postgresql://user:password@localhost/notification_db", env="DATABASE_URL")
 
     # Redis settings
     REDIS_URL: str = Field(default="redis://localhost:6379/0", env="REDIS_URL")
@@ -43,12 +40,8 @@ class Settings(BaseSettings):
 
     # ML Model settings
     TIMING_MODEL_PATH: str = Field(default="models/timing_model.pkl", env="TIMING_MODEL_PATH")
-    RELEVANCE_MODEL_PATH: str = Field(
-        default="models/relevance_model.pkl", env="RELEVANCE_MODEL_PATH"
-    )
-    ENGAGEMENT_MODEL_PATH: str = Field(
-        default="models/engagement_model.pkl", env="ENGAGEMENT_MODEL_PATH"
-    )
+    RELEVANCE_MODEL_PATH: str = Field(default="models/relevance_model.pkl", env="RELEVANCE_MODEL_PATH")
+    ENGAGEMENT_MODEL_PATH: str = Field(default="models/engagement_model.pkl", env="ENGAGEMENT_MODEL_PATH")
 
     # Notification settings
     MAX_NOTIFICATIONS_PER_HOUR: int = Field(default=10, env="MAX_NOTIFICATIONS_PER_HOUR")

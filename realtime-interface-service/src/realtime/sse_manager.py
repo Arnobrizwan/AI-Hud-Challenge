@@ -46,7 +46,8 @@ class EventFormatter:
         if "id" in event_data:
             event_lines.append(f"id: {event_data['id']}")
         else:
-            event_lines.append(f"id: {int(datetime.utcnow().timestamp() * 1000)}")
+            event_lines.append(
+                f"id: {int(datetime.utcnow().timestamp() * 1000)}")
 
         # Add event type
         if "type" in event_data:
@@ -87,15 +88,15 @@ class SSEManager:
         self.heartbeat_interval = 30  # seconds
         self.heartbeat_task: Optional[asyncio.Task] = None
 
-    async def start_heartbeat_monitoring(self):
+    async def start_heartbeat_monitoring(self) -> Dict[str, Any]:
         """Start heartbeat monitoring for all streams"""
         self.heartbeat_task = asyncio.create_task(self._heartbeat_monitor())
 
-    async def _heartbeat_monitor(self):
+    async def _heartbeat_monitor(self) -> Dict[str, Any]:
         """Monitor and send heartbeats to active streams"""
         while True:
             try:
-                await asyncio.sleep(self.heartbeat_interval)
+    await asyncio.sleep(self.heartbeat_interval)
 
                 # Send heartbeat to all active streams
                 inactive_streams = []
@@ -104,9 +105,11 @@ class SSEManager:
                         try:
                             # This would send heartbeat to the stream
                             # For now, just log
-                            logger.debug(f"Sending heartbeat to stream {stream_id}")
+                            logger.debug(
+                                f"Sending heartbeat to stream {stream_id}")
                         except Exception as e:
-                            logger.error(f"Error sending heartbeat to {stream_id}: {str(e)}")
+                            logger.error(
+                                f"Error sending heartbeat to {stream_id}: {str(e)}")
                             stream.is_active = False
                             inactive_streams.append(stream_id)
                     else:
@@ -121,15 +124,21 @@ class SSEManager:
                 logger.error(f"Error in heartbeat monitor: {str(e)}")
                 await asyncio.sleep(5)
 
-    async def create_sse_endpoint(self, request: Request, user_id: str) -> StreamingResponse:
+    async def create_sse_endpoint(
+            self,
+            request: Request,
+            user_id: str) -> StreamingResponse:
         """Create SSE endpoint for real-time updates"""
         if not user_id:
             raise HTTPException(status_code=401, detail="User ID required")
 
         stream_id = str(uuid.uuid4())
 
-        async def event_generator():
-            stream = SSEStream(id=stream_id, user_id=user_id, created_at=datetime.utcnow())
+        async def event_generator() -> Dict[str, Any]:
+            stream = SSEStream(
+                id=stream_id,
+                user_id=user_id,
+                created_at=datetime.utcnow())
 
             self.active_streams[stream_id] = stream
 
@@ -148,7 +157,8 @@ class SSEManager:
 
                 # Send periodic updates
                 async for event in self.get_user_event_stream(user_id, stream):
-                    formatted_event = self.event_formatter.format_sse_event(event)
+                    formatted_event = self.event_formatter.format_sse_event(
+                        event)
                     yield formatted_event
 
             except GeneratorExit:
@@ -182,7 +192,8 @@ class SSEManager:
                 current_time = datetime.utcnow()
 
                 # Send heartbeat every 30 seconds
-                if (current_time - last_heartbeat).seconds >= self.heartbeat_interval:
+                if (current_time -
+                        last_heartbeat).seconds >= self.heartbeat_interval:
                     yield {
                         "type": "heartbeat",
                         "data": {"timestamp": current_time.isoformat(), "stream_id": stream.id},
@@ -216,39 +227,42 @@ class SSEManager:
                 {
                     "type": "user_notification",
                     "data": {
-                        "id": str(uuid.uuid4()),
+                        "id": str(
+                            uuid.uuid4()),
                         "title": f"Notification for {user_id}",
                         "message": f'You have a new update at {datetime.utcnow().strftime("%H:%M:%S")}',
                         "timestamp": datetime.utcnow().isoformat(),
                     },
-                }
-            )
+                })
 
         return events
 
-    async def get_subscription_events(self, subscriptions: List[str]) -> List[Dict[str, Any]]:
+    async def get_subscription_events(
+            self, subscriptions: List[str]) -> List[Dict[str, Any]]:
         """Get events for subscriptions"""
         events = []
 
         for subscription in subscriptions:
             if subscription == "articles":
                 # Simulate article updates
-                if int(datetime.utcnow().timestamp()) % 15 == 0:  # Every 15 seconds
+                if int(datetime.utcnow().timestamp()
+                       ) % 15 == 0:  # Every 15 seconds
                     events.append(
                         {
                             "type": "article_update",
                             "data": {
-                                "id": str(uuid.uuid4()),
+                                "id": str(
+                                    uuid.uuid4()),
                                 "title": f'Breaking News {datetime.utcnow().strftime("%H:%M:%S")}',
                                 "summary": f"Latest breaking news update",
                                 "timestamp": datetime.utcnow().isoformat(),
                             },
-                        }
-                    )
+                        })
 
             elif subscription == "trending":
                 # Simulate trending topics updates
-                if int(datetime.utcnow().timestamp()) % 20 == 0:  # Every 20 seconds
+                if int(datetime.utcnow().timestamp()
+                       ) % 20 == 0:  # Every 20 seconds
                     events.append(
                         {
                             "type": "trending_update",
@@ -265,7 +279,8 @@ class SSEManager:
 
             elif subscription == "analytics":
                 # Simulate analytics updates
-                if int(datetime.utcnow().timestamp()) % 5 == 0:  # Every 5 seconds
+                if int(datetime.utcnow().timestamp()
+                       ) % 5 == 0:  # Every 5 seconds
                     events.append(
                         {
                             "type": "analytics_update",
@@ -282,7 +297,8 @@ class SSEManager:
 
         return events
 
-    async def send_event_to_stream(self, stream_id: str, event: Dict[str, Any]) -> bool:
+    async def send_event_to_stream(
+            self, stream_id: str, event: Dict[str, Any]) -> bool:
         """Send event to specific stream"""
         if stream_id not in self.active_streams:
             return False
@@ -294,13 +310,16 @@ class SSEManager:
         try:
             # This would send the event to the stream
             # For now, just log
-            logger.info(f"Sending event to stream {stream_id}: {event['type']}")
+            logger.info(
+                f"Sending event to stream {stream_id}: {event['type']}")
             return True
         except Exception as e:
-            logger.error(f"Error sending event to stream {stream_id}: {str(e)}")
+            logger.error(
+                f"Error sending event to stream {stream_id}: {str(e)}")
             return False
 
-    async def broadcast_event(self, event: Dict[str, Any], target_users: List[str] = None) -> int:
+    async def broadcast_event(
+            self, event: Dict[str, Any], target_users: List[str] = None) -> int:
         """Broadcast event to multiple streams"""
         sent_count = 0
 
@@ -318,8 +337,9 @@ class SSEManager:
         # This would create an SSE connection
         # For now, return a placeholder
         return type(
-            "SSEConnection", (), {"id": str(uuid.uuid4()), "send_initial_data": lambda data: None}
-        )()
+            "SSEConnection", (), {
+                "id": str(
+                    uuid.uuid4()), "send_initial_data": lambda data: None})()
 
     async def get_streams_status(self) -> Dict[str, Any]:
         """Get status of active streams"""

@@ -30,7 +30,7 @@ try:
     nltk.download("punkt", quiet=True)
     nltk.download("stopwords", quiet=True)
     nltk.download("averaged_perceptron_tagger", quiet=True)
-except:
+except BaseException:
     pass
 
 
@@ -45,7 +45,7 @@ class SummaryQualityValidator:
         self.tfidf_vectorizer = None
         self._initialized = False
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize models and tools"""
         try:
             logger.info("Initializing quality validator...")
@@ -75,11 +75,11 @@ class SummaryQualityValidator:
             self._initialized = True
             logger.info("Quality validator initialized successfully")
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Failed to initialize quality validator: {str(e)}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Clean up resources"""
         try:
             if self.sentence_model:
@@ -89,7 +89,10 @@ class SummaryQualityValidator:
         except Exception as e:
             logger.error(f"Error during cleanup: {str(e)}")
 
-    async def validate_summary_quality(self, original: str, summary: str) -> QualityMetrics:
+    async def validate_summary_quality(
+            self,
+            original: str,
+            summary: str) -> QualityMetrics:
         """Comprehensive quality assessment of summary"""
 
         if not self._initialized:
@@ -126,7 +129,7 @@ class SummaryQualityValidator:
                 overall_score=overall_score,
             )
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Quality validation failed: {str(e)}")
             # Return default metrics
             return QualityMetrics(
@@ -141,7 +144,8 @@ class SummaryQualityValidator:
                 overall_score=0.0,
             )
 
-    async def _calculate_rouge_scores(self, original: str, summary: str) -> Dict[str, float]:
+    async def _calculate_rouge_scores(
+            self, original: str, summary: str) -> Dict[str, float]:
         """Calculate ROUGE scores for n-gram overlap"""
         try:
             scores = self.rouge_scorer.score(original, summary)
@@ -152,23 +156,26 @@ class SummaryQualityValidator:
                 "rougeL_f1": scores["rougeL"].fmeasure,
             }
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"ROUGE calculation failed: {str(e)}")
             return {"rouge1_f1": 0.0, "rouge2_f1": 0.0, "rougeL_f1": 0.0}
 
-    async def _calculate_bert_scores(self, original: str, summary: str) -> Dict[str, float]:
+    async def _calculate_bert_scores(
+            self, original: str, summary: str) -> Dict[str, float]:
         """Calculate BERTScore for semantic similarity"""
         try:
             # BERTScore calculation
-            P, R, F1 = bert_score([summary], [original], lang="en", verbose=False)
+            P, R, F1 = bert_score(
+                [summary], [original], lang="en", verbose=False)
 
             return {"bertscore_f1": float(F1.item())}
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"BERTScore calculation failed: {str(e)}")
             return {"bertscore_f1": 0.0}
 
-    async def _calculate_factual_consistency(self, original: str, summary: str) -> float:
+    async def _calculate_factual_consistency(
+            self, original: str, summary: str) -> float:
         """Calculate factual consistency between original and summary"""
         try:
             # Extract entities from both texts
@@ -176,13 +183,16 @@ class SummaryQualityValidator:
             summary_entities = self._extract_entities(summary)
 
             # Check entity consistency
-            entity_consistency = self._check_entity_consistency(original_entities, summary_entities)
+            entity_consistency = self._check_entity_consistency(
+                original_entities, summary_entities)
 
             # Check numerical consistency
-            numerical_consistency = self._check_numerical_consistency(original, summary)
+            numerical_consistency = self._check_numerical_consistency(
+                original, summary)
 
             # Check temporal consistency
-            temporal_consistency = self._check_temporal_consistency(original, summary)
+            temporal_consistency = self._check_temporal_consistency(
+                original, summary)
 
             # Check semantic consistency
             semantic_consistency = await self._check_semantic_consistency(original, summary)
@@ -197,7 +207,7 @@ class SummaryQualityValidator:
 
             return consistency_score
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Factual consistency calculation failed: {str(e)}")
             return 0.5
 
@@ -214,19 +224,31 @@ class SummaryQualityValidator:
                     "MONEY": [ent.text for ent in doc.ents if ent.label_ == "MONEY"],
                     "PERCENT": [ent.text for ent in doc.ents if ent.label_ == "PERCENT"],
                 }
-            else:
+        else:
                 # Fallback: simple entity extraction
                 entities = self._simple_entity_extraction(text)
 
             return entities
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Entity extraction failed: {str(e)}")
-            return {"PERSON": [], "ORG": [], "GPE": [], "DATE": [], "MONEY": [], "PERCENT": []}
+            return {
+                "PERSON": [],
+                "ORG": [],
+                "GPE": [],
+                "DATE": [],
+                "MONEY": [],
+                "PERCENT": []}
 
     def _simple_entity_extraction(self, text: str) -> Dict[str, List[str]]:
         """Simple entity extraction without spaCy"""
-        entities = {"PERSON": [], "ORG": [], "GPE": [], "DATE": [], "MONEY": [], "PERCENT": []}
+        entities = {
+            "PERSON": [],
+            "ORG": [],
+            "GPE": [],
+            "DATE": [],
+            "MONEY": [],
+            "PERCENT": []}
 
         # Extract dates
         date_pattern = r"\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b|\b\d{4}\b"
@@ -242,7 +264,10 @@ class SummaryQualityValidator:
 
         return entities
 
-    def _check_entity_consistency(self, original_entities: Dict, summary_entities: Dict) -> float:
+    def _check_entity_consistency(
+            self,
+            original_entities: Dict,
+            summary_entities: Dict) -> float:
         """Check consistency of entities between original and summary"""
         try:
             total_consistency = 0.0
@@ -269,11 +294,12 @@ class SummaryQualityValidator:
 
             return total_consistency / entity_types if entity_types > 0 else 0.5
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Entity consistency check failed: {str(e)}")
             return 0.5
 
-    def _check_numerical_consistency(self, original: str, summary: str) -> float:
+    def _check_numerical_consistency(
+            self, original: str, summary: str) -> float:
         """Check consistency of numbers between original and summary"""
         try:
             # Extract numbers from both texts
@@ -291,21 +317,24 @@ class SummaryQualityValidator:
             if not summary_set:
                 return 0.5  # No numbers in summary
 
-            precision = len(summary_set.intersection(original_set)) / len(summary_set)
-            recall = len(summary_set.intersection(original_set)) / len(original_set)
+            precision = len(summary_set.intersection(
+                original_set)) / len(summary_set)
+            recall = len(summary_set.intersection(
+                original_set)) / len(original_set)
 
             # F1 score
             if precision + recall > 0:
                 f1 = 2 * precision * recall / (precision + recall)
                 return f1
-            else:
+else:
                 return 0.0
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Numerical consistency check failed: {str(e)}")
             return 0.5
 
-    def _check_temporal_consistency(self, original: str, summary: str) -> float:
+    def _check_temporal_consistency(
+            self, original: str, summary: str) -> float:
         """Check temporal consistency between original and summary"""
         try:
             # Extract temporal expressions
@@ -320,8 +349,13 @@ class SummaryQualityValidator:
             summary_temporal = []
 
             for pattern in temporal_patterns:
-                original_temporal.extend(re.findall(pattern, original, re.IGNORECASE))
-                summary_temporal.extend(re.findall(pattern, summary, re.IGNORECASE))
+                original_temporal.extend(re.findall(
+                    pattern, original, re.IGNORECASE))
+                summary_temporal.extend(
+                    re.findall(
+                        pattern,
+                        summary,
+                        re.IGNORECASE))
 
             if not original_temporal:
                 return 1.0  # No temporal expressions to check
@@ -338,11 +372,12 @@ class SummaryQualityValidator:
 
             return intersection / union if union > 0 else 0.5
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Temporal consistency check failed: {str(e)}")
             return 0.5
 
-    async def _check_semantic_consistency(self, original: str, summary: str) -> float:
+    async def _check_semantic_consistency(
+            self, original: str, summary: str) -> float:
         """Check semantic consistency using sentence embeddings"""
         try:
             # Get embeddings
@@ -350,11 +385,12 @@ class SummaryQualityValidator:
             summary_embedding = self.sentence_model.encode([summary])
 
             # Calculate cosine similarity
-            similarity = cosine_similarity(original_embedding, summary_embedding)[0][0]
+            similarity = cosine_similarity(
+                original_embedding, summary_embedding)[0][0]
 
             return float(similarity)
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Semantic consistency check failed: {str(e)}")
             return 0.5
 
@@ -379,7 +415,7 @@ class SummaryQualityValidator:
 
             return readability_score
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Readability calculation failed: {str(e)}")
             return 0.5
 
@@ -402,11 +438,14 @@ class SummaryQualityValidator:
                 for original_sentence in original_sentences:
                     # Calculate cosine similarity
                     try:
-                        summary_embedding = self.sentence_model.encode([summary_sentence])
-                        original_embedding = self.sentence_model.encode([original_sentence])
-                        similarity = cosine_similarity(summary_embedding, original_embedding)[0][0]
+                        summary_embedding = self.sentence_model.encode(
+                            [summary_sentence])
+                        original_embedding = self.sentence_model.encode(
+                            [original_sentence])
+                        similarity = cosine_similarity(
+                            summary_embedding, original_embedding)[0][0]
                         max_similarity = max(max_similarity, similarity)
-                    except:
+                    except BaseException:
                         continue
 
                 similarities.append(max_similarity)
@@ -416,11 +455,12 @@ class SummaryQualityValidator:
 
             return float(coverage)
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Coverage calculation failed: {str(e)}")
             return 0.5
 
-    async def _calculate_abstractiveness(self, original: str, summary: str) -> float:
+    async def _calculate_abstractiveness(
+            self, original: str, summary: str) -> float:
         """Calculate abstractiveness (how much new phrasing vs extraction)"""
         try:
             # Tokenize texts
@@ -432,12 +472,14 @@ class SummaryQualityValidator:
 
             # Remove stopwords
             stop_words = set(stopwords.words("english"))
-            original_tokens = [t for t in original_tokens if t not in stop_words]
+            original_tokens = [
+                t for t in original_tokens if t not in stop_words]
             summary_tokens = [t for t in summary_tokens if t not in stop_words]
 
             # Calculate n-gram overlap
             def get_ngrams(tokens, n):
-                return set(tuple(tokens[i : i + n]) for i in range(len(tokens) - n + 1))
+                return set(tuple(tokens[i: i + n])
+                           for i in range(len(tokens) - n + 1))
 
             # 1-gram overlap
             original_1grams = get_ngrams(original_tokens, 1)
@@ -453,14 +495,15 @@ class SummaryQualityValidator:
 
             # Calculate abstractiveness (1 - overlap ratio)
             if total_1gram > 0 and total_2gram > 0:
-                overlap_ratio = (overlap_1gram / total_1gram + overlap_2gram / total_2gram) / 2
+                overlap_ratio = (overlap_1gram / total_1gram +
+                                 overlap_2gram / total_2gram) / 2
                 abstractiveness = 1 - overlap_ratio
-            else:
+else:
                 abstractiveness = 0.5
 
             return max(0, min(1, abstractiveness))
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Abstractiveness calculation failed: {str(e)}")
             return 0.5
 
@@ -500,11 +543,12 @@ class SummaryQualityValidator:
 
             return round(score, 3)
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Overall score calculation failed: {str(e)}")
             return 0.5
 
-    async def validate_summary_quality_async(self, original: str, summary: str) -> QualityMetrics:
+    async def validate_summary_quality_async(
+            self, original: str, summary: str) -> QualityMetrics:
         """Async wrapper for quality validation"""
         return await self.validate_summary_quality(original, summary)
 

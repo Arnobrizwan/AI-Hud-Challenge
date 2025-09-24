@@ -43,15 +43,19 @@ class IncidentClassifier:
 
         # Impact assessment rules
         self.impact_rules = {
-            "system_availability": {"critical": 0.9, "high": 0.7, "medium": 0.5, "low": 0.3},
-            "data_integrity": {"critical": 0.9, "high": 0.7, "medium": 0.5, "low": 0.3},
-            "user_experience": {"critical": 0.9, "high": 0.7, "medium": 0.5, "low": 0.3},
-        }
+            "system_availability": {
+                "critical": 0.9, "high": 0.7, "medium": 0.5, "low": 0.3}, "data_integrity": {
+                "critical": 0.9, "high": 0.7, "medium": 0.5, "low": 0.3}, "user_experience": {
+                "critical": 0.9, "high": 0.7, "medium": 0.5, "low": 0.3}, }
 
         # Escalation rules
-        self.escalation_rules = {"critical": True, "high": True, "medium": False, "low": False}
+        self.escalation_rules = {
+            "critical": True,
+            "high": True,
+            "medium": False,
+            "low": False}
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize the incident classifier"""
         try:
             # Load any ML models or additional rules
@@ -64,7 +68,7 @@ class IncidentClassifier:
             logger.error(f"Failed to initialize incident classifier: {str(e)}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup resources"""
         try:
             self.is_initialized = False
@@ -73,7 +77,8 @@ class IncidentClassifier:
         except Exception as e:
             logger.error(f"Error during incident classifier cleanup: {str(e)}")
 
-    async def classify_incident(self, incident: SafetyIncident) -> IncidentClassification:
+    async def classify_incident(
+            self, incident: SafetyIncident) -> IncidentClassification:
         """Classify incident by type, severity, and impact"""
 
         if not self.is_initialized:
@@ -107,7 +112,8 @@ class IncidentClassifier:
                 classification_timestamp=datetime.utcnow(),
             )
 
-            logger.info(f"Incident {incident.id} classified as {severity} {incident_type}")
+            logger.info(
+                f"Incident {incident.id} classified as {severity} {incident_type}")
 
             return classification
 
@@ -127,27 +133,52 @@ class IncidentClassifier:
             metadata = incident.metadata or {}
 
             # Check for drift-related keywords
-            drift_keywords = ["drift", "distribution", "model", "prediction", "data"]
+            drift_keywords = [
+                "drift",
+                "distribution",
+                "model",
+                "prediction",
+                "data"]
             if any(keyword in description for keyword in drift_keywords):
                 return "data_drift"
 
             # Check for abuse-related keywords
-            abuse_keywords = ["abuse", "malicious", "attack", "violation", "suspicious"]
+            abuse_keywords = [
+                "abuse",
+                "malicious",
+                "attack",
+                "violation",
+                "suspicious"]
             if any(keyword in description for keyword in abuse_keywords):
                 return "abuse_detection"
 
             # Check for content-related keywords
-            content_keywords = ["content", "moderation", "safety", "policy", "violation"]
+            content_keywords = [
+                "content",
+                "moderation",
+                "safety",
+                "policy",
+                "violation"]
             if any(keyword in description for keyword in content_keywords):
                 return "content_safety"
 
             # Check for system-related keywords
-            system_keywords = ["system", "service", "outage", "error", "failure"]
+            system_keywords = [
+                "system",
+                "service",
+                "outage",
+                "error",
+                "failure"]
             if any(keyword in description for keyword in system_keywords):
                 return "system_failure"
 
             # Check for security-related keywords
-            security_keywords = ["security", "breach", "unauthorized", "access", "permission"]
+            security_keywords = [
+                "security",
+                "breach",
+                "unauthorized",
+                "access",
+                "permission"]
             if any(keyword in description for keyword in security_keywords):
                 return "security_incident"
 
@@ -171,7 +202,8 @@ class IncidentClassifier:
 
             # Check for severity keywords
             for severity, rules in self.severity_rules.items():
-                if any(keyword in description for keyword in rules["keywords"]):
+                if any(
+                        keyword in description for keyword in rules["keywords"]):
                     return severity
 
             # Check metadata thresholds
@@ -258,7 +290,8 @@ class IncidentClassifier:
             return "low"
 
         except Exception as e:
-            logger.error(f"System availability impact assessment failed: {str(e)}")
+            logger.error(
+                f"System availability impact assessment failed: {str(e)}")
             return "unknown"
 
     async def assess_data_integrity_impact(
@@ -270,7 +303,11 @@ class IncidentClassifier:
             description = incident.description.lower()
 
             # Critical data integrity issues
-            critical_keywords = ["corruption", "loss", "breach", "unauthorized_access"]
+            critical_keywords = [
+                "corruption",
+                "loss",
+                "breach",
+                "unauthorized_access"]
             if any(keyword in description for keyword in critical_keywords):
                 return "critical"
 
@@ -332,7 +369,8 @@ class IncidentClassifier:
 
             # Check for escalation keywords in description
             description = incident.description.lower()
-            escalation_keywords = ["escalate", "urgent", "immediate", "critical"]
+            escalation_keywords = [
+                "escalate", "urgent", "immediate", "critical"]
             if any(keyword in description for keyword in escalation_keywords):
                 return True
 
@@ -345,7 +383,8 @@ class IncidentClassifier:
             return False
 
         except Exception as e:
-            logger.error(f"Escalation requirement determination failed: {str(e)}")
+            logger.error(
+                f"Escalation requirement determination failed: {str(e)}")
             return False
 
     async def calculate_classification_confidence(
@@ -357,11 +396,12 @@ class IncidentClassifier:
 
             # Factor 1: Severity keyword match
             description = incident.description.lower()
-            severity_keywords = self.severity_rules.get(severity, {}).get("keywords", [])
-            keyword_matches = sum(1 for keyword in severity_keywords if keyword in description)
-            keyword_confidence = (
-                min(1.0, keyword_matches / len(severity_keywords)) if severity_keywords else 0.5
-            )
+            severity_keywords = self.severity_rules.get(
+                severity, {}).get("keywords", [])
+            keyword_matches = sum(
+                1 for keyword in severity_keywords if keyword in description)
+            keyword_confidence = (min(
+                1.0, keyword_matches / len(severity_keywords)) if severity_keywords else 0.5)
             confidence_factors.append(keyword_confidence)
 
             # Factor 2: Metadata threshold match
@@ -374,7 +414,8 @@ class IncidentClassifier:
                     for key, threshold in thresholds.items()
                     if key in metadata and metadata[key] >= threshold
                 )
-                threshold_confidence = threshold_matches / len(thresholds) if thresholds else 0.5
+                threshold_confidence = threshold_matches / \
+                    len(thresholds) if thresholds else 0.5
             confidence_factors.append(threshold_confidence)
 
             # Factor 3: Impact assessment consistency
@@ -384,21 +425,23 @@ class IncidentClassifier:
                 if impact_levels:
                     # Check if impact levels are consistent
                     high_impact_count = sum(
-                        1 for level in impact_levels if level in ["high", "critical"]
-                    )
+                        1 for level in impact_levels if level in [
+                            "high", "critical"])
                     impact_consistency = high_impact_count / len(impact_levels)
             confidence_factors.append(impact_consistency)
 
             # Calculate overall confidence
-            overall_confidence = sum(confidence_factors) / len(confidence_factors)
+            overall_confidence = sum(
+                confidence_factors) / len(confidence_factors)
 
             return min(1.0, max(0.0, overall_confidence))
 
         except Exception as e:
-            logger.error(f"Classification confidence calculation failed: {str(e)}")
+            logger.error(
+                f"Classification confidence calculation failed: {str(e)}")
             return 0.5
 
-    async def load_classification_models(self):
+    async def load_classification_models(self) -> Dict[str, Any]:
         """Load any ML models for classification"""
         try:
             # Placeholder for loading ML models
@@ -421,10 +464,12 @@ class IncidentClassifier:
             }
 
         except Exception as e:
-            logger.error(f"Classification statistics calculation failed: {str(e)}")
+            logger.error(
+                f"Classification statistics calculation failed: {str(e)}")
             return {"error": str(e)}
 
-    async def update_classification_rules(self, new_rules: Dict[str, Any]) -> bool:
+    async def update_classification_rules(
+            self, new_rules: Dict[str, Any]) -> bool:
         """Update classification rules"""
         try:
             # Update severity rules

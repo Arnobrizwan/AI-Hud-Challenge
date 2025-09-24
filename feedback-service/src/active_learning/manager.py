@@ -14,9 +14,7 @@ from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..models.database import Feedback as FeedbackDB
-from ..models.database import (
-    FeedbackProcessingResult,
-)
+from ..models.database import FeedbackProcessingResult
 from ..models.database import ModelUpdate as ModelUpdateDB
 from ..models.database import TrainingBatch as TrainingBatchDB
 from ..models.schemas import (
@@ -72,14 +70,15 @@ class ActiveLearningManager:
                 if uncertainty_score > threshold:
                     uncertain_predictions.append(
                         UncertainPrediction(
-                            prediction_id=str(prediction.id),
+                            prediction_id=str(
+                                prediction.id),
                             model_name=model_name,
-                            content_id=str(prediction.feedback.content_id),
+                            content_id=str(
+                                prediction.feedback.content_id),
                             uncertainty_score=uncertainty_score,
                             prediction_confidence=prediction.confidence_score or 0.0,
                             requires_review=True,
-                        )
-                    )
+                        ))
 
             # Prioritize by uncertainty and business impact
             prioritized_predictions = await self.prioritize_for_review(uncertain_predictions)
@@ -93,7 +92,9 @@ class ActiveLearningManager:
             return prioritized_predictions
 
         except Exception as e:
-            logger.error("Error identifying uncertain predictions", error=str(e))
+            logger.error(
+                "Error identifying uncertain predictions",
+                error=str(e))
             return []
 
     async def create_training_data_from_feedback(
@@ -118,17 +119,17 @@ class ActiveLearningManager:
                         "label": label,
                         "weight": self.calculate_example_weight(feedback),
                         "metadata": {
-                            "feedback_id": str(feedback.id),
-                            "user_id": str(feedback.user_id) if feedback.user_id else None,
+                            "feedback_id": str(
+                                feedback.id),
+                            "user_id": str(
+                                feedback.user_id) if feedback.user_id else None,
                             "timestamp": (
-                                feedback.created_at.isoformat()
-                                if hasattr(feedback, "created_at")
-                                else None
-                            ),
+                                feedback.created_at.isoformat() if hasattr(
+                                    feedback,
+                                    "created_at") else None),
                             "feedback_type": feedback.feedback_type.value,
                         },
-                    }
-                )
+                    })
 
             # Create training batch
             batch = TrainingBatchDB(
@@ -165,13 +166,13 @@ class ActiveLearningManager:
     async def trigger_model_retraining(
         self, model_name: str, training_batch: TrainingBatch
     ) -> Dict[str, Any]:
-        """Trigger model retraining with new data"""
-
+    """Trigger model retraining with new data"""
         try:
             # Validate training batch quality
             quality_check = await self.validate_training_batch(training_batch)
             if not quality_check["is_valid"]:
-                raise ValueError(f"Invalid training batch: {quality_check['error']}")
+                raise ValueError(
+                    f"Invalid training batch: {quality_check['error']}")
 
             # Submit retraining job
             job_id = await self.model_trainer.submit_retraining_job(
@@ -198,13 +199,19 @@ class ActiveLearningManager:
             self.db.add(model_update)
             await self.db.commit()
 
-            logger.info("Model retraining triggered", job_id=job_id, model_name=model_name)
+            logger.info(
+                "Model retraining triggered",
+                job_id=job_id,
+                model_name=model_name)
 
             return {
                 "job_id": job_id,
                 "model_name": model_name,
                 "training_examples_count": training_batch.example_count,
-                "estimated_completion": (datetime.utcnow() + timedelta(hours=2)).isoformat(),
+                "estimated_completion": (
+                    datetime.utcnow() +
+                    timedelta(
+                        hours=2)).isoformat(),
             }
 
         except Exception as e:
@@ -231,7 +238,9 @@ class ActiveLearningManager:
 
                 update_results.append(result)
 
-                logger.info("Scheduled update for model", model_name=model_info["name"])
+                logger.info(
+                    "Scheduled update for model",
+                    model_name=model_info["name"])
 
             return update_results
 
@@ -245,8 +254,12 @@ class ActiveLearningManager:
         """Prioritize uncertain predictions for human review"""
 
         # Sort by uncertainty score (highest first)
-        # In production, this would consider business impact, user importance, etc.
-        return sorted(uncertain_predictions, key=lambda x: x.uncertainty_score, reverse=True)
+        # In production, this would consider business impact, user importance,
+        # etc.
+        return sorted(
+            uncertain_predictions,
+            key=lambda x: x.uncertainty_score,
+            reverse=True)
 
     async def extract_features(self, content_id: UUID) -> List[float]:
         """Extract features from content for training"""
@@ -273,12 +286,26 @@ class ActiveLearningManager:
         """Analyze sentiment and return binary label"""
 
         # Simple keyword-based sentiment analysis
-        positive_words = ["good", "great", "excellent", "amazing", "love", "like"]
-        negative_words = ["bad", "terrible", "awful", "hate", "dislike", "poor"]
+        positive_words = [
+            "good",
+            "great",
+            "excellent",
+            "amazing",
+            "love",
+            "like"]
+        negative_words = [
+            "bad",
+            "terrible",
+            "awful",
+            "hate",
+            "dislike",
+            "poor"]
 
         comment_lower = comment.lower()
-        positive_count = sum(1 for word in positive_words if word in comment_lower)
-        negative_count = sum(1 for word in negative_words if word in comment_lower)
+        positive_count = sum(
+            1 for word in positive_words if word in comment_lower)
+        negative_count = sum(
+            1 for word in negative_words if word in comment_lower)
 
         return 1 if positive_count > negative_count else 0
 
@@ -311,18 +338,23 @@ class ActiveLearningManager:
 
         return distribution
 
-    async def validate_training_batch(self, training_batch: TrainingBatch) -> Dict[str, Any]:
-        """Validate training batch quality"""
-
+    async def validate_training_batch(
+            self, training_batch: TrainingBatch) -> Dict[str, Any]:
+    """Validate training batch quality"""
         try:
             # Check minimum examples
             if training_batch.example_count < 10:
-                return {"is_valid": False, "error": "Insufficient training examples"}
+                return {
+                    "is_valid": False,
+                    "error": "Insufficient training examples"}
 
             # Check label distribution
-            label_dist = training_batch.batch_data.get("label_distribution", {})
+            label_dist = training_batch.batch_data.get(
+                "label_distribution", {})
             if len(label_dist) < 2:
-                return {"is_valid": False, "error": "Insufficient label diversity"}
+                return {
+                    "is_valid": False,
+                    "error": "Insufficient label diversity"}
 
             # Check for class imbalance
             total_examples = sum(label_dist.values())
@@ -356,7 +388,8 @@ class ActiveLearningManager:
             return [
                 {
                     "name": "feedback_classifier",
-                    "feedback_batch": recent_feedback[:100],  # Limit batch size
+                    # Limit batch size
+                    "feedback_batch": recent_feedback[:100],
                 }
             ]
 
@@ -389,7 +422,10 @@ class UncertaintyEstimator:
 class SampleSelector:
     """Select samples for active learning"""
 
-    def select_diverse_samples(self, candidates: List[Any], count: int) -> List[Any]:
+    def select_diverse_samples(
+            self,
+            candidates: List[Any],
+            count: int) -> List[Any]:
         """Select diverse samples from candidates"""
 
         # Simple random selection
@@ -415,7 +451,10 @@ class ModelTrainer:
         job_id = f"retrain_{model_name}_{uuid4().hex[:8]}"
 
         # Simulate job submission
-        logger.info("Retraining job submitted", job_id=job_id, model_name=model_name)
+        logger.info(
+            "Retraining job submitted",
+            job_id=job_id,
+            model_name=model_name)
 
         return job_id
 

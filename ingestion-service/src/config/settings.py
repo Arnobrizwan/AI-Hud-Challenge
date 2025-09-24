@@ -3,7 +3,7 @@ Configuration management for the Ingestion & Normalization microservice.
 """
 
 from functools import lru_cache
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 from pydantic import Field, validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -12,9 +12,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     """Application configuration with environment variable support."""
 
-    model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", case_sensitive=True, extra="ignore"
-    )
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", case_sensitive=True, extra="ignore")
 
     # Application Settings
     APP_NAME: str = "News Ingestion & Normalization Service"
@@ -30,40 +28,24 @@ class Settings(BaseSettings):
     # Google Cloud Configuration
     GCP_PROJECT_ID: str = Field(description="GCP Project ID")
     GCP_REGION: str = Field(default="us-central1", description="GCP Region")
-    GOOGLE_APPLICATION_CREDENTIALS: Optional[str] = Field(
-        default=None, description="Path to GCP credentials"
-    )
+    GOOGLE_APPLICATION_CREDENTIALS: Optional[str] = Field(default=None, description="Path to GCP credentials")
 
     # Cloud Pub/Sub Configuration
-    PUBSUB_TOPIC_INGESTION: str = Field(
-        default="news-ingestion", description="Pub/Sub topic for ingestion"
-    )
-    PUBSUB_TOPIC_NORMALIZATION: str = Field(
-        default="news-normalization", description="Pub/Sub topic for normalization"
-    )
-    PUBSUB_SUBSCRIPTION_INGESTION: str = Field(
-        default="news-ingestion-sub", description="Pub/Sub subscription"
-    )
+    PUBSUB_TOPIC_INGESTION: str = Field(default="news-ingestion", description="Pub/Sub topic for ingestion")
+    PUBSUB_TOPIC_NORMALIZATION: str = Field(default="news-normalization", description="Pub/Sub topic for normalization")
+    PUBSUB_SUBSCRIPTION_INGESTION: str = Field(default="news-ingestion-sub", description="Pub/Sub subscription")
 
     # Firestore Configuration
-    FIRESTORE_COLLECTION_ARTICLES: str = Field(
-        default="articles", description="Firestore articles collection"
-    )
-    FIRESTORE_COLLECTION_SOURCES: str = Field(
-        default="sources", description="Firestore sources collection"
-    )
-    FIRESTORE_COLLECTION_METADATA: str = Field(
-        default="metadata", description="Firestore metadata collection"
-    )
+    FIRESTORE_COLLECTION_ARTICLES: str = Field(default="articles", description="Firestore articles collection")
+    FIRESTORE_COLLECTION_SOURCES: str = Field(default="sources", description="Firestore sources collection")
+    FIRESTORE_COLLECTION_METADATA: str = Field(default="metadata", description="Firestore metadata collection")
 
     # Redis Configuration
     REDIS_URL: str = Field(default="redis://localhost:6379/0", description="Redis connection URL")
     REDIS_MAX_CONNECTIONS: int = Field(default=20, description="Max Redis connections")
 
     # Content Processing Configuration
-    MAX_CONTENT_LENGTH: int = Field(
-        default=10485760, description="Max content length in bytes (10MB)"
-    )
+    MAX_CONTENT_LENGTH: int = Field(default=10485760, description="Max content length in bytes (10MB)")
     MAX_ARTICLE_AGE_DAYS: int = Field(default=30, description="Max article age in days")
     MIN_WORD_COUNT: int = Field(default=50, description="Minimum word count for articles")
     MAX_WORD_COUNT: int = Field(default=50000, description="Maximum word count for articles")
@@ -78,9 +60,7 @@ class Settings(BaseSettings):
     HTTP_TIMEOUT: int = Field(default=30, description="HTTP request timeout in seconds")
     HTTP_MAX_CONNECTIONS: int = Field(default=100, description="Max HTTP connections")
     HTTP_KEEPALIVE_TIMEOUT: int = Field(default=5, description="HTTP keepalive timeout")
-    USER_AGENT: str = Field(
-        default="NewsBot/1.0 (+https://example.com/bot)", description="Default user agent"
-    )
+    USER_AGENT: str = Field(default="NewsBot/1.0 (+https://example.com/bot)", description="Default user agent")
 
     # Content Normalization
     DEFAULT_LANGUAGE: str = Field(default="en", description="Default language code")
@@ -90,9 +70,7 @@ class Settings(BaseSettings):
     TIMEZONE: str = Field(default="UTC", description="Default timezone")
 
     # Duplicate Detection
-    DUPLICATE_THRESHOLD: float = Field(
-        default=0.8, description="Similarity threshold for duplicates"
-    )
+    DUPLICATE_THRESHOLD: float = Field(default=0.8, description="Similarity threshold for duplicates")
     CONTENT_HASH_ALGORITHM: str = Field(default="sha256", description="Hash algorithm for content")
 
     # Web Scraping Configuration
@@ -112,9 +90,7 @@ class Settings(BaseSettings):
     HEALTH_CHECK_DEPENDENCIES: bool = Field(default=True, description="Include dependency checks")
 
     # Content Sources Configuration
-    SOURCES_CONFIG_PATH: str = Field(
-        default="config/sources.yaml", description="Path to sources configuration"
-    )
+    SOURCES_CONFIG_PATH: str = Field(default="config/sources.yaml", description="Path to sources configuration")
     ENABLE_RSS_FEEDS: bool = Field(default=True, description="Enable RSS/Atom feed processing")
     ENABLE_JSON_FEEDS: bool = Field(default=True, description="Enable JSON Feed processing")
     ENABLE_API_SOURCES: bool = Field(default=True, description="Enable API source processing")

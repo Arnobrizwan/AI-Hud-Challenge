@@ -4,8 +4,7 @@ Deployment Models - Data models for model deployment and serving
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
-from uuid import UUID
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -41,9 +40,7 @@ class CanaryConfig(BaseModel):
     stage_duration_minutes: int = 10
     success_threshold: float = 0.95
     failure_threshold: float = 0.05
-    monitoring_metrics: List[str] = Field(
-        default_factory=lambda: ["latency", "error_rate", "accuracy"]
-    )
+    monitoring_metrics: List[str] = Field(default_factory=lambda: ["latency", "error_rate", "accuracy"])
 
 
 class BlueGreenConfig(BaseModel):

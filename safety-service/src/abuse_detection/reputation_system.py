@@ -23,8 +23,10 @@ class ReputationSystem:
 
         # Reputation storage
         self.user_reputations: Dict[str, float] = {}
-        self.reputation_history: Dict[str, deque] = defaultdict(lambda: deque(maxlen=1000))
-        self.reputation_events: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+        self.reputation_history: Dict[str, deque] = defaultdict(
+            lambda: deque(maxlen=1000))
+        self.reputation_events: Dict[str,
+                                     List[Dict[str, Any]]] = defaultdict(list)
 
         # Reputation calculation parameters
         self.base_reputation = 0.5  # Starting reputation for new users
@@ -43,7 +45,7 @@ class ReputationSystem:
             "long_term_activity": 0.05,
         }
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize the reputation system"""
         try:
             # Load existing reputations from storage
@@ -59,7 +61,7 @@ class ReputationSystem:
             logger.error(f"Failed to initialize reputation system: {str(e)}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup resources"""
         try:
             # Save current reputations
@@ -86,7 +88,8 @@ class ReputationSystem:
             return self.user_reputations[user_id]
 
         except Exception as e:
-            logger.error(f"Failed to get reputation for user {user_id}: {str(e)}")
+            logger.error(
+                f"Failed to get reputation for user {user_id}: {str(e)}")
             return self.base_reputation
 
     async def update_reputation(
@@ -102,13 +105,13 @@ class ReputationSystem:
             current_reputation = await self.get_user_reputation(user_id)
 
             # Calculate reputation change
-            reputation_change = self.calculate_reputation_change(event_type, event_data)
+            reputation_change = self.calculate_reputation_change(
+                event_type, event_data)
 
             # Apply change with bounds
             new_reputation = max(
-                self.min_reputation,
-                min(self.max_reputation, current_reputation + reputation_change),
-            )
+                self.min_reputation, min(
+                    self.max_reputation, current_reputation + reputation_change), )
 
             # Update reputation
             self.user_reputations[user_id] = new_reputation
@@ -137,7 +140,8 @@ class ReputationSystem:
             return new_reputation
 
         except Exception as e:
-            logger.error(f"Failed to update reputation for user {user_id}: {str(e)}")
+            logger.error(
+                f"Failed to update reputation for user {user_id}: {str(e)}")
             return current_reputation
 
     def calculate_reputation_change(
@@ -157,13 +161,15 @@ class ReputationSystem:
             if event_data:
                 # Severity multiplier
                 severity = event_data.get("severity", "medium")
-                severity_multipliers = {"low": 0.5, "medium": 1.0, "high": 1.5, "critical": 2.0}
+                severity_multipliers = {
+                    "low": 0.5, "medium": 1.0, "high": 1.5, "critical": 2.0}
                 multiplier *= severity_multipliers.get(severity, 1.0)
 
                 # Frequency multiplier (recent similar events)
                 frequency = event_data.get("frequency", 1)
                 if frequency > 1:
-                    multiplier *= min(1.0 + (frequency - 1) * 0.1, 2.0)  # Cap at 2x
+                    multiplier *= min(1.0 + (frequency - 1)
+                                      * 0.1, 2.0)  # Cap at 2x
 
                 # Context multiplier
                 context = event_data.get("context", {})
@@ -181,7 +187,8 @@ class ReputationSystem:
             logger.error(f"Reputation change calculation failed: {str(e)}")
             return 0.0
 
-    async def batch_update_reputations(self, updates: List[Dict[str, Any]]) -> Dict[str, float]:
+    async def batch_update_reputations(
+            self, updates: List[Dict[str, Any]]) -> Dict[str, float]:
         """Update multiple user reputations in batch"""
         try:
             results = {}
@@ -201,18 +208,21 @@ class ReputationSystem:
             logger.error(f"Batch reputation update failed: {str(e)}")
             return {}
 
-    async def get_reputation_history(self, user_id: str, limit: int = 100) -> List[Dict[str, Any]]:
+    async def get_reputation_history(
+            self, user_id: str, limit: int = 100) -> List[Dict[str, Any]]:
         """Get reputation history for a user"""
         try:
             events = self.reputation_events.get(user_id, [])
             return events[-limit:] if limit > 0 else events
 
         except Exception as e:
-            logger.error(f"Failed to get reputation history for user {user_id}: {str(e)}")
+            logger.error(
+                f"Failed to get reputation history for user {user_id}: {str(e)}")
             return []
 
-    async def get_reputation_trend(self, user_id: str, days: int = 30) -> Dict[str, Any]:
-        """Get reputation trend analysis for a user"""
+    async def get_reputation_trend(
+            self, user_id: str, days: int = 30) -> Dict[str, Any]:
+    """Get reputation trend analysis for a user"""
         try:
             history = self.reputation_history.get(user_id, deque())
 
@@ -233,7 +243,8 @@ class ReputationSystem:
                 return {"trend": "stable", "change": 0.0, "volatility": 0.0}
 
             # Calculate trend
-            recent_reputations = [event["new_reputation"] for event in recent_events]
+            recent_reputations = [event["new_reputation"]
+                                  for event in recent_events]
             trend_change = recent_reputations[-1] - recent_reputations[0]
 
             # Calculate volatility (standard deviation of changes)
@@ -260,7 +271,8 @@ class ReputationSystem:
             }
 
         except Exception as e:
-            logger.error(f"Reputation trend calculation failed for user {user_id}: {str(e)}")
+            logger.error(
+                f"Reputation trend calculation failed for user {user_id}: {str(e)}")
             return {"trend": "stable", "change": 0.0, "volatility": 0.0}
 
     async def get_top_users(
@@ -276,7 +288,10 @@ class ReputationSystem:
             }
 
             # Sort by reputation (descending)
-            sorted_users = sorted(filtered_users.items(), key=lambda x: x[1], reverse=True)
+            sorted_users = sorted(
+                filtered_users.items(),
+                key=lambda x: x[1],
+                reverse=True)
 
             # Format results
             top_users = []
@@ -323,14 +338,15 @@ class ReputationSystem:
             return distribution
 
         except Exception as e:
-            logger.error(f"Reputation distribution calculation failed: {str(e)}")
+            logger.error(
+                f"Reputation distribution calculation failed: {str(e)}")
             return {}
 
-    async def reputation_decay_task(self):
+    async def reputation_decay_task(self) -> Dict[str, Any]:
         """Background task to apply reputation decay"""
         while True:
             try:
-                await asyncio.sleep(3600)  # Run every hour
+    await asyncio.sleep(3600)  # Run every hour
 
                 if not self.is_initialized:
                     break
@@ -340,8 +356,10 @@ class ReputationSystem:
                     current_reputation = self.user_reputations[user_id]
 
                     # Apply decay
-                    decayed_reputation = current_reputation * (1 - self.decay_rate)
-                    decayed_reputation = max(self.min_reputation, decayed_reputation)
+                    decayed_reputation = current_reputation * \
+                        (1 - self.decay_rate)
+                    decayed_reputation = max(
+                        self.min_reputation, decayed_reputation)
 
                     if (
                         abs(decayed_reputation - current_reputation) > 0.001
@@ -361,7 +379,7 @@ class ReputationSystem:
                 logger.error(f"Reputation decay task failed: {str(e)}")
                 await asyncio.sleep(3600)  # Wait before retrying
 
-    async def load_reputations(self):
+    async def load_reputations(self) -> Dict[str, Any]:
         """Load reputations from persistent storage"""
         try:
             # In a real implementation, this would load from a database
@@ -371,11 +389,12 @@ class ReputationSystem:
         except Exception as e:
             logger.error(f"Failed to load reputations: {str(e)}")
 
-    async def save_reputations(self):
+    async def save_reputations(self) -> Dict[str, Any]:
         """Save reputations to persistent storage"""
         try:
             # In a real implementation, this would save to a database
-            logger.info(f"Saved {len(self.user_reputations)} reputations to storage")
+            logger.info(
+                f"Saved {len(self.user_reputations)} reputations to storage")
 
         except Exception as e:
             logger.error(f"Failed to save reputations: {str(e)}")
@@ -398,12 +417,14 @@ class ReputationSystem:
                 "min_reputation": np.min(reputations),
                 "max_reputation": np.max(reputations),
                 "reputation_std": np.std(reputations),
-                "distribution": await self.get_reputation_distribution(),
+                "distribution":
+    await self.get_reputation_distribution(),
                 "decay_rate": self.decay_rate,
             }
 
             return stats
 
         except Exception as e:
-            logger.error(f"Reputation system statistics calculation failed: {str(e)}")
+            logger.error(
+                f"Reputation system statistics calculation failed: {str(e)}")
             return {"error": str(e)}

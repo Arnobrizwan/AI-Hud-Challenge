@@ -1,13 +1,10 @@
 """Event grouping engine with temporal and topical coherence."""
 
-import asyncio
-import time
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Set, Tuple
+from datetime import datetime
+from typing import Dict, List, Optional
 from uuid import UUID
 
 import numpy as np
-from sklearn.metrics import silhouette_score
 
 from ..algorithms.similarity.semantic import SemanticSimilarityCalculator
 from ..models.schemas import Cluster, Entity, Location, NewsEvent, NormalizedArticle, Topic
@@ -70,9 +67,7 @@ class EventGroupingEngine:
                 continue
 
             # Get articles in cluster
-            cluster_articles = [
-                article for article, label in zip(articles, cluster_labels) if label == cluster_id
-            ]
+            cluster_articles = [article for article, label in zip(articles, cluster_labels) if label == cluster_id]
 
             # Create event
             event = await self._create_news_event(cluster_articles, cluster_id)
@@ -128,9 +123,7 @@ class EventGroupingEngine:
 
         return updated_events
 
-    async def _create_news_event(
-        self, articles: List[NormalizedArticle], cluster_id: int
-    ) -> Optional[NewsEvent]:
+    async def _create_news_event(self, articles: List[NormalizedArticle], cluster_id: int) -> Optional[NewsEvent]:
         """Create a news event from cluster articles.
 
         Args:
@@ -215,9 +208,7 @@ class EventGroupingEngine:
             updated_at=max(article.published_at for article in articles),
         )
 
-    async def _select_representative_article(
-        self, articles: List[NormalizedArticle]
-    ) -> NormalizedArticle:
+    async def _select_representative_article(self, articles: List[NormalizedArticle]) -> NormalizedArticle:
         """Select representative article for cluster.
 
         Args:
@@ -461,12 +452,7 @@ class EventGroupingEngine:
         topical_coherence = await self._compute_topical_coherence(articles)
 
         # Weighted combination
-        quality = (
-            0.4 * avg_quality
-            + 0.2 * size_factor
-            + 0.2 * temporal_coherence
-            + 0.2 * topical_coherence
-        )
+        quality = 0.4 * avg_quality + 0.2 * size_factor + 0.2 * temporal_coherence + 0.2 * topical_coherence
 
         return min(quality, 1.0)
 
@@ -530,9 +516,7 @@ class EventGroupingEngine:
             if entity_data["count"] >= threshold:
                 # Update confidence based on frequency
                 entity = entity_data["entity"]
-                entity.confidence = min(
-                    entity.confidence * entity_data["count"] / len(articles), 1.0
-                )
+                entity.confidence = min(entity.confidence * entity_data["count"] / len(articles), 1.0)
                 common_entities.append(entity)
 
         # Sort by confidence
@@ -566,9 +550,7 @@ class EventGroupingEngine:
             if location_data["count"] >= threshold:
                 # Update confidence based on frequency
                 location = location_data["location"]
-                location.confidence = min(
-                    location.confidence * location_data["count"] / len(articles), 1.0
-                )
+                location.confidence = min(location.confidence * location_data["count"] / len(articles), 1.0)
                 common_locations.append(location)
 
         # Sort by confidence

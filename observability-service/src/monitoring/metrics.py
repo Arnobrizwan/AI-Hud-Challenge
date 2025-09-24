@@ -210,8 +210,10 @@ class MetricsCollector:
     def __init__(self):
         self.prometheus_registry = CollectorRegistry()
         self.custom_metrics = CustomMetricsRegistry()
-        self.business_metrics = BusinessMetricsCollector(self.prometheus_registry)
-        self.performance_metrics = PerformanceMetricsCollector(self.prometheus_registry)
+        self.business_metrics = BusinessMetricsCollector(
+            self.prometheus_registry)
+        self.performance_metrics = PerformanceMetricsCollector(
+            self.prometheus_registry)
 
         self._register_standard_metrics()
         self._register_sli_metrics()
@@ -316,11 +318,11 @@ class MetricsCollector:
 
         # Register custom metrics if enabled
         if config.custom_metrics_enabled:
-            await self._register_custom_metrics()
+    await self._register_custom_metrics()
 
         logger.info("Metrics collector initialized")
 
-    async def _register_custom_metrics(self):
+    async def _register_custom_metrics(self) -> Dict[str, Any]:
         """Register custom metrics"""
 
         # Custom business metrics
@@ -345,7 +347,7 @@ class MetricsCollector:
             labelnames=["component", "metric_type"],
         )
 
-    async def start_metrics_collection(self):
+    async def start_metrics_collection(self) -> Dict[str, Any]:
         """Start background metrics collection"""
         if self.is_running:
             return
@@ -354,11 +356,11 @@ class MetricsCollector:
         asyncio.create_task(self._collection_loop())
         logger.info("Started metrics collection")
 
-    async def _collection_loop(self):
+    async def _collection_loop(self) -> Dict[str, Any]:
         """Background metrics collection loop"""
         while self.is_running:
             try:
-                await self.collect_real_time_metrics()
+    await self.collect_real_time_metrics()
                 await asyncio.sleep(self.collection_interval)
             except Exception as e:
                 logger.error(f"Metrics collection error: {str(e)}")
@@ -439,7 +441,8 @@ class MetricsCollector:
             metrics["queue_length_pending"] = 5  # Placeholder
 
         except Exception as e:
-            logger.error(f"Failed to collect application performance: {str(e)}")
+            logger.error(
+                f"Failed to collect application performance: {str(e)}")
 
         return metrics
 
@@ -465,15 +468,19 @@ class MetricsCollector:
 
         return metrics
 
-    async def _update_prometheus_metrics(self, metrics: Dict[str, float]):
+    async def _update_prometheus_metrics(self, metrics: Dict[str, float]) -> Dict[str, Any]:
         """Update Prometheus metrics with collected values"""
         try:
             # Update system metrics
             if "cpu_usage_percent" in metrics:
-                self.cpu_usage.labels(cpu_core="total").set(metrics["cpu_usage_percent"])
+                self.cpu_usage.labels(
+                    cpu_core="total").set(
+                    metrics["cpu_usage_percent"])
 
             if "memory_usage_percent" in metrics:
-                self.memory_usage.labels(memory_type="percent").set(metrics["memory_usage_percent"])
+                self.memory_usage.labels(
+                    memory_type="percent").set(
+                    metrics["memory_usage_percent"])
 
             if "disk_usage_percent" in metrics:
                 self.disk_usage.labels(device="root", mountpoint="/").set(
@@ -529,7 +536,7 @@ class MetricsCollector:
         """Get content type for Prometheus metrics"""
         return CONTENT_TYPE_LATEST
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup metrics collector"""
         self.is_running = False
         logger.info("Metrics collector cleaned up")

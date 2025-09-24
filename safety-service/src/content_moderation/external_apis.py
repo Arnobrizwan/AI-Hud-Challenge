@@ -54,7 +54,7 @@ class ExternalModerationAPIs:
         # HTTP session
         self.session = None
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize external APIs"""
         try:
             if not self.enabled:
@@ -80,11 +80,11 @@ class ExternalModerationAPIs:
             logger.error(f"Failed to initialize external APIs: {str(e)}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup resources"""
         try:
             if self.session:
-                await self.session.close()
+    await self.session.close()
                 self.session = None
 
             self.is_initialized = False
@@ -93,7 +93,7 @@ class ExternalModerationAPIs:
         except Exception as e:
             logger.error(f"Error during external APIs cleanup: {str(e)}")
 
-    async def load_api_configurations(self):
+    async def load_api_configurations(self) -> Dict[str, Any]:
         """Load API configurations from environment variables"""
         try:
             # In a real implementation, this would load from environment variables
@@ -103,39 +103,41 @@ class ExternalModerationAPIs:
         except Exception as e:
             logger.error(f"Failed to load API configurations: {str(e)}")
 
-    async def test_api_connections(self):
+    async def test_api_connections(self) -> Dict[str, Any]:
         """Test connections to external APIs"""
         try:
             # Test each enabled API
             for api_name, config in self.api_configs.items():
                 if config["enabled"]:
                     try:
-                        await self.test_api_connection(api_name, config)
-                        logger.info(f"API {api_name} connection test successful")
+    await self.test_api_connection(api_name, config)
+                        logger.info(
+                            f"API {api_name} connection test successful")
                     except Exception as e:
-                        logger.warning(f"API {api_name} connection test failed: {str(e)}")
+                        logger.warning(
+                            f"API {api_name} connection test failed: {str(e)}")
                         config["enabled"] = False
 
         except Exception as e:
             logger.error(f"API connection testing failed: {str(e)}")
 
-    async def test_api_connection(self, api_name: str, config: Dict[str, Any]):
+    async def test_api_connection(self, api_name: str, config: Dict[str, Any]) -> Dict[str, Any]:
         """Test connection to a specific API"""
         try:
             if api_name == "google_perspective":
-                await self.test_google_perspective(config)
+    await self.test_google_perspective(config)
             elif api_name == "microsoft_content_moderator":
-                await self.test_microsoft_content_moderator(config)
+    await self.test_microsoft_content_moderator(config)
             elif api_name == "aws_comprehend":
-                await self.test_aws_comprehend(config)
+    await self.test_aws_comprehend(config)
             elif api_name == "azure_content_safety":
-                await self.test_azure_content_safety(config)
+    await self.test_azure_content_safety(config)
 
         except Exception as e:
             logger.error(f"API {api_name} connection test failed: {str(e)}")
             raise
 
-    async def test_google_perspective(self, config: Dict[str, Any]):
+    async def test_google_perspective(self, config: Dict[str, Any]) -> Dict[str, Any]:
         """Test Google Perspective API connection"""
         try:
             # Test with a simple request
@@ -153,7 +155,7 @@ class ExternalModerationAPIs:
             logger.error(f"Google Perspective API test failed: {str(e)}")
             raise
 
-    async def test_microsoft_content_moderator(self, config: Dict[str, Any]):
+    async def test_microsoft_content_moderator(self, config: Dict[str, Any]) -> Dict[str, Any]:
         """Test Microsoft Content Moderator API connection"""
         try:
             # Test with a simple request
@@ -164,10 +166,11 @@ class ExternalModerationAPIs:
             logger.debug("Microsoft Content Moderator API test completed")
 
         except Exception as e:
-            logger.error(f"Microsoft Content Moderator API test failed: {str(e)}")
+            logger.error(
+                f"Microsoft Content Moderator API test failed: {str(e)}")
             raise
 
-    async def test_aws_comprehend(self, config: Dict[str, Any]):
+    async def test_aws_comprehend(self, config: Dict[str, Any]) -> Dict[str, Any]:
         """Test AWS Comprehend API connection"""
         try:
             # Test with a simple request
@@ -181,7 +184,7 @@ class ExternalModerationAPIs:
             logger.error(f"AWS Comprehend API test failed: {str(e)}")
             raise
 
-    async def test_azure_content_safety(self, config: Dict[str, Any]):
+    async def test_azure_content_safety(self, config: Dict[str, Any]) -> Dict[str, Any]:
         """Test Azure Content Safety API connection"""
         try:
             # Test with a simple request
@@ -211,7 +214,8 @@ class ExternalModerationAPIs:
                         if api_result:
                             results[api_name] = api_result
                     except Exception as e:
-                        logger.warning(f"API {api_name} text moderation failed: {str(e)}")
+                        logger.warning(
+                            f"API {api_name} text moderation failed: {str(e)}")
                         continue
 
             return results if results else None
@@ -236,7 +240,8 @@ class ExternalModerationAPIs:
                         if api_result:
                             results[api_name] = api_result
                     except Exception as e:
-                        logger.warning(f"API {api_name} image moderation failed: {str(e)}")
+                        logger.warning(
+                            f"API {api_name} image moderation failed: {str(e)}")
                         continue
 
             return results if results else None
@@ -261,7 +266,8 @@ class ExternalModerationAPIs:
                         if api_result:
                             results[api_name] = api_result
                     except Exception as e:
-                        logger.warning(f"API {api_name} video moderation failed: {str(e)}")
+                        logger.warning(
+                            f"API {api_name} video moderation failed: {str(e)}")
                         continue
 
             return results if results else None
@@ -328,7 +334,8 @@ class ExternalModerationAPIs:
                     result = await response.json()
                     return self.parse_google_perspective_result(result)
                 else:
-                    logger.warning(f"Google Perspective API returned status {response.status}")
+                    logger.warning(
+                        f"Google Perspective API returned status {response.status}")
                     return None
 
         except Exception as e:
@@ -344,7 +351,8 @@ class ExternalModerationAPIs:
                 return None
 
             # Prepare request data
-            headers = {"Content-Type": "text/plain", "Ocp-Apim-Subscription-Key": config["api_key"]}
+            headers = {"Content-Type": "text/plain",
+                       "Ocp-Apim-Subscription-Key": config["api_key"]}
 
             # Make API call
             async with self.session.post(
@@ -352,7 +360,8 @@ class ExternalModerationAPIs:
             ) as response:
                 if response.status == 200:
                     result = await response.json()
-                    return self.parse_microsoft_content_moderator_result(result)
+                    return self.parse_microsoft_content_moderator_result(
+                        result)
                 else:
                     logger.warning(
                         f"Microsoft Content Moderator API returned status {response.status}"
@@ -360,7 +369,8 @@ class ExternalModerationAPIs:
                     return None
 
         except Exception as e:
-            logger.error(f"Microsoft Content Moderator API call failed: {str(e)}")
+            logger.error(
+                f"Microsoft Content Moderator API call failed: {str(e)}")
             return None
 
     async def call_aws_comprehend(
@@ -407,15 +417,17 @@ class ExternalModerationAPIs:
                     result = await response.json()
                     return self.parse_azure_content_safety_result(result)
                 else:
-                    logger.warning(f"Azure Content Safety API returned status {response.status}")
+                    logger.warning(
+                        f"Azure Content Safety API returned status {response.status}")
                     return None
 
         except Exception as e:
             logger.error(f"Azure Content Safety API call failed: {str(e)}")
             return None
 
-    def parse_google_perspective_result(self, result: Dict[str, Any]) -> Dict[str, Any]:
-        """Parse Google Perspective API result"""
+    def parse_google_perspective_result(
+            self, result: Dict[str, Any]) -> Dict[str, Any]:
+    """Parse Google Perspective API result"""
         try:
             parsed_result = {
                 "api": "google_perspective",
@@ -426,16 +438,19 @@ class ExternalModerationAPIs:
             if "attributeScores" in result:
                 for attribute, data in result["attributeScores"].items():
                     if "summaryScore" in data:
-                        parsed_result["scores"][attribute.lower()] = data["summaryScore"]["value"]
+                        parsed_result["scores"][attribute.lower(
+                        )] = data["summaryScore"]["value"]
 
             return parsed_result
 
         except Exception as e:
-            logger.error(f"Failed to parse Google Perspective result: {str(e)}")
+            logger.error(
+                f"Failed to parse Google Perspective result: {str(e)}")
             return {}
 
-    def parse_microsoft_content_moderator_result(self, result: Dict[str, Any]) -> Dict[str, Any]:
-        """Parse Microsoft Content Moderator API result"""
+    def parse_microsoft_content_moderator_result(
+            self, result: Dict[str, Any]) -> Dict[str, Any]:
+    """Parse Microsoft Content Moderator API result"""
         try:
             parsed_result = {
                 "api": "microsoft_content_moderator",
@@ -445,18 +460,23 @@ class ExternalModerationAPIs:
 
             if "Classification" in result:
                 classification = result["Classification"]
-                parsed_result["scores"]["adult"] = classification.get("AdultScore", 0.0)
-                parsed_result["scores"]["racy"] = classification.get("RacyScore", 0.0)
-                parsed_result["scores"]["offensive"] = classification.get("OffensiveScore", 0.0)
+                parsed_result["scores"]["adult"] = classification.get(
+                    "AdultScore", 0.0)
+                parsed_result["scores"]["racy"] = classification.get(
+                    "RacyScore", 0.0)
+                parsed_result["scores"]["offensive"] = classification.get(
+                    "OffensiveScore", 0.0)
 
             return parsed_result
 
         except Exception as e:
-            logger.error(f"Failed to parse Microsoft Content Moderator result: {str(e)}")
+            logger.error(
+                f"Failed to parse Microsoft Content Moderator result: {str(e)}")
             return {}
 
-    def parse_azure_content_safety_result(self, result: Dict[str, Any]) -> Dict[str, Any]:
-        """Parse Azure Content Safety API result"""
+    def parse_azure_content_safety_result(
+            self, result: Dict[str, Any]) -> Dict[str, Any]:
+    """Parse Azure Content Safety API result"""
         try:
             parsed_result = {
                 "api": "azure_content_safety",
@@ -468,23 +488,29 @@ class ExternalModerationAPIs:
                 for category in result["categoriesAnalysis"]:
                     category_name = category.get("category", "").lower()
                     severity = category.get("severity", 0)
-                    parsed_result["scores"][category_name] = severity / 4.0  # Normalize to 0-1
+                    # Normalize to 0-1
+                    parsed_result["scores"][category_name] = severity / 4.0
 
             return parsed_result
 
         except Exception as e:
-            logger.error(f"Failed to parse Azure Content Safety result: {str(e)}")
+            logger.error(
+                f"Failed to parse Azure Content Safety result: {str(e)}")
             return {}
 
     async def get_api_status(self) -> Dict[str, Any]:
         """Get status of all external APIs"""
         try:
-            status = {"enabled": self.enabled, "initialized": self.is_initialized, "apis": {}}
+            status = {
+                "enabled": self.enabled,
+                "initialized": self.is_initialized,
+                "apis": {}}
 
             for api_name, config in self.api_configs.items():
                 status["apis"][api_name] = {
                     "enabled": config["enabled"],
-                    "configured": bool(config.get("api_key") or config.get("access_key")),
+                    "configured": bool(
+                        config.get("api_key") or config.get("access_key")),
                     "timeout": config["timeout"],
                 }
 

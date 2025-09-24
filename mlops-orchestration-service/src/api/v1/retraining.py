@@ -4,16 +4,13 @@ Retraining API endpoints - REST API for automated retraining management
 
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
-from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from pydantic import BaseModel
 
 from src.models.retraining_models import (
     RetrainingResult,
-    RetrainingStatus,
     RetrainingTriggerConfig,
-    TriggerStatus,
 )
 from src.retraining.retraining_manager import AutomatedRetrainingManager
 from src.utils.exceptions import RetrainingError, ValidationError
@@ -56,9 +53,7 @@ async def setup_retraining_triggers(
     """Setup automated retraining triggers for a model"""
 
     try:
-        await retraining_manager.setup_retraining_triggers(
-            model_name=model_name, trigger_config=request.trigger_config
-        )
+    await retraining_manager.setup_retraining_triggers(model_name=model_name, trigger_config=request.trigger_config)
 
         return SetupRetrainingResponse(
             model_name=model_name,
@@ -92,9 +87,7 @@ async def get_retraining_status(
         end_idx = start_idx + page_size
         paginated_retrainings = retrainings[start_idx:end_idx]
 
-        return RetrainingListResponse(
-            retrainings=paginated_retrainings, total=total, page=page, page_size=page_size
-        )
+        return RetrainingListResponse(retrainings=paginated_retrainings, total=total, page=page, page_size=page_size)
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get retraining status: {str(e)}")
@@ -120,9 +113,7 @@ async def get_trigger_status(
                 "trigger_type": trigger.trigger_type.value,
                 "status": trigger.status.value,
                 "created_at": trigger.created_at.isoformat(),
-                "last_fired_at": (
-                    trigger.last_fired_at.isoformat() if trigger.last_fired_at else None
-                ),
+                "last_fired_at": (trigger.last_fired_at.isoformat() if trigger.last_fired_at else None),
                 "fire_count": trigger.fire_count,
             }
             for trigger in triggers
@@ -134,18 +125,14 @@ async def get_trigger_status(
         end_idx = start_idx + page_size
         paginated_triggers = trigger_dicts[start_idx:end_idx]
 
-        return TriggerListResponse(
-            triggers=paginated_triggers, total=total, page=page, page_size=page_size
-        )
+        return TriggerListResponse(triggers=paginated_triggers, total=total, page=page, page_size=page_size)
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get trigger status: {str(e)}")
 
 
 @router.post("/triggers/{trigger_id}/disable")
-async def disable_trigger(
-    trigger_id: str, retraining_manager: AutomatedRetrainingManager = Depends()
-):
+async def disable_trigger(trigger_id: str, retraining_manager: AutomatedRetrainingManager = Depends()):
     """Disable a retraining trigger"""
 
     try:
@@ -165,9 +152,7 @@ async def disable_trigger(
 
 
 @router.post("/triggers/{trigger_id}/enable")
-async def enable_trigger(
-    trigger_id: str, retraining_manager: AutomatedRetrainingManager = Depends()
-):
+async def enable_trigger(trigger_id: str, retraining_manager: AutomatedRetrainingManager = Depends()):
     """Enable a retraining trigger"""
 
     try:
@@ -207,15 +192,11 @@ async def trigger_manual_retraining(
         return retraining_job
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to trigger manual retraining: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to trigger manual retraining: {str(e)}")
 
 
 @router.get("/jobs/{job_id}")
-async def get_retraining_job_status(
-    job_id: str, retraining_manager: AutomatedRetrainingManager = Depends()
-):
+async def get_retraining_job_status(job_id: str, retraining_manager: AutomatedRetrainingManager = Depends()):
     """Get retraining job status"""
 
     try:
@@ -300,9 +281,7 @@ async def get_model_comparison(
 
 
 @router.delete("/triggers/{model_name}")
-async def delete_all_triggers(
-    model_name: str, retraining_manager: AutomatedRetrainingManager = Depends()
-):
+async def delete_all_triggers(model_name: str, retraining_manager: AutomatedRetrainingManager = Depends()):
     """Delete all retraining triggers for a model"""
 
     try:

@@ -31,7 +31,7 @@ class SafetyMonitoringEngine:
         self.compliance_monitor = None
         self.audit_logger = None
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize the safety monitoring engine"""
         try:
             # Initialize all components
@@ -41,10 +41,11 @@ class SafetyMonitoringEngine:
             logger.info("Safety monitoring engine initialized")
 
         except Exception as e:
-            logger.error(f"Failed to initialize safety monitoring engine: {str(e)}")
+            logger.error(
+                f"Failed to initialize safety monitoring engine: {str(e)}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup resources"""
         try:
             # Cleanup all components
@@ -54,7 +55,8 @@ class SafetyMonitoringEngine:
             logger.info("Safety monitoring engine cleanup completed")
 
         except Exception as e:
-            logger.error(f"Error during safety monitoring engine cleanup: {str(e)}")
+            logger.error(
+                f"Error during safety monitoring engine cleanup: {str(e)}")
 
     async def monitor_system_safety(
         self, monitoring_request: SafetyMonitoringRequest
@@ -86,7 +88,7 @@ class SafetyMonitoringEngine:
 
             # Trigger automated response if needed
             if requires_intervention:
-                await self.trigger_safety_response(safety_status)
+    await self.trigger_safety_response(safety_status)
 
             return safety_status
 
@@ -94,8 +96,9 @@ class SafetyMonitoringEngine:
             logger.error(f"Safety monitoring failed: {str(e)}")
             raise
 
-    async def perform_safety_checks(self, request: SafetyMonitoringRequest) -> Dict[str, Any]:
-        """Perform all safety checks"""
+    async def perform_safety_checks(
+            self, request: SafetyMonitoringRequest) -> Dict[str, Any]:
+    """Perform all safety checks"""
         try:
             checks = {}
 
@@ -127,7 +130,8 @@ class SafetyMonitoringEngine:
             harmful_keywords = ["spam", "scam", "fake", "fraud"]
             content_lower = content.lower()
 
-            harmful_count = sum(1 for keyword in harmful_keywords if keyword in content_lower)
+            harmful_count = sum(
+                1 for keyword in harmful_keywords if keyword in content_lower)
             safety_score = max(0.0, 1.0 - (harmful_count * 0.2))
 
             return safety_score
@@ -159,15 +163,18 @@ class SafetyMonitoringEngine:
 
                     feature_scores.append(score)
                 else:
-                    feature_scores.append(0.5)  # Default score for non-numeric features
+                    # Default score for non-numeric features
+                    feature_scores.append(0.5)
 
-            return sum(feature_scores) / len(feature_scores) if feature_scores else 0.5
+            return sum(feature_scores) / \
+                len(feature_scores) if feature_scores else 0.5
 
         except Exception as e:
             logger.error(f"Feature analysis failed: {str(e)}")
             return 0.5
 
-    async def analyze_user_behavior(self, user_id: str, features: Dict[str, Any]) -> float:
+    async def analyze_user_behavior(
+            self, user_id: str, features: Dict[str, Any]) -> float:
         """Analyze user behavior (placeholder implementation)"""
         try:
             # Simple user behavior analysis
@@ -217,7 +224,8 @@ class SafetyMonitoringEngine:
             logger.error(f"Safety score calculation failed: {str(e)}")
             return 0.5
 
-    async def trigger_safety_response(self, safety_status: SafetyStatus) -> None:
+    async def trigger_safety_response(
+            self, safety_status: SafetyStatus) -> None:
         """Trigger automated safety response measures"""
         try:
             if safety_status.requires_intervention:
@@ -253,7 +261,7 @@ class SafetyMonitoringEngine:
         except Exception as e:
             logger.error(f"Safety check logging failed: {str(e)}")
 
-    async def initialize_components(self):
+    async def initialize_components(self) -> Dict[str, Any]:
         """Initialize all safety monitoring components"""
         try:
             # Placeholder for component initialization
@@ -273,7 +281,7 @@ class SafetyMonitoringEngine:
             logger.error(f"Component initialization failed: {str(e)}")
             raise
 
-    async def cleanup_components(self):
+    async def cleanup_components(self) -> Dict[str, Any]:
         """Cleanup all safety monitoring components"""
         try:
             # Placeholder for component cleanup

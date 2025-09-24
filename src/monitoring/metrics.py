@@ -49,11 +49,11 @@ class MetricsCollector:
         self.gauges: Dict[str, float] = defaultdict(float)
         self.histograms: Dict[str, List[float]] = defaultdict(list)
 
-    def record_metric(self, name: str, value: float, labels: Optional[Dict[str, str]] = None):
+    def record_metric(self, name: str, value: float,
+                      labels: Optional[Dict[str, str]] = None):
         """Record a metric value."""
-        self.metrics.append(
-            {"timestamp": datetime.utcnow(), "name": name, "value": value, "labels": labels or {}}
-        )
+        self.metrics.append({"timestamp": datetime.utcnow(
+        ), "name": name, "value": value, "labels": labels or {}})
 
     def increment_counter(self, name: str, value: int = 1):
         """Increment a counter."""
@@ -113,8 +113,8 @@ class RankingMetricsCollector(MetricsCollector):
     def _init_prometheus_metrics(self):
         """Initialize Prometheus metrics."""
         self.request_counter = Counter(
-            "ranking_requests_total", "Total ranking requests", ["algorithm_variant", "status"]
-        )
+            "ranking_requests_total", "Total ranking requests", [
+                "algorithm_variant", "status"])
 
         self.response_time_histogram = Histogram(
             "ranking_response_time_seconds",
@@ -136,7 +136,8 @@ class RankingMetricsCollector(MetricsCollector):
             buckets=[0.001, 0.005, 0.01, 0.05, 0.1, 0.2, 0.5],
         )
 
-        self.cache_hit_rate_gauge = Gauge("ranking_cache_hit_rate", "Cache hit rate")
+        self.cache_hit_rate_gauge = Gauge(
+            "ranking_cache_hit_rate", "Cache hit rate")
 
         self.article_count_histogram = Histogram(
             "ranking_article_count",
@@ -144,7 +145,10 @@ class RankingMetricsCollector(MetricsCollector):
             buckets=[1, 5, 10, 20, 50, 100, 200, 500],
         )
 
-        self.error_counter = Counter("ranking_errors_total", "Total ranking errors", ["error_type"])
+        self.error_counter = Counter(
+            "ranking_errors_total",
+            "Total ranking errors",
+            ["error_type"])
 
     async def record_ranking(
         self,
@@ -156,7 +160,7 @@ class RankingMetricsCollector(MetricsCollector):
         user_id: Optional[str] = None,
         algorithm_variant: Optional[str] = None,
     ):
-        """Record ranking performance metrics."""
+         -> Dict[str, Any]:"""Record ranking performance metrics."""
         try:
             # Record performance metrics
             metrics = PerformanceMetrics(
@@ -183,21 +187,23 @@ class RankingMetricsCollector(MetricsCollector):
 
             # Update Prometheus metrics
             variant = algorithm_variant or "unknown"
-            self.request_counter.labels(algorithm_variant=variant, status="success").inc()
-            self.response_time_histogram.labels(algorithm_variant=variant).observe(
-                response_time_ms / 1000
-            )
+            self.request_counter.labels(
+                algorithm_variant=variant,
+                status="success").inc()
+            self.response_time_histogram.labels(
+                algorithm_variant=variant).observe(
+                response_time_ms / 1000)
             self.feature_time_histogram.observe(feature_time_ms / 1000)
-            self.ranking_time_histogram.labels(algorithm_variant=variant).observe(
-                ranking_time_ms / 1000
-            )
+            self.ranking_time_histogram.labels(
+                algorithm_variant=variant).observe(
+                ranking_time_ms / 1000)
             self.cache_hit_rate_gauge.set(cache_hit_rate)
             self.article_count_histogram.observe(article_count)
 
         except Exception as e:
             logger.error("Failed to record ranking metrics", error=str(e))
 
-    async def record_error(self, error_type: str = "unknown"):
+    async def record_error(self, error_type: str = "unknown") -> Dict[str, Any]:
         """Record ranking error."""
         try:
             self.error_count += 1
@@ -210,12 +216,14 @@ class RankingMetricsCollector(MetricsCollector):
         except Exception as e:
             logger.error("Failed to record error metrics", error=str(e))
 
-    def get_performance_summary(self, time_window_minutes: int = 60) -> Dict[str, Any]:
-        """Get performance summary for time window."""
+    def get_performance_summary(
+            self, time_window_minutes: int = 60) -> Dict[str, Any]:
+    """Get performance summary for time window."""
         cutoff_time = datetime.utcnow() - timedelta(minutes=time_window_minutes)
 
         # Filter metrics by time window
-        recent_metrics = [m for m in self.performance_metrics if m.timestamp >= cutoff_time]
+        recent_metrics = [
+            m for m in self.performance_metrics if m.timestamp >= cutoff_time]
 
         if not recent_metrics:
             return {
@@ -267,9 +275,13 @@ class RankingMetricsCollector(MetricsCollector):
 
             comparison[algorithm] = {
                 "request_count": len(metrics_list),
-                "avg_response_time_ms": sum(response_times) / len(response_times),
-                "p95_response_time_ms": self._percentile(response_times, 95),
-                "avg_cache_hit_rate": sum(cache_hit_rates) / len(cache_hit_rates),
+                "avg_response_time_ms": sum(response_times) /
+                len(response_times),
+                "p95_response_time_ms": self._percentile(
+                    response_times,
+                    95),
+                "avg_cache_hit_rate": sum(cache_hit_rates) /
+                len(cache_hit_rates),
             }
 
         return comparison
@@ -283,10 +295,16 @@ class SystemMetricsCollector(MetricsCollector):
         self.system_metrics: deque = deque(maxlen=1000)
 
         # Prometheus metrics
-        self.cpu_usage_gauge = Gauge("system_cpu_usage_percent", "CPU usage percentage")
-        self.memory_usage_gauge = Gauge("system_memory_usage_bytes", "Memory usage in bytes")
-        self.redis_connections_gauge = Gauge("redis_connections", "Number of Redis connections")
-        self.active_requests_gauge = Gauge("active_requests", "Number of active requests")
+        self.cpu_usage_gauge = Gauge(
+            "system_cpu_usage_percent",
+            "CPU usage percentage")
+        self.memory_usage_gauge = Gauge(
+            "system_memory_usage_bytes",
+            "Memory usage in bytes")
+        self.redis_connections_gauge = Gauge(
+            "redis_connections", "Number of Redis connections")
+        self.active_requests_gauge = Gauge(
+            "active_requests", "Number of active requests")
         self.queue_size_gauge = Gauge("queue_size", "Queue size")
 
     async def record_system_metrics(
@@ -297,7 +315,7 @@ class SystemMetricsCollector(MetricsCollector):
         active_requests: int,
         queue_size: int,
     ):
-        """Record system metrics."""
+         -> Dict[str, Any]:"""Record system metrics."""
         try:
             metrics = SystemMetrics(
                 timestamp=datetime.utcnow(),
@@ -327,12 +345,14 @@ class SystemMetricsCollector(MetricsCollector):
         except Exception as e:
             logger.error("Failed to record system metrics", error=str(e))
 
-    def get_system_summary(self, time_window_minutes: int = 60) -> Dict[str, Any]:
-        """Get system summary for time window."""
+    def get_system_summary(
+            self, time_window_minutes: int = 60) -> Dict[str, Any]:
+    """Get system summary for time window."""
         cutoff_time = datetime.utcnow() - timedelta(minutes=time_window_minutes)
 
         # Filter metrics by time window
-        recent_metrics = [m for m in self.system_metrics if m.timestamp >= cutoff_time]
+        recent_metrics = [
+            m for m in self.system_metrics if m.timestamp >= cutoff_time]
 
         if not recent_metrics:
             return {
@@ -353,22 +373,26 @@ class SystemMetricsCollector(MetricsCollector):
         queue_size = [m.queue_size for m in recent_metrics]
 
         return {
-            "avg_cpu_usage": sum(cpu_usage) / len(cpu_usage),
+            "avg_cpu_usage": sum(cpu_usage) /
+            len(cpu_usage),
             "max_cpu_usage": max(cpu_usage),
-            "avg_memory_usage": sum(memory_usage) / len(memory_usage),
+            "avg_memory_usage": sum(memory_usage) /
+            len(memory_usage),
             "max_memory_usage": max(memory_usage),
-            "avg_redis_connections": sum(redis_connections) / len(redis_connections),
-            "avg_active_requests": sum(active_requests) / len(active_requests),
-            "avg_queue_size": sum(queue_size) / len(queue_size),
+            "avg_redis_connections": sum(redis_connections) /
+            len(redis_connections),
+            "avg_active_requests": sum(active_requests) /
+            len(active_requests),
+            "avg_queue_size": sum(queue_size) /
+            len(queue_size),
         }
 
 
 class HealthChecker:
     """Health check and alerting system."""
 
-    def __init__(
-        self, ranking_collector: RankingMetricsCollector, system_collector: SystemMetricsCollector
-    ):
+    def __init__(self, ranking_collector: RankingMetricsCollector,
+                 system_collector: SystemMetricsCollector):
         self.ranking_collector = ranking_collector
         self.system_collector = system_collector
         self.alert_thresholds = {
@@ -389,7 +413,8 @@ class HealthChecker:
         }
 
         # Check ranking performance
-        ranking_summary = self.ranking_collector.get_performance_summary(5)  # Last 5 minutes
+        ranking_summary = self.ranking_collector.get_performance_summary(
+            5)  # Last 5 minutes
 
         if ranking_summary["avg_response_time_ms"] > self.alert_thresholds["response_time_ms"]:
             health_status["checks"]["response_time"] = {
@@ -420,7 +445,8 @@ class HealthChecker:
             }
 
         # Check system metrics
-        system_summary = self.system_collector.get_system_summary(5)  # Last 5 minutes
+        system_summary = self.system_collector.get_system_summary(
+            5)  # Last 5 minutes
 
         if system_summary["avg_cpu_usage"] > self.alert_thresholds["cpu_usage"]:
             health_status["checks"]["cpu_usage"] = {
@@ -460,9 +486,8 @@ class HealthChecker:
 class MetricsExporter:
     """Export metrics to external systems."""
 
-    def __init__(
-        self, ranking_collector: RankingMetricsCollector, system_collector: SystemMetricsCollector
-    ):
+    def __init__(self, ranking_collector: RankingMetricsCollector,
+                 system_collector: SystemMetricsCollector):
         self.ranking_collector = ranking_collector
         self.system_collector = system_collector
         self.export_interval = 60  # seconds
@@ -471,24 +496,25 @@ class MetricsExporter:
         # Start export task
         asyncio.create_task(self._export_loop())
 
-    async def _export_loop(self):
+    async def _export_loop(self) -> Dict[str, Any]:
         """Export metrics periodically."""
         while self.export_enabled:
             try:
-                await self.export_metrics()
+    await self.export_metrics()
                 await asyncio.sleep(self.export_interval)
             except Exception as e:
                 logger.error("Metrics export failed", error=str(e))
                 await asyncio.sleep(self.export_interval)
 
-    async def export_metrics(self):
+    async def export_metrics(self) -> Dict[str, Any]:
         """Export metrics to external systems."""
         try:
             # Get metrics summaries
             ranking_summary = self.ranking_collector.get_performance_summary()
             system_summary = self.system_collector.get_system_summary()
 
-            # Export to external systems (e.g., data warehouse, monitoring service)
+            # Export to external systems (e.g., data warehouse, monitoring
+            # service)
             export_data = {
                 "timestamp": datetime.utcnow().isoformat(),
                 "ranking_metrics": ranking_summary,

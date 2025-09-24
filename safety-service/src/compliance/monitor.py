@@ -37,7 +37,7 @@ class ComplianceMonitor:
         self.privacy_monitor = PrivacyComplianceMonitor()
         self.audit_trail_manager = AuditTrailManager()
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize the compliance monitor"""
         try:
             # Initialize all monitors
@@ -53,10 +53,10 @@ class ComplianceMonitor:
             logger.error(f"Failed to initialize compliance monitor: {str(e)}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup resources"""
         try:
-            await self.gdpr_monitor.cleanup()
+    await self.gdpr_monitor.cleanup()
             await self.content_policy_monitor.cleanup()
             await self.privacy_monitor.cleanup()
             await self.audit_trail_manager.cleanup()
@@ -67,7 +67,9 @@ class ComplianceMonitor:
         except Exception as e:
             logger.error(f"Error during compliance monitor cleanup: {str(e)}")
 
-    async def check_compliance(self, request: ComplianceRequest) -> ComplianceReport:
+    async def check_compliance(
+            self,
+            request: ComplianceRequest) -> ComplianceReport:
         """Comprehensive compliance checking"""
 
         if not self.is_initialized:
@@ -98,7 +100,8 @@ class ComplianceMonitor:
                 compliance_results["privacy"] = privacy_result
 
             # Calculate overall compliance score
-            overall_compliance = self.calculate_compliance_score(compliance_results)
+            overall_compliance = self.calculate_compliance_score(
+                compliance_results)
 
             # Extract violations
             violations = self.extract_compliance_violations(compliance_results)
@@ -124,7 +127,8 @@ class ComplianceMonitor:
             logger.error(f"Compliance check failed: {str(e)}")
             raise
 
-    def calculate_compliance_score(self, compliance_results: Dict[str, Any]) -> float:
+    def calculate_compliance_score(
+            self, compliance_results: Dict[str, Any]) -> float:
         """Calculate overall compliance score from individual results"""
         try:
             if not compliance_results:
@@ -228,13 +232,19 @@ class ComplianceMonitor:
             dashboard_data = {
                 "timestamp": datetime.utcnow().isoformat(),
                 "compliance_status": {
-                    "gdpr": await self.gdpr_monitor.get_compliance_status(),
-                    "content_policy": await self.content_policy_monitor.get_compliance_status(),
-                    "privacy": await self.privacy_monitor.get_compliance_status(),
+                    "gdpr":
+    await self.gdpr_monitor.get_compliance_status(),
+                    "content_policy":
+    await self.content_policy_monitor.get_compliance_status(),
+                    "privacy":
+    await self.privacy_monitor.get_compliance_status(),
                 },
-                "recent_violations": await self.get_recent_violations(),
-                "compliance_trends": await self.get_compliance_trends(),
-                "audit_summary": await self.audit_trail_manager.get_audit_summary(),
+                "recent_violations":
+    await self.get_recent_violations(),
+                "compliance_trends":
+    await self.get_compliance_trends(),
+                "audit_summary":
+    await self.audit_trail_manager.get_audit_summary(),
             }
 
             return dashboard_data
@@ -243,7 +253,8 @@ class ComplianceMonitor:
             logger.error(f"Compliance dashboard generation failed: {str(e)}")
             return {"error": str(e)}
 
-    async def get_recent_violations(self, limit: int = 10) -> List[Dict[str, Any]]:
+    async def get_recent_violations(
+            self, limit: int = 10) -> List[Dict[str, Any]]:
         """Get recent compliance violations"""
         try:
             # This would typically query a database
@@ -271,13 +282,15 @@ class ComplianceMonitor:
             logger.error(f"Compliance trends retrieval failed: {str(e)}")
             return {"error": str(e)}
 
-    async def generate_compliance_report(self, report_type: str = "summary") -> Dict[str, Any]:
-        """Generate comprehensive compliance report"""
+    async def generate_compliance_report(
+            self, report_type: str = "summary") -> Dict[str, Any]:
+    """Generate comprehensive compliance report"""
         try:
             report = {
                 "report_type": report_type,
                 "generated_at": datetime.utcnow().isoformat(),
-                "compliance_overview": await self.get_compliance_dashboard(),
+                "compliance_overview":
+    await self.get_compliance_dashboard(),
                 "detailed_results": {},
             }
 
@@ -312,7 +325,7 @@ class ComplianceMonitor:
             elif format == "csv":
                 # Generate CSV format
                 return self.generate_csv_export()
-            else:
+        else:
                 raise ValueError(f"Unsupported export format: {format}")
 
         except Exception as e:
@@ -330,7 +343,7 @@ class ComplianceMonitor:
             logger.error(f"CSV export generation failed: {str(e)}")
             return ""
 
-    async def schedule_compliance_checks(self):
+    async def schedule_compliance_checks(self) -> Dict[str, Any]:
         """Schedule periodic compliance checks"""
         try:
             # This would set up scheduled compliance checks

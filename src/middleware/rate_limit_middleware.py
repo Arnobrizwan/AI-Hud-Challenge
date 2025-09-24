@@ -46,7 +46,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         start_time = time.time()
 
         # Skip rate limiting for excluded paths
-        if any(request.url.path.startswith(path) for path in self.excluded_paths):
+        if any(request.url.path.startswith(path)
+               for path in self.excluded_paths):
             return await call_next(request)
 
         # Get client information
@@ -58,11 +59,13 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
         # IP-based rate limiting
         if self.enable_ip_limits:
-            checks.append({"type": "ip", "identifier": client_ip, "name": "ip_limit"})
+            checks.append(
+                {"type": "ip", "identifier": client_ip, "name": "ip_limit"})
 
         # User-based rate limiting (if authenticated)
         if self.enable_user_limits and user_id:
-            checks.append({"type": "user", "identifier": user_id, "name": "user_limit"})
+            checks.append(
+                {"type": "user", "identifier": user_id, "name": "user_limit"})
 
         # Global rate limiting
         if self.enable_global_limits:
@@ -72,16 +75,14 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         endpoint_config = self._get_endpoint_config(request)
         if endpoint_config:
             identifier = user_id or client_ip
-            checks.append(
-                {
-                    "type": "endpoint",
-                    "endpoint": endpoint_config["name"],
-                    "identifier": identifier,
-                    "limit": endpoint_config["limit"],
-                    "window_seconds": endpoint_config.get("window_seconds", 60),
-                    "name": "endpoint_limit",
-                }
-            )
+            checks.append({"type": "endpoint",
+                           "endpoint": endpoint_config["name"],
+                           "identifier": identifier,
+                           "limit": endpoint_config["limit"],
+                           "window_seconds": endpoint_config.get("window_seconds",
+                                                                 60),
+                           "name": "endpoint_limit",
+                           })
 
         try:
             # Check multiple rate limits concurrently
@@ -129,7 +130,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 )
 
                 # Record metrics
-                metrics_collector.record_rate_limit_block(most_restrictive_type)
+                metrics_collector.record_rate_limit_block(
+                    most_restrictive_type)
 
                 return self._create_rate_limit_response(
                     most_restrictive_info, most_restrictive_type
@@ -231,14 +233,23 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             "Retry-After": str(rate_limit_info.window_seconds),
         }
 
-        return JSONResponse(status_code=429, content=response_data.dict(), headers=headers)
+        return JSONResponse(
+            status_code=429,
+            content=response_data.dict(),
+            headers=headers)
 
-    def _add_rate_limit_headers(self, response: Response, rate_limit_info: RateLimitInfo):
+    def _add_rate_limit_headers(
+            self,
+            response: Response,
+            rate_limit_info: RateLimitInfo):
         """Add rate limit headers to successful response."""
         response.headers["X-RateLimit-Limit"] = str(rate_limit_info.limit)
-        response.headers["X-RateLimit-Remaining"] = str(rate_limit_info.remaining)
-        response.headers["X-RateLimit-Reset"] = str(int(rate_limit_info.reset_time.timestamp()))
-        response.headers["X-RateLimit-Window"] = str(rate_limit_info.window_seconds)
+        response.headers["X-RateLimit-Remaining"] = str(
+            rate_limit_info.remaining)
+        response.headers["X-RateLimit-Reset"] = str(
+            int(rate_limit_info.reset_time.timestamp()))
+        response.headers["X-RateLimit-Window"] = str(
+            rate_limit_info.window_seconds)
 
 
 class AdaptiveRateLimitMiddleware(RateLimitMiddleware):
@@ -295,7 +306,13 @@ class AdaptiveRateLimitMiddleware(RateLimitMiddleware):
         """Check for suspicious user agent patterns."""
         user_agent = request.headers.get("user-agent", "").lower()
 
-        suspicious_patterns = ["bot", "crawler", "scraper", "curl", "wget", "python-requests"]
+        suspicious_patterns = [
+            "bot",
+            "crawler",
+            "scraper",
+            "curl",
+            "wget",
+            "python-requests"]
 
         return any(pattern in user_agent for pattern in suspicious_patterns)
 
@@ -312,7 +329,10 @@ class AdaptiveRateLimitMiddleware(RateLimitMiddleware):
 
         return False
 
-    async def _has_recent_failures(self, client_ip: str, user_id: Optional[str]) -> bool:
+    async def _has_recent_failures(
+            self,
+            client_ip: str,
+            user_id: Optional[str]) -> bool:
         """Check for recent authentication or validation failures."""
         # This would typically check a failure tracking system
         # For now, return False as a placeholder
@@ -337,12 +357,19 @@ class AdaptiveRateLimitMiddleware(RateLimitMiddleware):
 
 
 # Utility functions for manual rate limit checks
-async def check_rate_limit_dependency(request: Request, limit: int = 100, window: int = 60):
-    """Dependency function for manual rate limit checks in endpoints."""
+async def check_rate_limit_dependency(
+        request: Request,
+        limit: int = 100,
+        window: int = 60):
+     -> Dict[str, Any]:"""Dependency function for manual rate limit checks in endpoints."""
     client_ip = request.client.host if request.client else "unknown"
     user_id = (
-        getattr(request.state, "user", {}).get("uid") if hasattr(request.state, "user") else None
-    )
+        getattr(
+            request.state,
+            "user",
+            {}).get("uid") if hasattr(
+            request.state,
+            "user") else None)
 
     identifier = user_id or client_ip
     allowed, rate_limit_info = await rate_limiter.check_endpoint_rate_limit(

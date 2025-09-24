@@ -1,7 +1,7 @@
 """Semantic similarity calculation using sentence embeddings."""
 
 import asyncio
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 
 import numpy as np
 from sentence_transformers import SentenceTransformer
@@ -65,9 +65,7 @@ class SemanticSimilarityCalculator:
         """
         return await self._compute_embedding(text)
 
-    async def compute_similarity(
-        self, article1: NormalizedArticle, article2: NormalizedArticle
-    ) -> float:
+    async def compute_similarity(self, article1: NormalizedArticle, article2: NormalizedArticle) -> float:
         """Compute semantic similarity between two articles.
 
         Args:
@@ -148,9 +146,7 @@ class SemanticSimilarityCalculator:
 
         return similar_articles
 
-    async def compute_entity_similarity(
-        self, entities1: List[Entity], entities2: List[Entity]
-    ) -> float:
+    async def compute_entity_similarity(self, entities1: List[Entity], entities2: List[Entity]) -> float:
         """Compute similarity based on entity overlap.
 
         Args:
@@ -208,9 +204,7 @@ class SemanticSimilarityCalculator:
 
         return intersection / union
 
-    async def compute_location_similarity(
-        self, locations1: List[Location], locations2: List[Location]
-    ) -> float:
+    async def compute_location_similarity(self, locations1: List[Location], locations2: List[Location]) -> float:
         """Compute similarity based on location overlap.
 
         Args:

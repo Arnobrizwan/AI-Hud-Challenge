@@ -27,15 +27,15 @@ class BaseAnomalyDetector:
         self.is_trained = False
         self.scaler = StandardScaler()
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize the detector"""
         self.is_initialized = True
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup resources"""
         self.is_initialized = False
 
-    async def train(self, X: np.ndarray):
+    async def train(self, X: np.ndarray) -> Dict[str, Any]:
         """Train the detector"""
         pass
 
@@ -56,11 +56,12 @@ class IsolationForestDetector(BaseAnomalyDetector):
         )
         self.feature_names = []
 
-    async def train(self, X: np.ndarray):
+    async def train(self, X: np.ndarray) -> Dict[str, Any]:
         """Train the Isolation Forest model"""
         try:
             if len(X) < 10:
-                logger.warning("Insufficient data for Isolation Forest training")
+                logger.warning(
+                    "Insufficient data for Isolation Forest training")
                 return
 
             # Fit scaler
@@ -87,10 +88,12 @@ class IsolationForestDetector(BaseAnomalyDetector):
                 return None
 
             # Scale features
-            feature_array_scaled = self.scaler.transform(feature_array.reshape(1, -1))
+            feature_array_scaled = self.scaler.transform(
+                feature_array.reshape(1, -1))
 
             # Predict anomaly
-            anomaly_score = self.model.decision_function(feature_array_scaled)[0]
+            anomaly_score = self.model.decision_function(
+                feature_array_scaled)[0]
             is_anomaly = self.model.predict(feature_array_scaled)[0] == -1
 
             # Convert to 0-1 scale
@@ -110,7 +113,8 @@ class IsolationForestDetector(BaseAnomalyDetector):
                             Anomaly(
                                 metric_name=feature_name,
                                 anomaly_type="isolation_forest",
-                                severity=self.determine_severity(abs(contribution)),
+                                severity=self.determine_severity(
+                                    abs(contribution)),
                                 value=features.get(feature_name, 0.0),
                                 expected_value=0.0,  # Would need historical data for this
                                 deviation=abs(contribution),
@@ -131,7 +135,8 @@ class IsolationForestDetector(BaseAnomalyDetector):
             logger.error(f"Isolation Forest detection failed: {str(e)}")
             return None
 
-    def features_to_array(self, features: Dict[str, float]) -> Optional[np.ndarray]:
+    def features_to_array(
+            self, features: Dict[str, float]) -> Optional[np.ndarray]:
         """Convert features dictionary to numpy array"""
         try:
             if not features:
@@ -141,7 +146,8 @@ class IsolationForestDetector(BaseAnomalyDetector):
             if not self.feature_names:
                 self.feature_names = sorted(features.keys())
 
-            feature_array = np.array([features.get(name, 0.0) for name in self.feature_names])
+            feature_array = np.array([features.get(name, 0.0)
+                                     for name in self.feature_names])
             return feature_array
 
         except Exception as e:
@@ -184,10 +190,13 @@ class OneClassSVMDetector(BaseAnomalyDetector):
 
     def __init__(self):
         super().__init__()
-        self.model = OneClassSVM(nu=self.config.one_class_svm_nu, kernel="rbf", gamma="scale")
+        self.model = OneClassSVM(
+            nu=self.config.one_class_svm_nu,
+            kernel="rbf",
+            gamma="scale")
         self.feature_names = []
 
-    async def train(self, X: np.ndarray):
+    async def train(self, X: np.ndarray) -> Dict[str, Any]:
         """Train the One-Class SVM model"""
         try:
             if len(X) < 10:
@@ -218,11 +227,13 @@ class OneClassSVMDetector(BaseAnomalyDetector):
                 return None
 
             # Scale features
-            feature_array_scaled = self.scaler.transform(feature_array.reshape(1, -1))
+            feature_array_scaled = self.scaler.transform(
+                feature_array.reshape(1, -1))
 
             # Predict anomaly
             prediction = self.model.predict(feature_array_scaled)[0]
-            decision_score = self.model.decision_function(feature_array_scaled)[0]
+            decision_score = self.model.decision_function(
+                feature_array_scaled)[0]
 
             # Convert to 0-1 scale
             is_anomaly = prediction == -1
@@ -242,12 +253,14 @@ class OneClassSVMDetector(BaseAnomalyDetector):
                             Anomaly(
                                 metric_name=feature_name,
                                 anomaly_type="one_class_svm",
-                                severity=self.determine_severity(abs(contribution)),
-                                value=features.get(feature_name, 0.0),
+                                severity=self.determine_severity(
+                                    abs(contribution)),
+                                value=features.get(
+                                    feature_name,
+                                    0.0),
                                 expected_value=0.0,
                                 deviation=abs(contribution),
-                            )
-                        )
+                            ))
 
             return type(
                 "AnomalyResult",
@@ -263,7 +276,8 @@ class OneClassSVMDetector(BaseAnomalyDetector):
             logger.error(f"One-Class SVM detection failed: {str(e)}")
             return None
 
-    def features_to_array(self, features: Dict[str, float]) -> Optional[np.ndarray]:
+    def features_to_array(
+            self, features: Dict[str, float]) -> Optional[np.ndarray]:
         """Convert features dictionary to numpy array"""
         try:
             if not features:
@@ -273,7 +287,8 @@ class OneClassSVMDetector(BaseAnomalyDetector):
             if not self.feature_names:
                 self.feature_names = sorted(features.keys())
 
-            feature_array = np.array([features.get(name, 0.0) for name in self.feature_names])
+            feature_array = np.array([features.get(name, 0.0)
+                                     for name in self.feature_names])
             return feature_array
 
         except Exception as e:
@@ -321,17 +336,19 @@ class LSTMAutoencoderDetector(BaseAnomalyDetector):
         self.feature_names = []
         self.historical_sequences = []
 
-    async def train(self, X: np.ndarray):
+    async def train(self, X: np.ndarray) -> Dict[str, Any]:
         """Train the LSTM Autoencoder model"""
         try:
             if len(X) < self.sequence_length * 2:
-                logger.warning("Insufficient data for LSTM Autoencoder training")
+                logger.warning(
+                    "Insufficient data for LSTM Autoencoder training")
                 return
 
             # Create sequences
             sequences = self.create_sequences(X)
             if len(sequences) < 10:
-                logger.warning("Insufficient sequences for LSTM Autoencoder training")
+                logger.warning(
+                    "Insufficient sequences for LSTM Autoencoder training")
                 return
 
             # For now, we'll simulate training
@@ -360,15 +377,18 @@ class LSTMAutoencoderDetector(BaseAnomalyDetector):
 
             # Keep only recent sequences
             if len(self.historical_sequences) > self.sequence_length * 2:
-                self.historical_sequences = self.historical_sequences[-self.sequence_length * 2 :]
+                self.historical_sequences = self.historical_sequences[-self.sequence_length * 2:]
 
             # Create sequence if we have enough data
             if len(self.historical_sequences) >= self.sequence_length:
-                sequence = np.array(self.historical_sequences[-self.sequence_length :])
+                sequence = np.array(
+                    self.historical_sequences[-self.sequence_length:])
 
                 # Simulate reconstruction error
-                # In a real implementation, this would use the trained autoencoder
-                reconstruction_error = self.simulate_reconstruction_error(sequence)
+                # In a real implementation, this would use the trained
+                # autoencoder
+                reconstruction_error = self.simulate_reconstruction_error(
+                    sequence)
 
                 # Convert to anomaly score
                 anomaly_score = min(1.0, reconstruction_error)
@@ -378,8 +398,7 @@ class LSTMAutoencoderDetector(BaseAnomalyDetector):
                 if anomaly_score > 0.7:
                     # Find which features contributed most to the anomaly
                     feature_contributions = self.calculate_feature_contributions(
-                        features, feature_array
-                    )
+                        features, feature_array)
 
                     for feature_name, contribution in feature_contributions.items():
                         if abs(contribution) > 0.5:  # Significant contribution
@@ -387,12 +406,14 @@ class LSTMAutoencoderDetector(BaseAnomalyDetector):
                                 Anomaly(
                                     metric_name=feature_name,
                                     anomaly_type="lstm_autoencoder",
-                                    severity=self.determine_severity(abs(contribution)),
-                                    value=features.get(feature_name, 0.0),
+                                    severity=self.determine_severity(
+                                        abs(contribution)),
+                                    value=features.get(
+                                        feature_name,
+                                        0.0),
                                     expected_value=0.0,
                                     deviation=abs(contribution),
-                                )
-                            )
+                                ))
 
                 return type(
                     "AnomalyResult",
@@ -415,7 +436,7 @@ class LSTMAutoencoderDetector(BaseAnomalyDetector):
         try:
             sequences = []
             for i in range(len(X) - self.sequence_length + 1):
-                sequence = X[i : i + self.sequence_length]
+                sequence = X[i: i + self.sequence_length]
                 sequences.append(sequence)
             return sequences
 
@@ -430,8 +451,10 @@ class LSTMAutoencoderDetector(BaseAnomalyDetector):
             sequence_variance = np.var(sequence)
             sequence_mean = np.mean(sequence)
 
-            # Higher variance and deviation from mean indicate higher reconstruction error
-            reconstruction_error = min(1.0, sequence_variance + abs(sequence_mean - 0.5))
+            # Higher variance and deviation from mean indicate higher
+            # reconstruction error
+            reconstruction_error = min(
+                1.0, sequence_variance + abs(sequence_mean - 0.5))
 
             return reconstruction_error
 
@@ -439,7 +462,8 @@ class LSTMAutoencoderDetector(BaseAnomalyDetector):
             logger.error(f"Reconstruction error simulation failed: {str(e)}")
             return 0.0
 
-    def features_to_array(self, features: Dict[str, float]) -> Optional[np.ndarray]:
+    def features_to_array(
+            self, features: Dict[str, float]) -> Optional[np.ndarray]:
         """Convert features dictionary to numpy array"""
         try:
             if not features:
@@ -449,7 +473,8 @@ class LSTMAutoencoderDetector(BaseAnomalyDetector):
             if not self.feature_names:
                 self.feature_names = sorted(features.keys())
 
-            feature_array = np.array([features.get(name, 0.0) for name in self.feature_names])
+            feature_array = np.array([features.get(name, 0.0)
+                                     for name in self.feature_names])
             return feature_array
 
         except Exception as e:
@@ -495,11 +520,12 @@ class StatisticalAnomalyDetector(BaseAnomalyDetector):
         self.feature_stats = {}
         self.feature_names = []
 
-    async def train(self, X: np.ndarray):
+    async def train(self, X: np.ndarray) -> Dict[str, Any]:
         """Train the statistical detector"""
         try:
             if len(X) < 10:
-                logger.warning("Insufficient data for statistical detector training")
+                logger.warning(
+                    "Insufficient data for statistical detector training")
                 return
 
             # Calculate statistics for each feature
@@ -559,7 +585,8 @@ class StatisticalAnomalyDetector(BaseAnomalyDetector):
                     percentile_score = 0.5
 
                 # Combine z-score and percentile scores
-                anomaly_score = max(z_score / 3.0, percentile_score)  # Normalize z-score
+                anomaly_score = max(
+                    z_score / 3.0, percentile_score)  # Normalize z-score
                 max_anomaly_score = max(max_anomaly_score, anomaly_score)
 
                 # Create anomaly if significant

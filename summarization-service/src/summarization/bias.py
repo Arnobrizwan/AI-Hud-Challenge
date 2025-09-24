@@ -31,7 +31,7 @@ try:
     nltk.download("vader_lexicon", quiet=True)
     nltk.download("punkt", quiet=True)
     nltk.download("stopwords", quiet=True)
-except:
+except BaseException:
     pass
 
 
@@ -146,7 +146,7 @@ class BiasDetector:
             ],
         }
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize bias detection models"""
         try:
             logger.info("Initializing bias detector...")
@@ -187,11 +187,11 @@ class BiasDetector:
             self._initialized = True
             logger.info("Bias detector initialized successfully")
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Failed to initialize bias detector: {str(e)}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Clean up resources"""
         try:
             if self.political_classifier:
@@ -219,7 +219,8 @@ class BiasDetector:
             sentiment_bias = await self._analyze_sentiment_bias(text)
 
             # Calculate overall bias
-            overall_bias = (political_bias + gender_bias + racial_bias + sentiment_bias) / 4
+            overall_bias = (political_bias + gender_bias +
+                            racial_bias + sentiment_bias) / 4
 
             # Calculate neutrality score
             neutrality_score = 1.0 - overall_bias
@@ -239,7 +240,7 @@ class BiasDetector:
                 detected_biases=detected_biases,
             )
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Bias analysis failed: {str(e)}")
             return BiasAnalysis(
                 political_bias=0.0,
@@ -268,7 +269,7 @@ class BiasDetector:
 
             return min(1.0, max(0.0, political_bias))
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Political bias analysis failed: {str(e)}")
             return 0.0
 
@@ -278,8 +279,10 @@ class BiasDetector:
             text_lower = text.lower()
             words = word_tokenize(text_lower)
 
-            left_count = sum(1 for word in words if word in self.political_indicators["left"])
-            right_count = sum(1 for word in words if word in self.political_indicators["right"])
+            left_count = sum(
+                1 for word in words if word in self.political_indicators["left"])
+            right_count = sum(
+                1 for word in words if word in self.political_indicators["right"])
 
             total_political_words = left_count + right_count
 
@@ -291,7 +294,7 @@ class BiasDetector:
 
             return bias_ratio
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Political keyword analysis failed: {str(e)}")
             return 0.0
 
@@ -326,7 +329,7 @@ class BiasDetector:
 
             return min(1.0, sentiment_bias)
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Political sentiment analysis failed: {str(e)}")
             return 0.0
 
@@ -353,7 +356,8 @@ class BiasDetector:
                 # Find sentences containing the entity
                 for sentence in sent_tokenize(text):
                     if entity in sentence:
-                        sentiment = self.sentiment_analyzer.polarity_scores(sentence)
+                        sentiment = self.sentiment_analyzer.polarity_scores(
+                            sentence)
                         entity_sentiments.append(sentiment["compound"])
                         break
 
@@ -366,7 +370,7 @@ class BiasDetector:
 
             return min(1.0, entity_bias)
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Political entity analysis failed: {str(e)}")
             return 0.0
 
@@ -387,7 +391,7 @@ class BiasDetector:
 
             return min(1.0, max(0.0, gender_bias))
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Gender bias analysis failed: {str(e)}")
             return 0.0
 
@@ -397,8 +401,10 @@ class BiasDetector:
             text_lower = text.lower()
             words = word_tokenize(text_lower)
 
-            male_pronouns = sum(1 for word in words if word in self.gender_indicators["male"])
-            female_pronouns = sum(1 for word in words if word in self.gender_indicators["female"])
+            male_pronouns = sum(
+                1 for word in words if word in self.gender_indicators["male"])
+            female_pronouns = sum(
+                1 for word in words if word in self.gender_indicators["female"])
 
             total_pronouns = male_pronouns + female_pronouns
 
@@ -406,11 +412,12 @@ class BiasDetector:
                 return 0.0
 
             # Calculate pronoun bias
-            pronoun_bias = abs(male_pronouns - female_pronouns) / total_pronouns
+            pronoun_bias = abs(
+                male_pronouns - female_pronouns) / total_pronouns
 
             return pronoun_bias
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Gender pronoun analysis failed: {str(e)}")
             return 0.0
 
@@ -449,7 +456,8 @@ class BiasDetector:
             words = word_tokenize(text_lower)
 
             male_role_count = sum(1 for word in words if word in male_roles)
-            female_role_count = sum(1 for word in words if word in female_roles)
+            female_role_count = sum(
+                1 for word in words if word in female_roles)
 
             total_roles = male_role_count + female_role_count
 
@@ -461,7 +469,7 @@ class BiasDetector:
 
             return role_bias
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Gender role analysis failed: {str(e)}")
             return 0.0
 
@@ -475,7 +483,8 @@ class BiasDetector:
 
             for sentence in sentences:
                 sentence_lower = sentence.lower()
-                if any(term in sentence_lower for term in self.gender_indicators["male"]):
+                if any(
+                        term in sentence_lower for term in self.gender_indicators["male"]):
                     male_sentences.append(sentence)
                 elif any(term in sentence_lower for term in self.gender_indicators["female"]):
                     female_sentences.append(sentence)
@@ -500,12 +509,12 @@ class BiasDetector:
                 avg_male_sentiment = np.mean(male_sentiments)
                 avg_female_sentiment = np.mean(female_sentiments)
                 sentiment_bias = abs(avg_male_sentiment - avg_female_sentiment)
-            else:
+else:
                 sentiment_bias = 0.0
 
             return min(1.0, sentiment_bias)
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Gender sentiment analysis failed: {str(e)}")
             return 0.0
 
@@ -522,11 +531,12 @@ class BiasDetector:
             representation_bias = await self._analyze_racial_representation(text)
 
             # Combine methods
-            racial_bias = (keyword_bias + sentiment_bias + representation_bias) / 3
+            racial_bias = (keyword_bias + sentiment_bias +
+                           representation_bias) / 3
 
             return min(1.0, max(0.0, racial_bias))
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Racial bias analysis failed: {str(e)}")
             return 0.0
 
@@ -536,8 +546,10 @@ class BiasDetector:
             text_lower = text.lower()
             words = word_tokenize(text_lower)
 
-            positive_count = sum(1 for word in words if word in self.racial_indicators["positive"])
-            negative_count = sum(1 for word in words if word in self.racial_indicators["negative"])
+            positive_count = sum(
+                1 for word in words if word in self.racial_indicators["positive"])
+            negative_count = sum(
+                1 for word in words if word in self.racial_indicators["negative"])
 
             total_racial_words = positive_count + negative_count
 
@@ -549,7 +561,7 @@ class BiasDetector:
 
             return bias_ratio
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Racial keyword analysis failed: {str(e)}")
             return 0.0
 
@@ -593,7 +605,7 @@ class BiasDetector:
 
             return min(1.0, sentiment_bias)
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Racial sentiment analysis failed: {str(e)}")
             return 0.0
 
@@ -606,7 +618,8 @@ class BiasDetector:
             doc = self.nlp(text)
 
             # Extract person entities
-            person_entities = [ent.text for ent in doc.ents if ent.label_ == "PERSON"]
+            person_entities = [
+                ent.text for ent in doc.ents if ent.label_ == "PERSON"]
 
             if not person_entities:
                 return 0.0
@@ -616,7 +629,8 @@ class BiasDetector:
             for person in person_entities:
                 for sentence in sent_tokenize(text):
                     if person in sentence:
-                        sentiment = self.sentiment_analyzer.polarity_scores(sentence)
+                        sentiment = self.sentiment_analyzer.polarity_scores(
+                            sentence)
                         person_sentiments.append(sentiment["compound"])
                         break
 
@@ -629,7 +643,7 @@ class BiasDetector:
 
             return min(1.0, representation_bias)
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Racial representation analysis failed: {str(e)}")
             return 0.0
 
@@ -657,13 +671,16 @@ class BiasDetector:
 
             return min(1.0, sentiment_bias)
 
-        except Exception as e:
+except Exception as e:
             logger.error(f"Sentiment bias analysis failed: {str(e)}")
             return 0.0
 
     def _detect_bias_types(
-        self, political_bias: float, gender_bias: float, racial_bias: float, sentiment_bias: float
-    ) -> List[str]:
+            self,
+            political_bias: float,
+            gender_bias: float,
+            racial_bias: float,
+            sentiment_bias: float) -> List[str]:
         """Detect specific types of bias present"""
         detected_biases = []
 

@@ -16,7 +16,12 @@ logger = logging.getLogger(__name__)
 class CacheEntry:
     """Cache entry with metadata"""
 
-    def __init__(self, key: str, value: Any, ttl: int = 0, tags: List[str] = None):
+    def __init__(
+            self,
+            key: str,
+            value: Any,
+            ttl: int = 0,
+            tags: List[str] = None):
         self.key = key
         self.value = value
         self.created_at = time.time()
@@ -50,7 +55,7 @@ class MemoryCache:
         self._cleanup_task: Optional[asyncio.Task] = None
         self._stats = {"hits": 0, "misses": 0, "evictions": 0, "expired": 0}
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize memory cache"""
         if self._initialized:
             return
@@ -59,21 +64,23 @@ class MemoryCache:
 
         try:
             # Start cleanup task
-            self._cleanup_task = asyncio.create_task(self._cleanup_expired_entries())
+            self._cleanup_task = asyncio.create_task(
+                self._cleanup_expired_entries())
 
             self._initialized = True
-            logger.info(f"Memory Cache initialized with max_size={self.max_size}")
+            logger.info(
+                f"Memory Cache initialized with max_size={self.max_size}")
 
         except Exception as e:
             logger.error(f"Failed to initialize Memory Cache: {e}")
             raise
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup memory cache"""
         if self._cleanup_task:
             self._cleanup_task.cancel()
             try:
-                await self._cleanup_task
+    await self._cleanup_task
             except asyncio.CancelledError:
                 pass
 
@@ -107,13 +114,18 @@ class MemoryCache:
                 self._stats["misses"] += 1
                 return None
 
-    async def set(self, key: str, value: Any, ttl: int = None, tags: List[str] = None) -> bool:
+    async def set(
+            self,
+            key: str,
+            value: Any,
+            ttl: int = None,
+            tags: List[str] = None) -> bool:
         """Set value in cache"""
         if not self._initialized:
             return False
 
         try:
-            async with self._lock:
+    async with self._lock:
                 # Remove existing entry if present
                 if key in self._cache:
                     old_entry = self._cache[key]
@@ -161,7 +173,9 @@ class MemoryCache:
 
         deleted_count = 0
         async with self._lock:
-            keys_to_delete = [key for key in self._cache.keys() if fnmatch.fnmatch(key, pattern)]
+            keys_to_delete = [
+                key for key in self._cache.keys() if fnmatch.fnmatch(
+                    key, pattern)]
 
             for key in keys_to_delete:
                 entry = self._cache[key]
@@ -210,7 +224,10 @@ class MemoryCache:
 
         async with self._lock:
             total_requests = self._stats["hits"] + self._stats["misses"]
-            hit_rate = (self._stats["hits"] / total_requests * 100) if total_requests > 0 else 0
+            hit_rate = (
+                self._stats["hits"] /
+                total_requests *
+                100) if total_requests > 0 else 0
 
             return {
                 "size": len(self._cache),
@@ -224,11 +241,11 @@ class MemoryCache:
                 "timestamp": datetime.utcnow().isoformat(),
             }
 
-    async def _cleanup_expired_entries(self):
+    async def _cleanup_expired_entries(self) -> Dict[str, Any]:
         """Background task to clean up expired entries"""
         while True:
             try:
-                await asyncio.sleep(60)  # Run every minute
+    await asyncio.sleep(60)  # Run every minute
 
                 if not self._initialized:
                     break
@@ -246,14 +263,15 @@ class MemoryCache:
                         self._stats["expired"] += 1
 
                     if expired_keys:
-                        logger.debug(f"Cleaned up {len(expired_keys)} expired entries")
+                        logger.debug(
+                            f"Cleaned up {len(expired_keys)} expired entries")
 
             except asyncio.CancelledError:
                 break
             except Exception as e:
                 logger.error(f"Error in cache cleanup task: {e}")
 
-    async def _evict_if_needed(self):
+    async def _evict_if_needed(self) -> Dict[str, Any]:
         """Evict entries if cache is full"""
         while len(self._cache) > self.max_size:
             # Remove least recently used entry

@@ -1,15 +1,13 @@
 """Diversity and serendipity optimization for recommendations."""
 
-import asyncio
-from collections import Counter, defaultdict
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Set
 
 import numpy as np
 import structlog
 from sklearn.metrics.pairwise import cosine_similarity
 
 from ..config.settings import settings
-from ..models.schemas import ContentItem, DiversityParams, Recommendation, UserProfile
+from ..models.schemas import DiversityParams, Recommendation, UserProfile
 
 logger = structlog.get_logger()
 
@@ -38,14 +36,10 @@ class DiversityOptimizer:
         diversified = await self._apply_diversity_constraints(recommendations, diversity_params)
 
         # Apply serendipity optimization
-        serendipitous = await self._apply_serendipity_optimization(
-            diversified, user_profile, diversity_params
-        )
+        serendipitous = await self._apply_serendipity_optimization(diversified, user_profile, diversity_params)
 
         # Re-rank with diversity and serendipity scores
-        final_recommendations = await self._rerank_with_diversity(
-            serendipitous, user_profile, diversity_params
-        )
+        final_recommendations = await self._rerank_with_diversity(serendipitous, user_profile, diversity_params)
 
         return final_recommendations[: diversity_params.max_results]
 
@@ -131,9 +125,7 @@ class DiversityOptimizer:
 
             # Add serendipity features
             rec.features["serendipity_boost"] = serendipity_boost
-            rec.features["serendipity_score"] = await self._compute_serendipity_score(
-                rec, user_profile
-            )
+            rec.features["serendipity_score"] = await self._compute_serendipity_score(rec, user_profile)
 
             serendipitous.append(rec)
 
@@ -153,15 +145,11 @@ class DiversityOptimizer:
         content_novelty = await self._compute_content_novelty(recommendation, user_profile)
 
         # Combine serendipity factors
-        serendipity_score = (
-            topic_serendipity * 0.4 + source_serendipity * 0.3 + content_novelty * 0.3
-        )
+        serendipity_score = topic_serendipity * 0.4 + source_serendipity * 0.3 + content_novelty * 0.3
 
         return serendipity_score * serendipity_weight
 
-    async def _compute_topic_serendipity(
-        self, recommendation: Recommendation, user_profile: UserProfile
-    ) -> float:
+    async def _compute_topic_serendipity(self, recommendation: Recommendation, user_profile: UserProfile) -> float:
         """Compute topic serendipity score."""
         if not recommendation.topics or not user_profile.topic_preferences:
             return 0.0
@@ -175,9 +163,7 @@ class DiversityOptimizer:
 
         return serendipity_score
 
-    async def _compute_source_serendipity(
-        self, recommendation: Recommendation, user_profile: UserProfile
-    ) -> float:
+    async def _compute_source_serendipity(self, recommendation: Recommendation, user_profile: UserProfile) -> float:
         """Compute source serendipity score."""
         if not recommendation.source or not user_profile.source_preferences:
             return 0.0
@@ -186,9 +172,7 @@ class DiversityOptimizer:
         # Higher serendipity for less preferred sources
         return 1.0 - preference
 
-    async def _compute_content_novelty(
-        self, recommendation: Recommendation, user_profile: UserProfile
-    ) -> float:
+    async def _compute_content_novelty(self, recommendation: Recommendation, user_profile: UserProfile) -> float:
         """Compute content novelty score."""
         # This would typically use content embeddings or other features
         # For now, use a simple heuristic based on content features
@@ -198,18 +182,14 @@ class DiversityOptimizer:
         # Check for unusual content features
         if "embedding_dim" in recommendation.features:
             # Use embedding variance as novelty indicator
-            embedding_values = [
-                v for k, v in recommendation.features.items() if k.startswith("embedding_dim_")
-            ]
+            embedding_values = [v for k, v in recommendation.features.items() if k.startswith("embedding_dim_")]
             if embedding_values:
                 variance = np.var(embedding_values)
                 novelty_score = min(1.0, variance)
 
         return novelty_score
 
-    async def _compute_serendipity_score(
-        self, recommendation: Recommendation, user_profile: UserProfile
-    ) -> float:
+    async def _compute_serendipity_score(self, recommendation: Recommendation, user_profile: UserProfile) -> float:
         """Compute overall serendipity score for a recommendation."""
         topic_serendipity = await self._compute_topic_serendipity(recommendation, user_profile)
         source_serendipity = await self._compute_source_serendipity(recommendation, user_profile)
@@ -267,9 +247,7 @@ class DiversityOptimizer:
                     # Content diversity (using features)
                     content_diversity = await self._compute_content_diversity_score(rec, other_rec)
 
-                    diversity_score += (
-                        topic_diversity * 0.4 + source_diversity * 0.3 + content_diversity * 0.3
-                    )
+                    diversity_score += topic_diversity * 0.4 + source_diversity * 0.3 + content_diversity * 0.3
                     count += 1
 
             if count > 0:
@@ -279,9 +257,7 @@ class DiversityOptimizer:
 
         return diversity_scores
 
-    async def _compute_topic_diversity_score(
-        self, rec1: Recommendation, rec2: Recommendation
-    ) -> float:
+    async def _compute_topic_diversity_score(self, rec1: Recommendation, rec2: Recommendation) -> float:
         """Compute topic diversity between two recommendations."""
         if not rec1.topics or not rec2.topics:
             return 1.0
@@ -298,18 +274,14 @@ class DiversityOptimizer:
 
         return 1.0 - (intersection / union)
 
-    async def _compute_source_diversity_score(
-        self, rec1: Recommendation, rec2: Recommendation
-    ) -> float:
+    async def _compute_source_diversity_score(self, rec1: Recommendation, rec2: Recommendation) -> float:
         """Compute source diversity between two recommendations."""
         if not rec1.source or not rec2.source:
             return 1.0
 
         return 1.0 if rec1.source != rec2.source else 0.0
 
-    async def _compute_content_diversity_score(
-        self, rec1: Recommendation, rec2: Recommendation
-    ) -> float:
+    async def _compute_content_diversity_score(self, rec1: Recommendation, rec2: Recommendation) -> float:
         """Compute content diversity between two recommendations."""
         # Extract feature vectors
         features1 = self._extract_feature_vector(rec1)
@@ -340,9 +312,7 @@ class DiversityOptimizer:
 
         return features if features else None
 
-    async def compute_diversity_metrics(
-        self, recommendations: List[Recommendation]
-    ) -> Dict[str, float]:
+    async def compute_diversity_metrics(self, recommendations: List[Recommendation]) -> Dict[str, float]:
         """Compute diversity metrics for a set of recommendations."""
         if not recommendations:
             return {}

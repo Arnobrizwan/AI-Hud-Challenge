@@ -14,7 +14,8 @@ class TestIncrementalDBSCAN:
 
     def test_init(self):
         """Test DBSCAN initialization."""
-        dbscan = IncrementalDBSCAN(eps=0.3, min_samples=2, max_cluster_size=100)
+        dbscan = IncrementalDBSCAN(
+            eps=0.3, min_samples=2, max_cluster_size=100)
 
         assert dbscan.eps == 0.3
         assert dbscan.min_samples == 2
@@ -23,8 +24,11 @@ class TestIncrementalDBSCAN:
         assert len(dbscan.cluster_centers) == 0
 
     @pytest.mark.asyncio
-    async def test_fit_predict(self, clustering_engine, mock_articles_for_clustering):
-        """Test fit and predict."""
+    async def test_fit_predict(
+            self,
+            clustering_engine,
+            mock_articles_for_clustering):
+         -> Dict[str, Any]:"""Test fit and predict."""
         # Create mock features
         features = np.random.random((len(mock_articles_for_clustering), 10))
 
@@ -36,8 +40,11 @@ class TestIncrementalDBSCAN:
         assert all(label >= -1 for label in cluster_labels)
 
     @pytest.mark.asyncio
-    async def test_incremental_fit(self, clustering_engine, mock_articles_for_clustering):
-        """Test incremental fitting."""
+    async def test_incremental_fit(
+            self,
+            clustering_engine,
+            mock_articles_for_clustering):
+         -> Dict[str, Any]:"""Test incremental fitting."""
         # First fit with some articles
         initial_articles = mock_articles_for_clustering[:3]
         initial_features = np.random.random((len(initial_articles), 10))
@@ -54,8 +61,9 @@ class TestIncrementalDBSCAN:
         assert all(isinstance(label, int) for label in new_labels)
 
     @pytest.mark.asyncio
-    async def test_compute_temporal_features(self, clustering_engine, sample_article):
-        """Test temporal feature computation."""
+    async def test_compute_temporal_features(
+            self, clustering_engine, sample_article):
+         -> Dict[str, Any]:"""Test temporal feature computation."""
         features = await clustering_engine._compute_temporal_features(sample_article)
 
         assert isinstance(features, np.ndarray)
@@ -63,8 +71,9 @@ class TestIncrementalDBSCAN:
         assert all(isinstance(f, (int, float)) for f in features)
 
     @pytest.mark.asyncio
-    async def test_compute_entity_features(self, clustering_engine, sample_article):
-        """Test entity feature computation."""
+    async def test_compute_entity_features(
+            self, clustering_engine, sample_article):
+         -> Dict[str, Any]:"""Test entity feature computation."""
         features = await clustering_engine._compute_entity_features(sample_article.entities)
 
         assert isinstance(features, np.ndarray)
@@ -72,8 +81,9 @@ class TestIncrementalDBSCAN:
         assert all(isinstance(f, (int, float)) for f in features)
 
     @pytest.mark.asyncio
-    async def test_compute_topic_features(self, clustering_engine, sample_article):
-        """Test topic feature computation."""
+    async def test_compute_topic_features(
+            self, clustering_engine, sample_article):
+         -> Dict[str, Any]:"""Test topic feature computation."""
         features = await clustering_engine._compute_topic_features(sample_article.topics)
 
         assert isinstance(features, np.ndarray)
@@ -81,8 +91,9 @@ class TestIncrementalDBSCAN:
         assert all(isinstance(f, (int, float)) for f in features)
 
     @pytest.mark.asyncio
-    async def test_compute_geo_features(self, clustering_engine, sample_article):
-        """Test geographic feature computation."""
+    async def test_compute_geo_features(
+            self, clustering_engine, sample_article):
+         -> Dict[str, Any]:"""Test geographic feature computation."""
         features = await clustering_engine._compute_geo_features(sample_article.locations)
 
         assert isinstance(features, np.ndarray)
@@ -133,8 +144,11 @@ class TestEventGroupingEngine:
         assert event_grouping_engine.max_cluster_size == 100
 
     @pytest.mark.asyncio
-    async def test_group_into_events(self, event_grouping_engine, mock_articles_for_clustering):
-        """Test grouping articles into events."""
+    async def test_group_into_events(
+            self,
+            event_grouping_engine,
+            mock_articles_for_clustering):
+         -> Dict[str, Any]:"""Test grouping articles into events."""
         events = await event_grouping_engine.group_into_events(mock_articles_for_clustering)
 
         assert isinstance(events, list)
@@ -151,7 +165,7 @@ class TestEventGroupingEngine:
     async def test_incremental_group_articles(
         self, event_grouping_engine, mock_articles_for_clustering
     ):
-        """Test incremental article grouping."""
+         -> Dict[str, Any]:"""Test incremental article grouping."""
         # First group some articles
         initial_articles = mock_articles_for_clustering[:3]
         initial_events = await event_grouping_engine.group_into_events(initial_articles)
@@ -165,24 +179,27 @@ class TestEventGroupingEngine:
         assert len(updated_events) >= 0
 
     @pytest.mark.asyncio
-    async def test_compute_temporal_coherence(self, event_grouping_engine, sample_articles):
-        """Test temporal coherence computation."""
+    async def test_compute_temporal_coherence(
+            self, event_grouping_engine, sample_articles):
+         -> Dict[str, Any]:"""Test temporal coherence computation."""
         coherence = await event_grouping_engine._compute_temporal_coherence(sample_articles)
 
         assert isinstance(coherence, float)
         assert 0.0 <= coherence <= 1.0
 
     @pytest.mark.asyncio
-    async def test_compute_topical_coherence(self, event_grouping_engine, sample_articles):
-        """Test topical coherence computation."""
+    async def test_compute_topical_coherence(
+            self, event_grouping_engine, sample_articles):
+         -> Dict[str, Any]:"""Test topical coherence computation."""
         coherence = await event_grouping_engine._compute_topical_coherence(sample_articles)
 
         assert isinstance(coherence, float)
         assert 0.0 <= coherence <= 1.0
 
     @pytest.mark.asyncio
-    async def test_compute_centrality(self, event_grouping_engine, sample_articles):
-        """Test centrality computation."""
+    async def test_compute_centrality(
+            self, event_grouping_engine, sample_articles):
+         -> Dict[str, Any]:"""Test centrality computation."""
         candidate = sample_articles[0]
         cluster_articles = sample_articles[:3]
 
@@ -191,15 +208,17 @@ class TestEventGroupingEngine:
         assert isinstance(centrality, float)
         assert 0.0 <= centrality <= 1.0
 
-    def test_compute_freshness_score(self, event_grouping_engine, sample_article):
+    def test_compute_freshness_score(
+            self, event_grouping_engine, sample_article):
         """Test freshness score computation."""
-        score = event_grouping_engine._compute_freshness_score(sample_article.published_at)
+        score = event_grouping_engine._compute_freshness_score(
+            sample_article.published_at)
 
         assert isinstance(score, float)
         assert 0.0 <= score <= 1.0
 
     @pytest.mark.asyncio
-    async def test_get_source_authority(self, event_grouping_engine):
+    async def test_get_source_authority(self, event_grouping_engine) -> Dict[str, Any]:
         """Test source authority computation."""
         authority = await event_grouping_engine._get_source_authority("reuters")
         assert isinstance(authority, float)
@@ -209,16 +228,19 @@ class TestEventGroupingEngine:
         authority = await event_grouping_engine._get_source_authority("unknown_source")
         assert authority == 0.5  # Default value
 
-    def test_compute_completeness_score(self, event_grouping_engine, sample_article):
+    def test_compute_completeness_score(
+            self, event_grouping_engine, sample_article):
         """Test completeness score computation."""
-        score = event_grouping_engine._compute_completeness_score(sample_article)
+        score = event_grouping_engine._compute_completeness_score(
+            sample_article)
 
         assert isinstance(score, float)
         assert 0.0 <= score <= 1.0
 
     @pytest.mark.asyncio
-    async def test_extract_common_topics(self, event_grouping_engine, sample_articles):
-        """Test common topic extraction."""
+    async def test_extract_common_topics(
+            self, event_grouping_engine, sample_articles):
+         -> Dict[str, Any]:"""Test common topic extraction."""
         topics = await event_grouping_engine._extract_common_topics(sample_articles)
 
         assert isinstance(topics, list)
@@ -228,8 +250,9 @@ class TestEventGroupingEngine:
             assert hasattr(topic, "confidence")
 
     @pytest.mark.asyncio
-    async def test_extract_common_entities(self, event_grouping_engine, sample_articles):
-        """Test common entity extraction."""
+    async def test_extract_common_entities(
+            self, event_grouping_engine, sample_articles):
+         -> Dict[str, Any]:"""Test common entity extraction."""
         entities = await event_grouping_engine._extract_common_entities(sample_articles)
 
         assert isinstance(entities, list)
@@ -240,8 +263,9 @@ class TestEventGroupingEngine:
             assert hasattr(entity, "confidence")
 
     @pytest.mark.asyncio
-    async def test_extract_common_locations(self, event_grouping_engine, sample_articles):
-        """Test common location extraction."""
+    async def test_extract_common_locations(
+            self, event_grouping_engine, sample_articles):
+         -> Dict[str, Any]:"""Test common location extraction."""
         locations = await event_grouping_engine._extract_common_locations(sample_articles)
 
         assert isinstance(locations, list)

@@ -18,7 +18,8 @@ logger = structlog.get_logger()
 class UserProfileManager:
     """Dynamic user profiling with real-time updates."""
 
-    def __init__(self, redis_client: RedisClient, postgres_client: PostgreSQLClient):
+    def __init__(self, redis_client: RedisClient,
+                 postgres_client: PostgreSQLClient):
         self.redis = redis_client
         self.postgres = postgres_client
         self.cache_ttl = settings.profile_cache_ttl
@@ -165,14 +166,15 @@ class UserProfileManager:
 
         # Update preferences
         for topic in topics:
-            current_preferences[topic] = current_preferences.get(topic, 0.0) + weight
+            current_preferences[topic] = current_preferences.get(
+                topic, 0.0) + weight
 
         # Normalize preferences
         total_weight = sum(current_preferences.values())
         if total_weight > 0:
             current_preferences = {
-                topic: weight / total_weight for topic, weight in current_preferences.items()
-            }
+                topic: weight / total_weight for topic,
+                weight in current_preferences.items()}
 
         return current_preferences
 
@@ -184,21 +186,22 @@ class UserProfileManager:
         weight = self._get_interaction_weight(interaction_type)
 
         # Update preferences
-        current_preferences[source] = current_preferences.get(source, 0.0) + weight
+        current_preferences[source] = current_preferences.get(
+            source, 0.0) + weight
 
         # Normalize preferences
         total_weight = sum(current_preferences.values())
         if total_weight > 0:
             current_preferences = {
-                source: weight / total_weight for source, weight in current_preferences.items()
-            }
+                source: weight / total_weight for source,
+                weight in current_preferences.items()}
 
         return current_preferences
 
     async def update_reading_patterns(
         self, current_patterns: Dict[str, Any], interaction: UserInteraction
     ) -> Dict[str, Any]:
-        """Update reading patterns based on interaction."""
+    """Update reading patterns based on interaction."""
         patterns = current_patterns.copy()
 
         # Update device preference
@@ -210,7 +213,9 @@ class UserProfileManager:
             patterns["device_counts"] = device_counts
 
             # Update preferred device
-            preferred_device = max(device_counts.items(), key=lambda x: x[1])[0]
+            preferred_device = max(
+                device_counts.items(),
+                key=lambda x: x[1])[0]
             patterns["preferred_device"] = preferred_device
 
         # Update time patterns
@@ -232,16 +237,20 @@ class UserProfileManager:
             length_category = self._get_length_category(length)
 
             length_counts = patterns.get("length_counts", {})
-            length_counts[length_category] = length_counts.get(length_category, 0) + 1
+            length_counts[length_category] = length_counts.get(
+                length_category, 0) + 1
             patterns["length_counts"] = length_counts
 
             # Update preferred length
-            preferred_length = max(length_counts.items(), key=lambda x: x[1])[0]
+            preferred_length = max(
+                length_counts.items(),
+                key=lambda x: x[1])[0]
             patterns["preferred_length"] = preferred_length
 
         return patterns
 
-    def _get_interaction_weight(self, interaction_type: InteractionType) -> float:
+    def _get_interaction_weight(
+            self, interaction_type: InteractionType) -> float:
         """Get weight for interaction based on type."""
         weights = {
             InteractionType.CLICK: 1.0,
@@ -326,7 +335,7 @@ class UserProfileManager:
         recent_interactions = await self.postgres.fetch_all(
             """
             SELECT interaction_type, COUNT(*) as count
-            FROM user_interactions 
+            FROM user_interactions
             WHERE user_id = $1 AND timestamp > $2
             GROUP BY interaction_type
             """,
@@ -364,8 +373,8 @@ class UserProfileManager:
         # Get active users (last 30 days)
         active_users = await self.postgres.fetch_one(
             """
-            SELECT COUNT(*) as count 
-            FROM user_profiles 
+            SELECT COUNT(*) as count
+            FROM user_profiles
             WHERE last_interaction_at > $1
             """,
             datetime.utcnow() - timedelta(days=30),

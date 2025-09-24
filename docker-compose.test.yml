@@ -1,0 +1,253 @@
+# docker-compose.test.yml - Test environment
+version: '3.8'
+
+services:
+  # Test database
+  test-postgres:
+    image: pgvector/pgvector:pg15
+    environment:
+      POSTGRES_DB: newshub_test
+      POSTGRES_USER: newshub
+      POSTGRES_PASSWORD: test_password
+    ports: ["5433:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U newshub"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Test Redis
+  test-redis:
+    image: redis:7-alpine
+    ports: ["6380:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Test services
+  test-safety-service:
+    build:
+      context: ./safety-service
+      dockerfile: Dockerfile.dev
+    environment:
+      - REDIS_URL=redis://test-redis:6379
+      - DATABASE_URL=postgresql://newshub:test_password@test-postgres:5432/newshub_test
+      - ENVIRONMENT=test
+    depends_on:
+      test-postgres:
+        condition: service_healthy
+      test-redis:
+        condition: service_healthy
+    command: ["python", "-m", "pytest", "tests/", "-v"]
+
+  test-ingestion-service:
+    build:
+      context: ./ingestion-service
+      dockerfile: Dockerfile.dev
+    environment:
+      - REDIS_URL=redis://test-redis:6379
+      - DATABASE_URL=postgresql://newshub:test_password@test-postgres:5432/newshub_test
+      - ENVIRONMENT=test
+    depends_on:
+      test-postgres:
+        condition: service_healthy
+      test-redis:
+        condition: service_healthy
+    command: ["python", "-m", "pytest", "tests/", "-v"]
+
+  test-content-extraction-service:
+    build:
+      context: ./content-extraction-service
+      dockerfile: Dockerfile.dev
+    environment:
+      - REDIS_URL=redis://test-redis:6379
+      - DATABASE_URL=postgresql://newshub:test_password@test-postgres:5432/newshub_test
+      - ENVIRONMENT=test
+    depends_on:
+      test-postgres:
+        condition: service_healthy
+      test-redis:
+        condition: service_healthy
+    command: ["python", "-m", "pytest", "tests/", "-v"]
+
+  test-content-enrichment-service:
+    build:
+      context: ./content-enrichment-service
+      dockerfile: Dockerfile.dev
+    environment:
+      - REDIS_URL=redis://test-redis:6379
+      - DATABASE_URL=postgresql://newshub:test_password@test-postgres:5432/newshub_test
+      - ENVIRONMENT=test
+    depends_on:
+      test-postgres:
+        condition: service_healthy
+      test-redis:
+        condition: service_healthy
+    command: ["python", "-m", "pytest", "tests/", "-v"]
+
+  test-deduplication-service:
+    build:
+      context: ./deduplication-service
+      dockerfile: Dockerfile.dev
+    environment:
+      - REDIS_URL=redis://test-redis:6379
+      - DATABASE_URL=postgresql://newshub:test_password@test-postgres:5432/newshub_test
+      - ENVIRONMENT=test
+    depends_on:
+      test-postgres:
+        condition: service_healthy
+      test-redis:
+        condition: service_healthy
+    command: ["python", "-m", "pytest", "tests/", "-v"]
+
+  test-ranking-service:
+    build:
+      context: ./src
+      dockerfile: Dockerfile.dev
+    environment:
+      - REDIS_URL=redis://test-redis:6379
+      - DATABASE_URL=postgresql://newshub:test_password@test-postgres:5432/newshub_test
+      - ENVIRONMENT=test
+    depends_on:
+      test-postgres:
+        condition: service_healthy
+      test-redis:
+        condition: service_healthy
+    command: ["python", "-m", "pytest", "tests/", "-v"]
+
+  test-summarization-service:
+    build:
+      context: ./summarization-service
+      dockerfile: Dockerfile.dev
+    environment:
+      - REDIS_URL=redis://test-redis:6379
+      - DATABASE_URL=postgresql://newshub:test_password@test-postgres:5432/newshub_test
+      - ENVIRONMENT=test
+    depends_on:
+      test-postgres:
+        condition: service_healthy
+      test-redis:
+        condition: service_healthy
+    command: ["python", "-m", "pytest", "tests/", "-v"]
+
+  test-personalization-service:
+    build:
+      context: ./personalization-service
+      dockerfile: Dockerfile.dev
+    environment:
+      - REDIS_URL=redis://test-redis:6379
+      - DATABASE_URL=postgresql://newshub:test_password@test-postgres:5432/newshub_test
+      - ENVIRONMENT=test
+    depends_on:
+      test-postgres:
+        condition: service_healthy
+      test-redis:
+        condition: service_healthy
+    command: ["python", "-m", "pytest", "tests/", "-v"]
+
+  test-notification-service:
+    build:
+      context: ./notification-service
+      dockerfile: Dockerfile.dev
+    environment:
+      - REDIS_URL=redis://test-redis:6379
+      - DATABASE_URL=postgresql://newshub:test_password@test-postgres:5432/newshub_test
+      - ENVIRONMENT=test
+    depends_on:
+      test-postgres:
+        condition: service_healthy
+      test-redis:
+        condition: service_healthy
+    command: ["python", "-m", "pytest", "tests/", "-v"]
+
+  test-feedback-service:
+    build:
+      context: ./feedback-service
+      dockerfile: Dockerfile.dev
+    environment:
+      - REDIS_URL=redis://test-redis:6379
+      - DATABASE_URL=postgresql://newshub:test_password@test-postgres:5432/newshub_test
+      - ENVIRONMENT=test
+    depends_on:
+      test-postgres:
+        condition: service_healthy
+      test-redis:
+        condition: service_healthy
+    command: ["python", "-m", "pytest", "tests/", "-v"]
+
+  test-evaluation-service:
+    build:
+      context: ./evaluation-service
+      dockerfile: Dockerfile.dev
+    environment:
+      - REDIS_URL=redis://test-redis:6379
+      - DATABASE_URL=postgresql://newshub:test_password@test-postgres:5432/newshub_test
+      - ENVIRONMENT=test
+    depends_on:
+      test-postgres:
+        condition: service_healthy
+      test-redis:
+        condition: service_healthy
+    command: ["python", "-m", "pytest", "tests/", "-v"]
+
+  test-mlops-orchestration-service:
+    build:
+      context: ./mlops-orchestration-service
+      dockerfile: Dockerfile.dev
+    environment:
+      - REDIS_URL=redis://test-redis:6379
+      - DATABASE_URL=postgresql://newshub:test_password@test-postgres:5432/newshub_test
+      - ENVIRONMENT=test
+    depends_on:
+      test-postgres:
+        condition: service_healthy
+      test-redis:
+        condition: service_healthy
+    command: ["python", "-m", "pytest", "tests/", "-v"]
+
+  test-storage-service:
+    build:
+      context: ./storage-service
+      dockerfile: Dockerfile.dev
+    environment:
+      - REDIS_URL=redis://test-redis:6379
+      - DATABASE_URL=postgresql://newshub:test_password@test-postgres:5432/newshub_test
+      - ENVIRONMENT=test
+    depends_on:
+      test-postgres:
+        condition: service_healthy
+      test-redis:
+        condition: service_healthy
+    command: ["python", "-m", "pytest", "tests/", "-v"]
+
+  test-realtime-interface-service:
+    build:
+      context: ./realtime-interface-service
+      dockerfile: Dockerfile.dev
+    environment:
+      - REDIS_URL=redis://test-redis:6379
+      - DATABASE_URL=postgresql://newshub:test_password@test-postgres:5432/newshub_test
+      - ENVIRONMENT=test
+    depends_on:
+      test-postgres:
+        condition: service_healthy
+      test-redis:
+        condition: service_healthy
+    command: ["python", "-m", "pytest", "tests/", "-v"]
+
+  test-observability-service:
+    build:
+      context: ./observability-service
+      dockerfile: Dockerfile.dev
+    environment:
+      - REDIS_URL=redis://test-redis:6379
+      - DATABASE_URL=postgresql://newshub:test_password@test-postgres:5432/newshub_test
+      - ENVIRONMENT=test
+    depends_on:
+      test-postgres:
+        condition: service_healthy
+      test-redis:
+        condition: service_healthy
+    command: ["python", "-m", "pytest", "tests/", "-v"]

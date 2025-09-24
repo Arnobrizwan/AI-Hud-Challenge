@@ -18,12 +18,12 @@ class GDPRProcessor:
     def __init__(self):
         self._initialized = False
 
-    async def initialize(self):
+    async def initialize(self) -> Dict[str, Any]:
         """Initialize GDPR processor"""
         self._initialized = True
         logger.info("GDPR Processor initialized")
 
-    async def cleanup(self):
+    async def cleanup(self) -> Dict[str, Any]:
         """Cleanup GDPR processor"""
         self._initialized = False
         logger.info("GDPR Processor cleanup complete")
@@ -47,8 +47,9 @@ class GDPRProcessor:
             deletion_timestamp=datetime.utcnow(),
         )
 
-    async def rectify_user_data(self, user_id: str, corrections: Dict[str, Any]) -> Dict[str, Any]:
-        """Rectify user data for GDPR compliance"""
+    async def rectify_user_data(
+            self, user_id: str, corrections: Dict[str, Any]) -> Dict[str, Any]:
+    """Rectify user data for GDPR compliance"""
         # Placeholder implementation
         return {
             "user_id": user_id,

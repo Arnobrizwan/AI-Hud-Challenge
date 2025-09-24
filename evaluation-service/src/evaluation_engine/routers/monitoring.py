@@ -3,7 +3,7 @@ Monitoring Router - Real-time monitoring and alerting endpoints
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 
@@ -18,9 +18,8 @@ monitoring_router = APIRouter()
 @monitoring_router.get("/status")
 async def get_monitoring_status(
     evaluation_engine: EvaluationEngine = Depends(get_evaluation_engine),
-):
+) -> Dict[str, Any]:
     """Get monitoring service status"""
-
     try:
         logger.info("Getting monitoring status")
 
@@ -52,9 +51,8 @@ async def get_monitoring_metrics(
     experiment_id: Optional[str] = None,
     time_range: Optional[str] = "1h",
     evaluation_engine: EvaluationEngine = Depends(get_evaluation_engine),
-):
+) -> Dict[str, Any]:
     """Get monitoring metrics"""
-
     try:
         logger.info(f"Getting monitoring metrics for experiment {experiment_id}")
 

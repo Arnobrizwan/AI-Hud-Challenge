@@ -5,9 +5,9 @@ Content models for news ingestion and normalization.
 import hashlib
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field, HttpUrl, validator
+from pydantic import BaseModel, Field, validator
 
 
 class ContentType(str, Enum):
@@ -55,9 +55,7 @@ class IngestionMetadata(BaseModel):
     source_id: str = Field(..., description="Source identifier")
     source_type: SourceType = Field(..., description="Type of source")
     source_url: str = Field(..., description="Source URL")
-    ingested_at: datetime = Field(
-        default_factory=datetime.utcnow, description="Ingestion timestamp"
-    )
+    ingested_at: datetime = Field(default_factory=datetime.utcnow, description="Ingestion timestamp")
     processed_at: Optional[datetime] = Field(None, description="Processing timestamp")
     processing_time_ms: Optional[int] = Field(None, description="Processing time in milliseconds")
     retry_count: int = Field(default=0, description="Number of retry attempts")
@@ -97,9 +95,7 @@ class NormalizedArticle(BaseModel):
     content_type: ContentType = Field(default=ContentType.ARTICLE, description="Type of content")
     raw_data: Dict[str, Any] = Field(default_factory=dict, description="Original feed data")
     ingestion_metadata: IngestionMetadata = Field(..., description="Processing metadata")
-    processing_status: ProcessingStatus = Field(
-        default=ProcessingStatus.PENDING, description="Processing status"
-    )
+    processing_status: ProcessingStatus = Field(default=ProcessingStatus.PENDING, description="Processing status")
 
     @validator("url", "canonical_url")
     def validate_urls(cls, v):
@@ -244,9 +240,7 @@ class DuplicateDetection(BaseModel):
     duplicate_of: str = Field(..., description="ID of duplicate article")
     similarity_score: float = Field(..., description="Similarity score (0-1)")
     detection_method: str = Field(..., description="Detection method used")
-    detected_at: datetime = Field(
-        default_factory=datetime.utcnow, description="Detection timestamp"
-    )
+    detected_at: datetime = Field(default_factory=datetime.utcnow, description="Detection timestamp")
 
     @validator("similarity_score")
     def validate_similarity_score(cls, v):
@@ -267,12 +261,8 @@ class ContentMetrics(BaseModel):
     duplicate_articles: int = Field(default=0, description="Duplicate articles")
     average_processing_time_ms: float = Field(default=0.0, description="Average processing time")
     average_word_count: float = Field(default=0.0, description="Average word count")
-    language_distribution: Dict[str, int] = Field(
-        default_factory=dict, description="Language distribution"
-    )
-    content_type_distribution: Dict[str, int] = Field(
-        default_factory=dict, description="Content type distribution"
-    )
+    language_distribution: Dict[str, int] = Field(default_factory=dict, description="Language distribution")
+    content_type_distribution: Dict[str, int] = Field(default_factory=dict, description="Content type distribution")
 
     @property
     def success_rate(self) -> float:

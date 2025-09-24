@@ -172,9 +172,7 @@ class TestProcessingBatch:
 
     def test_create_processing_batch(self):
         """Test creating a valid processing batch."""
-        batch = ProcessingBatch(
-            batch_id="test-batch-1", source_id="test-source", articles=[], total_count=0
-        )
+        batch = ProcessingBatch(batch_id="test-batch-1", source_id="test-source", articles=[], total_count=0)
 
         assert batch.batch_id == "test-batch-1"
         assert batch.source_id == "test-source"
@@ -185,9 +183,7 @@ class TestProcessingBatch:
         """Test batch validation rules."""
         # Test invalid total count
         with pytest.raises(ValueError):
-            ProcessingBatch(
-                batch_id="test-batch-1", source_id="test-source", articles=[], total_count=-1
-            )
+            ProcessingBatch(batch_id="test-batch-1", source_id="test-source", articles=[], total_count=-1)
 
     def test_processing_time_calculation(self):
         """Test processing time calculation."""
