@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: deduplication-service
+  namespace: deduplication-service
+  labels:
+    app: deduplication-service
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8000
+    targetPort: 8000
+    protocol: TCP
+    name: http
+  - port: 9090
+    targetPort: 9090
+    protocol: TCP
+    name: metrics
+  selector:
+    app: deduplication-service

@@ -1,0 +1,135 @@
+# Ingress for external access to the service
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: foundations-guards-ingress
+  namespace: foundations-guards
+  labels:
+    app: foundations-guards-service
+  annotations:
+    # GCP-specific annotations
+    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.global-static-ip-name: "foundations-guards-ip"
+    networking.gke.io/managed-certificates: "foundations-guards-ssl-cert"
+    ingress.gcp.kubernetes.io/frontend-config: "foundations-guards-frontend-config"
+    ingress.gcp.kubernetes.io/backend-config: "foundations-guards-backend-config"
+    
+    # Rate limiting and security
+    cloud.google.com/armor-config: '{"foundations-guards-armor-policy": "foundations-guards-security-policy"}'
+    
+    # SSL redirect
+    ingress.kubernetes.io/ssl-redirect: "true"
+    
+    # Load balancer type
+    cloud.google.com/load-balancer-type: "External"
+spec:
+  rules:
+  - host: api.foundations-guards.your-domain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: foundations-guards-service
+            port:
+              number: 80
+  tls:
+  - hosts:
+    - api.foundations-guards.your-domain.com
+    secretName: foundations-guards-tls-secret
+
+---
+# Managed Certificate for HTTPS
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: foundations-guards-ssl-cert
+  namespace: foundations-guards
+spec:
+  domains:
+    - api.foundations-guards.your-domain.com
+
+---
+# Frontend Config for additional ingress settings
+apiVersion: networking.gke.io/v1beta1
+kind: FrontendConfig
+metadata:
+  name: foundations-guards-frontend-config
+  namespace: foundations-guards
+spec:
+  sslPolicy: "foundations-guards-ssl-policy"
+  redirectToHttps:
+    enabled: true
+    responseCodeName: MOVED_PERMANENTLY_DEFAULT
+
+---
+# Backend Config for backend-specific settings
+apiVersion: networking.gke.io/v1
+kind: BackendConfig
+metadata:
+  name: foundations-guards-backend-config
+  namespace: foundations-guards
+spec:
+  healthCheck:
+    checkIntervalSec: 10
+    timeoutSec: 5
+    healthyThreshold: 1
+    unhealthyThreshold: 3
+    type: HTTP
+    requestPath: /health/live
+    port: 8080
+  
+  sessionAffinity:
+    affinityType: "CLIENT_IP"
+    affinityCookieTtlSec: 3600
+  
+  timeoutSec: 30
+  
+  connectionDraining:
+    drainingTimeoutSec: 60
+  
+  logging:
+    enable: true
+    sampleRate: 1.0
+
+---
+# Network Policy for ingress traffic
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: foundations-guards-ingress-policy
+  namespace: foundations-guards
+spec:
+  podSelector:
+    matchLabels:
+      app: foundations-guards-service
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    - podSelector:
+        matchLabels:
+          k8s-app: glbc
+    ports:
+    - protocol: TCP
+      port: 8080
+  - from: []
+    ports:
+    - protocol: TCP
+      port: 8080
+  egress:
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 6379  # Redis
+    - protocol: TCP
+      port: 443   # HTTPS
+    - protocol: TCP
+      port: 80    # HTTP
+    - protocol: UDP
+      port: 53    # DNS

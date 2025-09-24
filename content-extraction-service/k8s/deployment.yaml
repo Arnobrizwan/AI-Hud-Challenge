@@ -1,0 +1,143 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: content-extraction-service
+  labels:
+    app: content-extraction-service
+    version: v1
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: content-extraction-service
+  template:
+    metadata:
+      labels:
+        app: content-extraction-service
+        version: v1
+    spec:
+      containers:
+      - name: content-extraction-service
+        image: gcr.io/PROJECT_ID/content-extraction-service:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        - name: LOG_LEVEL
+          value: "INFO"
+        - name: GCP_PROJECT_ID
+          valueFrom:
+            secretKeyRef:
+              name: gcp-secrets
+              key: project-id
+        - name: GCP_REGION
+          value: "us-central1"
+        - name: GCP_CLOUD_STORAGE_BUCKET
+          valueFrom:
+            secretKeyRef:
+              name: gcp-secrets
+              key: storage-bucket
+        - name: GCP_CLOUD_TASKS_QUEUE
+          valueFrom:
+            secretKeyRef:
+              name: gcp-secrets
+              key: tasks-queue
+        - name: GCP_DOCUMENT_AI_PROCESSOR_ID
+          valueFrom:
+            secretKeyRef:
+              name: gcp-secrets
+              key: document-ai-processor
+        - name: GCP_DOCUMENT_AI_LOCATION
+          value: "us"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        volumeMounts:
+        - name: gcp-service-account
+          mountPath: /var/secrets/google
+          readOnly: true
+      volumes:
+      - name: gcp-service-account
+        secret:
+          secretName: gcp-service-account
+      nodeSelector:
+        cloud.google.com/gke-nodepool: default-pool
+      tolerations:
+      - key: "cloud.google.com/gke-nodepool"
+        operator: "Equal"
+        value: "default-pool"
+        effect: "NoSchedule"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: content-extraction-service
+  labels:
+    app: content-extraction-service
+spec:
+  selector:
+    app: content-extraction-service
+  ports:
+  - port: 80
+    targetPort: 8000
+    protocol: TCP
+  type: ClusterIP
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: content-extraction-service-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: content-extraction-service
+  minReplicas: 2
+  maxReplicas: 50
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 15
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 10
+        periodSeconds: 60

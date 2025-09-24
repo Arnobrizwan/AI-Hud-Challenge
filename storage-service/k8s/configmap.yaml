@@ -1,0 +1,113 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: storage-config
+  namespace: storage
+data:
+  # Redis Configuration
+  redis-host: "redis-service"
+  redis-port: "6379"
+  redis-db: "0"
+  
+  # Elasticsearch Configuration
+  elasticsearch-hosts: "elasticsearch-service:9200"
+  elasticsearch-verify-certs: "false"
+  
+  # TimescaleDB Configuration
+  timescale-host: "timescale-service"
+  timescale-port: "5432"
+  timescale-database: "timescale_db"
+  timescale-username: "timescale"
+  
+  # Performance Configuration
+  max-concurrent-operations: "100"
+  query-timeout: "30"
+  cache-default-ttl: "3600"
+  
+  # Vector Search Configuration
+  vector-dimension: "768"
+  vector-similarity-threshold: "0.7"
+  vector-index-m: "16"
+  vector-index-ef-construction: "200"
+  
+  # Cache Configuration
+  memory-cache-size: "1000"
+  memory-cache-ttl: "300"
+  redis-cache-ttl: "3600"
+  cdn-cache-ttl: "86400"
+  
+  # Data Lifecycle Configuration
+  retention-check-interval: "3600"
+  max-retention-days: "365"
+  archive-after-days: "90"
+  
+  # Monitoring Configuration
+  metrics-enabled: "true"
+  metrics-port: "9090"
+  health-check-interval: "30"
+  
+  # Rate Limiting
+  rate-limit-requests: "1000"
+  rate-limit-window: "3600"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: storage-secrets
+  namespace: storage
+type: Opaque
+data:
+  # PostgreSQL Configuration
+  postgres-host: cG9zdGdyZXMtc2VydmljZQ==  # base64 encoded
+  postgres-password: cGFzc3dvcmQ=  # base64 encoded
+  
+  # Redis Configuration
+  redis-password: ""  # base64 encoded (empty for no password)
+  
+  # Elasticsearch Configuration
+  elasticsearch-username: ""  # base64 encoded (empty for no auth)
+  elasticsearch-password: ""  # base64 encoded (empty for no auth)
+  
+  # TimescaleDB Configuration
+  timescale-password: cGFzc3dvcmQ=  # base64 encoded
+  
+  # Cloud Storage Configuration
+  aws-access-key: ""  # base64 encoded
+  aws-secret-key: ""  # base64 encoded
+  
+  # Security
+  secret-key: eW91ci1zZWNyZXQta2V5  # base64 encoded
+  jwt-secret: eW91ci1qd3Qtc2VjcmV0  # base64 encoded
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: storage-service
+  namespace: storage
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: storage
+  name: storage-service-role
+rules:
+- apiGroups: [""]
+  resources: ["secrets", "configmaps"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: storage-service-rolebinding
+  namespace: storage
+subjects:
+- kind: ServiceAccount
+  name: storage-service
+  namespace: storage
+roleRef:
+  kind: Role
+  name: storage-service-role
+  apiGroup: rbac.authorization.k8s.io

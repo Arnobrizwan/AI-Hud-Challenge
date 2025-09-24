@@ -1,0 +1,10 @@
+# Kubernetes namespace for the Foundations & Guards service
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: foundations-guards
+  labels:
+    name: foundations-guards
+    environment: production
+    service: foundations-guards-service
+    managed-by: kubernetes

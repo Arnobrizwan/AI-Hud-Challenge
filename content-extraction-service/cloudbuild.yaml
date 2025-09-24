@@ -1,0 +1,78 @@
+# Cloud Build configuration for Content Extraction Service
+steps:
+  # Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/content-extraction-service:$COMMIT_SHA', '.']
+    dir: 'content-extraction-service'
+
+  # Push the container image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/content-extraction-service:$COMMIT_SHA']
+
+  # Deploy container image to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'content-extraction-service'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/content-extraction-service:$COMMIT_SHA'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--memory'
+      - '2Gi'
+      - '--cpu'
+      - '2'
+      - '--min-instances'
+      - '0'
+      - '--max-instances'
+      - '100'
+      - '--concurrency'
+      - '100'
+      - '--timeout'
+      - '900'
+      - '--set-env-vars'
+      - 'ENVIRONMENT=production,LOG_LEVEL=INFO,GCP_PROJECT_ID=$PROJECT_ID,GCP_REGION=us-central1'
+      - '--set-secrets'
+      - 'GCP_CLOUD_STORAGE_BUCKET=content-extraction-cache:latest,GCP_CLOUD_TASKS_QUEUE=content-extraction-queue:latest,GCP_DOCUMENT_AI_PROCESSOR_ID=document-ai-processor:latest'
+
+  # Run tests
+  - name: 'gcr.io/$PROJECT_ID/content-extraction-service:$COMMIT_SHA'
+    entrypoint: python
+    args: ['-m', 'pytest', 'src/tests/', '-v', '--cov=src', '--cov-report=xml']
+    dir: 'content-extraction-service'
+
+  # Upload coverage to Codecov
+  - name: 'gcr.io/cloud-builders/curl'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        if [ -f "content-extraction-service/coverage.xml" ]; then
+          curl -s https://codecov.io/bash | bash -s -- -f content-extraction-service/coverage.xml
+        fi
+
+# Store images in Container Registry
+images:
+  - 'gcr.io/$PROJECT_ID/content-extraction-service:$COMMIT_SHA'
+
+# Build options
+options:
+  machineType: 'E2_HIGHCPU_8'
+  diskSizeGb: 100
+  logging: CLOUD_LOGGING_ONLY
+
+# Substitution variables
+substitutions:
+  _SERVICE_NAME: 'content-extraction-service'
+  _REGION: 'us-central1'
+  _MEMORY: '2Gi'
+  _CPU: '2'
+  _MIN_INSTANCES: '0'
+  _MAX_INSTANCES: '100'
+  _CONCURRENCY: '100'
+  _TIMEOUT: '900'

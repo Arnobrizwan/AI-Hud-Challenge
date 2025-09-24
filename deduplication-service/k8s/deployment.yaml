@@ -1,0 +1,254 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deduplication-service
+  namespace: deduplication-service
+  labels:
+    app: deduplication-service
+    version: v1.0.0
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: deduplication-service
+  template:
+    metadata:
+      labels:
+        app: deduplication-service
+        version: v1.0.0
+    spec:
+      serviceAccountName: deduplication-service
+      containers:
+      - name: deduplication-service
+        image: deduplication-service:latest
+        ports:
+        - containerPort: 8000
+          name: http
+        - containerPort: 9090
+          name: metrics
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: deduplication-secrets
+              key: DATABASE_URL
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: deduplication-secrets
+              key: REDIS_URL
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: deduplication-secrets
+              key: SECRET_KEY
+        - name: ALGORITHM
+          valueFrom:
+            secretKeyRef:
+              name: deduplication-secrets
+              key: ALGORITHM
+        - name: ACCESS_TOKEN_EXPIRE_MINUTES
+          valueFrom:
+            secretKeyRef:
+              name: deduplication-secrets
+              key: ACCESS_TOKEN_EXPIRE_MINUTES
+        - name: ALLOWED_ORIGINS
+          valueFrom:
+            secretKeyRef:
+              name: deduplication-secrets
+              key: ALLOWED_ORIGINS
+        - name: ALLOWED_METHODS
+          valueFrom:
+            secretKeyRef:
+              name: deduplication-secrets
+              key: ALLOWED_METHODS
+        - name: ALLOWED_HEADERS
+          valueFrom:
+            secretKeyRef:
+              name: deduplication-secrets
+              key: ALLOWED_HEADERS
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: deduplication-config
+              key: LOG_LEVEL
+        - name: SIMILARITY_THRESHOLD
+          valueFrom:
+            configMapKeyRef:
+              name: deduplication-config
+              key: SIMILARITY_THRESHOLD
+        - name: LSH_THRESHOLD
+          valueFrom:
+            configMapKeyRef:
+              name: deduplication-config
+              key: LSH_THRESHOLD
+        - name: CLUSTERING_EPS
+          valueFrom:
+            configMapKeyRef:
+              name: deduplication-config
+              key: CLUSTERING_EPS
+        - name: CLUSTERING_MIN_SAMPLES
+          valueFrom:
+            configMapKeyRef:
+              name: deduplication-config
+              key: CLUSTERING_MIN_SAMPLES
+        - name: MAX_CLUSTER_SIZE
+          valueFrom:
+            configMapKeyRef:
+              name: deduplication-config
+              key: MAX_CLUSTER_SIZE
+        - name: LSH_NUM_PERM
+          valueFrom:
+            configMapKeyRef:
+              name: deduplication-config
+              key: LSH_NUM_PERM
+        - name: LSH_NUM_BANDS
+          valueFrom:
+            configMapKeyRef:
+              name: deduplication-config
+              key: LSH_NUM_BANDS
+        - name: LSH_BAND_SIZE
+          valueFrom:
+            configMapKeyRef:
+              name: deduplication-config
+              key: LSH_BAND_SIZE
+        - name: EMBEDDING_MODEL
+          valueFrom:
+            configMapKeyRef:
+              name: deduplication-config
+              key: EMBEDDING_MODEL
+        - name: EMBEDDING_DIMENSION
+          valueFrom:
+            configMapKeyRef:
+              name: deduplication-config
+              key: EMBEDDING_DIMENSION
+        - name: BATCH_SIZE
+          valueFrom:
+            configMapKeyRef:
+              name: deduplication-config
+              key: BATCH_SIZE
+        - name: MAX_WORKERS
+          valueFrom:
+            configMapKeyRef:
+              name: deduplication-config
+              key: MAX_WORKERS
+        - name: PROCESSING_TIMEOUT
+          valueFrom:
+            configMapKeyRef:
+              name: deduplication-config
+              key: PROCESSING_TIMEOUT
+        - name: TEMPORAL_DECAY_HALF_LIFE_HOURS
+          valueFrom:
+            configMapKeyRef:
+              name: deduplication-config
+              key: TEMPORAL_DECAY_HALF_LIFE_HOURS
+        - name: TITLE_WEIGHT
+          valueFrom:
+            configMapKeyRef:
+              name: deduplication-config
+              key: TITLE_WEIGHT
+        - name: CONTENT_WEIGHT
+          valueFrom:
+            configMapKeyRef:
+              name: deduplication-config
+              key: CONTENT_WEIGHT
+        - name: ENTITY_WEIGHT
+          valueFrom:
+            configMapKeyRef:
+              name: deduplication-config
+              key: ENTITY_WEIGHT
+        - name: CENTRALITY_WEIGHT
+          valueFrom:
+            configMapKeyRef:
+              name: deduplication-config
+              key: CENTRALITY_WEIGHT
+        - name: QUALITY_WEIGHT
+          valueFrom:
+            configMapKeyRef:
+              name: deduplication-config
+              key: QUALITY_WEIGHT
+        - name: FRESHNESS_WEIGHT
+          valueFrom:
+            configMapKeyRef:
+              name: deduplication-config
+              key: FRESHNESS_WEIGHT
+        - name: SOURCE_AUTHORITY_WEIGHT
+          valueFrom:
+            configMapKeyRef:
+              name: deduplication-config
+              key: SOURCE_AUTHORITY_WEIGHT
+        - name: COMPLETENESS_WEIGHT
+          valueFrom:
+            configMapKeyRef:
+              name: deduplication-config
+              key: COMPLETENESS_WEIGHT
+        - name: METRICS_ENABLED
+          valueFrom:
+            configMapKeyRef:
+              name: deduplication-config
+              key: METRICS_ENABLED
+        - name: HEALTH_CHECK_INTERVAL
+          valueFrom:
+            configMapKeyRef:
+              name: deduplication-config
+              key: HEALTH_CHECK_INTERVAL
+        - name: RATE_LIMIT_REQUESTS
+          valueFrom:
+            configMapKeyRef:
+              name: deduplication-config
+              key: RATE_LIMIT_REQUESTS
+        - name: RATE_LIMIT_WINDOW
+          valueFrom:
+            configMapKeyRef:
+              name: deduplication-config
+              key: RATE_LIMIT_WINDOW
+        - name: CACHE_TTL
+          valueFrom:
+            configMapKeyRef:
+              name: deduplication-config
+              key: CACHE_TTL
+        - name: CACHE_MAX_SIZE
+          valueFrom:
+            configMapKeyRef:
+              name: deduplication-config
+              key: CACHE_MAX_SIZE
+        - name: BLOOM_FILTER_CAPACITY
+          valueFrom:
+            configMapKeyRef:
+              name: deduplication-config
+              key: BLOOM_FILTER_CAPACITY
+        - name: BLOOM_FILTER_ERROR_RATE
+          valueFrom:
+            configMapKeyRef:
+              name: deduplication-config
+              key: BLOOM_FILTER_ERROR_RATE
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        volumeMounts:
+        - name: logs
+          mountPath: /app/logs
+      volumes:
+      - name: logs
+        emptyDir: {}
+      restartPolicy: Always

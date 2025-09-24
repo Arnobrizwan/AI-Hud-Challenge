@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: content-enrichment-config
+  namespace: content-enrichment
+data:
+  # Application Configuration
+  app-name: "Content Enrichment Service"
+  app-version: "1.0.0"
+  debug: "false"
+  host: "0.0.0.0"
+  port: "8000"
+  
+  # Database Configuration
+  database-pool-size: "20"
+  database-max-overflow: "30"
+  
+  # Redis Configuration
+  redis-max-connections: "20"
+  redis-ttl: "3600"
+  
+  # Google Cloud Configuration
+  google-cloud-project: "your-project-id"
+  vertex-ai-location: "us-central1"
+  
+  # MLflow Configuration
+  mlflow-tracking-uri: "http://mlflow-service:5000"
+  mlflow-experiment-name: "content-enrichment"
+  
+  # Model Configuration
+  model-cache-dir: "/app/models"
+  max-text-length: "10000"
+  batch-size: "32"
+  
+  # Performance Configuration
+  max-concurrent-requests: "100"
+  request-timeout: "300"
+  enrichment-timeout: "30"
+  
+  # Monitoring Configuration
+  enable-metrics: "true"
+  enable-tracing: "true"
+  metrics-port: "9090"
+  
+  # A/B Testing Configuration
+  enable-ab-testing: "true"
+  ab-test-traffic-split: "0.5"
+  
+  # Content Processing Configuration
+  supported-languages: "en,es,fr,de,it,pt,ru,zh,ja,ko"
+  entity-confidence-threshold: "0.3"
+  max-entities-per-document: "100"
+  topic-confidence-threshold: "0.3"
+  max-topics-per-document: "10"
+  sentiment-confidence-threshold: "0.5"
+  readability-threshold: "0.6"
+  trust-score-threshold: "0.5"
+  
+  # Rate Limiting Configuration
+  rate-limit-requests: "1000"
+  rate-limit-window: "3600"
+  
+  # Security Configuration
+  algorithm: "HS256"
+  access-token-expire-minutes: "30"

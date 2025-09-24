@@ -1,0 +1,156 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: content-enrichment-service
+  namespace: content-enrichment
+  labels:
+    app: content-enrichment-service
+    version: v1.0.0
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: content-enrichment-service
+  template:
+    metadata:
+      labels:
+        app: content-enrichment-service
+        version: v1.0.0
+    spec:
+      serviceAccountName: content-enrichment-service-account
+      containers:
+      - name: content-enrichment-service
+        image: content-enrichment-service:latest
+        ports:
+        - containerPort: 8000
+          name: http
+        - containerPort: 9090
+          name: metrics
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: content-enrichment-secrets
+              key: database-url
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: content-enrichment-secrets
+              key: redis-url
+        - name: GOOGLE_CLOUD_PROJECT
+          valueFrom:
+            configMapKeyRef:
+              name: content-enrichment-config
+              key: google-cloud-project
+        - name: VERTEX_AI_LOCATION
+          valueFrom:
+            configMapKeyRef:
+              name: content-enrichment-config
+              key: vertex-ai-location
+        - name: MLFLOW_TRACKING_URI
+          valueFrom:
+            configMapKeyRef:
+              name: content-enrichment-config
+              key: mlflow-tracking-uri
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: content-enrichment-secrets
+              key: secret-key
+        - name: WORKERS
+          value: "4"
+        - name: MAX_CONCURRENT_REQUESTS
+          value: "100"
+        - name: ENABLE_METRICS
+          value: "true"
+        - name: ENABLE_TRACING
+          value: "true"
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+            ephemeral-storage: "1Gi"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+            ephemeral-storage: "2Gi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        volumeMounts:
+        - name: model-cache
+          mountPath: /app/models
+        - name: logs
+          mountPath: /app/logs
+      volumes:
+      - name: model-cache
+        persistentVolumeClaim:
+          claimName: content-enrichment-model-cache
+      - name: logs
+        emptyDir: {}
+      nodeSelector:
+        node-type: cpu-optimized
+      tolerations:
+      - key: "content-enrichment"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - content-enrichment-service
+              topologyKey: kubernetes.io/hostname
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: content-enrichment-service
+  namespace: content-enrichment
+  labels:
+    app: content-enrichment-service
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8000
+    targetPort: 8000
+    protocol: TCP
+    name: http
+  - port: 9090
+    targetPort: 9090
+    protocol: TCP
+    name: metrics
+  selector:
+    app: content-enrichment-service
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: content-enrichment-model-cache
+  namespace: content-enrichment
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: fast-ssd

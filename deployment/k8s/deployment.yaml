@@ -1,0 +1,167 @@
+# Deployment for the Foundations & Guards service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foundations-guards-deployment
+  namespace: foundations-guards
+  labels:
+    app: foundations-guards-service
+    version: v1
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: foundations-guards-service
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: foundations-guards-service
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "8080"
+    spec:
+      serviceAccountName: foundations-guards-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+      containers:
+      - name: foundations-guards-container
+        image: gcr.io/your-project/foundations-guards-service:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        
+        # Environment variables from ConfigMap
+        envFrom:
+        - configMapRef:
+            name: foundations-guards-config
+        
+        # Secret environment variables
+        env:
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: foundations-guards-secrets
+              key: SECRET_KEY
+        - name: FIREBASE_CREDENTIALS_JSON
+          valueFrom:
+            secretKeyRef:
+              name: foundations-guards-secrets
+              key: FIREBASE_CREDENTIALS_JSON
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: foundations-guards-secrets
+              key: REDIS_URL
+        - name: FIREBASE_PROJECT_ID
+          valueFrom:
+            secretKeyRef:
+              name: foundations-guards-secrets
+              key: FIREBASE_PROJECT_ID
+        - name: GCP_PROJECT_ID
+          valueFrom:
+            secretKeyRef:
+              name: foundations-guards-secrets
+              key: GCP_PROJECT_ID
+        - name: GCP_REGION
+          valueFrom:
+            secretKeyRef:
+              name: foundations-guards-secrets
+              key: GCP_REGION
+        
+        # Resource limits and requests
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 512Mi
+            ephemeral-storage: 1Gi
+          requests:
+            cpu: 250m
+            memory: 256Mi
+            ephemeral-storage: 512Mi
+        
+        # Security context
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        
+        # Health checks
+        startupProbe:
+          httpGet:
+            path: /health/live
+            port: 8080
+            httpHeaders:
+            - name: User-Agent
+              value: "k8s-startup-probe"
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+          successThreshold: 1
+        
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 8080
+            httpHeaders:
+            - name: User-Agent
+              value: "k8s-liveness-probe"
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+          successThreshold: 1
+        
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8080
+            httpHeaders:
+            - name: User-Agent
+              value: "k8s-readiness-probe"
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+          successThreshold: 1
+        
+        # Volume mounts for writable directories
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: logs
+          mountPath: /app/logs
+      
+      # Volumes
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: logs
+        emptyDir: {}
+      
+      # Node affinity and tolerations
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - foundations-guards-service
+              topologyKey: kubernetes.io/hostname
+      
+      # Termination grace period
+      terminationGracePeriodSeconds: 30

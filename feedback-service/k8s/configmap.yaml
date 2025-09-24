@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: feedback-service-config
+  namespace: feedback-service
+data:
+  DATABASE_URL: "postgresql://feedback_user:feedback_pass@postgres:5432/feedback_db"
+  REDIS_URL: "redis://redis:6379"
+  ELASTICSEARCH_URL: "http://elasticsearch:9200"
+  KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+  CORS_ORIGINS: "http://localhost:3000,http://localhost:8080"
+  WEBSOCKET_MAX_CONNECTIONS: "1000"
+  MAX_FEEDBACK_PER_SECOND: "10000"
+  QUALITY_THRESHOLD_LOW: "0.3"
+  QUALITY_THRESHOLD_MEDIUM: "0.6"
+  QUALITY_THRESHOLD_HIGH: "0.8"

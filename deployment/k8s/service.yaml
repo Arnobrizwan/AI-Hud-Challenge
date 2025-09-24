@@ -1,0 +1,43 @@
+# Service for the Foundations & Guards deployment
+apiVersion: v1
+kind: Service
+metadata:
+  name: foundations-guards-service
+  namespace: foundations-guards
+  labels:
+    app: foundations-guards-service
+  annotations:
+    cloud.google.com/neg: '{"ingress": true}'
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "/metrics"
+    prometheus.io/port: "8080"
+spec:
+  type: ClusterIP
+  selector:
+    app: foundations-guards-service
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080
+    protocol: TCP
+  sessionAffinity: None
+
+---
+# Headless service for StatefulSet (if needed for Redis)
+apiVersion: v1
+kind: Service
+metadata:
+  name: foundations-guards-headless
+  namespace: foundations-guards
+  labels:
+    app: foundations-guards-service
+spec:
+  type: ClusterIP
+  clusterIP: None
+  selector:
+    app: foundations-guards-service
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+    protocol: TCP

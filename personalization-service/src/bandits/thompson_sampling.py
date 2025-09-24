@@ -1,0 +1,113 @@
+"""Thompson Sampling contextual bandit algorithm."""
+
+import numpy as np
+from typing import List, Dict, Optional, Tuple
+import structlog
+from scipy.stats import beta
+import asyncio
+
+from ..models.schemas import BanditRecommendation, UserContext, ContentItem
+from ..config.settings import settings
+
+logger = structlog.get_logger()
+
+
+class ThompsonSamplingBandit:
+    """Thompson Sampling contextual bandit algorithm."""
+    
+    def __init__(self):
+        self.alpha = settings.bandit_alpha
+        self.beta = settings.bandit_beta
+        self.arm_counts: Dict[str, int] = {}
+        self.arm_rewards: Dict[str, List[float]] = {}
+        self.context_weights: Dict[str, np.ndarray] = {}
+        self.context_dim = 0
+        
+    async def predict(self, features: np.ndarray, candidate_id: str) -> Tuple[float, float]:
+        """Predict expected reward and uncertainty for a candidate."""
+        if candidate_id not in self.arm_counts:
+            # New arm - initialize
+            self.arm_counts[candidate_id] = 0
+            self.arm_rewards[candidate_id] = []
+            self.context_weights[candidate_id] = np.zeros(len(features))
+            self.context_dim = len(features)
+        
+        # Get arm statistics
+        alpha = self.alpha + self.arm_counts[candidate_id]
+        beta = self.beta + len(self.arm_rewards[candidate_id]) - self.arm_counts[candidate_id]
+        
+        # Sample from Beta distribution
+        sampled_reward = beta.rvs(alpha, beta)
+        
+        # Compute uncertainty (variance of Beta distribution)
+        uncertainty = (alpha * beta) / ((alpha + beta) ** 2 * (alpha + beta + 1))
+        
+        return float(sampled_reward), float(uncertainty)
+    
+    async def update(self, features: np.ndarray, action_id: str, reward: float) -> None:
+        """Update the bandit model with new feedback."""
+        if action_id not in self.arm_counts:
+            # Initialize new arm
+            self.arm_counts[action_id] = 0
+            self.arm_rewards[action_id] = []
+            self.context_weights[action_id] = np.zeros(len(features))
+            self.context_dim = len(features)
+        
+        # Update arm statistics
+        self.arm_counts[action_id] += 1
+        self.arm_rewards[action_id].append(reward)
+        
+        # Update context weights using online gradient descent
+        learning_rate = 0.01
+        prediction = np.dot(self.context_weights[action_id], features)
+        error = reward - prediction
+        
+        # Update weights
+        self.context_weights[action_id] += learning_rate * error * features
+        
+        # Clip weights to prevent explosion
+        self.context_weights[action_id] = np.clip(
+            self.context_weights[action_id], -10, 10
+        )
+    
+    async def get_arm_statistics(self, action_id: str) -> Dict[str, float]:
+        """Get statistics for a specific arm."""
+        if action_id not in self.arm_counts:
+            return {
+                "count": 0,
+                "total_reward": 0.0,
+                "average_reward": 0.0,
+                "alpha": self.alpha,
+                "beta": self.beta
+            }
+        
+        total_reward = sum(self.arm_rewards[action_id])
+        average_reward = total_reward / len(self.arm_rewards[action_id]) if self.arm_rewards[action_id] else 0.0
+        
+        alpha = self.alpha + self.arm_counts[action_id]
+        beta = self.beta + len(self.arm_rewards[action_id]) - self.arm_counts[action_id]
+        
+        return {
+            "count": self.arm_counts[action_id],
+            "total_reward": total_reward,
+            "average_reward": average_reward,
+            "alpha": alpha,
+            "beta": beta
+        }
+    
+    async def get_all_arm_statistics(self) -> Dict[str, Dict[str, float]]:
+        """Get statistics for all arms."""
+        stats = {}
+        for action_id in self.arm_counts:
+            stats[action_id] = await self.get_arm_statistics(action_id)
+        return stats
+    
+    def get_model_info(self) -> Dict[str, any]:
+        """Get information about the bandit model."""
+        return {
+            "n_arms": len(self.arm_counts),
+            "context_dim": self.context_dim,
+            "alpha": self.alpha,
+            "beta": self.beta,
+            "total_pulls": sum(self.arm_counts.values())
+        }

@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: personalization-config
+  namespace: personalization-service
+data:
+  DATABASE_URL: "postgresql://postgres:password@postgres-service:5432/personalization"
+  REDIS_URL: "redis://redis-service:6379/0"
+  ENVIRONMENT: "production"
+  DEBUG: "false"
+  COLLABORATIVE_FACTORS: "100"
+  COLLABORATIVE_REGULARIZATION: "0.01"
+  COLLABORATIVE_ITERATIONS: "50"
+  CONTENT_EMBEDDING_DIM: "384"
+  TFIDF_MAX_FEATURES: "10000"
+  BANDIT_ALPHA: "1.0"
+  BANDIT_BETA: "1.0"
+  EPSILON: "0.1"
+  DIVERSITY_THRESHOLD: "0.3"
+  SERENDIPITY_WEIGHT: "0.2"
+  PRIVACY_EPSILON: "1.0"
+  PRIVACY_DELTA: "0.00001"
+  PROFILE_CACHE_TTL: "3600"
+  MODEL_CACHE_TTL: "86400"
+  RATE_LIMIT_REQUESTS: "100"
+  RATE_LIMIT_WINDOW: "60"
+  ENABLE_METRICS: "true"
+  METRICS_PORT: "9090"

@@ -1,0 +1,337 @@
+# Content Sources Configuration
+# This file defines the sources for content ingestion
+
+sources:
+  # RSS/Atom Feeds
+  - id: "techcrunch_rss"
+    name: "TechCrunch"
+    type: "rss_feed"
+    url: "https://techcrunch.com/feed/"
+    enabled: true
+    priority: 1
+    rate_limit: 60
+    timeout: 30
+    retry_attempts: 3
+    backoff_factor: 2.0
+    user_agent: "NewsBot/1.0 (+https://example.com/bot)"
+    headers: {}
+    auth: null
+    filters:
+      min_word_count: 100
+      max_word_count: 10000
+      languages: ["en"]
+      title_keywords: ["tech", "startup", "innovation", "AI", "machine learning"]
+      exclude_keywords: ["advertisement", "sponsored"]
+    last_checked: null
+    last_success: null
+    error_count: 0
+    success_count: 0
+
+  - id: "hackernews_rss"
+    name: "Hacker News"
+    type: "rss_feed"
+    url: "https://hnrss.org/frontpage"
+    enabled: true
+    priority: 2
+    rate_limit: 60
+    timeout: 30
+    retry_attempts: 3
+    backoff_factor: 2.0
+    user_agent: "NewsBot/1.0 (+https://example.com/bot)"
+    headers: {}
+    auth: null
+    filters:
+      min_word_count: 50
+      max_word_count: 5000
+      languages: ["en"]
+      title_keywords: ["programming", "software", "development", "tech"]
+      exclude_keywords: ["job", "hiring", "ask hn"]
+    last_checked: null
+    last_success: null
+    error_count: 0
+    success_count: 0
+
+  - id: "reddit_programming"
+    name: "Reddit Programming"
+    type: "rss_feed"
+    url: "https://www.reddit.com/r/programming/.rss"
+    enabled: true
+    priority: 3
+    rate_limit: 60
+    timeout: 30
+    retry_attempts: 3
+    backoff_factor: 2.0
+    user_agent: "NewsBot/1.0 (+https://example.com/bot)"
+    headers: {}
+    auth: null
+    filters:
+      min_word_count: 100
+      max_word_count: 5000
+      languages: ["en"]
+      title_keywords: ["programming", "code", "software", "development"]
+      exclude_keywords: ["meme", "joke", "funny"]
+    last_checked: null
+    last_success: null
+    error_count: 0
+    success_count: 0
+
+  # JSON Feeds
+  - id: "json_feed_example"
+    name: "JSON Feed Example"
+    type: "json_feed"
+    url: "https://jsonfeed.org/feed.json"
+    enabled: false
+    priority: 5
+    rate_limit: 60
+    timeout: 30
+    retry_attempts: 3
+    backoff_factor: 2.0
+    user_agent: "NewsBot/1.0 (+https://example.com/bot)"
+    headers: {}
+    auth: null
+    filters:
+      min_word_count: 50
+      max_word_count: 5000
+      languages: ["en"]
+    last_checked: null
+    last_success: null
+    error_count: 0
+    success_count: 0
+
+  # API Sources
+  - id: "newsapi_tech"
+    name: "NewsAPI Technology"
+    type: "api"
+    url: "https://newsapi.org/v2/everything"
+    enabled: false
+    priority: 4
+    rate_limit: 30
+    timeout: 30
+    retry_attempts: 3
+    backoff_factor: 2.0
+    user_agent: "NewsBot/1.0 (+https://example.com/bot)"
+    headers: {}
+    auth:
+      type: "api_key"
+      key: "X-API-Key"
+      value: "YOUR_NEWSAPI_KEY"
+    filters:
+      api_config:
+        articles_path: "articles"
+        field_mapping:
+          title: "title"
+          url: "url"
+          content: "content"
+          summary: "description"
+          author: "author"
+          published_at: "publishedAt"
+          image_url: "urlToImage"
+          tags: "tags"
+        pagination:
+          type: "page_based"
+          params:
+            page: "{page}"
+            pageSize: 20
+        params:
+          q: "technology"
+          sortBy: "publishedAt"
+          language: "en"
+      min_word_count: 100
+      max_word_count: 10000
+      languages: ["en"]
+      title_keywords: ["tech", "technology", "innovation", "AI"]
+    last_checked: null
+    last_success: null
+    error_count: 0
+    success_count: 0
+
+  # Web Scraping Sources
+  - id: "example_blog_scraping"
+    name: "Example Blog Scraping"
+    type: "web_scraping"
+    url: "https://example-blog.com"
+    enabled: false
+    priority: 6
+    rate_limit: 30
+    timeout: 60
+    retry_attempts: 3
+    backoff_factor: 2.0
+    user_agent: "NewsBot/1.0 (+https://example.com/bot)"
+    headers: {}
+    auth: null
+    filters:
+      scraping_config:
+        urls:
+          - "https://example-blog.com/articles"
+          - "https://example-blog.com/posts"
+        sitemap_url: "https://example-blog.com/sitemap.xml"
+        listing_pages:
+          - "https://example-blog.com/articles"
+        max_urls: 50
+        content_selectors:
+          - "article"
+          - ".post"
+          - ".content"
+        title_selectors:
+          - "h1"
+          - ".title"
+          - ".headline"
+        author_selectors:
+          - ".author"
+          - ".byline"
+          - "[rel='author']"
+        date_selectors:
+          - "time"
+          - ".date"
+          - ".published"
+        image_selectors:
+          - "img"
+          - ".featured-image img"
+        tag_selectors:
+          - ".tags a"
+          - ".categories a"
+        summary_selectors:
+          - ".summary"
+          - ".excerpt"
+      min_word_count: 100
+      max_word_count: 10000
+      languages: ["en"]
+    last_checked: null
+    last_success: null
+    error_count: 0
+    success_count: 0
+
+  # Social Media Sources
+  - id: "twitter_tech"
+    name: "Twitter Technology"
+    type: "api"
+    url: "https://api.twitter.com/2/tweets/search/recent"
+    enabled: false
+    priority: 7
+    rate_limit: 15
+    timeout: 30
+    retry_attempts: 3
+    backoff_factor: 2.0
+    user_agent: "NewsBot/1.0 (+https://example.com/bot)"
+    headers: {}
+    auth:
+      type: "bearer"
+      token: "YOUR_TWITTER_BEARER_TOKEN"
+    filters:
+      api_config:
+        articles_path: "data"
+        field_mapping:
+          title: "text"
+          url: "id"
+          content: "text"
+          author: "author.username"
+          published_at: "created_at"
+        pagination:
+          type: "cursor_based"
+          params:
+            next_token: "{next_token}"
+        params:
+          query: "technology lang:en -is:retweet"
+          max_results: 100
+          tweet.fields: "created_at,author_id,public_metrics"
+      min_word_count: 10
+      max_word_count: 1000
+      languages: ["en"]
+      title_keywords: ["tech", "technology", "AI", "programming"]
+    last_checked: null
+    last_success: null
+    error_count: 0
+    success_count: 0
+
+  # News Wire Services
+  - id: "reuters_api"
+    name: "Reuters API"
+    type: "api"
+    url: "https://api.reuters.com/v1/articles"
+    enabled: false
+    priority: 8
+    rate_limit: 20
+    timeout: 30
+    retry_attempts: 3
+    backoff_factor: 2.0
+    user_agent: "NewsBot/1.0 (+https://example.com/bot)"
+    headers: {}
+    auth:
+      type: "api_key"
+      key: "Authorization"
+      value: "Bearer YOUR_REUTERS_API_KEY"
+    filters:
+      api_config:
+        articles_path: "articles"
+        field_mapping:
+          title: "headline"
+          url: "url"
+          content: "body"
+          summary: "summary"
+          author: "author"
+          published_at: "publishedAt"
+          image_url: "imageUrl"
+          tags: "tags"
+        pagination:
+          type: "offset_based"
+          params:
+            offset: "{offset}"
+            limit: 20
+        params:
+          category: "technology"
+          language: "en"
+      min_word_count: 200
+      max_word_count: 15000
+      languages: ["en"]
+      title_keywords: ["tech", "technology", "innovation", "business"]
+    last_checked: null
+    last_success: null
+    error_count: 0
+    success_count: 0
+
+# Global configuration
+global_config:
+  # Default settings for all sources
+  default_rate_limit: 60
+  default_timeout: 30
+  default_retry_attempts: 3
+  default_backoff_factor: 2.0
+  default_user_agent: "NewsBot/1.0 (+https://example.com/bot)"
+  
+  # Content filtering defaults
+  default_filters:
+    min_word_count: 50
+    max_word_count: 50000
+    min_title_length: 10
+    max_title_length: 200
+    languages: ["en"]
+    exclude_keywords: ["advertisement", "sponsored", "promoted"]
+  
+  # Processing settings
+  processing:
+    batch_size: 100
+    max_concurrent_sources: 10
+    processing_interval_seconds: 300  # 5 minutes
+    cleanup_interval_hours: 24
+    max_article_age_days: 30
+  
+  # Monitoring settings
+  monitoring:
+    enable_metrics: true
+    enable_health_checks: true
+    health_check_interval_seconds: 60
+    metrics_retention_days: 30
+  
+  # Security settings
+  security:
+    respect_robots_txt: true
+    max_request_size_mb: 10
+    allowed_domains: []
+    blocked_domains: []
+    allowed_content_types:
+      - "text/html"
+      - "text/xml"
+      - "application/xml"
+      - "application/rss+xml"
+      - "application/atom+xml"
+      - "application/json"
