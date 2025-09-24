@@ -1,0 +1,126 @@
+name: Deploy
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+        - staging
+        - production
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
+    environment: staging
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+
+    - name: Configure kubectl
+      run: |
+        echo "${{ secrets.KUBE_CONFIG_STAGING }}" | base64 -d > kubeconfig
+        export KUBECONFIG=kubeconfig
+
+    - name: Deploy to staging
+      run: |
+        echo "Deploying to staging environment..."
+        # Add your staging deployment commands here
+        # kubectl apply -f k8s/staging/
+        # helm upgrade --install ai-hud-staging ./helm-chart --values ./helm-chart/values-staging.yaml
+
+    - name: Run smoke tests
+      run: |
+        echo "Running smoke tests..."
+        # Add smoke test commands here
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
+    environment: production
+    needs: deploy-staging
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+
+    - name: Configure kubectl
+      run: |
+        echo "${{ secrets.KUBE_CONFIG_PRODUCTION }}" | base64 -d > kubeconfig
+        export KUBECONFIG=kubeconfig
+
+    - name: Deploy to production
+      run: |
+        echo "Deploying to production environment..."
+        # Add your production deployment commands here
+        # kubectl apply -f k8s/production/
+        # helm upgrade --install ai-hud-production ./helm-chart --values ./helm-chart/values-production.yaml
+
+    - name: Run health checks
+      run: |
+        echo "Running health checks..."
+        # Add health check commands here
+
+    - name: Notify deployment success
+      if: success()
+      run: |
+        echo "Production deployment successful! 🎉"
+        # Add notification logic here
+
+    - name: Notify deployment failure
+      if: failure()
+      run: |
+        echo "Production deployment failed! ❌"
+        # Add failure notification logic here
+
+  rollback:
+    name: Rollback
+    runs-on: ubuntu-latest
+    if: failure() && github.ref == 'refs/heads/main'
+    environment: production
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+
+    - name: Configure kubectl
+      run: |
+        echo "${{ secrets.KUBE_CONFIG_PRODUCTION }}" | base64 -d > kubeconfig
+        export KUBECONFIG=kubeconfig
+
+    - name: Rollback deployment
+      run: |
+        echo "Rolling back deployment..."
+        # Add rollback commands here
+        # kubectl rollout undo deployment/ai-hud-production
+
+    - name: Notify rollback
+      run: |
+        echo "Rollback completed"
+        # Add rollback notification logic here

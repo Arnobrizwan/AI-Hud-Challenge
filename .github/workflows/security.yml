@@ -1,0 +1,155 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    - cron: '0 2 * * 1' # Weekly on Monday at 2 AM
+
+jobs:
+  dependency-check:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install safety pip-audit
+
+    - name: Run safety check
+      run: |
+        safety check --json --output safety-report.json || true
+
+    - name: Run pip-audit
+      run: |
+        pip-audit --format=json --output=pip-audit-report.json || true
+
+    - name: Upload security reports
+      uses: actions/upload-artifact@v3
+      with:
+        name: security-reports
+        path: |
+          safety-report.json
+          pip-audit-report.json
+
+  code-security:
+    name: Code Security Analysis
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+
+    - name: Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+    - name: Run Bandit security linter
+      run: |
+        pip install bandit
+        bandit -r . -f json -o bandit-report.json || true
+
+    - name: Run Semgrep
+      uses: returntocorp/semgrep-action@v1
+      with:
+        config: >-
+          p/security-audit
+          p/secrets
+          p/owasp-top-ten
+        generateSarif: "1"
+
+    - name: Upload Bandit results
+      uses: actions/upload-artifact@v3
+      with:
+        name: bandit-report
+        path: bandit-report.json
+
+  container-security:
+    name: Container Security Scan
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Build Docker image for scanning
+      run: |
+        docker build -t test-image .
+
+    - name: Run Trivy container scan
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'test-image'
+        format: 'sarif'
+        output: 'trivy-container-results.sarif'
+
+    - name: Upload container scan results
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: 'trivy-container-results.sarif'
+
+  secrets-scan:
+    name: Secrets Detection
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Run TruffleHog
+      uses: trufflesecurity/trufflehog@main
+      with:
+        path: ./
+        base: main
+        head: HEAD
+        extra_args: --debug --only-verified
+
+  license-check:
+    name: License Compliance Check
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pip-licenses
+
+    - name: Generate license report
+      run: |
+        pip-licenses --format=json --output-file=licenses.json
+        pip-licenses --format=html --output-file=licenses.html
+
+    - name: Upload license reports
+      uses: actions/upload-artifact@v3
+      with:
+        name: license-reports
+        path: |
+          licenses.json
+          licenses.html

@@ -1,0 +1,296 @@
+# Dependabot configuration for AI HUD Challenge
+# See https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+updates:
+  # Python dependencies
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "arnobrizwan"
+    assignees:
+      - "arnobrizwan"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "python"
+
+  # Docker dependencies
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "arnobrizwan"
+    assignees:
+      - "arnobrizwan"
+    commit-message:
+      prefix: "docker"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "docker"
+
+  # GitHub Actions dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "arnobrizwan"
+    assignees:
+      - "arnobrizwan"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "github-actions"
+
+  # Service-specific Python dependencies
+  - package-ecosystem: "pip"
+    directory: "/content-enrichment-service"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 3
+    reviewers:
+      - "arnobrizwan"
+    assignees:
+      - "arnobrizwan"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "content-enrichment-service"
+
+  - package-ecosystem: "pip"
+    directory: "/content-extraction-service"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 3
+    reviewers:
+      - "arnobrizwan"
+    assignees:
+      - "arnobrizwan"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "content-extraction-service"
+
+  - package-ecosystem: "pip"
+    directory: "/deduplication-service"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 3
+    reviewers:
+      - "arnobrizwan"
+    assignees:
+      - "arnobrizwan"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "deduplication-service"
+
+  - package-ecosystem: "pip"
+    directory: "/evaluation-service"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 3
+    reviewers:
+      - "arnobrizwan"
+    assignees:
+      - "arnobrizwan"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "evaluation-service"
+
+  - package-ecosystem: "pip"
+    directory: "/feedback-service"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 3
+    reviewers:
+      - "arnobrizwan"
+    assignees:
+      - "arnobrizwan"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "feedback-service"
+
+  - package-ecosystem: "pip"
+    directory: "/ingestion-service"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 3
+    reviewers:
+      - "arnobrizwan"
+    assignees:
+      - "arnobrizwan"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "ingestion-service"
+
+  - package-ecosystem: "pip"
+    directory: "/mlops-orchestration-service"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 3
+    reviewers:
+      - "arnobrizwan"
+    assignees:
+      - "arnobrizwan"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "mlops-orchestration-service"
+
+  - package-ecosystem: "pip"
+    directory: "/notification-service"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 3
+    reviewers:
+      - "arnobrizwan"
+    assignees:
+      - "arnobrizwan"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "notification-service"
+
+  - package-ecosystem: "pip"
+    directory: "/observability-service"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 3
+    reviewers:
+      - "arnobrizwan"
+    assignees:
+      - "arnobrizwan"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "observability-service"
+
+  - package-ecosystem: "pip"
+    directory: "/personalization-service"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 3
+    reviewers:
+      - "arnobrizwan"
+    assignees:
+      - "arnobrizwan"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "personalization-service"
+
+  - package-ecosystem: "pip"
+    directory: "/safety-service"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 3
+    reviewers:
+      - "arnobrizwan"
+    assignees:
+      - "arnobrizwan"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "safety-service"
+
+  - package-ecosystem: "pip"
+    directory: "/storage-service"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 3
+    reviewers:
+      - "arnobrizwan"
+    assignees:
+      - "arnobrizwan"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "storage-service"
+
+  - package-ecosystem: "pip"
+    directory: "/summarization-service"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 3
+    reviewers:
+      - "arnobrizwan"
+    assignees:
+      - "arnobrizwan"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "summarization-service"

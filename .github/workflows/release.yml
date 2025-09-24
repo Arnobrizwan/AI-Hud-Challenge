@@ -1,0 +1,155 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release'
+        required: true
+        type: string
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Get version
+      id: version
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+        else
+          echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.version.outputs.version }}
+        release_name: Release ${{ steps.version.outputs.version }}
+        draft: false
+        prerelease: false
+
+  build-and-push:
+    name: Build and Push Images
+    runs-on: ubuntu-latest
+    needs: create-release
+    strategy:
+      matrix:
+        service: [
+          "content-enrichment-service",
+          "content-extraction-service",
+          "deduplication-service",
+          "evaluation-service",
+          "feedback-service",
+          "ingestion-service",
+          "mlops-orchestration-service",
+          "notification-service",
+          "observability-service",
+          "personalization-service",
+          "safety-service",
+          "storage-service",
+          "summarization-service"
+        ]
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.service }}
+        tags: |
+          type=ref,event=tag
+          type=raw,value=latest
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./${{ matrix.service }}
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [create-release, build-and-push]
+    environment: production
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+
+    - name: Configure kubectl
+      run: |
+        echo "${{ secrets.KUBE_CONFIG_PRODUCTION }}" | base64 -d > kubeconfig
+        export KUBECONFIG=kubeconfig
+
+    - name: Deploy to production
+      run: |
+        echo "Deploying to production environment..."
+        # Add your production deployment commands here
+        # kubectl apply -f k8s/production/
+        # helm upgrade --install ai-hud-production ./helm-chart --values ./helm-chart/values-production.yaml
+
+    - name: Run health checks
+      run: |
+        echo "Running health checks..."
+        # Add health check commands here
+
+    - name: Notify deployment success
+      if: success()
+      run: |
+        echo "Production deployment successful! 🎉"
+        # Add notification logic here
+
+  notify:
+    name: Notify
+    runs-on: ubuntu-latest
+    needs: [create-release, build-and-push, deploy-production]
+    if: always()
+    steps:
+    - name: Notify on success
+      if: ${{ needs.deploy-production.result == 'success' }}
+      run: |
+        echo "Release successful! 🎉"
+        # Add notification logic here
+
+    - name: Notify on failure
+      if: ${{ needs.deploy-production.result == 'failure' }}
+      run: |
+        echo "Release failed! ❌"
+        # Add failure notification logic here

@@ -1,0 +1,95 @@
+name: Monitoring
+
+on:
+  schedule:
+    - cron: '*/5 * * * *' # Every 5 minutes
+  workflow_dispatch:
+
+jobs:
+  health-check:
+    name: Health Check
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+
+    - name: Configure kubectl
+      run: |
+        echo "${{ secrets.KUBE_CONFIG_PRODUCTION }}" | base64 -d > kubeconfig
+        export KUBECONFIG=kubeconfig
+
+    - name: Check pod health
+      run: |
+        echo "Checking pod health..."
+        kubectl get pods --all-namespaces
+        kubectl get services --all-namespaces
+        kubectl get ingress --all-namespaces
+
+    - name: Check service endpoints
+      run: |
+        echo "Checking service endpoints..."
+        # Add service endpoint health checks here
+
+    - name: Check database connectivity
+      run: |
+        echo "Checking database connectivity..."
+        # Add database connectivity checks here
+
+  metrics-collection:
+    name: Metrics Collection
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+
+    - name: Configure kubectl
+      run: |
+        echo "${{ secrets.KUBE_CONFIG_PRODUCTION }}" | base64 -d > kubeconfig
+        export KUBECONFIG=kubeconfig
+
+    - name: Collect metrics
+      run: |
+        echo "Collecting metrics..."
+        # Add metrics collection commands here
+
+    - name: Upload metrics
+      run: |
+        echo "Uploading metrics..."
+        # Add metrics upload commands here
+
+  alerting:
+    name: Alerting
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+
+    - name: Configure kubectl
+      run: |
+        echo "${{ secrets.KUBE_CONFIG_PRODUCTION }}" | base64 -d > kubeconfig
+        export KUBECONFIG=kubeconfig
+
+    - name: Check alerts
+      run: |
+        echo "Checking alerts..."
+        # Add alert checking commands here
+
+    - name: Send notifications
+      run: |
+        echo "Sending notifications..."
+        # Add notification sending commands here
