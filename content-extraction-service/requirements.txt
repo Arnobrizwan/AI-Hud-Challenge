@@ -27,7 +27,7 @@ chardet==5.2.0
 tldextract==5.1.1
 
 # Image processing
-Pillow==10.1.0
+Pillow==11.3.0
 python-magic==0.4.27
 opencv-python==4.8.1.78
 imagehash==4.3.1
