@@ -16,7 +16,7 @@ celery==5.3.4
 prometheus-client==0.19.0
 structlog==23.2.0
 python-json-logger==2.0.7
-pytest==7.4.3
+pytest==8.4.2
 pytest-asyncio==0.21.1
 pytest-cov==4.1.0
 black==23.11.0
