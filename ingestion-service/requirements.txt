@@ -32,7 +32,7 @@ google-auth==2.25.2
 # Database and caching
 redis==5.0.1
 aioredis==2.0.1
-motor==3.3.2  # Async MongoDB driver
+motor==3.7.1  # Async MongoDB driver
 
 # Content processing
 Pillow==10.1.0
