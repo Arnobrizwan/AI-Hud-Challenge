@@ -3,18 +3,18 @@ Anomaly Detection System
 System anomaly detection and monitoring
 """
 
-from .system import AnomalyDetectionSystem
 from .detectors import (
     IsolationForestDetector,
-    OneClassSVMDetector,
     LSTMAutoencoderDetector,
-    StatisticalAnomalyDetector
+    OneClassSVMDetector,
+    StatisticalAnomalyDetector,
 )
+from .system import AnomalyDetectionSystem
 
 __all__ = [
     "AnomalyDetectionSystem",
     "IsolationForestDetector",
-    "OneClassSVMDetector", 
+    "OneClassSVMDetector",
     "LSTMAutoencoderDetector",
-    "StatisticalAnomalyDetector"
+    "StatisticalAnomalyDetector",
 ]

@@ -7,20 +7,20 @@ import logging.config
 import sys
 import uuid
 from contextvars import ContextVar
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
+
 import structlog
 from pythonjsonlogger import jsonlogger
 
 from src.config.settings import settings
 
-
 # Context variable for correlation ID
-correlation_id: ContextVar[Optional[str]] = ContextVar('correlation_id', default=None)
+correlation_id: ContextVar[Optional[str]] = ContextVar("correlation_id", default=None)
 
 
 class CorrelationFilter(logging.Filter):
     """Add correlation ID to log records."""
-    
+
     def filter(self, record):
         """Add correlation ID to the log record."""
         record.correlation_id = correlation_id.get() or str(uuid.uuid4())
@@ -29,39 +29,41 @@ class CorrelationFilter(logging.Filter):
 
 class JSONFormatter(jsonlogger.JsonFormatter):
     """Custom JSON formatter with additional fields."""
-    
-    def add_fields(self, log_record: Dict[str, Any], record: logging.LogRecord, message_dict: Dict[str, Any]):
+
+    def add_fields(
+        self, log_record: Dict[str, Any], record: logging.LogRecord, message_dict: Dict[str, Any]
+    ):
         """Add custom fields to the log record."""
         super().add_fields(log_record, record, message_dict)
-        
+
         # Add standard fields
-        log_record['service'] = settings.APP_NAME
-        log_record['version'] = settings.APP_VERSION
-        log_record['environment'] = settings.ENVIRONMENT
-        
+        log_record["service"] = settings.APP_NAME
+        log_record["version"] = settings.APP_VERSION
+        log_record["environment"] = settings.ENVIRONMENT
+
         # Add correlation ID
-        log_record['correlation_id'] = getattr(record, 'correlation_id', None)
-        
+        log_record["correlation_id"] = getattr(record, "correlation_id", None)
+
         # Add structured data if present
-        if hasattr(record, 'user_id'):
-            log_record['user_id'] = record.user_id
-        if hasattr(record, 'request_id'):
-            log_record['request_id'] = record.request_id
-        if hasattr(record, 'client_ip'):
-            log_record['client_ip'] = record.client_ip
-        if hasattr(record, 'method'):
-            log_record['method'] = record.method
-        if hasattr(record, 'path'):
-            log_record['path'] = record.path
-        if hasattr(record, 'status_code'):
-            log_record['status_code'] = record.status_code
-        if hasattr(record, 'duration'):
-            log_record['duration'] = record.duration
+        if hasattr(record, "user_id"):
+            log_record["user_id"] = record.user_id
+        if hasattr(record, "request_id"):
+            log_record["request_id"] = record.request_id
+        if hasattr(record, "client_ip"):
+            log_record["client_ip"] = record.client_ip
+        if hasattr(record, "method"):
+            log_record["method"] = record.method
+        if hasattr(record, "path"):
+            log_record["path"] = record.path
+        if hasattr(record, "status_code"):
+            log_record["status_code"] = record.status_code
+        if hasattr(record, "duration"):
+            log_record["duration"] = record.duration
 
 
 def configure_logging():
     """Configure application logging."""
-    
+
     # Configure structlog
     structlog.configure(
         processors=[
@@ -74,72 +76,62 @@ def configure_logging():
             structlog.processors.StackInfoRenderer(),
             structlog.processors.format_exc_info,
             structlog.processors.UnicodeDecoder(),
-            structlog.processors.JSONRenderer() if settings.LOG_FORMAT == "json" else structlog.dev.ConsoleRenderer(),
+            (
+                structlog.processors.JSONRenderer()
+                if settings.LOG_FORMAT == "json"
+                else structlog.dev.ConsoleRenderer()
+            ),
         ],
         wrapper_class=structlog.stdlib.BoundLogger,
         logger_factory=structlog.stdlib.LoggerFactory(),
         cache_logger_on_first_use=True,
     )
-    
+
     # Logging configuration
     config = {
-        'version': 1,
-        'disable_existing_loggers': False,
-        'formatters': {
-            'json': {
-                '()': JSONFormatter,
-                'format': '%(asctime)s %(name)s %(levelname)s %(message)s'
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "json": {
+                "()": JSONFormatter,
+                "format": "%(asctime)s %(name)s %(levelname)s %(message)s",
             },
-            'standard': {
-                'format': '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+            "standard": {"format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s"},
+        },
+        "filters": {
+            "correlation": {
+                "()": CorrelationFilter,
             }
         },
-        'filters': {
-            'correlation': {
-                '()': CorrelationFilter,
+        "handlers": {
+            "default": {
+                "level": settings.LOG_LEVEL,
+                "formatter": settings.LOG_FORMAT,
+                "filters": ["correlation"],
+                "class": "logging.StreamHandler",
+                "stream": sys.stdout,
             }
         },
-        'handlers': {
-            'default': {
-                'level': settings.LOG_LEVEL,
-                'formatter': settings.LOG_FORMAT,
-                'filters': ['correlation'],
-                'class': 'logging.StreamHandler',
-                'stream': sys.stdout
-            }
+        "loggers": {
+            "": {"handlers": ["default"], "level": settings.LOG_LEVEL, "propagate": False},
+            "uvicorn.error": {"handlers": ["default"], "level": "INFO", "propagate": False},
+            "uvicorn.access": {"handlers": ["default"], "level": "INFO", "propagate": False},
         },
-        'loggers': {
-            '': {
-                'handlers': ['default'],
-                'level': settings.LOG_LEVEL,
-                'propagate': False
-            },
-            'uvicorn.error': {
-                'handlers': ['default'],
-                'level': 'INFO',
-                'propagate': False
-            },
-            'uvicorn.access': {
-                'handlers': ['default'],
-                'level': 'INFO',
-                'propagate': False
-            }
-        }
     }
-    
+
     # Add file handler if log file is configured
     if settings.LOG_FILE:
-        config['handlers']['file'] = {
-            'level': settings.LOG_LEVEL,
-            'formatter': settings.LOG_FORMAT,
-            'filters': ['correlation'],
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': settings.LOG_FILE,
-            'maxBytes': 10485760,  # 10MB
-            'backupCount': 5
+        config["handlers"]["file"] = {
+            "level": settings.LOG_LEVEL,
+            "formatter": settings.LOG_FORMAT,
+            "filters": ["correlation"],
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": settings.LOG_FILE,
+            "maxBytes": 10485760,  # 10MB
+            "backupCount": 5,
         }
-        config['loggers']['']['handlers'].append('file')
-    
+        config["loggers"][""]["handlers"].append("file")
+
     logging.config.dictConfig(config)
 
 
@@ -158,9 +150,14 @@ def get_correlation_id() -> Optional[str]:
     return correlation_id.get()
 
 
-def log_request(logger: structlog.BoundLogger, method: str, path: str, 
-                client_ip: str, user_id: Optional[str] = None,
-                request_id: Optional[str] = None):
+def log_request(
+    logger: structlog.BoundLogger,
+    method: str,
+    path: str,
+    client_ip: str,
+    user_id: Optional[str] = None,
+    request_id: Optional[str] = None,
+):
     """Log incoming request."""
     logger.info(
         "Incoming request",
@@ -169,13 +166,19 @@ def log_request(logger: structlog.BoundLogger, method: str, path: str,
         client_ip=client_ip,
         user_id=user_id,
         request_id=request_id,
-        event="request_start"
+        event="request_start",
     )
 
 
-def log_response(logger: structlog.BoundLogger, method: str, path: str,
-                 status_code: int, duration: float, user_id: Optional[str] = None,
-                 request_id: Optional[str] = None):
+def log_response(
+    logger: structlog.BoundLogger,
+    method: str,
+    path: str,
+    status_code: int,
+    duration: float,
+    user_id: Optional[str] = None,
+    request_id: Optional[str] = None,
+):
     """Log outgoing response."""
     logger.info(
         "Request completed",
@@ -185,25 +188,28 @@ def log_response(logger: structlog.BoundLogger, method: str, path: str,
         duration=duration,
         user_id=user_id,
         request_id=request_id,
-        event="request_complete"
+        event="request_complete",
     )
 
 
-def log_error(logger: structlog.BoundLogger, error: Exception, 
-              context: Dict[str, Any] = None):
+def log_error(logger: structlog.BoundLogger, error: Exception, context: Dict[str, Any] = None):
     """Log an error with context."""
     logger.error(
         "Error occurred",
         error=str(error),
         error_type=type(error).__name__,
         **(context or {}),
-        event="error"
+        event="error",
     )
 
 
-def log_security_event(logger: structlog.BoundLogger, event_type: str,
-                       user_id: Optional[str] = None, client_ip: Optional[str] = None,
-                       details: Dict[str, Any] = None):
+def log_security_event(
+    logger: structlog.BoundLogger,
+    event_type: str,
+    user_id: Optional[str] = None,
+    client_ip: Optional[str] = None,
+    details: Dict[str, Any] = None,
+):
     """Log security-related events."""
     logger.warning(
         f"Security event: {event_type}",
@@ -211,19 +217,20 @@ def log_security_event(logger: structlog.BoundLogger, event_type: str,
         user_id=user_id,
         client_ip=client_ip,
         event="security",
-        **(details or {})
+        **(details or {}),
     )
 
 
-def log_performance(logger: structlog.BoundLogger, operation: str, 
-                    duration: float, metadata: Dict[str, Any] = None):
+def log_performance(
+    logger: structlog.BoundLogger, operation: str, duration: float, metadata: Dict[str, Any] = None
+):
     """Log performance metrics."""
     logger.info(
         f"Performance: {operation}",
         operation=operation,
         duration=duration,
         event="performance",
-        **(metadata or {})
+        **(metadata or {}),
     )
 
 

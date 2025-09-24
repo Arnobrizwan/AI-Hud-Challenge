@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field, validator
 
 class Entity(BaseModel):
     """Entity model."""
+
     text: str
     label: str
     confidence: float = Field(ge=0.0, le=1.0)
@@ -18,6 +19,7 @@ class Entity(BaseModel):
 
 class Location(BaseModel):
     """Location model."""
+
     name: str
     country: Optional[str] = None
     region: Optional[str] = None
@@ -27,6 +29,7 @@ class Location(BaseModel):
 
 class Topic(BaseModel):
     """Topic model."""
+
     name: str
     confidence: float = Field(ge=0.0, le=1.0)
     category: Optional[str] = None
@@ -34,6 +37,7 @@ class Topic(BaseModel):
 
 class NormalizedArticle(BaseModel):
     """Normalized article model."""
+
     id: UUID
     title: str
     content: str
@@ -53,22 +57,23 @@ class NormalizedArticle(BaseModel):
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
-    @validator('word_count', pre=True, always=True)
+    @validator("word_count", pre=True, always=True)
     def calculate_word_count(cls, v, values):
-        if v == 0 and 'content' in values:
-            return len(values['content'].split())
+        if v == 0 and "content" in values:
+            return len(values["content"].split())
         return v
 
-    @validator('reading_time', pre=True, always=True)
+    @validator("reading_time", pre=True, always=True)
     def calculate_reading_time(cls, v, values):
-        if v == 0 and 'word_count' in values:
+        if v == 0 and "word_count" in values:
             # Average reading speed: 200 words per minute
-            return max(1, values['word_count'] // 200)
+            return max(1, values["word_count"] // 200)
         return v
 
 
 class DuplicateResult(BaseModel):
     """Duplicate detection result."""
+
     article_id: UUID
     is_duplicate: bool
     duplicate_of: Optional[UUID] = None
@@ -80,6 +85,7 @@ class DuplicateResult(BaseModel):
 
 class SimilarityScore(BaseModel):
     """Similarity score between two articles."""
+
     article_id: UUID
     similarity: float = Field(ge=0.0, le=1.0)
     similarity_type: str  # 'lsh', 'semantic', 'content', 'title'
@@ -88,6 +94,7 @@ class SimilarityScore(BaseModel):
 
 class Cluster(BaseModel):
     """News event cluster."""
+
     id: UUID
     representative_article_id: UUID
     article_count: int = 0
@@ -103,6 +110,7 @@ class Cluster(BaseModel):
 
 class NewsEvent(BaseModel):
     """News event with articles."""
+
     id: UUID
     cluster: Cluster
     articles: List[NormalizedArticle]
@@ -115,6 +123,7 @@ class NewsEvent(BaseModel):
 
 class ProcessingStatus(BaseModel):
     """Processing status for an article."""
+
     article_id: UUID
     status: str  # 'pending', 'processing', 'completed', 'failed'
     priority: int = 0
@@ -127,6 +136,7 @@ class ProcessingStatus(BaseModel):
 
 class DeduplicationRequest(BaseModel):
     """Request for deduplication."""
+
     articles: List[NormalizedArticle]
     batch_id: Optional[str] = None
     force_reprocess: bool = False
@@ -136,6 +146,7 @@ class DeduplicationRequest(BaseModel):
 
 class DeduplicationResponse(BaseModel):
     """Response from deduplication."""
+
     batch_id: Optional[str] = None
     results: List[DuplicateResult]
     clusters: List[Cluster] = Field(default_factory=list)
@@ -147,6 +158,7 @@ class DeduplicationResponse(BaseModel):
 
 class EventGroupingRequest(BaseModel):
     """Request for event grouping."""
+
     articles: List[NormalizedArticle]
     time_window_hours: int = 24
     min_cluster_size: int = 2
@@ -157,6 +169,7 @@ class EventGroupingRequest(BaseModel):
 
 class EventGroupingResponse(BaseModel):
     """Response from event grouping."""
+
     events: List[NewsEvent]
     unclustered_articles: List[NormalizedArticle]
     processing_time: float
@@ -166,6 +179,7 @@ class EventGroupingResponse(BaseModel):
 
 class ClusterMetrics(BaseModel):
     """Cluster quality metrics."""
+
     cluster_id: UUID
     silhouette_score: float
     cohesion: float
@@ -178,6 +192,7 @@ class ClusterMetrics(BaseModel):
 
 class SystemMetrics(BaseModel):
     """System performance metrics."""
+
     articles_processed: int
     duplicates_detected: int
     clusters_created: int
@@ -193,6 +208,7 @@ class SystemMetrics(BaseModel):
 
 class HealthCheck(BaseModel):
     """Health check response."""
+
     status: str
     timestamp: datetime
     version: str
@@ -203,6 +219,7 @@ class HealthCheck(BaseModel):
 
 class APIError(BaseModel):
     """API error response."""
+
     error: str
     message: str
     details: Optional[Dict[str, Any]] = None
@@ -212,6 +229,7 @@ class APIError(BaseModel):
 
 class PaginationParams(BaseModel):
     """Pagination parameters."""
+
     page: int = Field(ge=1, default=1)
     size: int = Field(ge=1, le=1000, default=100)
     sort_by: str = "created_at"
@@ -220,6 +238,7 @@ class PaginationParams(BaseModel):
 
 class PaginatedResponse(BaseModel):
     """Paginated response."""
+
     items: List[Any]
     total: int
     page: int
@@ -231,6 +250,7 @@ class PaginatedResponse(BaseModel):
 
 class SearchRequest(BaseModel):
     """Search request."""
+
     query: str
     filters: Optional[Dict[str, Any]] = None
     pagination: PaginationParams = Field(default_factory=PaginationParams)
@@ -238,6 +258,7 @@ class SearchRequest(BaseModel):
 
 class SearchResponse(BaseModel):
     """Search response."""
+
     results: PaginatedResponse
     search_time: float
     total_matches: int

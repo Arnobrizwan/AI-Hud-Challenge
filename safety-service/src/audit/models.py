@@ -4,12 +4,15 @@ Data models for audit logging and reporting
 """
 
 from datetime import datetime
-from typing import Dict, List, Optional, Any, Union
 from enum import Enum
+from typing import Any, Dict, List, Optional, Union
+
 from pydantic import BaseModel, Field
+
 
 class AuditEventType(str, Enum):
     """Types of audit events"""
+
     SAFETY_CHECK = "safety_check"
     DRIFT_DETECTION = "drift_detection"
     ABUSE_DETECTION = "abuse_detection"
@@ -23,22 +26,28 @@ class AuditEventType(str, Enum):
     USER_ACTION = "user_action"
     SYSTEM_EVENT = "system_event"
 
+
 class AuditSeverity(str, Enum):
     """Audit event severity levels"""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
     CRITICAL = "critical"
 
+
 class AuditStatus(str, Enum):
     """Audit event status"""
+
     SUCCESS = "success"
     FAILURE = "failure"
     WARNING = "warning"
     INFO = "info"
 
+
 class AuditEvent(BaseModel):
     """Individual audit event"""
+
     event_id: str = Field(..., description="Unique event identifier")
     event_type: AuditEventType = Field(..., description="Type of audit event")
     severity: AuditSeverity = Field(..., description="Event severity level")
@@ -61,8 +70,10 @@ class AuditEvent(BaseModel):
     error_code: Optional[str] = Field(None, description="Error code if event failed")
     error_message: Optional[str] = Field(None, description="Error message if event failed")
 
+
 class AuditLog(BaseModel):
     """Audit log containing multiple events"""
+
     log_id: str = Field(..., description="Unique log identifier")
     log_type: str = Field(..., description="Type of audit log")
     start_time: datetime = Field(..., description="Log start time")
@@ -75,8 +86,10 @@ class AuditLog(BaseModel):
     warning_count: int = Field(..., description="Number of warning events")
     info_count: int = Field(..., description="Number of info events")
 
+
 class AuditReport(BaseModel):
     """Audit report with analysis and insights"""
+
     report_id: str = Field(..., description="Unique report identifier")
     report_type: str = Field(..., description="Type of audit report")
     generated_at: datetime = Field(..., description="Report generation timestamp")
@@ -96,8 +109,10 @@ class AuditReport(BaseModel):
     summary: str = Field(..., description="Report summary")
     details: Dict[str, Any] = Field(default_factory=dict, description="Additional report details")
 
+
 class AuditQuery(BaseModel):
     """Query parameters for audit log retrieval"""
+
     start_time: Optional[datetime] = Field(None, description="Start time filter")
     end_time: Optional[datetime] = Field(None, description="End time filter")
     event_types: Optional[List[AuditEventType]] = Field(None, description="Event type filter")
@@ -113,8 +128,10 @@ class AuditQuery(BaseModel):
     sort_by: Optional[str] = Field("timestamp", description="Field to sort by")
     sort_order: Optional[str] = Field("desc", description="Sort order (asc/desc)")
 
+
 class AuditMetrics(BaseModel):
     """Audit metrics and statistics"""
+
     total_events: int = Field(..., description="Total number of events")
     events_today: int = Field(..., description="Events today")
     events_this_week: int = Field(..., description="Events this week")
@@ -129,8 +146,10 @@ class AuditMetrics(BaseModel):
     anomaly_count: int = Field(..., description="Number of anomalies detected")
     last_updated: datetime = Field(..., description="Last metrics update")
 
+
 class AuditAlert(BaseModel):
     """Audit alert for suspicious or critical events"""
+
     alert_id: str = Field(..., description="Unique alert identifier")
     alert_type: str = Field(..., description="Type of alert")
     severity: AuditSeverity = Field(..., description="Alert severity")
@@ -149,8 +168,10 @@ class AuditAlert(BaseModel):
     resolved_at: Optional[datetime] = Field(None, description="Alert resolution timestamp")
     resolution_notes: Optional[str] = Field(None, description="Alert resolution notes")
 
+
 class AuditConfiguration(BaseModel):
     """Audit system configuration"""
+
     enabled: bool = Field(True, description="Whether audit logging is enabled")
     log_level: str = Field("INFO", description="Minimum log level to capture")
     retention_days: int = Field(90, description="Number of days to retain audit logs")

@@ -3,13 +3,14 @@ Dependency injection for Evaluation Suite Microservice
 """
 
 from typing import Generator, Optional
+
 from fastapi import Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from .database import get_db_session
 from .cache import get_cache_client
-from .core import EvaluationEngine
 from .config import get_settings
+from .core import EvaluationEngine
+from .database import get_db_session
 
 
 def get_database_dependency() -> Generator[Session, None, None]:
@@ -29,10 +30,7 @@ def get_cache_dependency():
 def get_evaluation_engine() -> EvaluationEngine:
     """Get evaluation engine dependency"""
     # This will be overridden in main.py with the actual instance
-    raise HTTPException(
-        status_code=503,
-        detail="Evaluation engine not available"
-    )
+    raise HTTPException(status_code=503, detail="Evaluation engine not available")
 
 
 def get_settings_dependency():

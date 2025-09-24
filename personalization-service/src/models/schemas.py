@@ -1,13 +1,15 @@
 """Pydantic schemas for the personalization service."""
 
 from datetime import datetime
-from typing import List, Optional, Dict, Any, Union
-from pydantic import BaseModel, Field
 from enum import Enum
+from typing import Any, Dict, List, Optional, Union
+
+from pydantic import BaseModel, Field
 
 
 class InteractionType(str, Enum):
     """Types of user interactions."""
+
     CLICK = "click"
     VIEW = "view"
     SHARE = "share"
@@ -20,6 +22,7 @@ class InteractionType(str, Enum):
 
 class AlgorithmType(str, Enum):
     """Personalization algorithm types."""
+
     HYBRID = "hybrid"
     COLLABORATIVE = "collaborative"
     CONTENT_BASED = "content_based"
@@ -29,16 +32,18 @@ class AlgorithmType(str, Enum):
 
 class PersonalizationRequest(BaseModel):
     """Request for content personalization."""
+
     user_id: str
-    candidates: List['ContentItem']
-    context: Optional['UserContext'] = None
-    diversity_params: Optional['DiversityParams'] = None
+    candidates: List["ContentItem"]
+    context: Optional["UserContext"] = None
+    diversity_params: Optional["DiversityParams"] = None
     max_results: int = Field(default=10, ge=1, le=100)
     include_explanation: bool = Field(default=False)
 
 
 class ContentItem(BaseModel):
     """Content item representation."""
+
     id: str
     title: str
     content: Optional[str] = None
@@ -52,6 +57,7 @@ class ContentItem(BaseModel):
 
 class UserContext(BaseModel):
     """User context information."""
+
     session_id: Optional[str] = None
     device_type: Optional[str] = None
     location: Optional[str] = None
@@ -63,6 +69,7 @@ class UserContext(BaseModel):
 
 class DiversityParams(BaseModel):
     """Diversity optimization parameters."""
+
     enable_diversity: bool = Field(default=True)
     topic_diversity_threshold: float = Field(default=0.3, ge=0.0, le=1.0)
     source_diversity_threshold: float = Field(default=0.3, ge=0.0, le=1.0)
@@ -72,6 +79,7 @@ class DiversityParams(BaseModel):
 
 class Recommendation(BaseModel):
     """Individual recommendation."""
+
     item_id: str
     score: float = Field(ge=0.0, le=1.0)
     method: str
@@ -83,6 +91,7 @@ class Recommendation(BaseModel):
 
 class BanditRecommendation(BaseModel):
     """Bandit-based recommendation."""
+
     item_id: str
     expected_reward: float
     uncertainty: float
@@ -92,6 +101,7 @@ class BanditRecommendation(BaseModel):
 
 class PersonalizedResponse(BaseModel):
     """Personalized content response."""
+
     user_id: str
     recommendations: List[Recommendation]
     algorithm_used: str
@@ -103,6 +113,7 @@ class PersonalizedResponse(BaseModel):
 
 class UserProfile(BaseModel):
     """User profile for personalization."""
+
     user_id: str
     created_at: datetime
     updated_at: datetime
@@ -121,6 +132,7 @@ class UserProfile(BaseModel):
 
 class UserInteraction(BaseModel):
     """User interaction record."""
+
     user_id: str
     item_id: str
     interaction_type: InteractionType
@@ -134,6 +146,7 @@ class UserInteraction(BaseModel):
 
 class SimilarUser(BaseModel):
     """Similar user for collaborative filtering."""
+
     user_id: str
     similarity: float = Field(ge=0.0, le=1.0)
     common_interactions: int = 0
@@ -141,6 +154,7 @@ class SimilarUser(BaseModel):
 
 class ABExperiment(BaseModel):
     """A/B testing experiment."""
+
     experiment_id: str
     name: str
     description: Optional[str] = None
@@ -153,6 +167,7 @@ class ABExperiment(BaseModel):
 
 class ModelMetrics(BaseModel):
     """Model performance metrics."""
+
     model_name: str
     metric_name: str
     metric_value: float
@@ -162,6 +177,7 @@ class ModelMetrics(BaseModel):
 
 class ColdStartProfile(BaseModel):
     """Cold start profile template."""
+
     profile_type: str
     template_profile: Dict[str, Any]
     created_at: datetime
@@ -170,6 +186,7 @@ class ColdStartProfile(BaseModel):
 
 class PrivacySettings(BaseModel):
     """Privacy settings for user data."""
+
     allow_personalization: bool = True
     allow_data_collection: bool = True
     allow_analytics: bool = True

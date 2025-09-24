@@ -2,16 +2,18 @@
 API models for the content extraction service.
 """
 
-from typing import Optional, List, Dict, Any, Union
 from datetime import datetime
-from pydantic import BaseModel, Field, validator
 from enum import Enum
+from typing import Any, Dict, List, Optional, Union
+
+from pydantic import BaseModel, Field, validator
 
 from .content import ContentType, ExtractionMethod, ProcessingStatus
 
 
 class APIResponse(BaseModel):
     """Base API response model."""
+
     success: bool = Field(..., description="Whether request was successful")
     message: Optional[str] = Field(None, description="Response message")
     data: Optional[Any] = Field(None, description="Response data")
@@ -22,6 +24,7 @@ class APIResponse(BaseModel):
 
 class HealthCheckResponse(BaseModel):
     """Health check response."""
+
     status: str = Field(..., description="Service status")
     version: str = Field(..., description="Service version")
     uptime_seconds: float = Field(..., description="Service uptime")
@@ -31,6 +34,7 @@ class HealthCheckResponse(BaseModel):
 
 class ExtractionStatusResponse(BaseModel):
     """Response for extraction status check."""
+
     extraction_id: str = Field(..., description="Extraction ID")
     status: ProcessingStatus = Field(..., description="Current status")
     progress_percentage: float = Field(..., description="Progress percentage")
@@ -41,6 +45,7 @@ class ExtractionStatusResponse(BaseModel):
 
 class ContentSearchRequest(BaseModel):
     """Request to search extracted content."""
+
     query: Optional[str] = Field(None, description="Search query")
     content_types: Optional[List[ContentType]] = Field(None, description="Filter by content types")
     languages: Optional[List[str]] = Field(None, description="Filter by languages")
@@ -51,21 +56,21 @@ class ContentSearchRequest(BaseModel):
     offset: int = Field(default=0, description="Result offset")
     sort_by: str = Field(default="extraction_timestamp", description="Sort field")
     sort_order: str = Field(default="desc", description="Sort order")
-    
+
     @validator("limit")
     def validate_limit(cls, v):
         """Validate limit."""
         if v < 1 or v > 1000:
             raise ValueError("Limit must be between 1 and 1000")
         return v
-    
+
     @validator("offset")
     def validate_offset(cls, v):
         """Validate offset."""
         if v < 0:
             raise ValueError("Offset must be non-negative")
         return v
-    
+
     @validator("sort_order")
     def validate_sort_order(cls, v):
         """Validate sort order."""
@@ -76,6 +81,7 @@ class ContentSearchRequest(BaseModel):
 
 class ContentSearchResponse(BaseModel):
     """Response for content search."""
+
     results: List[Dict[str, Any]] = Field(..., description="Matching content")
     total_count: int = Field(..., description="Total matching results")
     limit: int = Field(..., description="Result limit")
@@ -85,11 +91,12 @@ class ContentSearchResponse(BaseModel):
 
 class QualityAnalysisRequest(BaseModel):
     """Request for content quality analysis."""
+
     content: str = Field(..., description="Content to analyze")
     title: Optional[str] = Field(None, description="Content title")
     url: Optional[str] = Field(None, description="Content URL")
     language_hint: Optional[str] = Field(None, description="Language hint")
-    
+
     @validator("content")
     def validate_content(cls, v):
         """Validate content."""
@@ -100,6 +107,7 @@ class QualityAnalysisRequest(BaseModel):
 
 class QualityAnalysisResponse(BaseModel):
     """Response for content quality analysis."""
+
     quality_score: float = Field(..., description="Overall quality score")
     readability_score: float = Field(..., description="Readability score")
     spam_score: float = Field(..., description="Spam detection score")
@@ -114,20 +122,21 @@ class QualityAnalysisResponse(BaseModel):
 
 class ImageProcessingRequest(BaseModel):
     """Request for image processing."""
+
     image_url: str = Field(..., description="Image URL to process")
     optimize: bool = Field(default=True, description="Whether to optimize image")
     max_width: Optional[int] = Field(None, description="Maximum width")
     max_height: Optional[int] = Field(None, description="Maximum height")
     quality: int = Field(default=85, description="JPEG quality (1-100)")
     format: Optional[str] = Field(None, description="Output format")
-    
+
     @validator("image_url")
     def validate_image_url(cls, v):
         """Validate image URL."""
         if not v.startswith(("http://", "https://")):
             raise ValueError("Image URL must start with http:// or https://")
         return v
-    
+
     @validator("quality")
     def validate_quality(cls, v):
         """Validate quality value."""
@@ -138,6 +147,7 @@ class ImageProcessingRequest(BaseModel):
 
 class ImageProcessingResponse(BaseModel):
     """Response for image processing."""
+
     success: bool = Field(..., description="Whether processing was successful")
     original_url: str = Field(..., description="Original image URL")
     processed_url: Optional[str] = Field(None, description="Processed image URL")
@@ -152,12 +162,15 @@ class ImageProcessingResponse(BaseModel):
 
 class BatchProcessingRequest(BaseModel):
     """Request for batch processing."""
+
     urls: List[str] = Field(..., description="URLs to process")
     processing_type: str = Field(..., description="Type of processing")
     options: Dict[str, Any] = Field(default_factory=dict, description="Processing options")
     priority: int = Field(default=1, description="Processing priority (1-10)")
-    callback_url: Optional[str] = Field(None, description="Callback URL for completion notification")
-    
+    callback_url: Optional[str] = Field(
+        None, description="Callback URL for completion notification"
+    )
+
     @validator("urls")
     def validate_urls(cls, v):
         """Validate URLs."""
@@ -166,7 +179,7 @@ class BatchProcessingRequest(BaseModel):
         if len(v) > 1000:
             raise ValueError("Maximum 1000 URLs per batch")
         return v
-    
+
     @validator("priority")
     def validate_priority(cls, v):
         """Validate priority."""
@@ -177,6 +190,7 @@ class BatchProcessingRequest(BaseModel):
 
 class BatchProcessingResponse(BaseModel):
     """Response for batch processing."""
+
     batch_id: str = Field(..., description="Batch ID")
     status: str = Field(..., description="Batch status")
     total_items: int = Field(..., description="Total items to process")
@@ -190,6 +204,7 @@ class BatchProcessingResponse(BaseModel):
 
 class MetricsResponse(BaseModel):
     """Response for metrics data."""
+
     period: str = Field(..., description="Metrics period")
     total_extractions: int = Field(..., description="Total extractions performed")
     successful_extractions: int = Field(..., description="Successful extractions")
@@ -201,11 +216,14 @@ class MetricsResponse(BaseModel):
     error_rate: float = Field(..., description="Error rate")
     content_type_distribution: Dict[str, int] = Field(..., description="Content type distribution")
     language_distribution: Dict[str, int] = Field(..., description="Language distribution")
-    quality_score_distribution: Dict[str, int] = Field(..., description="Quality score distribution")
+    quality_score_distribution: Dict[str, int] = Field(
+        ..., description="Quality score distribution"
+    )
 
 
 class CacheStatsResponse(BaseModel):
     """Response for cache statistics."""
+
     total_entries: int = Field(..., description="Total cache entries")
     hit_rate: float = Field(..., description="Cache hit rate")
     miss_rate: float = Field(..., description="Cache miss rate")
@@ -217,6 +235,7 @@ class CacheStatsResponse(BaseModel):
 
 class ErrorResponse(BaseModel):
     """Error response model."""
+
     error: str = Field(..., description="Error type")
     message: str = Field(..., description="Error message")
     details: Optional[Dict[str, Any]] = Field(None, description="Error details")

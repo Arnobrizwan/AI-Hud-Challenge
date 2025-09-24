@@ -2,10 +2,7 @@
 Monitoring components for Storage Service
 """
 
-from .metrics import MetricsCollector
 from .health import HealthChecker
+from .metrics import MetricsCollector
 
-__all__ = [
-    "MetricsCollector",
-    "HealthChecker"
-]
+__all__ = ["MetricsCollector", "HealthChecker"]

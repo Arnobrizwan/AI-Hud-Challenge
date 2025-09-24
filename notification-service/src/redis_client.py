@@ -24,9 +24,9 @@ async def get_redis_client() -> Redis:
             socket_keepalive=True,
             socket_keepalive_options={},
             retry_on_timeout=True,
-            health_check_interval=30
+            health_check_interval=30,
         )
-        
+
         # Test connection
         try:
             await _redis_client.ping()
@@ -34,7 +34,7 @@ async def get_redis_client() -> Redis:
         except Exception as e:
             print(f"Failed to connect to Redis: {e}")
             raise
-    
+
     return _redis_client
 
 

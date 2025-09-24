@@ -4,7 +4,7 @@ Pydantic schemas for notification decisioning service.
 
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional, Any, Union
+from typing import Any, Dict, List, Optional, Union
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 
 class NotificationType(str, Enum):
     """Types of notifications."""
+
     BREAKING_NEWS = "breaking_news"
     PERSONALIZED = "personalized"
     TRENDING = "trending"
@@ -22,6 +23,7 @@ class NotificationType(str, Enum):
 
 class DeliveryChannel(str, Enum):
     """Delivery channels for notifications."""
+
     PUSH = "push"
     EMAIL = "email"
     SMS = "sms"
@@ -30,6 +32,7 @@ class DeliveryChannel(str, Enum):
 
 class Priority(str, Enum):
     """Notification priority levels."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -38,6 +41,7 @@ class Priority(str, Enum):
 
 class NotificationContent(BaseModel):
     """Notification content model."""
+
     title: str = Field(..., max_length=100)
     body: str = Field(..., max_length=500)
     action_url: Optional[str] = None
@@ -49,6 +53,7 @@ class NotificationContent(BaseModel):
 
 class NewsItem(BaseModel):
     """News item model."""
+
     id: str
     title: str
     content: str
@@ -66,6 +71,7 @@ class NewsItem(BaseModel):
 
 class NotificationCandidate(BaseModel):
     """Notification candidate for decisioning."""
+
     user_id: str
     content: NewsItem
     notification_type: NotificationType
@@ -78,6 +84,7 @@ class NotificationCandidate(BaseModel):
 
 class NotificationDecision(BaseModel):
     """Notification decision result."""
+
     should_send: bool
     user_id: str
     reason: Optional[str] = None
@@ -94,6 +101,7 @@ class NotificationDecision(BaseModel):
 
 class DeliveryResult(BaseModel):
     """Notification delivery result."""
+
     success: bool
     delivery_id: str
     channel: DeliveryChannel
@@ -107,6 +115,7 @@ class DeliveryResult(BaseModel):
 
 class OptimalTiming(BaseModel):
     """Optimal timing prediction result."""
+
     scheduled_time: datetime
     predicted_engagement: float = Field(ge=0.0, le=1.0)
     alternative_times: List[datetime] = Field(default_factory=list)
@@ -115,6 +124,7 @@ class OptimalTiming(BaseModel):
 
 class TimingPrediction(BaseModel):
     """Timing prediction for a specific time window."""
+
     scheduled_time: datetime
     engagement_probability: float = Field(ge=0.0, le=1.0)
     features: Dict[str, Any] = Field(default_factory=dict)
@@ -122,6 +132,7 @@ class TimingPrediction(BaseModel):
 
 class FatigueCheck(BaseModel):
     """Notification fatigue check result."""
+
     is_fatigued: bool
     hourly_count: int
     daily_count: int
@@ -131,6 +142,7 @@ class FatigueCheck(BaseModel):
 
 class NotificationPreferences(BaseModel):
     """User notification preferences."""
+
     user_id: str
     enabled_types: List[NotificationType] = Field(default_factory=list)
     delivery_channels: List[DeliveryChannel] = Field(default_factory=list)
@@ -142,11 +154,11 @@ class NotificationPreferences(BaseModel):
     max_hourly_notifications: int = 10
     relevance_thresholds: Dict[NotificationType, float] = Field(default_factory=dict)
     metadata: Dict[str, Any] = Field(default_factory=dict)
-    
+
     def get_threshold(self, notification_type: NotificationType) -> float:
         """Get relevance threshold for notification type."""
         return self.relevance_thresholds.get(notification_type, 0.3)
-    
+
     def is_notification_type_enabled(self, notification_type: NotificationType) -> bool:
         """Check if notification type is enabled."""
         return notification_type in self.enabled_types
@@ -154,6 +166,7 @@ class NotificationPreferences(BaseModel):
 
 class UserProfile(BaseModel):
     """User profile for personalization."""
+
     user_id: str
     topic_preferences: List[str] = Field(default_factory=list)
     source_preferences: List[str] = Field(default_factory=list)
@@ -167,6 +180,7 @@ class UserProfile(BaseModel):
 
 class ABTestVariant(BaseModel):
     """A/B test variant."""
+
     experiment_name: str
     variant_name: str
     user_id: str
@@ -176,6 +190,7 @@ class ABTestVariant(BaseModel):
 
 class NotificationAnalytics(BaseModel):
     """Notification analytics data."""
+
     notification_id: str
     user_id: str
     notification_type: NotificationType
@@ -191,6 +206,7 @@ class NotificationAnalytics(BaseModel):
 
 class BatchNotificationRequest(BaseModel):
     """Request for batch notification processing."""
+
     candidates: List[NotificationCandidate]
     batch_id: Optional[str] = None
     priority: Priority = Priority.MEDIUM
@@ -199,6 +215,7 @@ class BatchNotificationRequest(BaseModel):
 
 class BatchNotificationResponse(BaseModel):
     """Response for batch notification processing."""
+
     batch_id: str
     total_candidates: int
     decisions_made: int

@@ -2,16 +2,18 @@
 API models for the ingestion service.
 """
 
-from typing import Optional, List, Dict, Any, Union
 from datetime import datetime
-from pydantic import BaseModel, Field, validator
 from enum import Enum
+from typing import Any, Dict, List, Optional, Union
 
-from .content import ProcessingStatus, SourceType, ContentType
+from pydantic import BaseModel, Field, validator
+
+from .content import ContentType, ProcessingStatus, SourceType
 
 
 class APIResponse(BaseModel):
     """Base API response model."""
+
     success: bool = Field(..., description="Whether request was successful")
     message: Optional[str] = Field(None, description="Response message")
     data: Optional[Any] = Field(None, description="Response data")
@@ -22,6 +24,7 @@ class APIResponse(BaseModel):
 
 class HealthCheckResponse(BaseModel):
     """Health check response."""
+
     status: str = Field(..., description="Service status")
     version: str = Field(..., description="Service version")
     uptime_seconds: float = Field(..., description="Service uptime")
@@ -31,12 +34,15 @@ class HealthCheckResponse(BaseModel):
 
 class IngestionRequest(BaseModel):
     """Request to ingest content from a source."""
+
     source_id: str = Field(..., description="Source identifier")
     url: Optional[str] = Field(None, description="Specific URL to ingest")
-    force_refresh: bool = Field(default=False, description="Force refresh even if recently processed")
+    force_refresh: bool = Field(
+        default=False, description="Force refresh even if recently processed"
+    )
     batch_size: Optional[int] = Field(None, description="Batch size for processing")
     priority: Optional[int] = Field(None, description="Processing priority")
-    
+
     @validator("batch_size")
     def validate_batch_size(cls, v):
         """Validate batch size."""
@@ -47,6 +53,7 @@ class IngestionRequest(BaseModel):
 
 class IngestionResponse(BaseModel):
     """Response from ingestion request."""
+
     batch_id: str = Field(..., description="Batch identifier")
     source_id: str = Field(..., description="Source identifier")
     articles_processed: int = Field(..., description="Number of articles processed")
@@ -60,6 +67,7 @@ class IngestionResponse(BaseModel):
 
 class SourceListResponse(BaseModel):
     """Response for listing sources."""
+
     sources: List[Dict[str, Any]] = Field(..., description="List of sources")
     total_count: int = Field(..., description="Total number of sources")
     enabled_count: int = Field(..., description="Number of enabled sources")
@@ -68,6 +76,7 @@ class SourceListResponse(BaseModel):
 
 class SourceStatsResponse(BaseModel):
     """Response for source statistics."""
+
     source_id: str = Field(..., description="Source identifier")
     period: str = Field(..., description="Statistics period")
     total_articles: int = Field(..., description="Total articles processed")
@@ -82,6 +91,7 @@ class SourceStatsResponse(BaseModel):
 
 class ContentSearchRequest(BaseModel):
     """Request to search content."""
+
     query: Optional[str] = Field(None, description="Search query")
     source_ids: Optional[List[str]] = Field(None, description="Filter by source IDs")
     content_types: Optional[List[ContentType]] = Field(None, description="Filter by content types")
@@ -92,21 +102,21 @@ class ContentSearchRequest(BaseModel):
     offset: int = Field(default=0, description="Result offset")
     sort_by: str = Field(default="published_at", description="Sort field")
     sort_order: str = Field(default="desc", description="Sort order")
-    
+
     @validator("limit")
     def validate_limit(cls, v):
         """Validate limit."""
         if v < 1 or v > 1000:
             raise ValueError("Limit must be between 1 and 1000")
         return v
-    
+
     @validator("offset")
     def validate_offset(cls, v):
         """Validate offset."""
         if v < 0:
             raise ValueError("Offset must be non-negative")
         return v
-    
+
     @validator("sort_order")
     def validate_sort_order(cls, v):
         """Validate sort order."""
@@ -117,6 +127,7 @@ class ContentSearchRequest(BaseModel):
 
 class ContentSearchResponse(BaseModel):
     """Response for content search."""
+
     articles: List[Dict[str, Any]] = Field(..., description="Matching articles")
     total_count: int = Field(..., description="Total matching articles")
     limit: int = Field(..., description="Result limit")
@@ -126,17 +137,18 @@ class ContentSearchResponse(BaseModel):
 
 class DuplicateDetectionRequest(BaseModel):
     """Request to detect duplicates."""
+
     article_id: str = Field(..., description="Article identifier")
     similarity_threshold: float = Field(default=0.8, description="Similarity threshold")
     check_period_days: int = Field(default=7, description="Check period in days")
-    
+
     @validator("similarity_threshold")
     def validate_threshold(cls, v):
         """Validate similarity threshold."""
         if not 0.0 <= v <= 1.0:
             raise ValueError("Similarity threshold must be between 0.0 and 1.0")
         return v
-    
+
     @validator("check_period_days")
     def validate_period(cls, v):
         """Validate check period."""
@@ -147,6 +159,7 @@ class DuplicateDetectionRequest(BaseModel):
 
 class DuplicateDetectionResponse(BaseModel):
     """Response for duplicate detection."""
+
     article_id: str = Field(..., description="Article identifier")
     duplicates: List[Dict[str, Any]] = Field(..., description="Found duplicates")
     total_duplicates: int = Field(..., description="Total number of duplicates")
@@ -155,6 +168,7 @@ class DuplicateDetectionResponse(BaseModel):
 
 class MetricsResponse(BaseModel):
     """Response for metrics data."""
+
     period: str = Field(..., description="Metrics period")
     total_articles: int = Field(..., description="Total articles processed")
     successful_articles: int = Field(..., description="Successful articles")
@@ -171,6 +185,7 @@ class MetricsResponse(BaseModel):
 
 class BatchStatusResponse(BaseModel):
     """Response for batch status."""
+
     batch_id: str = Field(..., description="Batch identifier")
     status: ProcessingStatus = Field(..., description="Batch status")
     progress_percentage: float = Field(..., description="Progress percentage")
@@ -186,6 +201,7 @@ class BatchStatusResponse(BaseModel):
 
 class SourceConfigRequest(BaseModel):
     """Request to update source configuration."""
+
     source_id: str = Field(..., description="Source identifier")
     enabled: Optional[bool] = Field(None, description="Enable/disable source")
     rate_limit: Optional[int] = Field(None, description="Rate limit per minute")
@@ -193,28 +209,28 @@ class SourceConfigRequest(BaseModel):
     retry_attempts: Optional[int] = Field(None, description="Retry attempts")
     priority: Optional[int] = Field(None, description="Processing priority")
     filters: Optional[Dict[str, Any]] = Field(None, description="Content filters")
-    
+
     @validator("rate_limit")
     def validate_rate_limit(cls, v):
         """Validate rate limit."""
         if v is not None and v < 1:
             raise ValueError("Rate limit must be positive")
         return v
-    
+
     @validator("timeout")
     def validate_timeout(cls, v):
         """Validate timeout."""
         if v is not None and v < 1:
             raise ValueError("Timeout must be positive")
         return v
-    
+
     @validator("retry_attempts")
     def validate_retry_attempts(cls, v):
         """Validate retry attempts."""
         if v is not None and v < 0:
             raise ValueError("Retry attempts must be non-negative")
         return v
-    
+
     @validator("priority")
     def validate_priority(cls, v):
         """Validate priority."""
@@ -225,6 +241,7 @@ class SourceConfigRequest(BaseModel):
 
 class ErrorResponse(BaseModel):
     """Error response model."""
+
     error: str = Field(..., description="Error type")
     message: str = Field(..., description="Error message")
     details: Optional[Dict[str, Any]] = Field(None, description="Error details")

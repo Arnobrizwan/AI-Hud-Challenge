@@ -2,16 +2,16 @@
 Storage Backends - Polyglot persistence implementations
 """
 
-from .postgresql import PostgreSQLManager
-from .elasticsearch import ElasticsearchManager
-from .redis import RedisManager
 from .cloud_storage import MediaStorageManager
+from .elasticsearch import ElasticsearchManager
+from .postgresql import PostgreSQLManager
+from .redis import RedisManager
 from .timeseries import TimeseriesDBManager
 
 __all__ = [
     "PostgreSQLManager",
-    "ElasticsearchManager", 
+    "ElasticsearchManager",
     "RedisManager",
     "MediaStorageManager",
-    "TimeseriesDBManager"
+    "TimeseriesDBManager",
 ]

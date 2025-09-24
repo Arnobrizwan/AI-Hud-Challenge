@@ -3,20 +3,21 @@ pytest configuration and fixtures for testing the Foundations & Guards service.
 """
 
 import asyncio
-import pytest
-import pytest_asyncio
+from datetime import datetime, timedelta
 from typing import AsyncGenerator, Generator
 from unittest.mock import Mock, patch
-from fastapi.testclient import TestClient
-import redis
-import fakeredis
 
-from src.main import app
+import fakeredis
+import pytest
+import pytest_asyncio
+import redis
+from fastapi.testclient import TestClient
+
 from src.config.settings import settings
+from src.main import app
+from src.models.auth import AuthenticatedUser, AuthProvider, TokenType, UserClaims
 from src.services.auth_service import auth_service
 from src.services.rate_limiter import rate_limiter
-from src.models.auth import UserClaims, AuthenticatedUser, AuthProvider, TokenType
-from datetime import datetime, timedelta
 
 
 # Test settings override
@@ -31,7 +32,7 @@ def override_settings():
     settings.SECRET_KEY = "test-secret-key-for-testing-only"
     settings.ENABLE_METRICS = False
     settings.HEALTH_CHECK_DEPENDENCIES = False
-    
+
 
 # Event loop fixture for async tests
 @pytest.fixture(scope="session")
@@ -55,7 +56,7 @@ def client() -> Generator[TestClient, None, None]:
 def mock_redis():
     """Create a mock Redis client using fakeredis."""
     fake_redis = fakeredis.FakeRedis(decode_responses=True)
-    with patch('aioredis.from_url') as mock_from_url:
+    with patch("aioredis.from_url") as mock_from_url:
         mock_from_url.return_value = fake_redis
         yield fake_redis
 
@@ -64,15 +65,15 @@ def mock_redis():
 @pytest.fixture(scope="function")
 def mock_firebase_auth():
     """Mock Firebase authentication."""
-    with patch('firebase_admin.auth.verify_id_token') as mock_verify:
+    with patch("firebase_admin.auth.verify_id_token") as mock_verify:
         mock_verify.return_value = {
-            'uid': 'test-user-123',
-            'email': 'test@example.com',
-            'email_verified': True,
-            'name': 'Test User',
-            'picture': 'https://example.com/avatar.jpg',
-            'iat': int(datetime.utcnow().timestamp()),
-            'exp': int((datetime.utcnow() + timedelta(hours=1)).timestamp())
+            "uid": "test-user-123",
+            "email": "test@example.com",
+            "email_verified": True,
+            "name": "Test User",
+            "picture": "https://example.com/avatar.jpg",
+            "iat": int(datetime.utcnow().timestamp()),
+            "exp": int((datetime.utcnow() + timedelta(hours=1)).timestamp()),
         }
         yield mock_verify
 
@@ -87,7 +88,7 @@ def test_user() -> UserClaims:
         email_verified=True,
         name="Test User",
         picture="https://example.com/avatar.jpg",
-        provider=AuthProvider.FIREBASE
+        provider=AuthProvider.FIREBASE,
     )
 
 
@@ -101,7 +102,7 @@ def authenticated_user(test_user) -> AuthenticatedUser:
         issued_at=datetime.utcnow(),
         expires_at=datetime.utcnow() + timedelta(hours=1),
         client_ip="127.0.0.1",
-        user_agent="pytest"
+        user_agent="pytest",
     )
 
 
@@ -119,7 +120,7 @@ def invalid_jwt_token() -> str:
     return "invalid.jwt.token"
 
 
-# Expired JWT token fixture  
+# Expired JWT token fixture
 @pytest.fixture(scope="function")
 def expired_jwt_token() -> str:
     """Create an expired JWT token for testing."""
@@ -130,17 +131,16 @@ def expired_jwt_token() -> str:
 @pytest.fixture(scope="function")
 async def mock_rate_limiter():
     """Mock rate limiter for testing."""
-    with patch.object(rate_limiter, 'check_user_rate_limit') as mock_user_limit, \
-         patch.object(rate_limiter, 'check_ip_rate_limit') as mock_ip_limit:
-        
+    with (
+        patch.object(rate_limiter, "check_user_rate_limit") as mock_user_limit,
+        patch.object(rate_limiter, "check_ip_rate_limit") as mock_ip_limit,
+    ):
+
         # Default to allowing requests
         mock_user_limit.return_value = (True, Mock())
         mock_ip_limit.return_value = (True, Mock())
-        
-        yield {
-            'user_limit': mock_user_limit,
-            'ip_limit': mock_ip_limit
-        }
+
+        yield {"user_limit": mock_user_limit, "ip_limit": mock_ip_limit}
 
 
 # Database fixtures (if using database)
@@ -156,14 +156,14 @@ async def db_session():
 @pytest.fixture(scope="function")
 def mock_external_services():
     """Mock external services for testing."""
-    with patch('httpx.AsyncClient') as mock_client:
+    with patch("httpx.AsyncClient") as mock_client:
         mock_response = Mock()
         mock_response.status_code = 200
         mock_response.json.return_value = {"status": "ok"}
-        
+
         mock_client.return_value.__aenter__.return_value.get.return_value = mock_response
         mock_client.return_value.__aenter__.return_value.post.return_value = mock_response
-        
+
         yield mock_client
 
 
@@ -178,7 +178,7 @@ def sample_request_data():
         "category": "technology",
         "language": "en",
         "country": "US",
-        "enabled": True
+        "enabled": True,
     }
 
 
@@ -192,7 +192,7 @@ def sample_filter_data():
         "min_score": 0.8,
         "languages": ["en"],
         "date_from": "2023-01-01",
-        "date_to": "2023-12-31"
+        "date_to": "2023-12-31",
     }
 
 
@@ -200,12 +200,7 @@ def sample_filter_data():
 @pytest.fixture(scope="function")
 def performance_test_config():
     """Configuration for performance testing."""
-    return {
-        "concurrent_requests": 100,
-        "total_requests": 1000,
-        "timeout": 30.0,
-        "rate_limit": 1000
-    }
+    return {"concurrent_requests": 100, "total_requests": 1000, "timeout": 30.0, "rate_limit": 1000}
 
 
 # Security testing fixtures
@@ -216,7 +211,7 @@ def security_test_payloads():
         "sql_injection": ["'; DROP TABLE users; --", "1' OR '1'='1"],
         "xss": ["<script>alert('xss')</script>", "javascript:alert('xss')"],
         "path_traversal": ["../../../etc/passwd", "..\\windows\\system32"],
-        "command_injection": ["; ls -la", "| whoami", "&& cat /etc/passwd"]
+        "command_injection": ["; ls -la", "| whoami", "&& cat /etc/passwd"],
     }
 
 
@@ -244,30 +239,31 @@ def mock_env_vars():
         "SECRET_KEY": "test-secret-key",
         "FIREBASE_PROJECT_ID": "test-project",
         "REDIS_URL": "redis://localhost:6379/15",
-        "LOG_LEVEL": "DEBUG"
+        "LOG_LEVEL": "DEBUG",
     }
-    
-    with patch.dict('os.environ', env_vars):
+
+    with patch.dict("os.environ", env_vars):
         yield env_vars
 
 
 # Async test utilities
 class AsyncTestCase:
     """Base class for async test utilities."""
-    
+
     @staticmethod
     async def wait_for_condition(condition_func, timeout=5.0, interval=0.1):
         """Wait for a condition to be true."""
         import time
+
         start_time = time.time()
-        
+
         while time.time() - start_time < timeout:
             if await condition_func():
                 return True
             await asyncio.sleep(interval)
-        
+
         return False
-    
+
     @staticmethod
     async def assert_eventually(assertion_func, timeout=5.0, interval=0.1):
         """Assert that a condition becomes true within timeout."""

@@ -1,15 +1,22 @@
 """Middleware package for Content Enrichment Service."""
 
+from .auth import (
+    AuthMiddleware,
+    auth_middleware,
+    get_current_user,
+    require_auth,
+    require_permission,
+    require_role,
+)
 from .rate_limiter import RateLimiter, RateLimitMiddleware
-from .auth import AuthMiddleware, auth_middleware, get_current_user, require_auth, require_permission, require_role
 
 __all__ = [
-    "RateLimiter", 
+    "RateLimiter",
     "RateLimitMiddleware",
-    "AuthMiddleware", 
+    "AuthMiddleware",
     "auth_middleware",
-    "get_current_user", 
-    "require_auth", 
-    "require_permission", 
-    "require_role"
+    "get_current_user",
+    "require_auth",
+    "require_permission",
+    "require_role",
 ]

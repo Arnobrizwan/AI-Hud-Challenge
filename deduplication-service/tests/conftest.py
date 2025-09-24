@@ -1,25 +1,30 @@
 """Test configuration and fixtures."""
 
 import asyncio
-import pytest
 from datetime import datetime, timezone
 from typing import List
 from uuid import uuid4
 
+import pytest
 import redis.asyncio as redis
 from faker import Faker
 
-from src.models.schemas import NormalizedArticle, Entity, Topic, Location
-from src.algorithms.lsh.minhash import MinHashGenerator, ContentFingerprinter
-from src.algorithms.similarity.semantic import SemanticSimilarityCalculator, ContentSimilarityCalculator
-from src.algorithms.similarity.combined import CombinedSimilarityCalculator, SimilarityThresholdManager
 from src.algorithms.lsh.lsh_index import LSHIndexManager
-from src.deduplication.pipeline import DeduplicationPipeline, DeduplicationService
-from src.clustering.incremental_dbscan import IncrementalDBSCAN
+from src.algorithms.lsh.minhash import ContentFingerprinter, MinHashGenerator
+from src.algorithms.similarity.combined import (
+    CombinedSimilarityCalculator,
+    SimilarityThresholdManager,
+)
+from src.algorithms.similarity.semantic import (
+    ContentSimilarityCalculator,
+    SemanticSimilarityCalculator,
+)
 from src.clustering.event_grouping import EventGroupingEngine
+from src.clustering.incremental_dbscan import IncrementalDBSCAN
+from src.deduplication.pipeline import DeduplicationPipeline, DeduplicationService
+from src.models.schemas import Entity, Location, NormalizedArticle, Topic
 from src.monitoring.metrics import MetricsCollector
 from src.utils.cache import CacheManager
-
 
 fake = Faker()
 
@@ -57,10 +62,7 @@ def content_fingerprinter(minhash_generator):
 @pytest.fixture
 def semantic_calculator():
     """Create semantic similarity calculator."""
-    return SemanticSimilarityCalculator(
-        model_name="all-MiniLM-L6-v2",
-        embedding_dimension=384
-    )
+    return SemanticSimilarityCalculator(model_name="all-MiniLM-L6-v2", embedding_dimension=384)
 
 
 @pytest.fixture
@@ -73,8 +75,11 @@ def content_calculator(minhash_generator):
 def combined_calculator(semantic_calculator, content_calculator):
     """Create combined similarity calculator."""
     return CombinedSimilarityCalculator(
-        semantic_calculator, content_calculator,
-        title_weight=0.4, content_weight=0.4, entity_weight=0.2
+        semantic_calculator,
+        content_calculator,
+        title_weight=0.4,
+        content_weight=0.4,
+        entity_weight=0.2,
     )
 
 
@@ -82,10 +87,7 @@ def combined_calculator(semantic_calculator, content_calculator):
 def threshold_manager():
     """Create similarity threshold manager."""
     return SimilarityThresholdManager(
-        default_threshold=0.85,
-        lsh_threshold=0.7,
-        content_threshold=0.8,
-        title_threshold=0.9
+        default_threshold=0.85, lsh_threshold=0.7, content_threshold=0.8, title_threshold=0.9
     )
 
 
@@ -102,7 +104,7 @@ async def deduplication_pipeline(redis_client, lsh_manager, combined_calculator,
         redis_client=redis_client,
         lsh_index_manager=lsh_manager,
         similarity_calculator=combined_calculator,
-        threshold_manager=threshold_manager
+        threshold_manager=threshold_manager,
     )
     await pipeline.initialize()
     return pipeline
@@ -117,11 +119,7 @@ def deduplication_service(deduplication_pipeline):
 @pytest.fixture
 def clustering_engine():
     """Create incremental DBSCAN clustering engine."""
-    return IncrementalDBSCAN(
-        eps=0.3,
-        min_samples=2,
-        max_cluster_size=100
-    )
+    return IncrementalDBSCAN(eps=0.3, min_samples=2, max_cluster_size=100)
 
 
 @pytest.fixture
@@ -132,7 +130,7 @@ def event_grouping_engine(clustering_engine, semantic_calculator):
         semantic_calculator=semantic_calculator,
         time_window_hours=24,
         min_cluster_size=2,
-        max_cluster_size=100
+        max_cluster_size=100,
     )
 
 
@@ -166,18 +164,16 @@ def sample_article():
         quality_score=0.9,
         entities=[
             Entity(text="California", label="GPE", confidence=0.95, start=0, end=10),
-            Entity(text="earthquake", label="EVENT", confidence=0.9, start=0, end=10)
+            Entity(text="earthquake", label="EVENT", confidence=0.9, start=0, end=10),
         ],
         topics=[
             Topic(name="Natural Disasters", confidence=0.9, category="Environment"),
-            Topic(name="California", confidence=0.8, category="Geography")
+            Topic(name="California", confidence=0.8, category="Geography"),
         ],
-        locations=[
-            Location(name="California", country="USA", confidence=0.95)
-        ],
+        locations=[Location(name="California", country="USA", confidence=0.95)],
         language="en",
         word_count=45,
-        reading_time=1
+        reading_time=1,
     )
 
 
@@ -185,7 +181,7 @@ def sample_article():
 def sample_articles():
     """Create sample articles."""
     articles = []
-    
+
     # Similar articles about the same event
     for i in range(5):
         article = NormalizedArticle(
@@ -199,29 +195,27 @@ def sample_articles():
             quality_score=0.8 + i * 0.02,
             entities=[
                 Entity(text="California", label="GPE", confidence=0.9, start=0, end=10),
-                Entity(text="earthquake", label="EVENT", confidence=0.85, start=0, end=10)
+                Entity(text="earthquake", label="EVENT", confidence=0.85, start=0, end=10),
             ],
             topics=[
                 Topic(name="Natural Disasters", confidence=0.85, category="Environment"),
-                Topic(name="California", confidence=0.8, category="Geography")
+                Topic(name="California", confidence=0.8, category="Geography"),
             ],
-            locations=[
-                Location(name="California", country="USA", confidence=0.9)
-            ],
+            locations=[Location(name="California", country="USA", confidence=0.9)],
             language="en",
             word_count=30 + i * 5,
-            reading_time=1
+            reading_time=1,
         )
         articles.append(article)
-    
+
     # Different articles about different topics
     different_topics = [
         ("Technology", "AI breakthrough announced", "Major AI breakthrough in machine learning"),
         ("Sports", "World Cup final results", "Exciting World Cup final match results"),
         ("Politics", "Election results announced", "Latest election results and analysis"),
-        ("Business", "Stock market update", "Stock market shows strong performance")
+        ("Business", "Stock market update", "Stock market shows strong performance"),
     ]
-    
+
     for topic, title, content in different_topics:
         article = NormalizedArticle(
             id=uuid4(),
@@ -237,10 +231,10 @@ def sample_articles():
             locations=[],
             language="en",
             word_count=20,
-            reading_time=1
+            reading_time=1,
         )
         articles.append(article)
-    
+
     return articles
 
 
@@ -261,9 +255,9 @@ def duplicate_articles():
         locations=[],
         language="en",
         word_count=20,
-        reading_time=1
+        reading_time=1,
     )
-    
+
     # Exact duplicate
     exact_duplicate = NormalizedArticle(
         id=uuid4(),
@@ -279,9 +273,9 @@ def duplicate_articles():
         locations=[],
         language="en",
         word_count=20,
-        reading_time=1
+        reading_time=1,
     )
-    
+
     # Near duplicate with minor changes
     near_duplicate = NormalizedArticle(
         id=uuid4(),
@@ -297,9 +291,9 @@ def duplicate_articles():
         locations=[],
         language="en",
         word_count=25,
-        reading_time=1
+        reading_time=1,
     )
-    
+
     return [base_article, exact_duplicate, near_duplicate]
 
 
@@ -307,14 +301,17 @@ def duplicate_articles():
 def mock_articles_for_clustering():
     """Create mock articles for clustering tests."""
     articles = []
-    
+
     # Group 1: Technology articles
     tech_articles = [
-        ("AI breakthrough in machine learning", "New AI model achieves state-of-the-art performance"),
+        (
+            "AI breakthrough in machine learning",
+            "New AI model achieves state-of-the-art performance",
+        ),
         ("Machine learning advances", "Latest developments in ML algorithms"),
-        ("Artificial intelligence news", "AI technology continues to evolve")
+        ("Artificial intelligence news", "AI technology continues to evolve"),
     ]
-    
+
     for title, content in tech_articles:
         article = NormalizedArticle(
             id=uuid4(),
@@ -330,17 +327,17 @@ def mock_articles_for_clustering():
             locations=[],
             language="en",
             word_count=len(content.split()),
-            reading_time=1
+            reading_time=1,
         )
         articles.append(article)
-    
+
     # Group 2: Sports articles
     sports_articles = [
         ("World Cup final results", "Exciting final match ends with victory"),
         ("Championship game highlights", "Key moments from the championship"),
-        ("Sports news update", "Latest sports results and analysis")
+        ("Sports news update", "Latest sports results and analysis"),
     ]
-    
+
     for title, content in sports_articles:
         article = NormalizedArticle(
             id=uuid4(),
@@ -356,8 +353,8 @@ def mock_articles_for_clustering():
             locations=[],
             language="en",
             word_count=len(content.split()),
-            reading_time=1
+            reading_time=1,
         )
         articles.append(article)
-    
+
     return articles

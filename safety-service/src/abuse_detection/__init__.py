@@ -3,13 +3,13 @@ Abuse Detection System
 Multi-layered abuse detection and prevention
 """
 
-from .system import AbuseDetectionSystem
 from .behavioral_analyzer import BehavioralAnomalyDetector
+from .captcha_challenger import CaptchaChallenger
 from .graph_analyzer import GraphBasedAbuseDetector
 from .ml_classifier import AbuseClassificationModel
-from .rule_engine import AbuseRuleEngine
 from .reputation_system import ReputationSystem
-from .captcha_challenger import CaptchaChallenger
+from .rule_engine import AbuseRuleEngine
+from .system import AbuseDetectionSystem
 
 __all__ = [
     "AbuseDetectionSystem",
@@ -18,5 +18,5 @@ __all__ = [
     "AbuseClassificationModel",
     "AbuseRuleEngine",
     "ReputationSystem",
-    "CaptchaChallenger"
+    "CaptchaChallenger",
 ]

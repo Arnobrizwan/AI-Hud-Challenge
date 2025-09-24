@@ -2,15 +2,17 @@
 Content models for news ingestion and normalization.
 """
 
-from typing import Optional, List, Dict, Any, Union
+import hashlib
 from datetime import datetime
 from enum import Enum
-from pydantic import BaseModel, Field, validator, HttpUrl
-import hashlib
+from typing import Any, Dict, List, Optional, Union
+
+from pydantic import BaseModel, Field, HttpUrl, validator
 
 
 class ContentType(str, Enum):
     """Content type enumeration."""
+
     ARTICLE = "article"
     BLOG_POST = "blog_post"
     NEWS_ITEM = "news_item"
@@ -23,6 +25,7 @@ class ContentType(str, Enum):
 
 class SourceType(str, Enum):
     """Source type enumeration."""
+
     RSS_FEED = "rss_feed"
     ATOM_FEED = "atom_feed"
     JSON_FEED = "json_feed"
@@ -35,6 +38,7 @@ class SourceType(str, Enum):
 
 class ProcessingStatus(str, Enum):
     """Processing status enumeration."""
+
     PENDING = "pending"
     INGESTING = "ingesting"
     NORMALIZING = "normalizing"
@@ -47,10 +51,13 @@ class ProcessingStatus(str, Enum):
 
 class IngestionMetadata(BaseModel):
     """Metadata about the ingestion process."""
+
     source_id: str = Field(..., description="Source identifier")
     source_type: SourceType = Field(..., description="Type of source")
     source_url: str = Field(..., description="Source URL")
-    ingested_at: datetime = Field(default_factory=datetime.utcnow, description="Ingestion timestamp")
+    ingested_at: datetime = Field(
+        default_factory=datetime.utcnow, description="Ingestion timestamp"
+    )
     processed_at: Optional[datetime] = Field(None, description="Processing timestamp")
     processing_time_ms: Optional[int] = Field(None, description="Processing time in milliseconds")
     retry_count: int = Field(default=0, description="Number of retry attempts")
@@ -68,6 +75,7 @@ class IngestionMetadata(BaseModel):
 
 class NormalizedArticle(BaseModel):
     """Normalized article model."""
+
     id: str = Field(..., description="Unique content identifier")
     url: str = Field(..., description="Original article URL")
     canonical_url: Optional[str] = Field(None, description="Canonical URL if different")
@@ -89,74 +97,74 @@ class NormalizedArticle(BaseModel):
     content_type: ContentType = Field(default=ContentType.ARTICLE, description="Type of content")
     raw_data: Dict[str, Any] = Field(default_factory=dict, description="Original feed data")
     ingestion_metadata: IngestionMetadata = Field(..., description="Processing metadata")
-    processing_status: ProcessingStatus = Field(default=ProcessingStatus.PENDING, description="Processing status")
-    
+    processing_status: ProcessingStatus = Field(
+        default=ProcessingStatus.PENDING, description="Processing status"
+    )
+
     @validator("url", "canonical_url")
     def validate_urls(cls, v):
         """Validate URL format."""
         if v and not v.startswith(("http://", "https://")):
             raise ValueError("URL must start with http:// or https://")
         return v
-    
+
     @validator("language")
     def validate_language(cls, v):
         """Validate language code."""
         if len(v) != 2:
             raise ValueError("Language code must be 2 characters")
         return v.lower()
-    
+
     @validator("word_count", "reading_time")
     def validate_positive_numbers(cls, v):
         """Validate positive numbers."""
         if v < 0:
             raise ValueError("Must be non-negative")
         return v
-    
+
     def calculate_content_hash(self) -> str:
         """Calculate content hash for duplicate detection."""
         content_for_hash = f"{self.title}|{self.content or ''}|{self.url}"
-        return hashlib.sha256(content_for_hash.encode('utf-8')).hexdigest()
-    
+        return hashlib.sha256(content_for_hash.encode("utf-8")).hexdigest()
+
     def calculate_reading_time(self) -> int:
         """Calculate estimated reading time in minutes."""
         if not self.word_count:
             return 0
         # Average reading speed: 200 words per minute
         return max(1, self.word_count // 200)
-    
+
     def is_duplicate_of(self, other: "NormalizedArticle", threshold: float = 0.8) -> bool:
         """Check if this article is a duplicate of another."""
         if self.content_hash == other.content_hash:
             return True
-        
+
         # Simple similarity check based on title and content
         title_similarity = self._calculate_similarity(self.title, other.title)
-        content_similarity = self._calculate_similarity(
-            self.content or "", 
-            other.content or ""
-        )
-        
+        content_similarity = self._calculate_similarity(self.content or "", other.content or "")
+
         return (title_similarity + content_similarity) / 2 >= threshold
-    
+
     def _calculate_similarity(self, text1: str, text2: str) -> float:
         """Calculate text similarity using simple word overlap."""
         if not text1 or not text2:
             return 0.0
-        
+
         words1 = set(text1.lower().split())
         words2 = set(text2.lower().split())
-        
+
         if not words1 or not words2:
             return 0.0
-        
+
         intersection = words1.intersection(words2)
         union = words1.union(words2)
-        
+
         return len(intersection) / len(union) if union else 0.0
 
 
 class SourceConfig(BaseModel):
     """Configuration for a content source."""
+
     id: str = Field(..., description="Unique source identifier")
     name: str = Field(..., description="Source name")
     type: SourceType = Field(..., description="Source type")
@@ -175,14 +183,14 @@ class SourceConfig(BaseModel):
     last_success: Optional[datetime] = Field(None, description="Last successful check")
     error_count: int = Field(default=0, description="Consecutive error count")
     success_count: int = Field(default=0, description="Consecutive success count")
-    
+
     @validator("priority")
     def validate_priority(cls, v):
         """Validate priority value."""
         if v < 1 or v > 10:
             raise ValueError("Priority must be between 1 and 10")
         return v
-    
+
     @validator("rate_limit")
     def validate_rate_limit(cls, v):
         """Validate rate limit value."""
@@ -193,6 +201,7 @@ class SourceConfig(BaseModel):
 
 class ProcessingBatch(BaseModel):
     """Batch of articles being processed."""
+
     batch_id: str = Field(..., description="Unique batch identifier")
     source_id: str = Field(..., description="Source identifier")
     articles: List[NormalizedArticle] = Field(..., description="Articles in batch")
@@ -205,21 +214,21 @@ class ProcessingBatch(BaseModel):
     failed_count: int = Field(default=0, description="Failed articles count")
     duplicate_count: int = Field(default=0, description="Duplicate articles count")
     error_message: Optional[str] = Field(None, description="Batch error message")
-    
+
     @validator("total_count")
     def validate_total_count(cls, v):
         """Validate total count matches articles length."""
         if v < 0:
             raise ValueError("Total count must be non-negative")
         return v
-    
+
     @property
     def success_rate(self) -> float:
         """Calculate success rate."""
         if self.total_count == 0:
             return 0.0
         return self.processed_count / self.total_count
-    
+
     @property
     def processing_time_seconds(self) -> Optional[float]:
         """Calculate processing time in seconds."""
@@ -230,12 +239,15 @@ class ProcessingBatch(BaseModel):
 
 class DuplicateDetection(BaseModel):
     """Duplicate detection result."""
+
     article_id: str = Field(..., description="Article identifier")
     duplicate_of: str = Field(..., description="ID of duplicate article")
     similarity_score: float = Field(..., description="Similarity score (0-1)")
     detection_method: str = Field(..., description="Detection method used")
-    detected_at: datetime = Field(default_factory=datetime.utcnow, description="Detection timestamp")
-    
+    detected_at: datetime = Field(
+        default_factory=datetime.utcnow, description="Detection timestamp"
+    )
+
     @validator("similarity_score")
     def validate_similarity_score(cls, v):
         """Validate similarity score."""
@@ -246,6 +258,7 @@ class DuplicateDetection(BaseModel):
 
 class ContentMetrics(BaseModel):
     """Content processing metrics."""
+
     source_id: str = Field(..., description="Source identifier")
     date: datetime = Field(..., description="Metrics date")
     total_articles: int = Field(default=0, description="Total articles processed")
@@ -254,16 +267,20 @@ class ContentMetrics(BaseModel):
     duplicate_articles: int = Field(default=0, description="Duplicate articles")
     average_processing_time_ms: float = Field(default=0.0, description="Average processing time")
     average_word_count: float = Field(default=0.0, description="Average word count")
-    language_distribution: Dict[str, int] = Field(default_factory=dict, description="Language distribution")
-    content_type_distribution: Dict[str, int] = Field(default_factory=dict, description="Content type distribution")
-    
+    language_distribution: Dict[str, int] = Field(
+        default_factory=dict, description="Language distribution"
+    )
+    content_type_distribution: Dict[str, int] = Field(
+        default_factory=dict, description="Content type distribution"
+    )
+
     @property
     def success_rate(self) -> float:
         """Calculate success rate."""
         if self.total_articles == 0:
             return 0.0
         return self.successful_articles / self.total_articles
-    
+
     @property
     def duplicate_rate(self) -> float:
         """Calculate duplicate rate."""

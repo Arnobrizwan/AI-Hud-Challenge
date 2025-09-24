@@ -4,10 +4,20 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy import (
-    Boolean, Column, DateTime, Float, ForeignKey, Integer, 
-    JSON, LargeBinary, String, Text, UniqueConstraint, Index
+    JSON,
+    Boolean,
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    LargeBinary,
+    String,
+    Text,
+    UniqueConstraint,
 )
-from sqlalchemy.dialects.postgresql import UUID, INTERVAL
+from sqlalchemy.dialects.postgresql import INTERVAL, UUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -17,6 +27,7 @@ Base = declarative_base()
 
 class Article(Base):
     """Article database model."""
+
     __tablename__ = "articles"
 
     id = Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
@@ -41,8 +52,12 @@ class Article(Base):
 
     # Relationships
     clusters = relationship("ArticleCluster", back_populates="article")
-    duplicates = relationship("Duplicate", foreign_keys="Duplicate.article_id", back_populates="article")
-    duplicate_of = relationship("Duplicate", foreign_keys="Duplicate.duplicate_of_id", back_populates="duplicate_article")
+    duplicates = relationship(
+        "Duplicate", foreign_keys="Duplicate.article_id", back_populates="article"
+    )
+    duplicate_of = relationship(
+        "Duplicate", foreign_keys="Duplicate.duplicate_of_id", back_populates="duplicate_article"
+    )
     lsh_entries = relationship("LSHIndex", back_populates="article")
     processing_queue = relationship("ProcessingQueue", back_populates="article")
 
@@ -59,6 +74,7 @@ class Article(Base):
 
 class Cluster(Base):
     """Cluster database model."""
+
     __tablename__ = "clusters"
 
     id = Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
@@ -87,10 +103,15 @@ class Cluster(Base):
 
 class ArticleCluster(Base):
     """Article-Cluster many-to-many relationship."""
+
     __tablename__ = "article_clusters"
 
-    article_id = Column(UUID(as_uuid=True), ForeignKey("articles.id", ondelete="CASCADE"), primary_key=True)
-    cluster_id = Column(UUID(as_uuid=True), ForeignKey("clusters.id", ondelete="CASCADE"), primary_key=True)
+    article_id = Column(
+        UUID(as_uuid=True), ForeignKey("articles.id", ondelete="CASCADE"), primary_key=True
+    )
+    cluster_id = Column(
+        UUID(as_uuid=True), ForeignKey("clusters.id", ondelete="CASCADE"), primary_key=True
+    )
     similarity_score = Column(Float, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
@@ -108,18 +129,25 @@ class ArticleCluster(Base):
 
 class Duplicate(Base):
     """Duplicate relationship model."""
+
     __tablename__ = "duplicates"
 
     id = Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
-    article_id = Column(UUID(as_uuid=True), ForeignKey("articles.id", ondelete="CASCADE"), nullable=False)
-    duplicate_of_id = Column(UUID(as_uuid=True), ForeignKey("articles.id", ondelete="CASCADE"), nullable=False)
+    article_id = Column(
+        UUID(as_uuid=True), ForeignKey("articles.id", ondelete="CASCADE"), nullable=False
+    )
+    duplicate_of_id = Column(
+        UUID(as_uuid=True), ForeignKey("articles.id", ondelete="CASCADE"), nullable=False
+    )
     similarity_score = Column(Float, nullable=False)
     similarity_type = Column(String(50), nullable=False)  # 'lsh', 'semantic', 'content'
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships
     article = relationship("Article", foreign_keys=[article_id], back_populates="duplicates")
-    duplicate_article = relationship("Article", foreign_keys=[duplicate_of_id], back_populates="duplicate_of")
+    duplicate_article = relationship(
+        "Article", foreign_keys=[duplicate_of_id], back_populates="duplicate_of"
+    )
 
     # Constraints
     __table_args__ = (
@@ -132,10 +160,13 @@ class Duplicate(Base):
 
 class LSHIndex(Base):
     """LSH index model."""
+
     __tablename__ = "lsh_index"
 
     id = Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
-    article_id = Column(UUID(as_uuid=True), ForeignKey("articles.id", ondelete="CASCADE"), nullable=False)
+    article_id = Column(
+        UUID(as_uuid=True), ForeignKey("articles.id", ondelete="CASCADE"), nullable=False
+    )
     minhash_signature = Column(LargeBinary, nullable=False)
     content_fingerprint = Column(String(64), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -152,10 +183,13 @@ class LSHIndex(Base):
 
 class ProcessingQueue(Base):
     """Processing queue model."""
+
     __tablename__ = "processing_queue"
 
     id = Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
-    article_id = Column(UUID(as_uuid=True), ForeignKey("articles.id", ondelete="CASCADE"), nullable=False)
+    article_id = Column(
+        UUID(as_uuid=True), ForeignKey("articles.id", ondelete="CASCADE"), nullable=False
+    )
     status = Column(String(20), default="pending")  # 'pending', 'processing', 'completed', 'failed'
     priority = Column(Integer, default=0)
     retry_count = Column(Integer, default=0)
@@ -177,6 +211,7 @@ class ProcessingQueue(Base):
 
 class SystemMetrics(Base):
     """System metrics model."""
+
     __tablename__ = "system_metrics"
 
     id = Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())

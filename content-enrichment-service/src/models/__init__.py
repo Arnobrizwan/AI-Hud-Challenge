@@ -1,29 +1,29 @@
 """Models package for Content Enrichment Service."""
 
 from .content import (
-    ExtractedContent,
-    EnrichedContent,
-    Entity,
-    Topic,
-    SentimentAnalysis,
-    ContentSignal,
-    TrustworthinessScore,
-    EnrichmentRequest,
-    EnrichmentResponse,
     BatchEnrichmentRequest,
     BatchEnrichmentResponse,
-    ProcessingMode,
+    ContentSignal,
     ContentType,
-    EntityType,
-    TopicCategory,
-    SentimentLabel,
     EmotionLabel,
-    ModelVersion
+    EnrichedContent,
+    EnrichmentRequest,
+    EnrichmentResponse,
+    Entity,
+    EntityType,
+    ExtractedContent,
+    ModelVersion,
+    ProcessingMode,
+    SentimentAnalysis,
+    SentimentLabel,
+    Topic,
+    TopicCategory,
+    TrustworthinessScore,
 )
 
 __all__ = [
     "ExtractedContent",
-    "EnrichedContent", 
+    "EnrichedContent",
     "Entity",
     "Topic",
     "SentimentAnalysis",
@@ -39,5 +39,5 @@ __all__ = [
     "TopicCategory",
     "SentimentLabel",
     "EmotionLabel",
-    "ModelVersion"
+    "ModelVersion",
 ]

@@ -2,14 +2,22 @@
 Unit tests for data models.
 """
 
-import pytest
 from datetime import datetime
+
+import pytest
 from pydantic import ValidationError
 
 from ..models.content import (
-    ExtractedContent, ContentMetadata, QualityMetrics, LanguageInfo,
-    ProcessedImage, VideoMetadata, ExtractionStats, ContentType,
-    ExtractionMethod, ProcessingStatus
+    ContentMetadata,
+    ContentType,
+    ExtractedContent,
+    ExtractionMethod,
+    ExtractionStats,
+    LanguageInfo,
+    ProcessedImage,
+    ProcessingStatus,
+    QualityMetrics,
+    VideoMetadata,
 )
 
 
@@ -22,9 +30,9 @@ class TestContentMetadata:
             og_title="Test Title",
             og_description="Test Description",
             og_image="https://example.com/image.jpg",
-            site_name="Test Site"
+            site_name="Test Site",
         )
-        
+
         assert metadata.og_title == "Test Title"
         assert metadata.og_description == "Test Description"
         assert metadata.og_image == "https://example.com/image.jpg"
@@ -56,9 +64,9 @@ class TestQualityMetrics:
             spam_score=10.0,
             duplicate_score=5.0,
             content_freshness=80.0,
-            overall_quality=70.0
+            overall_quality=70.0,
         )
-        
+
         assert metrics.readability_score == 75.0
         assert metrics.word_count == 500
         assert metrics.overall_quality == 70.0
@@ -79,7 +87,7 @@ class TestQualityMetrics:
                 spam_score=10.0,
                 duplicate_score=5.0,
                 content_freshness=80.0,
-                overall_quality=70.0
+                overall_quality=70.0,
             )
 
 
@@ -89,12 +97,9 @@ class TestLanguageInfo:
     def test_valid_language_info(self):
         """Test valid language info creation."""
         lang_info = LanguageInfo(
-            detected_language="en",
-            confidence=0.95,
-            charset="utf-8",
-            is_reliable=True
+            detected_language="en", confidence=0.95, charset="utf-8", is_reliable=True
         )
-        
+
         assert lang_info.detected_language == "en"
         assert lang_info.confidence == 0.95
         assert lang_info.is_reliable is True
@@ -102,11 +107,7 @@ class TestLanguageInfo:
     def test_invalid_confidence(self):
         """Test invalid confidence validation."""
         with pytest.raises(ValidationError):
-            LanguageInfo(
-                detected_language="en",
-                confidence=1.5,  # Invalid: > 1.0
-                charset="utf-8"
-            )
+            LanguageInfo(detected_language="en", confidence=1.5, charset="utf-8")  # Invalid: > 1.0
 
 
 class TestProcessedImage:
@@ -122,9 +123,9 @@ class TestProcessedImage:
             format="JPEG",
             alt_text="Test image",
             is_optimized=True,
-            quality_score=0.85
+            quality_score=0.85,
         )
-        
+
         assert image.url == "https://example.com/image.jpg"
         assert image.width == 800
         assert image.height == 600
@@ -139,7 +140,7 @@ class TestProcessedImage:
                 height=600,
                 file_size=1024000,
                 format="JPEG",
-                quality_score=1.5  # Invalid: > 1.0
+                quality_score=1.5,  # Invalid: > 1.0
             )
 
 
@@ -162,12 +163,9 @@ class TestExtractedContent:
             spam_score=10.0,
             duplicate_score=5.0,
             content_freshness=80.0,
-            overall_quality=70.0
+            overall_quality=70.0,
         )
-        language_info = LanguageInfo(
-            detected_language="en",
-            confidence=0.95
-        )
+        language_info = LanguageInfo(detected_language="en", confidence=0.95)
         extraction_stats = ExtractionStats(
             extraction_time_ms=5000,
             html_fetch_time_ms=1000,
@@ -180,9 +178,9 @@ class TestExtractedContent:
             links_found=10,
             scripts_removed=5,
             styles_removed=2,
-            ads_removed=1
+            ads_removed=1,
         )
-        
+
         content = ExtractedContent(
             url="https://example.com/article",
             title="Test Article",
@@ -195,9 +193,9 @@ class TestExtractedContent:
             extraction_method=ExtractionMethod.READABILITY,
             content_type=ContentType.HTML,
             content_hash="abc123",
-            extraction_stats=extraction_stats
+            extraction_stats=extraction_stats,
         )
-        
+
         assert content.url == "https://example.com/article"
         assert content.title == "Test Article"
         assert content.word_count == 500
@@ -219,7 +217,7 @@ class TestExtractedContent:
             spam_score=10.0,
             duplicate_score=5.0,
             content_freshness=80.0,
-            overall_quality=70.0
+            overall_quality=70.0,
         )
         language_info = LanguageInfo(detected_language="en", confidence=0.95)
         extraction_stats = ExtractionStats(
@@ -234,9 +232,9 @@ class TestExtractedContent:
             links_found=10,
             scripts_removed=5,
             styles_removed=2,
-            ads_removed=1
+            ads_removed=1,
         )
-        
+
         content = ExtractedContent(
             url="https://example.com/article",
             title="Test Article",
@@ -249,9 +247,9 @@ class TestExtractedContent:
             extraction_method=ExtractionMethod.READABILITY,
             content_type=ContentType.HTML,
             content_hash="",
-            extraction_stats=extraction_stats
+            extraction_stats=extraction_stats,
         )
-        
+
         calculated_hash = content.calculate_content_hash()
         assert calculated_hash is not None
         assert len(calculated_hash) == 64  # SHA256 hash length
@@ -272,7 +270,7 @@ class TestExtractedContent:
             spam_score=10.0,
             duplicate_score=5.0,
             content_freshness=80.0,
-            overall_quality=70.0
+            overall_quality=70.0,
         )
         language_info = LanguageInfo(detected_language="en", confidence=0.95)
         extraction_stats = ExtractionStats(
@@ -287,9 +285,9 @@ class TestExtractedContent:
             links_found=10,
             scripts_removed=5,
             styles_removed=2,
-            ads_removed=1
+            ads_removed=1,
         )
-        
+
         content = ExtractedContent(
             url="https://example.com/article",
             title="Test Article",
@@ -302,9 +300,9 @@ class TestExtractedContent:
             extraction_method=ExtractionMethod.READABILITY,
             content_type=ContentType.HTML,
             content_hash="abc123",
-            extraction_stats=extraction_stats
+            extraction_stats=extraction_stats,
         )
-        
+
         calculated_reading_time = content.calculate_reading_time()
         assert calculated_reading_time == 2  # 400 words / 200 wpm = 2 minutes
 
@@ -324,7 +322,7 @@ class TestExtractedContent:
             spam_score=20.0,  # Low spam score
             duplicate_score=10.0,  # Low duplicate score
             content_freshness=80.0,
-            overall_quality=85.0  # High quality
+            overall_quality=85.0,  # High quality
         )
         language_info = LanguageInfo(detected_language="en", confidence=0.95)
         extraction_stats = ExtractionStats(
@@ -339,9 +337,9 @@ class TestExtractedContent:
             links_found=10,
             scripts_removed=5,
             styles_removed=2,
-            ads_removed=1
+            ads_removed=1,
         )
-        
+
         content = ExtractedContent(
             url="https://example.com/article",
             title="Test Article",
@@ -354,9 +352,9 @@ class TestExtractedContent:
             extraction_method=ExtractionMethod.READABILITY,
             content_type=ContentType.HTML,
             content_hash="abc123",
-            extraction_stats=extraction_stats
+            extraction_stats=extraction_stats,
         )
-        
+
         assert content.is_high_quality() is True
         assert content.is_high_quality(min_quality_score=0.8) is True
         assert content.is_high_quality(min_quality_score=0.9) is False
@@ -377,7 +375,7 @@ class TestExtractedContent:
             spam_score=10.0,
             duplicate_score=5.0,
             content_freshness=80.0,
-            overall_quality=70.0
+            overall_quality=70.0,
         )
         language_info = LanguageInfo(detected_language="en", confidence=0.95)
         extraction_stats = ExtractionStats(
@@ -392,9 +390,9 @@ class TestExtractedContent:
             links_found=10,
             scripts_removed=5,
             styles_removed=2,
-            ads_removed=1
+            ads_removed=1,
         )
-        
+
         content1 = ExtractedContent(
             url="https://example.com/article1",
             title="Test Article",
@@ -407,9 +405,9 @@ class TestExtractedContent:
             extraction_method=ExtractionMethod.READABILITY,
             content_type=ContentType.HTML,
             content_hash="abc123",
-            extraction_stats=extraction_stats
+            extraction_stats=extraction_stats,
         )
-        
+
         content2 = ExtractedContent(
             url="https://example.com/article2",
             title="Test Article",
@@ -422,14 +420,14 @@ class TestExtractedContent:
             extraction_method=ExtractionMethod.READABILITY,
             content_type=ContentType.HTML,
             content_hash="def456",
-            extraction_stats=extraction_stats
+            extraction_stats=extraction_stats,
         )
-        
+
         # Same content should be detected as duplicate
         content1.content_hash = "same_hash"
         content2.content_hash = "same_hash"
         assert content1.is_duplicate_of(content2) is True
-        
+
         # Different content should not be detected as duplicate
         content1.content_hash = "hash1"
         content2.content_hash = "hash2"

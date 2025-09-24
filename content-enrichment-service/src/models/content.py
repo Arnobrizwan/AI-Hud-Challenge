@@ -1,20 +1,23 @@
 """Content models for enrichment service."""
 
-from typing import List, Optional, Dict, Any, Union
+import uuid
 from datetime import datetime
 from enum import Enum
+from typing import Any, Dict, List, Optional, Union
+
 from pydantic import BaseModel, Field, validator
-import uuid
 
 
 class ProcessingMode(str, Enum):
     """Processing mode for content enrichment."""
+
     REALTIME = "realtime"
     BATCH = "batch"
 
 
 class ContentType(str, Enum):
     """Type of content being processed."""
+
     ARTICLE = "article"
     BLOG_POST = "blog_post"
     NEWS = "news"
@@ -25,6 +28,7 @@ class ContentType(str, Enum):
 
 class ExtractedContent(BaseModel):
     """Input content for enrichment."""
+
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     title: str
     content: str
@@ -36,8 +40,8 @@ class ExtractedContent(BaseModel):
     content_type: ContentType = ContentType.ARTICLE
     language: str = "en"
     metadata: Dict[str, Any] = Field(default_factory=dict)
-    
-    @validator('content')
+
+    @validator("content")
     def validate_content_length(cls, v):
         if len(v) > 50000:  # 50k character limit
             raise ValueError("Content too long")
@@ -46,6 +50,7 @@ class ExtractedContent(BaseModel):
 
 class EntityType(str, Enum):
     """Types of entities that can be extracted."""
+
     PERSON = "PERSON"
     ORGANIZATION = "ORG"
     LOCATION = "GPE"
@@ -67,6 +72,7 @@ class EntityType(str, Enum):
 
 class Entity(BaseModel):
     """Named entity extracted from content."""
+
     text: str
     label: EntityType
     start: int
@@ -78,8 +84,8 @@ class Entity(BaseModel):
     aliases: List[str] = Field(default_factory=list)
     categories: List[str] = Field(default_factory=list)
     properties: Dict[str, Any] = Field(default_factory=dict)
-    
-    @validator('confidence')
+
+    @validator("confidence")
     def validate_confidence(cls, v):
         if not 0.0 <= v <= 1.0:
             raise ValueError("Confidence must be between 0.0 and 1.0")
@@ -88,6 +94,7 @@ class Entity(BaseModel):
 
 class TopicCategory(str, Enum):
     """Top-level topic categories."""
+
     TECHNOLOGY = "technology"
     BUSINESS = "business"
     POLITICS = "politics"
@@ -108,6 +115,7 @@ class TopicCategory(str, Enum):
 
 class Topic(BaseModel):
     """Topic classification result."""
+
     id: str
     name: str
     category: TopicCategory
@@ -119,6 +127,7 @@ class Topic(BaseModel):
 
 class SentimentLabel(str, Enum):
     """Sentiment classification labels."""
+
     POSITIVE = "positive"
     NEGATIVE = "negative"
     NEUTRAL = "neutral"
@@ -127,6 +136,7 @@ class SentimentLabel(str, Enum):
 
 class EmotionLabel(str, Enum):
     """Emotion classification labels."""
+
     JOY = "joy"
     SADNESS = "sadness"
     ANGER = "anger"
@@ -138,6 +148,7 @@ class EmotionLabel(str, Enum):
 
 class SentimentAnalysis(BaseModel):
     """Sentiment analysis result."""
+
     sentiment: SentimentLabel
     confidence: float = Field(ge=0.0, le=1.0)
     emotions: Dict[EmotionLabel, float] = Field(default_factory=dict)
@@ -147,6 +158,7 @@ class SentimentAnalysis(BaseModel):
 
 class ContentSignal(BaseModel):
     """Content quality and engagement signals."""
+
     readability_score: float = Field(ge=0.0, le=1.0)
     factual_claims: int = Field(ge=0)
     citations_count: int = Field(ge=0)
@@ -161,6 +173,7 @@ class ContentSignal(BaseModel):
 
 class TrustworthinessScore(BaseModel):
     """Content trustworthiness assessment."""
+
     overall_score: float = Field(ge=0.0, le=1.0)
     source_reliability: float = Field(ge=0.0, le=1.0)
     fact_checking_score: float = Field(ge=0.0, le=1.0)
@@ -173,6 +186,7 @@ class TrustworthinessScore(BaseModel):
 
 class ModelVersion(BaseModel):
     """Model version information."""
+
     name: str
     version: str
     created_at: datetime
@@ -181,6 +195,7 @@ class ModelVersion(BaseModel):
 
 class EnrichedContent(BaseModel):
     """Fully enriched content with all AI insights."""
+
     id: str
     original_content: ExtractedContent
     entities: List[Entity]
@@ -193,15 +208,14 @@ class EnrichedContent(BaseModel):
     processing_time_ms: int
     language_detected: str
     processing_mode: ProcessingMode
-    
+
     class Config:
-        json_encoders = {
-            datetime: lambda v: v.isoformat()
-        }
+        json_encoders = {datetime: lambda v: v.isoformat()}
 
 
 class EnrichmentRequest(BaseModel):
     """Request for content enrichment."""
+
     content: ExtractedContent
     processing_mode: ProcessingMode = ProcessingMode.REALTIME
     include_entities: bool = True
@@ -215,6 +229,7 @@ class EnrichmentRequest(BaseModel):
 
 class EnrichmentResponse(BaseModel):
     """Response from content enrichment."""
+
     success: bool
     enriched_content: Optional[EnrichedContent] = None
     error_message: Optional[str] = None
@@ -224,6 +239,7 @@ class EnrichmentResponse(BaseModel):
 
 class BatchEnrichmentRequest(BaseModel):
     """Batch enrichment request."""
+
     contents: List[ExtractedContent]
     processing_mode: ProcessingMode = ProcessingMode.BATCH
     include_entities: bool = True
@@ -236,6 +252,7 @@ class BatchEnrichmentRequest(BaseModel):
 
 class BatchEnrichmentResponse(BaseModel):
     """Batch enrichment response."""
+
     success: bool
     enriched_contents: List[EnrichedContent]
     failed_contents: List[Dict[str, Any]] = Field(default_factory=list)

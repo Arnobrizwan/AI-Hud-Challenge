@@ -4,13 +4,15 @@ Data models for Evaluation Suite Microservice
 
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional, Any, Union
+from typing import Any, Dict, List, Optional, Union
 from uuid import UUID
+
 from pydantic import BaseModel, Field, validator
 
 
 class EvaluationStatus(str, Enum):
     """Evaluation status enumeration"""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -20,6 +22,7 @@ class EvaluationStatus(str, Enum):
 
 class ModelType(str, Enum):
     """Model type enumeration"""
+
     RANKING = "ranking"
     CLASSIFICATION = "classification"
     REGRESSION = "regression"
@@ -31,6 +34,7 @@ class ModelType(str, Enum):
 
 class EvaluationType(str, Enum):
     """Evaluation type enumeration"""
+
     OFFLINE = "offline"
     ONLINE = "online"
     COMPREHENSIVE = "comprehensive"
@@ -41,6 +45,7 @@ class EvaluationType(str, Enum):
 
 class StatisticalTestType(str, Enum):
     """Statistical test type enumeration"""
+
     T_TEST = "t_test"
     WELCH_T_TEST = "welch_t_test"
     MANN_WHITNEY_U = "mann_whitney_u"
@@ -52,6 +57,7 @@ class StatisticalTestType(str, Enum):
 
 class ExperimentStatus(str, Enum):
     """Experiment status enumeration"""
+
     DRAFT = "draft"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -62,9 +68,10 @@ class ExperimentStatus(str, Enum):
 # Base models
 class BaseEvaluationModel(BaseModel):
     """Base model for evaluation entities"""
+
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
-    
+
     class Config:
         use_enum_values = True
         validate_assignment = True
@@ -73,30 +80,31 @@ class BaseEvaluationModel(BaseModel):
 # Configuration models
 class EvaluationConfig(BaseModel):
     """Configuration for comprehensive evaluation"""
+
     include_offline: bool = True
     include_online: bool = True
     include_business_impact: bool = True
     include_drift_analysis: bool = True
     include_causal_analysis: bool = True
-    
+
     # Model and dataset configuration
     models: List[Dict[str, Any]] = Field(default_factory=list)
     datasets: List[Dict[str, Any]] = Field(default_factory=list)
     metrics: Dict[str, Any] = Field(default_factory=dict)
-    
+
     # Online evaluation configuration
     online_experiments: List[Dict[str, Any]] = Field(default_factory=list)
     evaluation_period: Dict[str, Any] = Field(default_factory=dict)
-    
+
     # Business impact configuration
     business_metrics: List[str] = Field(default_factory=list)
-    
+
     # Drift detection configuration
     drift_config: Dict[str, Any] = Field(default_factory=dict)
-    
+
     # Causal analysis configuration
     causal_config: Dict[str, Any] = Field(default_factory=dict)
-    
+
     # Metadata
     created_by: str = Field(default="system")
     description: Optional[str] = None
@@ -105,6 +113,7 @@ class EvaluationConfig(BaseModel):
 
 class MetricsConfig(BaseModel):
     """Configuration for metrics calculation"""
+
     metric_types: List[str] = Field(default_factory=list)
     segments: List[str] = Field(default_factory=list)
     confidence_level: float = Field(default=0.95)
@@ -113,6 +122,7 @@ class MetricsConfig(BaseModel):
 
 class DriftConfig(BaseModel):
     """Configuration for drift detection"""
+
     reference_period: Dict[str, datetime]
     analysis_period: Dict[str, datetime]
     significance_level: float = Field(default=0.05)
@@ -122,6 +132,7 @@ class DriftConfig(BaseModel):
 
 class ExperimentConfig(BaseModel):
     """Configuration for A/B testing experiments"""
+
     name: str
     hypothesis: str
     variants: List[str] = Field(default_factory=list)
@@ -139,6 +150,7 @@ class ExperimentConfig(BaseModel):
 
 class BusinessImpactConfig(BaseModel):
     """Configuration for business impact analysis"""
+
     intervention_date: datetime
     metrics: List[str] = Field(default_factory=list)
     pre_period_days: int = Field(default=30)
@@ -148,32 +160,34 @@ class BusinessImpactConfig(BaseModel):
 # Result models
 class EvaluationResults(BaseModel):
     """Results from comprehensive evaluation"""
+
     evaluation_id: str
     config: EvaluationConfig
     status: EvaluationStatus
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
     duration_seconds: Optional[float] = None
-    
+
     # Results from different evaluation types
     offline_results: Optional[Dict[str, Any]] = None
     online_results: Optional[Dict[str, Any]] = None
     business_impact: Optional[Dict[str, Any]] = None
     drift_analysis: Optional[Dict[str, Any]] = None
     causal_analysis: Optional[Dict[str, Any]] = None
-    
+
     # Generated recommendations
     recommendations: List[Dict[str, Any]] = Field(default_factory=list)
-    
+
     # Error handling
     error_message: Optional[str] = None
-    
+
     # Metadata
     created_by: str = Field(default="system")
 
 
 class OfflineEvaluationResult(BaseModel):
     """Results from offline model evaluation"""
+
     model_name: str
     model_version: str
     dataset_name: str
@@ -187,25 +201,26 @@ class OfflineEvaluationResult(BaseModel):
 
 class RankingMetrics(BaseModel):
     """Metrics for ranking models"""
+
     precision_at_1: float = 0.0
     precision_at_3: float = 0.0
     precision_at_5: float = 0.0
     precision_at_10: float = 0.0
     precision_at_20: float = 0.0
-    
+
     recall_at_1: float = 0.0
     recall_at_3: float = 0.0
     recall_at_5: float = 0.0
     recall_at_10: float = 0.0
     recall_at_20: float = 0.0
-    
+
     ndcg_at_5: float = 0.0
     ndcg_at_10: float = 0.0
     ndcg_at_20: float = 0.0
-    
+
     mrr: float = 0.0  # Mean Reciprocal Rank
     map: float = 0.0  # Mean Average Precision
-    
+
     intra_list_diversity: float = 0.0
     catalog_coverage: float = 0.0
     novelty: float = 0.0
@@ -213,6 +228,7 @@ class RankingMetrics(BaseModel):
 
 class ClassificationMetrics(BaseModel):
     """Metrics for classification models"""
+
     accuracy: float = 0.0
     precision: float = 0.0
     recall: float = 0.0
@@ -224,6 +240,7 @@ class ClassificationMetrics(BaseModel):
 
 class RegressionMetrics(BaseModel):
     """Metrics for regression models"""
+
     mse: float = 0.0
     rmse: float = 0.0
     mae: float = 0.0
@@ -233,6 +250,7 @@ class RegressionMetrics(BaseModel):
 
 class RecommendationMetrics(BaseModel):
     """Metrics for recommendation models"""
+
     hit_rate: float = 0.0
     coverage: float = 0.0
     diversity: float = 0.0
@@ -242,6 +260,7 @@ class RecommendationMetrics(BaseModel):
 
 class ClusteringMetrics(BaseModel):
     """Metrics for clustering models"""
+
     silhouette_score: float = 0.0
     calinski_harabasz_score: float = 0.0
     davies_bouldin_score: float = 0.0
@@ -251,6 +270,7 @@ class ClusteringMetrics(BaseModel):
 # A/B Testing models
 class Experiment(BaseModel):
     """A/B testing experiment"""
+
     id: str
     name: str
     hypothesis: str
@@ -270,14 +290,15 @@ class Experiment(BaseModel):
 
 class ExperimentData(BaseModel):
     """Data collected during experiment"""
+
     experiment_id: str
     variant_data: Dict[str, Dict[str, Any]] = Field(default_factory=dict)
     collected_at: datetime = Field(default_factory=datetime.utcnow)
-    
+
     def get_variant_data(self, variant_name: str) -> Dict[str, Any]:
         """Get data for specific variant"""
         return self.variant_data.get(variant_name, {})
-    
+
     def get_metric_values(self, metric_name: str) -> List[float]:
         """Get values for specific metric across all variants"""
         values = []
@@ -285,7 +306,7 @@ class ExperimentData(BaseModel):
             if metric_name in variant_data:
                 values.extend(variant_data[metric_name])
         return values
-    
+
     def get_conversion_rate(self, metric_name: str) -> float:
         """Get conversion rate for specific metric"""
         values = self.get_metric_values(metric_name)
@@ -296,6 +317,7 @@ class ExperimentData(BaseModel):
 
 class VariantAnalysis(BaseModel):
     """Analysis results for experiment variant"""
+
     variant_name: str
     primary_metric_result: Dict[str, Any]
     secondary_metric_results: Dict[str, Dict[str, Any]] = Field(default_factory=dict)
@@ -307,6 +329,7 @@ class VariantAnalysis(BaseModel):
 
 class FrequentistAnalysis(BaseModel):
     """Frequentist statistical analysis results"""
+
     experiment_id: str
     variant_results: Dict[str, VariantAnalysis]
     overall_significance: bool = False
@@ -315,6 +338,7 @@ class FrequentistAnalysis(BaseModel):
 
 class BayesianAnalysis(BaseModel):
     """Bayesian statistical analysis results"""
+
     experiment_id: str
     variant_results: Dict[str, Dict[str, Any]]
     posterior_probabilities: Dict[str, float] = Field(default_factory=dict)
@@ -323,6 +347,7 @@ class BayesianAnalysis(BaseModel):
 
 class SequentialAnalysis(BaseModel):
     """Sequential statistical analysis results"""
+
     experiment_id: str
     variant_results: Dict[str, Dict[str, Any]]
     stopping_boundaries: Dict[str, float] = Field(default_factory=dict)
@@ -331,6 +356,7 @@ class SequentialAnalysis(BaseModel):
 
 class ExperimentAnalysis(BaseModel):
     """Complete experiment analysis results"""
+
     experiment_id: str
     analysis_type: str
     statistical_results: Union[FrequentistAnalysis, BayesianAnalysis, SequentialAnalysis]
@@ -343,6 +369,7 @@ class ExperimentAnalysis(BaseModel):
 # Business Impact models
 class BusinessImpactAnalysis(BaseModel):
     """Business impact analysis results"""
+
     intervention_date: datetime
     metric_impacts: Dict[str, Dict[str, Any]] = Field(default_factory=dict)
     overall_roi: float = 0.0
@@ -354,6 +381,7 @@ class BusinessImpactAnalysis(BaseModel):
 # Drift Detection models
 class FeatureDriftResult(BaseModel):
     """Drift detection result for individual feature"""
+
     feature_name: str
     test_statistic: float
     p_value: float
@@ -363,6 +391,7 @@ class FeatureDriftResult(BaseModel):
 
 class DataDriftResult(BaseModel):
     """Data drift detection results"""
+
     feature_results: Dict[str, FeatureDriftResult] = Field(default_factory=dict)
     overall_drift_score: float = 0.0
     drifted_features: List[str] = Field(default_factory=list)
@@ -370,6 +399,7 @@ class DataDriftResult(BaseModel):
 
 class PredictionDriftResult(BaseModel):
     """Prediction drift detection results"""
+
     test_statistic: float
     p_value: float
     is_drifted: bool
@@ -378,6 +408,7 @@ class PredictionDriftResult(BaseModel):
 
 class PerformanceDriftResult(BaseModel):
     """Performance drift detection results"""
+
     metric_name: str
     reference_performance: float
     current_performance: float
@@ -388,6 +419,7 @@ class PerformanceDriftResult(BaseModel):
 
 class ConceptDriftResult(BaseModel):
     """Concept drift detection results"""
+
     test_statistic: float
     p_value: float
     is_drifted: bool
@@ -396,6 +428,7 @@ class ConceptDriftResult(BaseModel):
 
 class DriftAnalysis(BaseModel):
     """Complete drift analysis results"""
+
     model_name: str
     reference_period: Dict[str, datetime]
     analysis_period: Dict[str, datetime]
@@ -408,6 +441,7 @@ class DriftAnalysis(BaseModel):
 # Statistical Testing models
 class StatisticalTestResult(BaseModel):
     """Result from statistical test"""
+
     test_name: str
     test_statistic: float
     p_value: float
@@ -419,6 +453,7 @@ class StatisticalTestResult(BaseModel):
 
 class PowerAnalysisResult(BaseModel):
     """Power analysis results"""
+
     effect_size: float
     alpha: float
     power: float
@@ -429,6 +464,7 @@ class PowerAnalysisResult(BaseModel):
 # Monitoring models
 class MetricAlert(BaseModel):
     """Alert for metric anomaly"""
+
     alert_id: str
     metric_name: str
     threshold: float
@@ -441,6 +477,7 @@ class MetricAlert(BaseModel):
 
 class EvaluationDashboard(BaseModel):
     """Dashboard data for evaluation metrics"""
+
     evaluation_id: str
     metrics: Dict[str, Any] = Field(default_factory=dict)
     charts: List[Dict[str, Any]] = Field(default_factory=list)
@@ -451,12 +488,14 @@ class EvaluationDashboard(BaseModel):
 # Request/Response models
 class CreateEvaluationRequest(BaseModel):
     """Request to create new evaluation"""
+
     config: EvaluationConfig
     created_by: str = Field(default="system")
 
 
 class CreateEvaluationResponse(BaseModel):
     """Response from creating evaluation"""
+
     evaluation_id: str
     status: EvaluationStatus
     message: str
@@ -464,11 +503,13 @@ class CreateEvaluationResponse(BaseModel):
 
 class GetEvaluationResponse(BaseModel):
     """Response for getting evaluation details"""
+
     evaluation: EvaluationResults
 
 
 class ListEvaluationsResponse(BaseModel):
     """Response for listing evaluations"""
+
     evaluations: List[EvaluationResults]
     total_count: int
     limit: int
@@ -477,12 +518,14 @@ class ListEvaluationsResponse(BaseModel):
 
 class CreateExperimentRequest(BaseModel):
     """Request to create A/B test experiment"""
+
     config: ExperimentConfig
     created_by: str = Field(default="system")
 
 
 class CreateExperimentResponse(BaseModel):
     """Response from creating experiment"""
+
     experiment_id: str
     status: ExperimentStatus
     message: str
@@ -490,18 +533,21 @@ class CreateExperimentResponse(BaseModel):
 
 class AnalyzeExperimentRequest(BaseModel):
     """Request to analyze experiment"""
+
     experiment_id: str
     analysis_type: str = "frequentist"
 
 
 class AnalyzeExperimentResponse(BaseModel):
     """Response from experiment analysis"""
+
     analysis: ExperimentAnalysis
 
 
 # Error models
 class EvaluationError(BaseModel):
     """Error response model"""
+
     error_code: str
     error_message: str
     details: Optional[Dict[str, Any]] = None
@@ -510,4 +556,5 @@ class EvaluationError(BaseModel):
 
 class ExperimentDesignError(Exception):
     """Exception for experiment design validation errors"""
+
     pass

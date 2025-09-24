@@ -3,10 +3,12 @@ Data models for Storage, Indexing & Retrieval Service
 """
 
 from datetime import datetime
-from typing import Dict, List, Optional, Any, Union
 from enum import Enum
-from pydantic import BaseModel, Field
+from typing import Any, Dict, List, Optional, Union
+
 import numpy as np
+from pydantic import BaseModel, Field
+
 
 class StorageType(str, Enum):
     POSTGRESQL = "postgresql"
@@ -16,25 +18,30 @@ class StorageType(str, Enum):
     MEDIA_STORAGE = "media_storage"
     TIMESERIES = "timeseries"
 
+
 class SearchMethod(str, Enum):
     EXACT = "exact"
     APPROXIMATE = "approximate"
     HYBRID = "hybrid"
+
 
 class CacheLevel(str, Enum):
     MEMORY = "memory"
     REDIS = "redis"
     CDN = "cdn"
 
+
 class GDPRRequestType(str, Enum):
     DATA_EXPORT = "data_export"
     DATA_DELETION = "data_deletion"
     DATA_RECTIFICATION = "data_rectification"
 
+
 class RetentionPolicyType(str, Enum):
     DELETE_OLD_DATA = "delete_old_data"
     ARCHIVE_DATA = "archive_data"
     ANONYMIZE_DATA = "anonymize_data"
+
 
 # Core data models
 class Article(BaseModel):
@@ -53,11 +60,13 @@ class Article(BaseModel):
     media_files: Optional[List[Dict[str, Any]]] = None
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
+
 class StorageResult(BaseModel):
     article_id: str
     stored_locations: List[StorageType]
     failed_stores: List[str] = Field(default_factory=list)
     storage_timestamp: datetime
+
 
 class RetrievedArticle(BaseModel):
     id: str
@@ -78,6 +87,7 @@ class RetrievedArticle(BaseModel):
     cache_hit: bool = False
     retrieval_sources: List[StorageType] = Field(default_factory=list)
 
+
 # Search models
 class SearchRequest(BaseModel):
     query: str
@@ -92,6 +102,7 @@ class SearchRequest(BaseModel):
     sort_order: str = "desc"
     explain: bool = False
 
+
 class SearchResultItem(BaseModel):
     article_id: str
     score: float
@@ -101,12 +112,14 @@ class SearchResultItem(BaseModel):
     source: str
     published_at: datetime
 
+
 class SearchResult(BaseModel):
     results: List[SearchResultItem]
     total_hits: int
     aggregations: Dict[str, Any] = Field(default_factory=dict)
     search_duration: int
     query_explanation: Optional[Dict[str, Any]] = None
+
 
 class SimilaritySearchParams(BaseModel):
     query_vector: List[float]
@@ -118,11 +131,13 @@ class SimilaritySearchParams(BaseModel):
     category_filter: Optional[str] = None
     rerank: bool = True
 
+
 class SimilarityResult(BaseModel):
     content_id: str
     similarity_score: float
     embedding_type: str
     metadata: Dict[str, Any] = Field(default_factory=dict)
+
 
 class SimilaritySearchResult(BaseModel):
     query_vector: List[float]
@@ -131,11 +146,13 @@ class SimilaritySearchResult(BaseModel):
     search_duration: int
     total_candidates: int
 
+
 # Vector store models
 class VectorStorageResult(BaseModel):
     content_id: str
     stored_embeddings: List[str]
     storage_results: List[Dict[str, Any]] = Field(default_factory=list)
+
 
 class VectorIndexConfig(BaseModel):
     index_name: str
@@ -145,11 +162,13 @@ class VectorIndexConfig(BaseModel):
     ef_construction: int = 200
     similarity_threshold: float = 0.7
 
+
 class IndexBuildResult(BaseModel):
     index_name: str
     build_duration: int
     index_size: int
     query_performance: float
+
 
 # Cache models
 class CacheConfig(BaseModel):
@@ -161,25 +180,30 @@ class CacheConfig(BaseModel):
     cdn_ttl: int = 86400  # 24 hours
     is_public: bool = False
 
+
 class CachedData(BaseModel):
     data: Any
     cache_level: Optional[CacheLevel] = None
     cache_hit: bool = False
     ttl: Optional[int] = None
 
+
 class CacheResult(BaseModel):
     cache_key: str
     cached_levels: List[CacheLevel] = Field(default_factory=list)
     cache_timestamp: datetime
+
 
 class CacheInvalidationRequest(BaseModel):
     key_patterns: Optional[List[str]] = None
     cache_tags: Optional[List[str]] = None
     user_id: Optional[str] = None
 
+
 class InvalidationResult(BaseModel):
     invalidated_keys: int
     invalidation_timestamp: datetime
+
 
 # Data lifecycle models
 class RetentionPolicy(BaseModel):
@@ -190,10 +214,12 @@ class RetentionPolicy(BaseModel):
     conditions: Dict[str, Any] = Field(default_factory=dict)
     is_active: bool = True
 
+
 class RetentionResult(BaseModel):
     policies_applied: int
     retention_results: List[Dict[str, Any]] = Field(default_factory=list)
     execution_timestamp: datetime
+
 
 class GDPRRequest(BaseModel):
     request_id: str
@@ -201,6 +227,7 @@ class GDPRRequest(BaseModel):
     request_type: GDPRRequestType
     corrections: Optional[Dict[str, Any]] = None
     request_timestamp: datetime = Field(default_factory=datetime.utcnow)
+
 
 class GDPRResponse(BaseModel):
     request_id: str
@@ -210,11 +237,13 @@ class GDPRResponse(BaseModel):
     data: Optional[Dict[str, Any]] = None
     processing_timestamp: datetime
 
+
 class GDPRDeletionResult(BaseModel):
     user_id: str
     deletion_results: List[Dict[str, Any]] = Field(default_factory=list)
     verification_result: Dict[str, Any] = Field(default_factory=dict)
     deletion_timestamp: datetime
+
 
 # Query optimization models
 class MultiStoreQuery(BaseModel):
@@ -224,17 +253,20 @@ class MultiStoreQuery(BaseModel):
     query_components: List[Dict[str, Any]]
     performance_requirements: Dict[str, Any] = Field(default_factory=dict)
 
+
 class OptimizedQuery(BaseModel):
     original_query: MultiStoreQuery
     optimized_strategy: Dict[str, Any]
     estimated_cost: float
     estimated_duration: int
 
+
 class RetrievalOptions(BaseModel):
     use_cache: bool = True
     update_cache: bool = True
     preferred_sources: Optional[List[StorageType]] = None
     performance_mode: str = "balanced"  # fast, balanced, complete
+
 
 # Health and monitoring models
 class HealthCheck(BaseModel):
@@ -243,12 +275,14 @@ class HealthCheck(BaseModel):
     services: Dict[str, Dict[str, Any]] = Field(default_factory=dict)
     version: str = "1.0.0"
 
+
 class ServiceStatus(BaseModel):
     name: str
     status: str
     response_time: Optional[float] = None
     last_check: datetime
     error_message: Optional[str] = None
+
 
 # Performance models
 class PerformanceMetrics(BaseModel):
@@ -259,6 +293,7 @@ class PerformanceMetrics(BaseModel):
     throughput: float
     timestamp: datetime
 
+
 class QueryPerformance(BaseModel):
     query_id: str
     execution_time: float
@@ -266,6 +301,7 @@ class QueryPerformance(BaseModel):
     rows_processed: int
     cache_hits: int
     optimization_applied: bool
+
 
 # Configuration models
 class DatabaseConfig(BaseModel):
@@ -278,6 +314,7 @@ class DatabaseConfig(BaseModel):
     max_overflow: int = 20
     pool_timeout: int = 30
 
+
 class RedisConfig(BaseModel):
     host: str
     port: int
@@ -286,6 +323,7 @@ class RedisConfig(BaseModel):
     max_connections: int = 100
     socket_timeout: int = 5
 
+
 class ElasticsearchConfig(BaseModel):
     hosts: List[str]
     username: Optional[str] = None
@@ -293,12 +331,14 @@ class ElasticsearchConfig(BaseModel):
     verify_certs: bool = True
     timeout: int = 30
 
+
 class CloudStorageConfig(BaseModel):
     provider: str  # aws, gcp, azure
     bucket_name: str
     region: str
     access_key: Optional[str] = None
     secret_key: Optional[str] = None
+
 
 # Error models
 class StorageError(BaseModel):
@@ -308,10 +348,12 @@ class StorageError(BaseModel):
     timestamp: datetime
     retry_count: int = 0
 
+
 class ValidationError(BaseModel):
     field: str
     message: str
     value: Any
+
 
 class ServiceError(BaseModel):
     error_code: str

@@ -7,10 +7,18 @@ from datetime import datetime
 from typing import Optional
 
 from sqlalchemy import (
-    Column, String, Integer, Float, Boolean, DateTime, Text, JSON,
-    create_engine, MetaData
+    JSON,
+    Boolean,
+    Column,
+    DateTime,
+    Float,
+    Integer,
+    MetaData,
+    String,
+    Text,
+    create_engine,
 )
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
@@ -26,8 +34,9 @@ _async_session_factory = None
 
 class NotificationDecision(Base):
     """Database model for notification decisions."""
+
     __tablename__ = "notification_decisions"
-    
+
     id = Column(String, primary_key=True)
     user_id = Column(String, nullable=False, index=True)
     notification_type = Column(String, nullable=False)
@@ -44,8 +53,9 @@ class NotificationDecision(Base):
 
 class NotificationDelivery(Base):
     """Database model for notification deliveries."""
+
     __tablename__ = "notification_deliveries"
-    
+
     id = Column(String, primary_key=True)
     user_id = Column(String, nullable=False, index=True)
     notification_id = Column(String, nullable=False)
@@ -60,8 +70,9 @@ class NotificationDelivery(Base):
 
 class UserPreferences(Base):
     """Database model for user notification preferences."""
+
     __tablename__ = "user_preferences"
-    
+
     user_id = Column(String, primary_key=True)
     enabled_types = Column(JSON)
     delivery_channels = Column(JSON)
@@ -79,8 +90,9 @@ class UserPreferences(Base):
 
 class UserProfile(Base):
     """Database model for user profiles."""
+
     __tablename__ = "user_profiles"
-    
+
     user_id = Column(String, primary_key=True)
     topic_preferences = Column(JSON)
     source_preferences = Column(JSON)
@@ -94,8 +106,9 @@ class UserProfile(Base):
 
 class NotificationAnalytics(Base):
     """Database model for notification analytics."""
+
     __tablename__ = "notification_analytics"
-    
+
     id = Column(String, primary_key=True)
     notification_id = Column(String, nullable=False, index=True)
     user_id = Column(String, nullable=False, index=True)
@@ -113,8 +126,9 @@ class NotificationAnalytics(Base):
 
 class ABTestAssignment(Base):
     """Database model for A/B test assignments."""
+
     __tablename__ = "ab_test_assignments"
-    
+
     id = Column(String, primary_key=True)
     user_id = Column(String, nullable=False, index=True)
     experiment_name = Column(String, nullable=False)
@@ -132,7 +146,7 @@ async def get_async_engine():
             settings.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://"),
             echo=settings.DEBUG,
             pool_size=20,
-            max_overflow=30
+            max_overflow=30,
         )
     return _async_engine
 
@@ -157,11 +171,11 @@ async def get_async_session() -> AsyncSession:
 async def init_db() -> None:
     """Initialize database tables."""
     engine = await get_async_engine()
-    
+
     async with engine.begin() as conn:
         # Create all tables
         await conn.run_sync(Base.metadata.create_all)
-    
+
     print("Database initialized successfully")
 
 

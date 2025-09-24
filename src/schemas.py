@@ -1,13 +1,15 @@
 """Data models and schemas for the ranking microservice."""
 
 from datetime import datetime
-from typing import List, Optional, Dict, Any, Union
-from pydantic import BaseModel, Field
 from enum import Enum
+from typing import Any, Dict, List, Optional, Union
+
+from pydantic import BaseModel, Field
 
 
 class ContentType(str, Enum):
     """Content type enumeration."""
+
     ARTICLE = "article"
     VIDEO = "video"
     PODCAST = "podcast"
@@ -16,12 +18,14 @@ class ContentType(str, Enum):
 
 class Sentiment(BaseModel):
     """Sentiment analysis result."""
+
     polarity: float = Field(..., ge=-1.0, le=1.0)
     subjectivity: float = Field(..., ge=0.0, le=1.0)
 
 
 class Entity(BaseModel):
     """Named entity."""
+
     text: str
     label: str
     confidence: float = Field(..., ge=0.0, le=1.0)
@@ -29,6 +33,7 @@ class Entity(BaseModel):
 
 class Topic(BaseModel):
     """Content topic."""
+
     name: str
     confidence: float = Field(..., ge=0.0, le=1.0)
     category: Optional[str] = None
@@ -36,6 +41,7 @@ class Topic(BaseModel):
 
 class Author(BaseModel):
     """Content author."""
+
     id: str
     name: str
     bio: Optional[str] = None
@@ -44,6 +50,7 @@ class Author(BaseModel):
 
 class Source(BaseModel):
     """Content source."""
+
     id: str
     name: str
     domain: str
@@ -54,6 +61,7 @@ class Source(BaseModel):
 
 class Article(BaseModel):
     """Article content model."""
+
     id: str
     title: str
     content: Optional[str] = None
@@ -61,32 +69,32 @@ class Article(BaseModel):
     url: str
     published_at: datetime
     updated_at: Optional[datetime] = None
-    
+
     # Content metadata
     content_type: ContentType = ContentType.ARTICLE
     word_count: int = 0
     reading_time: int = 0  # in minutes
     quality_score: float = Field(default=0.5, ge=0.0, le=1.0)
-    
+
     # Media
     image_url: Optional[str] = None
     videos: Optional[List[str]] = None
-    
+
     # Analysis results
     sentiment: Optional[Sentiment] = None
     entities: List[Entity] = []
     topics: List[Topic] = []
-    
+
     # Authors and sources
     author: Optional[Author] = None
     source: Source
-    
+
     # Engagement metrics
     view_count: int = 0
     like_count: int = 0
     share_count: int = 0
     comment_count: int = 0
-    
+
     # Geographic and temporal
     language: str = "en"
     country: Optional[str] = None
@@ -95,6 +103,7 @@ class Article(BaseModel):
 
 class UserProfile(BaseModel):
     """User profile for personalization."""
+
     user_id: str
     topic_preferences: Dict[str, float] = Field(default_factory=dict)
     source_preferences: Dict[str, float] = Field(default_factory=dict)
@@ -106,6 +115,7 @@ class UserProfile(BaseModel):
 
 class PersonalizedScore(BaseModel):
     """Personalized ranking score."""
+
     article_id: str
     score: float = Field(..., ge=0.0, le=1.0)
     explanation: Optional[str] = None
@@ -114,21 +124,22 @@ class PersonalizedScore(BaseModel):
 
 class RankingRequest(BaseModel):
     """Request for content ranking."""
+
     user_id: str
     query: Optional[str] = None
     content_types: List[ContentType] = Field(default_factory=lambda: [ContentType.ARTICLE])
     limit: int = Field(default=20, ge=1, le=100)
     offset: int = Field(default=0, ge=0)
-    
+
     # Context
     location: Optional[Dict[str, float]] = None  # lat, lng
     timezone: Optional[str] = None
     device_type: Optional[str] = None
-    
+
     # Personalization settings
     enable_personalization: bool = True
     personalization_weights: Optional[Dict[str, float]] = None
-    
+
     # Filtering
     topics: Optional[List[str]] = None
     sources: Optional[List[str]] = None
@@ -137,6 +148,7 @@ class RankingRequest(BaseModel):
 
 class RankedArticle(BaseModel):
     """Ranked article result."""
+
     article: Article
     rank: int
     score: float
@@ -147,6 +159,7 @@ class RankedArticle(BaseModel):
 
 class RankedResults(BaseModel):
     """Ranked content results."""
+
     articles: List[RankedArticle]
     total_count: int
     algorithm_variant: str
@@ -157,6 +170,7 @@ class RankedResults(BaseModel):
 
 class FeatureVector(BaseModel):
     """Feature vector for ML models."""
+
     article_id: str
     features: List[float]
     feature_names: List[str]
@@ -165,6 +179,7 @@ class FeatureVector(BaseModel):
 
 class ABTestVariant(BaseModel):
     """A/B test variant."""
+
     variant_id: str
     name: str
     weight: float = Field(..., ge=0.0, le=1.0)
@@ -174,6 +189,7 @@ class ABTestVariant(BaseModel):
 
 class ABTestExperiment(BaseModel):
     """A/B test experiment."""
+
     experiment_id: str
     name: str
     variants: List[ABTestVariant]
@@ -184,6 +200,7 @@ class ABTestExperiment(BaseModel):
 
 class RankingMetrics(BaseModel):
     """Ranking performance metrics."""
+
     total_requests: int
     avg_response_time_ms: float
     p95_response_time_ms: float
@@ -196,6 +213,7 @@ class RankingMetrics(BaseModel):
 
 class TrendingScore(BaseModel):
     """Trending content score."""
+
     article_id: str
     trending_score: float
     velocity: float
@@ -206,6 +224,7 @@ class TrendingScore(BaseModel):
 
 class AuthorityScore(BaseModel):
     """Source authority score."""
+
     source_id: str
     authority_score: float
     reliability_score: float
