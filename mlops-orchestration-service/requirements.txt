@@ -19,7 +19,7 @@ numpy==1.24.4
 pandas==1.5.3
 scikit-learn==1.3.2
 scipy==1.11.4
-joblib==1.3.2
+joblib==1.5.2
 # optuna==3.4.0  # Removed due to PyYAML build issues
 
 # MLflow (removed due to PyYAML build issues)
