@@ -186,7 +186,7 @@ custom_metrics: Dict[str, Any] = {}
 
 
 def create_custom_counter(name: str, description: str, labels: list = None) -> Counter:
-    """Create a custom counter metric."""
+        """Create a custom counter metric."""
     if labels is None:
         labels = []
 
@@ -197,7 +197,7 @@ def create_custom_counter(name: str, description: str, labels: list = None) -> C
 
 
 def create_custom_histogram(name: str, description: str, labels: list = None) -> Histogram:
-    """Create a custom histogram metric."""
+        """Create a custom histogram metric."""
     if labels is None:
         labels = []
 
@@ -208,7 +208,7 @@ def create_custom_histogram(name: str, description: str, labels: list = None) ->
 
 
 def create_custom_gauge(name: str, description: str, labels: list = None) -> Gauge:
-    """Create a custom gauge metric."""
+        """Create a custom gauge metric."""
     if labels is None:
         labels = []
 

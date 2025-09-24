@@ -29,7 +29,8 @@ class TestRSSAdapter:
     @pytest.fixture
     def rss_adapter(self, source_config):
         """Create a test RSS adapter."""
-        with patch("src.adapters.rss_adapter.get_http_client"):
+        mock_http_client = Mock()
+        with patch("src.utils.http_client.get_http_client", return_value=mock_http_client):
             return RSSAdapter(source_config)
 
     def test_adapter_initialization(self, rss_adapter, source_config):
@@ -94,7 +95,8 @@ class TestAPIAdapter:
     @pytest.fixture
     def api_adapter(self, api_source_config):
         """Create a test API adapter."""
-        with patch("src.adapters.api_adapter.get_http_client"):
+        mock_http_client = Mock()
+        with patch("src.utils.http_client.get_http_client", return_value=mock_http_client):
             return APIAdapter(api_source_config)
 
     def test_adapter_initialization(self, api_adapter, api_source_config):
@@ -114,7 +116,7 @@ class TestAPIAdapter:
 
     def test_prepare_headers(self, api_adapter):
         """Test header preparation."""
-        api_adapter.source_config.auth = {"type": "bearer", "token": "test-token"}
+        api_adapter.api_config["auth"] = {"type": "bearer", "token": "test-token"}
 
         headers = api_adapter._prepare_headers()
 
@@ -177,124 +179,148 @@ class TestAdapterBase:
             url="https://example.com/feed.xml",
         )
 
-    def test_create_ingestion_metadata(self, source_config):
+    @pytest.fixture
+    def concrete_adapter(self, source_config):
+        """Create a concrete adapter for testing BaseAdapter methods."""
+        from src.adapters.base import BaseAdapter
+
+        class ConcreteAdapter(BaseAdapter):
+            async def fetch_content(self):
+                yield  # Empty generator
+
+            async def test_connection(self):
+                return True
+
+            def get_source_info(self):
+                return {"type": "test"}
+
+        mock_http_client = Mock()
+        with patch("src.utils.http_client.get_http_client", return_value=mock_http_client):
+            return ConcreteAdapter(source_config)
+
+    def test_create_ingestion_metadata(self, concrete_adapter, source_config):
         """Test ingestion metadata creation."""
-        from src.adapters.base import BaseAdapter
+        metadata = concrete_adapter._create_ingestion_metadata()
 
-        with patch("src.adapters.base.get_http_client"):
-            adapter = BaseAdapter(source_config)
+        assert metadata["source_id"] == source_config.id
+        assert metadata["source_type"] == source_config.type
+        assert metadata["source_url"] == source_config.url
+        assert metadata["retry_count"] == 0
+        assert metadata["robots_txt_respected"] is True
 
-            metadata = adapter._create_ingestion_metadata()
-
-            assert metadata["source_id"] == source_config.id
-            assert metadata["source_type"] == source_config.type
-            assert metadata["source_url"] == source_config.url
-            assert metadata["retry_count"] == 0
-            assert metadata["robots_txt_respected"] is True
-
-    def test_generate_article_id(self, source_config):
+    def test_generate_article_id(self, concrete_adapter, source_config):
         """Test article ID generation."""
-        from src.adapters.base import BaseAdapter
+        article_id = concrete_adapter._generate_article_id("https://example.com/article", "Test Article")
 
-        with patch("src.adapters.base.get_http_client"):
-            adapter = BaseAdapter(source_config)
+        assert len(article_id) == 16
+        assert article_id.isalnum()
 
-            article_id = adapter._generate_article_id("https://example.com/article", "Test Article")
-
-            assert len(article_id) == 16
-            assert article_id.isalnum()
-
-    def test_calculate_content_hash(self, source_config):
+    def test_calculate_content_hash(self, concrete_adapter, source_config):
         """Test content hash calculation."""
-        from src.adapters.base import BaseAdapter
+        content = "Test content for hashing"
+        hash_value = concrete_adapter._calculate_content_hash(content)
 
-        with patch("src.adapters.base.get_http_client"):
-            adapter = BaseAdapter(source_config)
+        assert len(hash_value) == 64  # SHA256 hash length
+        assert hash_value.isalnum()
 
-            content = "Test content for hashing"
-            hash_value = adapter._calculate_content_hash(content)
-
-            assert len(hash_value) == 64  # SHA256 hash length
-            assert hash_value.isalnum()
-
-    def test_is_valid_article(self, source_config):
+    def test_is_valid_article(self, concrete_adapter, source_config):
         """Test article validation."""
-        from src.adapters.base import BaseAdapter
         from src.models.content import NormalizedArticle
 
-        with patch("src.adapters.base.get_http_client"):
-            adapter = BaseAdapter(source_config)
+        # Valid article
+        valid_article = NormalizedArticle(
+            id="test-article",
+            url="https://example.com/article",
+            title="Test Article Title",
+            source="Test Source",
+            source_url="https://example.com",
+            published_at=datetime.utcnow(),
+            content_hash="abc123",
+            word_count=100,
+            ingestion_metadata={
+                "source_id": "test-source",
+                "source_type": "rss_feed",
+                "source_url": "https://example.com",
+                "ingestion_time": datetime.utcnow(),
+                "ingestion_method": "test",
+            },
+        )
 
-            # Valid article
-            valid_article = NormalizedArticle(
-                id="test-article",
-                url="https://example.com/article",
-                title="Test Article Title",
-                source="Test Source",
-                source_url="https://example.com",
-                published_at=datetime.utcnow(),
-                content_hash="abc123",
-                word_count=100,
-            )
+        assert concrete_adapter._is_valid_article(valid_article) is True
 
-            assert adapter._is_valid_article(valid_article) is True
+        # Invalid article (too short)
+        invalid_article = NormalizedArticle(
+            id="test-article",
+            url="https://example.com/article",
+            title="Short",
+            source="Test Source",
+            source_url="https://example.com",
+            published_at=datetime.utcnow(),
+            content_hash="abc123",
+            word_count=10,
+            ingestion_metadata={
+                "source_id": "test-source",
+                "source_type": "rss_feed",
+                "source_url": "https://example.com",
+                "ingestion_time": datetime.utcnow(),
+                "ingestion_method": "test",
+            },
+        )
 
-            # Invalid article (too short)
-            invalid_article = NormalizedArticle(
-                id="test-article",
-                url="https://example.com/article",
-                title="Short",
-                source="Test Source",
-                source_url="https://example.com",
-                published_at=datetime.utcnow(),
-                content_hash="abc123",
-                word_count=10,
-            )
+        assert concrete_adapter._is_valid_article(invalid_article) is False
 
-            assert adapter._is_valid_article(invalid_article) is False
-
-    def test_apply_content_filters(self, source_config):
+    def test_apply_content_filters(self, concrete_adapter, source_config):
         """Test content filtering."""
-        from src.adapters.base import BaseAdapter
         from src.models.content import NormalizedArticle
 
-        with patch("src.adapters.base.get_http_client"):
-            adapter = BaseAdapter(source_config)
+        # Set up filters
+        concrete_adapter.source_config.filters = {
+            "min_word_count": 50,
+            "max_word_count": 1000,
+            "languages": ["en"],
+            "title_keywords": ["test", "article"],
+        }
 
-            # Set up filters
-            adapter.source_config.filters = {
-                "min_word_count": 50,
-                "max_word_count": 1000,
-                "languages": ["en"],
-                "title_keywords": ["test", "article"],
-            }
+        # Valid article
+        valid_article = NormalizedArticle(
+            id="test-article",
+            url="https://example.com/article",
+            title="Test Article Title",
+            source="Test Source",
+            source_url="https://example.com",
+            published_at=datetime.utcnow(),
+            content_hash="abc123",
+            word_count=100,
+            language="en",
+            ingestion_metadata={
+                "source_id": "test-source",
+                "source_type": "rss_feed",
+                "source_url": "https://example.com",
+                "ingestion_time": datetime.utcnow(),
+                "ingestion_method": "test",
+            },
+        )
 
-            # Valid article
-            valid_article = NormalizedArticle(
-                id="test-article",
-                url="https://example.com/article",
-                title="Test Article Title",
-                source="Test Source",
-                source_url="https://example.com",
-                published_at=datetime.utcnow(),
-                content_hash="abc123",
-                word_count=100,
-                language="en",
-            )
+        assert concrete_adapter._apply_content_filters(valid_article) is True
 
-            assert adapter._apply_content_filters(valid_article) is True
+        # Invalid article (wrong language)
+        invalid_article = NormalizedArticle(
+            id="test-article",
+            url="https://example.com/article",
+            title="Test Article Title",
+            source="Test Source",
+            source_url="https://example.com",
+            published_at=datetime.utcnow(),
+            content_hash="abc123",
+            word_count=100,
+            language="es",
+            ingestion_metadata={
+                "source_id": "test-source",
+                "source_type": "rss_feed",
+                "source_url": "https://example.com",
+                "ingestion_time": datetime.utcnow(),
+                "ingestion_method": "test",
+            },
+        )
 
-            # Invalid article (wrong language)
-            invalid_article = NormalizedArticle(
-                id="test-article",
-                url="https://example.com/article",
-                title="Test Article Title",
-                source="Test Source",
-                source_url="https://example.com",
-                published_at=datetime.utcnow(),
-                content_hash="abc123",
-                word_count=100,
-                language="es",
-            )
-
-            assert adapter._apply_content_filters(invalid_article) is False
+        assert concrete_adapter._apply_content_filters(invalid_article) is False

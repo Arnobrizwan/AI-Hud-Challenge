@@ -32,9 +32,11 @@ class TestNormalizedArticle:
             content_hash="abc123",
             ingestion_metadata={
                 "source_id": "test-source",
+                "source_type": "rss_feed",
+                "source_url": "https://example.com",
                 "ingestion_time": datetime.utcnow(),
                 "ingestion_method": "test",
-            }
+            },
         )
 
         assert article.id == "test-article-1"
@@ -81,9 +83,11 @@ class TestNormalizedArticle:
             content_hash="",
             ingestion_metadata={
                 "source_id": "test-source",
+                "source_type": "rss_feed",
+                "source_url": "https://example.com",
                 "ingestion_time": datetime.utcnow(),
                 "ingestion_method": "test",
-            }
+            },
         )
 
         hash_value = article.calculate_content_hash()
@@ -103,9 +107,11 @@ class TestNormalizedArticle:
             word_count=400,
             ingestion_metadata={
                 "source_id": "test-source",
+                "source_type": "rss_feed",
+                "source_url": "https://example.com",
                 "ingestion_time": datetime.utcnow(),
                 "ingestion_method": "test",
-            }
+            },
         )
 
         reading_time = article.calculate_reading_time()
@@ -123,9 +129,11 @@ class TestNormalizedArticle:
             content_hash="abc123",
             ingestion_metadata={
                 "source_id": "test-source",
+                "source_type": "rss_feed",
+                "source_url": "https://example.com",
                 "ingestion_time": datetime.utcnow(),
                 "ingestion_method": "test",
-            }
+            },
         )
 
         article2 = NormalizedArticle(
@@ -136,6 +144,13 @@ class TestNormalizedArticle:
             source_url="https://example.com",
             published_at=datetime.utcnow(),
             content_hash="abc123",
+            ingestion_metadata={
+                "source_id": "test-source",
+                "source_type": "rss_feed",
+                "source_url": "https://example.com",
+                "ingestion_time": datetime.utcnow(),
+                "ingestion_method": "test",
+            },
         )
 
         # Same content hash should be duplicate

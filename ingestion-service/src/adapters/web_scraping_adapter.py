@@ -25,16 +25,16 @@ class WebScrapingAdapter(BaseAdapter):
         self.page = None
 
     async def __aenter__(self) -> Dict[str, Any]:
-    """Async context manager entry."""
+        """Async context manager entry."""
         await self._initialize_browser()
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> Dict[str, Any]:
-    """Async context manager exit."""
+        """Async context manager exit."""
         await self._cleanup_browser()
 
     async def _initialize_browser(self) -> Dict[str, Any]:
-    """Initialize Playwright browser."""
+        """Initialize Playwright browser."""
         try:
             from playwright.async_api import async_playwright
 
@@ -69,7 +69,7 @@ class WebScrapingAdapter(BaseAdapter):
             raise
 
     async def _cleanup_browser(self) -> Dict[str, Any]:
-    """Cleanup browser resources."""
+        """Cleanup browser resources."""
         try:
             if self.page:
                 await self.page.close()
@@ -100,11 +100,7 @@ class WebScrapingAdapter(BaseAdapter):
                     # Scrape URL
                     article = await self._scrape_url(url)
 
-                    if (
-                        article
-                        and self._is_valid_article(article)
-                        and self._apply_content_filters(article)
-                    ):
+                    if article and self._is_valid_article(article) and self._apply_content_filters(article):
                         yield article
 
                     # Apply rate limiting
@@ -128,9 +124,7 @@ class WebScrapingAdapter(BaseAdapter):
 
         # Get URLs from sitemap
         if "sitemap_url" in self.scraping_config:
-            sitemap_urls = await self._extract_urls_from_sitemap(
-                self.scraping_config["sitemap_url"]
-            )
+            sitemap_urls = await self._extract_urls_from_sitemap(self.scraping_config["sitemap_url"])
             urls.extend(sitemap_urls)
 
         # Get URLs from listing pages
@@ -171,8 +165,7 @@ class WebScrapingAdapter(BaseAdapter):
             return urls
 
         except Exception as e:
-            logger.warning(
-                f"Error extracting URLs from sitemap {sitemap_url}: {e}")
+            logger.warning(f"Error extracting URLs from sitemap {sitemap_url}: {e}")
             return []
 
     async def _extract_urls_from_listing(self, listing_url: str) -> List[str]:
@@ -190,16 +183,14 @@ class WebScrapingAdapter(BaseAdapter):
                     href = await element.get_attribute("href")
                     if href:
                         # Convert relative URL to absolute
-                        absolute_url = self.url_utils.resolve_relative_url(
-                            href, listing_url)
+                        absolute_url = self.url_utils.resolve_relative_url(href, listing_url)
                         if self.url_utils.is_valid_url(absolute_url):
                             urls.append(absolute_url)
 
             return urls
 
         except Exception as e:
-            logger.warning(
-                f"Error extracting URLs from listing {listing_url}: {e}")
+            logger.warning(f"Error extracting URLs from listing {listing_url}: {e}")
             return []
 
     async def _check_robots_compliance(self, url: str) -> bool:
@@ -216,9 +207,7 @@ class WebScrapingAdapter(BaseAdapter):
         """Scrape a single URL for content."""
         try:
             # Navigate to URL
-            await self.page.goto(
-                url, wait_until="networkidle", timeout=self.source_config.timeout * 1000
-            )
+            await self.page.goto(url, wait_until="networkidle", timeout=self.source_config.timeout * 1000)
 
             # Wait for content to load
             await self._wait_for_content()
@@ -239,12 +228,12 @@ class WebScrapingAdapter(BaseAdapter):
             return None
 
     async def _wait_for_content(self) -> Dict[str, Any]:
-    """Wait for content to load on the page."""
+        """Wait for content to load on the page."""
         try:
             # Wait for main content selectors
             content_selectors = self.scraping_config.get(
-                "content_selectors", [
-                    "article", "main", ".content", ".post", ".article"])
+                "content_selectors", ["article", "main", ".content", ".post", ".article"]
+            )
 
             for selector in content_selectors:
                 try:
@@ -269,47 +258,38 @@ class WebScrapingAdapter(BaseAdapter):
             content_data = {}
 
             # Title
-            title_selectors = self.scraping_config.get(
-                "title_selectors", ["h1", "title", ".title", ".headline"]
-            )
+            title_selectors = self.scraping_config.get("title_selectors", ["h1", "title", ".title", ".headline"])
             content_data["title"] = await self._extract_text_by_selectors(title_selectors)
 
             # Content
             content_selectors = self.scraping_config.get(
-                "content_selectors", [
-                    "article", "main", ".content", ".post", ".article", ".entry-content"], )
+                "content_selectors",
+                ["article", "main", ".content", ".post", ".article", ".entry-content"],
+            )
             content_data["content"] = await self._extract_html_by_selectors(content_selectors)
 
             # Author
             author_selectors = self.scraping_config.get(
-                "author_selectors", [
-                    ".author", ".byline", '[rel="author"]', ".post-author"])
+                "author_selectors", [".author", ".byline", '[rel="author"]', ".post-author"]
+            )
             content_data["author"] = await self._extract_text_by_selectors(author_selectors)
 
             # Published date
-            date_selectors = self.scraping_config.get(
-                "date_selectors", ["time", ".date", ".published", ".post-date"]
-            )
+            date_selectors = self.scraping_config.get("date_selectors", ["time", ".date", ".published", ".post-date"])
             content_data["published_at"] = await self._extract_text_by_selectors(date_selectors)
 
             # Image
             image_selectors = self.scraping_config.get(
                 "image_selectors", ["img", ".featured-image img", ".post-image img"]
             )
-            content_data["image_url"] = await self._extract_attribute_by_selectors(
-                image_selectors, "src"
-            )
+            content_data["image_url"] = await self._extract_attribute_by_selectors(image_selectors, "src")
 
             # Tags
-            tag_selectors = self.scraping_config.get(
-                "tag_selectors", [".tags a", ".categories a", ".post-tags a"]
-            )
+            tag_selectors = self.scraping_config.get("tag_selectors", [".tags a", ".categories a", ".post-tags a"])
             content_data["tags"] = await self._extract_text_list_by_selectors(tag_selectors)
 
             # Summary
-            summary_selectors = self.scraping_config.get(
-                "summary_selectors", [".summary", ".excerpt", ".description"]
-            )
+            summary_selectors = self.scraping_config.get("summary_selectors", [".summary", ".excerpt", ".description"])
             content_data["summary"] = await self._extract_text_by_selectors(summary_selectors)
 
             # Add raw HTML for further processing
@@ -347,8 +327,7 @@ class WebScrapingAdapter(BaseAdapter):
                 continue
         return ""
 
-    async def _extract_attribute_by_selectors(
-            self, selectors: List[str], attribute: str) -> str:
+    async def _extract_attribute_by_selectors(self, selectors: List[str], attribute: str) -> str:
         """Extract attribute value using multiple selectors."""
         for selector in selectors:
             try:
@@ -361,8 +340,7 @@ class WebScrapingAdapter(BaseAdapter):
                 continue
         return ""
 
-    async def _extract_text_list_by_selectors(
-            self, selectors: List[str]) -> List[str]:
+    async def _extract_text_list_by_selectors(self, selectors: List[str]) -> List[str]:
         """Extract list of text using multiple selectors."""
         for selector in selectors:
             try:
@@ -379,9 +357,7 @@ class WebScrapingAdapter(BaseAdapter):
                 continue
         return []
 
-    async def _process_scraped_content(
-        self, url: str, content_data: Dict[str, Any]
-    ) -> Optional[NormalizedArticle]:
+    async def _process_scraped_content(self, url: str, content_data: Dict[str, Any]) -> Optional[NormalizedArticle]:
         """Process scraped content into normalized article."""
         try:
             # Extract basic information
@@ -409,8 +385,7 @@ class WebScrapingAdapter(BaseAdapter):
                 if not author:
                     author = self.content_parser.extract_author(raw_html)
                 if not image_url:
-                    image_url = self.content_parser.extract_image_url(
-                        raw_html, url)
+                    image_url = self.content_parser.extract_image_url(raw_html, url)
                 if not tags:
                     tags = self.content_parser.extract_tags(raw_html)
 
@@ -465,7 +440,7 @@ class WebScrapingAdapter(BaseAdapter):
             return False
 
     def get_source_info(self) -> Dict[str, Any]:
-    """Get information about the web scraping source."""
+        """Get information about the web scraping source."""
         return {
             "type": "Web Scraping",
             "url": self.source_config.url,

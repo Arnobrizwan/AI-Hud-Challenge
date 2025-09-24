@@ -110,7 +110,7 @@ class HTTPClient:
         self.domain_limiters: Dict[str, RateLimiter] = {}
 
     async def close(self) -> Dict[str, Any]:
-    """Close the HTTP client session."""
+        """Close the HTTP client session."""
         await self.session.close()
 
     def _get_domain_limiter(self, url: str) -> RateLimiter:
@@ -363,7 +363,7 @@ class RobotsTxtChecker:
             return True
 
     def _parse_robots_txt(self, content: str) -> Dict[str, Any]:
-    """Parse robots.txt content."""
+        """Parse robots.txt content."""
         rules = {}
         current_user_agent = None
 

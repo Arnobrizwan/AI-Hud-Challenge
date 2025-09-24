@@ -30,7 +30,9 @@ class BaseAdapter(ABC):
         date_utils: DateUtils = None,
     ):
         self.source_config = source_config
-        self.http_client = http_client or HTTPClient()
+        from src.utils.http_client import get_http_client
+
+        self.http_client = http_client or get_http_client()
         self.content_parser = content_parser or ContentParser()
         self.url_utils = url_utils or URLUtils()
         self.date_utils = date_utils or DateUtils()
@@ -98,7 +100,7 @@ class BaseAdapter(ABC):
             await asyncio.sleep(delay)
 
     def _create_ingestion_metadata(self, response: HTTPResponse = None) -> Dict[str, Any]:
-    """Create ingestion metadata for articles."""
+        """Create ingestion metadata for articles."""
         metadata = {
             "source_id": self.source_config.id,
             "source_type": self.source_config.type,
@@ -275,7 +277,7 @@ class BaseAdapter(ABC):
         return True
 
     async def health_check(self) -> Dict[str, Any]:
-    """Perform health check on the adapter."""
+        """Perform health check on the adapter."""
         try:
             is_connected = await self.test_connection()
 

@@ -35,9 +35,7 @@ class FirestoreService:
             article_data = self._article_to_dict(article)
 
             # Add to Firestore
-            doc_ref = self.db.collection(
-                self.articles_collection).document(
-                article.id)
+            doc_ref = self.db.collection(self.articles_collection).document(article.id)
             doc_ref.set(article_data)
 
             logger.debug(f"Saved article {article.id} to Firestore")
@@ -58,9 +56,7 @@ class FirestoreService:
 
             for article in articles:
                 article_data = self._article_to_dict(article)
-                doc_ref = self.db.collection(
-                    self.articles_collection).document(
-                    article.id)
+                doc_ref = self.db.collection(self.articles_collection).document(article.id)
                 batch.set(doc_ref, article_data)
 
             # Commit batch
@@ -73,13 +69,10 @@ class FirestoreService:
             logger.error(f"Error saving articles: {e}")
             return 0
 
-    async def get_article(
-            self,
-            article_id: str) -> Optional[NormalizedArticle]:
+    async def get_article(self, article_id: str) -> Optional[NormalizedArticle]:
         """Get a single article from Firestore."""
         try:
-            doc_ref = self.db.collection(
-                self.articles_collection).document(article_id)
+            doc_ref = self.db.collection(self.articles_collection).document(article_id)
             doc = doc_ref.get()
 
             if doc.exists:
@@ -110,8 +103,7 @@ class FirestoreService:
 
             # Apply filters
             if source_id:
-                query = query.where(
-                    "ingestion_metadata.source_id", "==", source_id)
+                query = query.where("ingestion_metadata.source_id", "==", source_id)
 
             if content_type:
                 query = query.where("content_type", "==", content_type)
@@ -127,11 +119,9 @@ class FirestoreService:
 
             # Apply ordering
             if order_direction == "desc":
-                query = query.order_by(
-                    order_by, direction=firestore.Query.DESCENDING)
+                query = query.order_by(order_by, direction=firestore.Query.DESCENDING)
             else:
-                query = query.order_by(
-                    order_by, direction=firestore.Query.ASCENDING)
+                query = query.order_by(order_by, direction=firestore.Query.ASCENDING)
 
             # Apply pagination
             if offset > 0:
@@ -177,8 +167,7 @@ class FirestoreService:
 
             # Apply filters
             if source_id:
-                query = query.where(
-                    "ingestion_metadata.source_id", "==", source_id)
+                query = query.where("ingestion_metadata.source_id", "==", source_id)
 
             if content_type:
                 query = query.where("content_type", "==", content_type)
@@ -195,8 +184,7 @@ class FirestoreService:
                     article_data = doc.to_dict()
                     article = self._dict_to_article(article_data)
 
-                    if article and self._matches_search_query(
-                            article, query_text):
+                    if article and self._matches_search_query(article, query_text):
                         articles.append(article)
 
                         if len(articles) >= limit:
@@ -212,10 +200,7 @@ class FirestoreService:
             logger.error(f"Error searching articles: {e}")
             return []
 
-    def _matches_search_query(
-            self,
-            article: NormalizedArticle,
-            query_text: str) -> bool:
+    def _matches_search_query(self, article: NormalizedArticle, query_text: str) -> bool:
         """Check if article matches search query."""
         query_lower = query_text.lower()
 
@@ -256,10 +241,7 @@ class FirestoreService:
             )
             query = query.where("published_at", ">=", date_from)
             query = query.where("published_at", "<=", date_to)
-            query = query.where(
-                "content_hash",
-                "!=",
-                article.content_hash)  # Exclude exact matches
+            query = query.where("content_hash", "!=", article.content_hash)  # Exclude exact matches
 
             docs = query.stream()
 
@@ -287,25 +269,20 @@ class FirestoreService:
         try:
             source_data = self._source_config_to_dict(source_config)
 
-            doc_ref = self.db.collection(
-                self.sources_collection).document(
-                source_config.id)
+            doc_ref = self.db.collection(self.sources_collection).document(source_config.id)
             doc_ref.set(source_data)
 
-            logger.debug(
-                f"Saved source config {source_config.id} to Firestore")
+            logger.debug(f"Saved source config {source_config.id} to Firestore")
             return True
 
         except Exception as e:
             logger.error(f"Error saving source config {source_config.id}: {e}")
             return False
 
-    async def get_source_config(
-            self, source_id: str) -> Optional[SourceConfig]:
+    async def get_source_config(self, source_id: str) -> Optional[SourceConfig]:
         """Get source configuration from Firestore."""
         try:
-            doc_ref = self.db.collection(
-                self.sources_collection).document(source_id)
+            doc_ref = self.db.collection(self.sources_collection).document(source_id)
             doc = doc_ref.get()
 
             if doc.exists:
@@ -331,8 +308,7 @@ class FirestoreService:
                     if source_config:
                         source_configs.append(source_config)
                 except Exception as e:
-                    logger.warning(
-                        f"Error parsing source config {doc.id}: {e}")
+                    logger.warning(f"Error parsing source config {doc.id}: {e}")
                     continue
 
             return source_configs
@@ -346,9 +322,7 @@ class FirestoreService:
         try:
             batch_data = self._batch_to_dict(batch)
 
-            doc_ref = self.db.collection(self.metadata_collection).document(
-                f"batch_{batch.batch_id}"
-            )
+            doc_ref = self.db.collection(self.metadata_collection).document(f"batch_{batch.batch_id}")
             doc_ref.set(batch_data)
 
             logger.debug(f"Saved batch {batch.batch_id} to Firestore")
@@ -358,12 +332,10 @@ class FirestoreService:
             logger.error(f"Error saving batch {batch.batch_id}: {e}")
             return False
 
-    async def get_processing_batch(
-            self, batch_id: str) -> Optional[ProcessingBatch]:
+    async def get_processing_batch(self, batch_id: str) -> Optional[ProcessingBatch]:
         """Get processing batch from Firestore."""
         try:
-            doc_ref = self.db.collection(
-                self.metadata_collection).document(f"batch_{batch_id}")
+            doc_ref = self.db.collection(self.metadata_collection).document(f"batch_{batch_id}")
             doc = doc_ref.get()
 
             if doc.exists:
@@ -386,26 +358,20 @@ class FirestoreService:
             )
             doc_ref.set(metrics_data)
 
-            logger.debug(
-                f"Saved metrics for source {metrics.source_id} to Firestore")
+            logger.debug(f"Saved metrics for source {metrics.source_id} to Firestore")
             return True
 
         except Exception as e:
             logger.error(f"Error saving metrics: {e}")
             return False
 
-    async def get_metrics(
-            self,
-            source_id: str,
-            date: datetime = None) -> Optional[ContentMetrics]:
+    async def get_metrics(self, source_id: str, date: datetime = None) -> Optional[ContentMetrics]:
         """Get content metrics from Firestore."""
         try:
             if date is None:
                 date = datetime.utcnow().date()
 
-            doc_ref = self.db.collection(self.metadata_collection).document(
-                f"metrics_{source_id}_{date}"
-            )
+            doc_ref = self.db.collection(self.metadata_collection).document(f"metrics_{source_id}_{date}")
             doc = doc_ref.get()
 
             if doc.exists:
@@ -419,7 +385,7 @@ class FirestoreService:
             return None
 
     def _article_to_dict(self, article: NormalizedArticle) -> Dict[str, Any]:
-    """Convert article to Firestore-compatible dictionary."""
+        """Convert article to Firestore-compatible dictionary."""
         return {
             "id": article.id,
             "url": article.url,
@@ -447,27 +413,23 @@ class FirestoreService:
             "updated_at": datetime.utcnow(),
         }
 
-    def _dict_to_article(
-            self, data: Dict[str, Any]) -> Optional[NormalizedArticle]:
+    def _dict_to_article(self, data: Dict[str, Any]) -> Optional[NormalizedArticle]:
         """Convert Firestore dictionary to article."""
         try:
             from src.models.content import ContentType, ProcessingStatus
 
             # Convert string enums back to enum objects
             content_type = ContentType(data.get("content_type", "article"))
-            processing_status = ProcessingStatus(
-                data.get("processing_status", "pending"))
+            processing_status = ProcessingStatus(data.get("processing_status", "pending"))
 
             # Convert datetime strings back to datetime objects
             published_at = data.get("published_at")
             if isinstance(published_at, str):
-                published_at = datetime.fromisoformat(
-                    published_at.replace("Z", "+00:00"))
+                published_at = datetime.fromisoformat(published_at.replace("Z", "+00:00"))
 
             updated_at = data.get("updated_at")
             if isinstance(updated_at, str):
-                updated_at = datetime.fromisoformat(
-                    updated_at.replace("Z", "+00:00"))
+                updated_at = datetime.fromisoformat(updated_at.replace("Z", "+00:00"))
 
             return NormalizedArticle(
                 id=data.get("id", ""),
@@ -498,9 +460,8 @@ class FirestoreService:
             logger.error(f"Error converting dict to article: {e}")
             return None
 
-    def _source_config_to_dict(
-            self, source_config: SourceConfig) -> Dict[str, Any]:
-    """Convert source config to Firestore-compatible dictionary."""
+    def _source_config_to_dict(self, source_config: SourceConfig) -> Dict[str, Any]:
+        """Convert source config to Firestore-compatible dictionary."""
         return {
             "id": source_config.id,
             "name": source_config.name,
@@ -524,8 +485,7 @@ class FirestoreService:
             "updated_at": datetime.utcnow(),
         }
 
-    def _dict_to_source_config(
-            self, data: Dict[str, Any]) -> Optional[SourceConfig]:
+    def _dict_to_source_config(self, data: Dict[str, Any]) -> Optional[SourceConfig]:
         """Convert Firestore dictionary to source config."""
         try:
             from src.models.content import SourceType
@@ -536,13 +496,11 @@ class FirestoreService:
             # Convert datetime strings back to datetime objects
             last_checked = data.get("last_checked")
             if isinstance(last_checked, str):
-                last_checked = datetime.fromisoformat(
-                    last_checked.replace("Z", "+00:00"))
+                last_checked = datetime.fromisoformat(last_checked.replace("Z", "+00:00"))
 
             last_success = data.get("last_success")
             if isinstance(last_success, str):
-                last_success = datetime.fromisoformat(
-                    last_success.replace("Z", "+00:00"))
+                last_success = datetime.fromisoformat(last_success.replace("Z", "+00:00"))
 
             return SourceConfig(
                 id=data.get("id", ""),
@@ -570,7 +528,7 @@ class FirestoreService:
             return None
 
     def _batch_to_dict(self, batch: ProcessingBatch) -> Dict[str, Any]:
-    """Convert batch to Firestore-compatible dictionary."""
+        """Convert batch to Firestore-compatible dictionary."""
         return {
             "batch_id": batch.batch_id,
             "source_id": batch.source_id,
@@ -587,8 +545,7 @@ class FirestoreService:
             "updated_at": datetime.utcnow(),
         }
 
-    def _dict_to_batch(self, data: Dict[str, Any]
-                       ) -> Optional[ProcessingBatch]:
+    def _dict_to_batch(self, data: Dict[str, Any]) -> Optional[ProcessingBatch]:
         """Convert Firestore dictionary to batch."""
         try:
             from src.models.content import ProcessingStatus
@@ -599,18 +556,15 @@ class FirestoreService:
             # Convert datetime strings back to datetime objects
             created_at = data.get("created_at")
             if isinstance(created_at, str):
-                created_at = datetime.fromisoformat(
-                    created_at.replace("Z", "+00:00"))
+                created_at = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
 
             started_at = data.get("started_at")
             if isinstance(started_at, str):
-                started_at = datetime.fromisoformat(
-                    started_at.replace("Z", "+00:00"))
+                started_at = datetime.fromisoformat(started_at.replace("Z", "+00:00"))
 
             completed_at = data.get("completed_at")
             if isinstance(completed_at, str):
-                completed_at = datetime.fromisoformat(
-                    completed_at.replace("Z", "+00:00"))
+                completed_at = datetime.fromisoformat(completed_at.replace("Z", "+00:00"))
 
             return ProcessingBatch(
                 batch_id=data.get("batch_id", ""),
@@ -632,7 +586,7 @@ class FirestoreService:
             return None
 
     def _metrics_to_dict(self, metrics: ContentMetrics) -> Dict[str, Any]:
-    """Convert metrics to Firestore-compatible dictionary."""
+        """Convert metrics to Firestore-compatible dictionary."""
         return {
             "source_id": metrics.source_id,
             "date": metrics.date,
@@ -648,8 +602,7 @@ class FirestoreService:
             "updated_at": datetime.utcnow(),
         }
 
-    def _dict_to_metrics(
-            self, data: Dict[str, Any]) -> Optional[ContentMetrics]:
+    def _dict_to_metrics(self, data: Dict[str, Any]) -> Optional[ContentMetrics]:
         """Convert Firestore dictionary to metrics."""
         try:
             # Convert date string back to date object
