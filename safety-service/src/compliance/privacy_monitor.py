@@ -35,7 +35,7 @@ class PrivacyComplianceMonitor:
         }
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the privacy monitor"""
+    """Initialize the privacy monitor"""
         try:
             self.is_initialized = True
             logger.info("Privacy compliance monitor initialized")
@@ -45,7 +45,7 @@ class PrivacyComplianceMonitor:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup resources"""
+    """Cleanup resources"""
         try:
             self.is_initialized = False
             logger.info("Privacy compliance monitor cleanup completed")
@@ -448,7 +448,7 @@ class PrivacyComplianceMonitor:
             return []
 
     async def get_compliance_status(self) -> Dict[str, Any]:
-        """Get current privacy compliance status"""
+    """Get current privacy compliance status"""
         try:
             return {
                 "enabled": self.config.privacy_enabled,
@@ -467,7 +467,7 @@ class PrivacyComplianceMonitor:
             return {"error": str(e)}
 
     async def generate_detailed_report(self) -> Dict[str, Any]:
-        """Generate detailed privacy compliance report"""
+    """Generate detailed privacy compliance report"""
         try:
             report = {
                 "report_type": "privacy_detailed",

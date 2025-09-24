@@ -114,7 +114,7 @@ class TestDeduplicationPipeline:
 
     @pytest.mark.asyncio
     async def test_get_pipeline_stats(self, deduplication_pipeline) -> Dict[str, Any]:
-        """Test pipeline statistics."""
+    """Test pipeline statistics."""
         # Mock Redis hgetall
         deduplication_pipeline.redis.hgetall = AsyncMock(
             return_value={b"articles_processed": b"100", b"duplicates_found": b"25"}
@@ -170,7 +170,7 @@ class TestDeduplicationService:
 
     @pytest.mark.asyncio
     async def test_get_service_stats(self, deduplication_service) -> Dict[str, Any]:
-        """Test service statistics."""
+    """Test service statistics."""
         # Mock the pipeline's get_pipeline_stats method
         deduplication_service.pipeline.get_pipeline_stats = AsyncMock(
             return_value={"articles_processed": 100, "duplicates_found": 25}
@@ -184,7 +184,7 @@ class TestDeduplicationService:
 
     @pytest.mark.asyncio
     async def test_health_check(self, deduplication_service) -> Dict[str, Any]:
-        """Test health check."""
+    """Test health check."""
         # Mock the pipeline's health_check method
         deduplication_service.pipeline.health_check = AsyncMock(
             return_value={

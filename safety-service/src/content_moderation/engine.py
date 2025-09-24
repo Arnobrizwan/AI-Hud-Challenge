@@ -49,7 +49,7 @@ class ContentModerationEngine:
         self.external_apis = ExternalModerationAPIs()
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the content moderation engine"""
+    """Initialize the content moderation engine"""
         try:
             # Initialize all detectors
             await self.toxicity_detector.initialize()
@@ -69,7 +69,7 @@ class ContentModerationEngine:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup resources"""
+    """Cleanup resources"""
         try:
     await self.toxicity_detector.cleanup()
             await self.hate_speech_detector.cleanup()
@@ -285,7 +285,7 @@ class ContentModerationEngine:
             return {}
 
     async def check_url_safety(self, urls: List[str]) -> Dict[str, Any]:
-        """Check URL safety"""
+    """Check URL safety"""
         try:
             url_results = {}
 

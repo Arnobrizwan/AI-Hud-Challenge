@@ -569,8 +569,7 @@ class SLOMonitor:
         logger.info("SLO monitor initialized")
 
     async def load_slo_definitions(self, definitions: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Load SLO definitions from configuration"""
-
+    """Load SLO definitions from configuration"""
         for slo_config in definitions:
             sli_definitions = []
             for sli_config in slo_config.get("sli_definitions", []):
@@ -599,12 +598,12 @@ class SLOMonitor:
             self.slo_definitions[slo.id] = slo
 
     async def setup_sli_collection(self) -> Dict[str, Any]:
-        """Set up SLI data collection"""
+    """Set up SLI data collection"""
         # This would set up metrics collection for SLIs
         logger.info("SLI collection setup completed")
 
     async def initialize_error_budgets(self) -> Dict[str, Any]:
-        """Initialize error budgets for all SLOs"""
+    """Initialize error budgets for all SLOs"""
         for slo in self.slo_definitions.values():
             error_budget = ErrorBudget(
                 slo_id=slo.id,
@@ -618,11 +617,11 @@ class SLOMonitor:
             self.error_budget_manager.error_budgets[slo.id] = error_budget
 
     async def start_slo_monitoring(self) -> Dict[str, Any]:
-        """Start SLO monitoring loops"""
+    """Start SLO monitoring loops"""
         asyncio.create_task(self._slo_monitoring_loop())
 
     async def _slo_monitoring_loop(self) -> Dict[str, Any]:
-        """Background SLO monitoring loop"""
+    """Background SLO monitoring loop"""
         while True:
             try:
     await self.monitor_all_slos()
@@ -632,8 +631,7 @@ class SLOMonitor:
                 await asyncio.sleep(300)
 
     async def monitor_all_slos(self) -> Dict[str, Any]:
-        """Monitor all SLOs"""
-
+    """Monitor all SLOs"""
         for slo in self.slo_definitions.values():
             try:
     await self.monitor_slo(slo)
@@ -641,8 +639,7 @@ class SLOMonitor:
                 logger.error(f"Failed to monitor SLO {slo.id}: {str(e)}")
 
     async def monitor_slo(self, slo: SLODefinition) -> Dict[str, Any]:
-        """Monitor individual SLO"""
-
+    """Monitor individual SLO"""
         # Calculate SLI results
         sli_results = []
         for sli in slo.sli_definitions:
@@ -756,7 +753,7 @@ class SLOMonitor:
         return recommendations
 
     async def get_overall_slo_status(self) -> Dict[str, Any]:
-        """Get overall SLO status across all SLOs"""
+    """Get overall SLO status across all SLOs"""
         slo_statuses = []
         for slo_id in self.slo_definitions.keys():
             try:
@@ -783,6 +780,6 @@ class SLOMonitor:
         }
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup SLO monitor"""
+    """Cleanup SLO monitor"""
         self.is_initialized = False
         logger.info("SLO monitor cleaned up")

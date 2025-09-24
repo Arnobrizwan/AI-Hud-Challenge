@@ -56,7 +56,7 @@ class MemoryCache:
         self._stats = {"hits": 0, "misses": 0, "evictions": 0, "expired": 0}
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize memory cache"""
+    """Initialize memory cache"""
         if self._initialized:
             return
 
@@ -76,7 +76,7 @@ class MemoryCache:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup memory cache"""
+    """Cleanup memory cache"""
         if self._cleanup_task:
             self._cleanup_task.cancel()
             try:
@@ -218,7 +218,7 @@ class MemoryCache:
             return count
 
     async def get_statistics(self) -> Dict[str, Any]:
-        """Get cache statistics"""
+    """Get cache statistics"""
         if not self._initialized:
             return {}
 
@@ -242,7 +242,7 @@ class MemoryCache:
             }
 
     async def _cleanup_expired_entries(self) -> Dict[str, Any]:
-        """Background task to clean up expired entries"""
+    """Background task to clean up expired entries"""
         while True:
             try:
     await asyncio.sleep(60)  # Run every minute
@@ -272,7 +272,7 @@ class MemoryCache:
                 logger.error(f"Error in cache cleanup task: {e}")
 
     async def _evict_if_needed(self) -> Dict[str, Any]:
-        """Evict entries if cache is full"""
+    """Evict entries if cache is full"""
         while len(self._cache) > self.max_size:
             # Remove least recently used entry
             key, entry = self._cache.popitem(last=False)

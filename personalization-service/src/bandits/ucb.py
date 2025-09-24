@@ -6,7 +6,6 @@ from typing import Dict, List, Tuple
 import numpy as np
 import structlog
 
-
 logger = structlog.get_logger()
 
 

@@ -43,7 +43,7 @@ class AdvancedRateLimiter:
         self.user_abuse_scores = {}
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the rate limiter"""
+    """Initialize the rate limiter"""
         try:
             # Initialize Redis connection
             self.redis_client = redis.from_url(
@@ -66,7 +66,7 @@ class AdvancedRateLimiter:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup resources"""
+    """Cleanup resources"""
         try:
             if self.redis_client:
     await self.redis_client.close()
@@ -304,7 +304,7 @@ class AdvancedRateLimiter:
             return {"error": str(e)}
 
     async def get_system_statistics(self) -> Dict[str, Any]:
-        """Get overall rate limiting system statistics"""
+    """Get overall rate limiting system statistics"""
         try:
             # Get statistics from all strategies
             stats_checks = await asyncio.gather(
@@ -354,7 +354,7 @@ class AdvancedRateLimiter:
                 f"Failed to update reputation for user {user_id}: {str(e)}")
 
     async def update_user_abuse_score(self, user_id: str, abuse_score: float) -> Dict[str, Any]:
-        """Update user abuse score"""
+    """Update user abuse score"""
         try:
             self.user_abuse_scores[user_id] = max(0.0, min(1.0, abuse_score))
             logger.debug(
@@ -384,7 +384,7 @@ class AdvancedRateLimiter:
             logger.error(f"Rate limit penalty application failed: {str(e)}")
 
     async def remove_rate_limit_penalty(self, user_id: str) -> Dict[str, Any]:
-        """Remove rate limit penalty from a user"""
+    """Remove rate limit penalty from a user"""
         try:
             # Remove penalty from all strategies
             await self.sliding_window.remove_penalty(user_id)

@@ -78,7 +78,7 @@ class HeadlineGenerator:
         }
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize models and tokenizers"""
+    """Initialize models and tokenizers"""
         try:
             logger.info("Initializing headline generator...")
 
@@ -108,7 +108,7 @@ except Exception as e:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Clean up resources"""
+    """Clean up resources"""
         try:
             if self.t5_model:
                 del self.t5_model
@@ -654,7 +654,7 @@ except Exception as e:
             return 0.5
 
     async def get_status(self) -> Dict[str, Any]:
-        """Get headline generator status"""
+    """Get headline generator status"""
         return {
             "initialized": self._initialized,
             "model": settings.T5_MODEL_PATH,

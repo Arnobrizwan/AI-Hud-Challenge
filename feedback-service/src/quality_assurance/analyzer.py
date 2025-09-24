@@ -45,8 +45,7 @@ class QualityAnalyzer:
 
             # Metadata quality score
             if hasattr(feedback, "metadata") and feedback.metadata:
-                metadata_score = self.analyze_metadata_quality(
-                    feedback.metadata)
+                metadata_score = self.analyze_metadata_quality(feedback.metadata)
                 scores.append(metadata_score)
 
             # Calculate weighted average
@@ -232,10 +231,8 @@ class BiasDetector:
             bias_scores = {}
 
             for bias_type, keywords in self.bias_keywords.items():
-                keyword_count = sum(
-                    1 for keyword in keywords if keyword in text_lower)
-                bias_scores[bias_type] = min(
-                    1.0, keyword_count / 5.0)  # Normalize
+                keyword_count = sum(1 for keyword in keywords if keyword in text_lower)
+                bias_scores[bias_type] = min(1.0, keyword_count / 5.0)  # Normalize
 
             return bias_scores
 
@@ -255,7 +252,7 @@ class FactChecker:
         ]
 
     async def check_facts(self, text: str) -> Dict[str, Any]:
-        """Check factual claims in text"""
+    """Check factual claims in text"""
         try:
             facts_found = []
 
@@ -271,10 +268,7 @@ class FactChecker:
 
         except Exception as e:
             logger.error("Error checking facts", error=str(e))
-            return {
-                "facts_found": 0,
-                "factual_claims": [],
-                "needs_verification": False}
+            return {"facts_found": 0, "factual_claims": [], "needs_verification": False}
 
 
 class ReadabilityAnalyzer:
@@ -301,8 +295,7 @@ class ReadabilityAnalyzer:
             avg_chars_per_word = sum(len(word) for word in words) / len(words)
 
             # Simple readability score (higher is more readable)
-            readability_score = 1.0 - \
-                min(1.0, (avg_words_per_sentence - 10) / 20)
+            readability_score = 1.0 - min(1.0, (avg_words_per_sentence - 10) / 20)
             readability_score *= 1.0 - min(1.0, (avg_chars_per_word - 4) / 6)
 
             return max(0.0, min(1.0, readability_score))

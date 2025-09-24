@@ -36,7 +36,7 @@ class DataLifecycleManager:
         self._retention_scheduler: Optional[asyncio.Task] = None
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize data lifecycle management components"""
+    """Initialize data lifecycle management components"""
         if self._initialized:
             return
 
@@ -67,7 +67,7 @@ class DataLifecycleManager:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup data lifecycle management components"""
+    """Cleanup data lifecycle management components"""
         logger.info("Cleaning up Data Lifecycle Manager...")
 
         # Stop retention scheduler
@@ -96,7 +96,7 @@ class DataLifecycleManager:
         logger.info("Data Lifecycle Manager cleanup complete")
 
     async def start_retention_scheduler(self) -> Dict[str, Any]:
-        """Start background retention policy scheduler"""
+    """Start background retention policy scheduler"""
         if not self._initialized:
             raise RuntimeError("Data Lifecycle Manager not initialized")
 
@@ -108,7 +108,7 @@ class DataLifecycleManager:
         logger.info("Retention scheduler started")
 
     async def _retention_scheduler_loop(self) -> Dict[str, Any]:
-        """Background loop for retention policy execution"""
+    """Background loop for retention policy execution"""
         while True:
             try:
     await asyncio.sleep(3600)  # Run every hour
@@ -437,7 +437,7 @@ class DataLifecycleManager:
             raise
 
     async def restore_backup(self, backup_name: str) -> Dict[str, Any]:
-        """Restore from backup"""
+    """Restore from backup"""
         if not self._initialized:
             raise RuntimeError("Data Lifecycle Manager not initialized")
 
@@ -455,7 +455,7 @@ class DataLifecycleManager:
             raise
 
     async def log_gdpr_request(self, gdpr_request: GDPRRequest) -> Dict[str, Any]:
-        """Log GDPR request for audit purposes"""
+    """Log GDPR request for audit purposes"""
         try:
             # This would typically log to an audit database
             logger.info(
@@ -471,7 +471,7 @@ class DataLifecycleManager:
             logger.error(f"Failed to log GDPR request: {e}")
 
     async def get_lifecycle_statistics(self) -> Dict[str, Any]:
-        """Get data lifecycle statistics"""
+    """Get data lifecycle statistics"""
         if not self._initialized:
             return {}
 

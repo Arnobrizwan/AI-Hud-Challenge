@@ -216,7 +216,7 @@ class RedisClient:
             return False
 
     async def hgetall(self, name: str) -> Dict[str, Any]:
-        """Get all hash fields."""
+    """Get all hash fields."""
         if not self.client:
             return {}
 
@@ -298,7 +298,7 @@ class RedisClient:
             return 0
 
     async def get_health(self) -> Dict[str, Any]:
-        """Get Redis health status."""
+    """Get Redis health status."""
         if not self.client:
             return {"status": "disconnected", "error": "No client"}
 

@@ -32,7 +32,7 @@ class SafetyMonitoringEngine:
         self.audit_logger = None
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the safety monitoring engine"""
+    """Initialize the safety monitoring engine"""
         try:
             # Initialize all components
             await self.initialize_components()
@@ -46,7 +46,7 @@ class SafetyMonitoringEngine:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup resources"""
+    """Cleanup resources"""
         try:
             # Cleanup all components
             await self.cleanup_components()
@@ -262,7 +262,7 @@ class SafetyMonitoringEngine:
             logger.error(f"Safety check logging failed: {str(e)}")
 
     async def initialize_components(self) -> Dict[str, Any]:
-        """Initialize all safety monitoring components"""
+    """Initialize all safety monitoring components"""
         try:
             # Placeholder for component initialization
             # In a real implementation, this would initialize:
@@ -282,7 +282,7 @@ class SafetyMonitoringEngine:
             raise
 
     async def cleanup_components(self) -> Dict[str, Any]:
-        """Cleanup all safety monitoring components"""
+    """Cleanup all safety monitoring components"""
         try:
             # Placeholder for component cleanup
             # In a real implementation, this would cleanup:
@@ -297,7 +297,7 @@ class SafetyMonitoringEngine:
             logger.error(f"Component cleanup failed: {str(e)}")
 
     async def get_system_health(self) -> Dict[str, Any]:
-        """Get system health status"""
+    """Get system health status"""
         try:
             return {
                 "is_initialized": self.is_initialized,

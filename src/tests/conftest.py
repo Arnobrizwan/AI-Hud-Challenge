@@ -124,7 +124,9 @@ def invalid_jwt_token() -> str:
 @pytest.fixture(scope="function")
 def expired_jwt_token() -> str:
     """Create an expired JWT token for testing."""
-    return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0LXVzZXItMTIzIiwiZXhwIjoxNTc3ODM2ODAwfQ.expired-signature"
+    return (
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0LXVzZXItMTIzIiwiZXhwIjoxNTc3ODM2ODAwfQ.expired-signature"
+    )
 
 
 # Mock rate limiter fixture
@@ -200,11 +202,7 @@ def sample_filter_data():
 @pytest.fixture(scope="function")
 def performance_test_config():
     """Configuration for performance testing."""
-    return {
-        "concurrent_requests": 100,
-        "total_requests": 1000,
-        "timeout": 30.0,
-        "rate_limit": 1000}
+    return {"concurrent_requests": 100, "total_requests": 1000, "timeout": 30.0, "rate_limit": 1000}
 
 
 # Security testing fixtures
@@ -256,7 +254,7 @@ class AsyncTestCase:
 
     @staticmethod
     async def wait_for_condition(condition_func, timeout=5.0, interval=0.1) -> Dict[str, Any]:
-        """Wait for a condition to be true."""
+    """Wait for a condition to be true."""
         import time
 
         start_time = time.time()
@@ -270,7 +268,7 @@ class AsyncTestCase:
 
     @staticmethod
     async def assert_eventually(assertion_func, timeout=5.0, interval=0.1) -> Dict[str, Any]:
-        """Assert that a condition becomes true within timeout."""
+    """Assert that a condition becomes true within timeout."""
         success = await AsyncTestCase.wait_for_condition(assertion_func, timeout, interval)
         if not success:
             raise AssertionError(f"Condition not met within {timeout} seconds")
@@ -280,13 +278,7 @@ class AsyncTestCase:
 def pytest_configure(config):
     """Configure pytest markers."""
     config.addinivalue_line("markers", "unit: mark test as a unit test")
-    config.addinivalue_line(
-        "markers",
-        "integration: mark test as an integration test")
+    config.addinivalue_line("markers", "integration: mark test as an integration test")
     config.addinivalue_line("markers", "slow: mark test as slow running")
-    config.addinivalue_line(
-        "markers",
-        "security: mark test as a security test")
-    config.addinivalue_line(
-        "markers",
-        "performance: mark test as a performance test")
+    config.addinivalue_line("markers", "security: mark test as a security test")
+    config.addinivalue_line("markers", "performance: mark test as a performance test")

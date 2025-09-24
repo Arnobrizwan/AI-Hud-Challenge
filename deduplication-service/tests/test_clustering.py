@@ -219,7 +219,7 @@ class TestEventGroupingEngine:
 
     @pytest.mark.asyncio
     async def test_get_source_authority(self, event_grouping_engine) -> Dict[str, Any]:
-        """Test source authority computation."""
+    """Test source authority computation."""
         authority = await event_grouping_engine._get_source_authority("reuters")
         assert isinstance(authority, float)
         assert 0.0 <= authority <= 1.0

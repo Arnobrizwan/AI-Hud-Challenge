@@ -34,7 +34,7 @@ class TopicClassifier:
         asyncio.create_task(self._initialize_model())
 
     def _load_topic_taxonomy(self) -> Dict[str, Any]:
-        """Load hierarchical topic taxonomy."""
+    """Load hierarchical topic taxonomy."""
         return {
             "technology": {
                 "artificial_intelligence": {
@@ -124,11 +124,9 @@ class TopicClassifier:
         }
 
     async def _initialize_model(self) -> Dict[str, Any]:
-        """Initialize or load the topic classification model."""
+    """Initialize or load the topic classification model."""
         try:
-            model_path = os.path.join(
-                settings.model_cache_dir,
-                "topic_classifier.joblib")
+            model_path = os.path.join(settings.model_cache_dir, "topic_classifier.joblib")
 
             if os.path.exists(model_path):
                 # Load existing model
@@ -148,7 +146,7 @@ class TopicClassifier:
             self.model_loaded = False
 
     async def _train_model(self) -> Dict[str, Any]:
-        """Train the topic classification model."""
+    """Train the topic classification model."""
         try:
             # This is a simplified training process
             # In practice, you'd use a large dataset of labeled content
@@ -157,8 +155,7 @@ class TopicClassifier:
             training_data = self._create_training_data()
 
             if not training_data:
-                logger.warning(
-                    "No training data available, using keyword-based classification")
+                logger.warning("No training data available, using keyword-based classification")
                 self.model_loaded = False
                 return
 
@@ -167,27 +164,20 @@ class TopicClassifier:
             labels = [item["labels"] for item in training_data]
 
             # Create vectorizer
-            self.vectorizer = TfidfVectorizer(
-                max_features=10000, ngram_range=(1, 2), stop_words="english"
-            )
+            self.vectorizer = TfidfVectorizer(max_features=10000, ngram_range=(1, 2), stop_words="english")
 
             # Create multi-label classifier
-            self.model = OneVsRestClassifier(
-                LogisticRegression(
-                    random_state=42, max_iter=1000))
+            self.model = OneVsRestClassifier(LogisticRegression(random_state=42, max_iter=1000))
 
             # Create pipeline
-            pipeline = Pipeline(
-                [("vectorizer", self.vectorizer), ("classifier", self.model)])
+            pipeline = Pipeline([("vectorizer", self.vectorizer), ("classifier", self.model)])
 
             # Train model
             pipeline.fit(texts, labels)
 
             # Save model
             os.makedirs(settings.model_cache_dir, exist_ok=True)
-            model_path = os.path.join(
-                settings.model_cache_dir,
-                "topic_classifier.joblib")
+            model_path = os.path.join(settings.model_cache_dir, "topic_classifier.joblib")
 
             joblib.dump(
                 {
@@ -281,10 +271,7 @@ class TopicClassifier:
         extract_topics(self.taxonomy)
         return topics
 
-    async def classify_topics(
-            self,
-            content: ExtractedContent,
-            language: str = "en") -> List[Topic]:
+    async def classify_topics(self, content: ExtractedContent, language: str = "en") -> List[Topic]:
         """Classify topics for content."""
         try:
             # Prepare text for classification
@@ -325,10 +312,7 @@ class TopicClassifier:
             return topics
 
         except Exception as e:
-            logger.error(
-                "Topic classification failed",
-                content_id=content.id,
-                error=str(e))
+            logger.error("Topic classification failed", content_id=content.id, error=str(e))
             return []
 
     async def _predict_with_model(self, text: str) -> List[Dict[str, Any]]:
@@ -439,12 +423,9 @@ class TopicClassifier:
             }
 
             for topic, info in topic_keywords.items():
-                keyword_matches = sum(
-                    1 for keyword in info["keywords"] if keyword in text_lower)
+                keyword_matches = sum(1 for keyword in info["keywords"] if keyword in text_lower)
                 if keyword_matches > 0:
-                    confidence = min(keyword_matches /
-                                     len(info["keywords"]) *
-                                     info["weight"], 1.0)
+                    confidence = min(keyword_matches / len(info["keywords"]) * info["weight"], 1.0)
 
                     results.append(
                         {
@@ -464,7 +445,7 @@ class TopicClassifier:
             return []
 
     def _get_topic_info(self, topic_name: str) -> Dict[str, Any]:
-        """Get detailed information about a topic."""
+    """Get detailed information about a topic."""
         # Parse hierarchy from topic name
         hierarchy_parts = topic_name.split("_")
 
@@ -481,7 +462,7 @@ class TopicClassifier:
         }
 
     async def get_topic_statistics(self) -> Dict[str, Any]:
-        """Get topic classification statistics."""
+    """Get topic classification statistics."""
         return {
             "model_loaded": self.model_loaded,
             "total_topics": len(self._flatten_taxonomy()),

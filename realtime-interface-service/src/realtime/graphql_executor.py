@@ -69,7 +69,7 @@ class DataLoaderRegistry:
         self.loaders: Dict[str, Any] = {}
 
     def create_loaders(self) -> Dict[str, Any]:
-        """Create DataLoader instances"""
+    """Create DataLoader instances"""
         return {
             "article_loader": self.create_article_loader(),
             "user_loader": self.create_user_loader(),
@@ -100,7 +100,7 @@ class DataLoaderRegistry:
             *[self.load_notification(key) for key in keys])
 
     async def load_article(self, article_id: str) -> Dict[str, Any]:
-        """Load single article"""
+    """Load single article"""
         # This would fetch from database or cache
         return {
             "id": article_id,
@@ -110,14 +110,14 @@ class DataLoaderRegistry:
         }
 
     async def load_user(self, user_id: str) -> Dict[str, Any]:
-        """Load single user"""
+    """Load single user"""
         return {
             "id": user_id,
             "name": f"User {user_id}",
             "email": f"user{user_id}@example.com"}
 
     async def load_category(self, category_id: str) -> Dict[str, Any]:
-        """Load single category"""
+    """Load single category"""
         return {
             "id": category_id,
             "name": f"Category {category_id}",
@@ -125,7 +125,7 @@ class DataLoaderRegistry:
         }
 
     async def load_notification(self, notification_id: str) -> Dict[str, Any]:
-        """Load single notification"""
+    """Load single notification"""
         return {
             "id": notification_id,
             "title": f"Notification {notification_id}",
@@ -393,7 +393,7 @@ class GraphQLRealtimeExecutor:
 
     # Query resolvers
     async def resolve_article(self, root, info, id: str) -> Dict[str, Any]:
-        """Resolve single article query"""
+    """Resolve single article query"""
         return await self.data_loaders.load_article(id)
 
     async def resolve_articles(
@@ -413,7 +413,7 @@ class GraphQLRealtimeExecutor:
         ]
 
     async def resolve_user_preferences(self, root, info) -> Dict[str, Any]:
-        """Resolve user preferences query"""
+    """Resolve user preferences query"""
         return {
             "categories": ["technology", "science"],
             "sources": ["techcrunch", "wired"],
@@ -500,7 +500,7 @@ class GraphQLRealtimeExecutor:
         return article
 
     async def execute_request(self, request: Request) -> Dict[str, Any]:
-        """Execute GraphQL request"""
+    """Execute GraphQL request"""
         try:
             body = await request.json()
             query = body.get("query")
@@ -586,7 +586,7 @@ class GraphQLRealtimeExecutor:
             yield {"errors": [{"message": str(e)}]}
 
     async def handle_subscription_websocket(self, websocket: WebSocket) -> Dict[str, Any]:
-        """Handle GraphQL subscription WebSocket connection"""
+    """Handle GraphQL subscription WebSocket connection"""
         await websocket.accept()
 
         try:

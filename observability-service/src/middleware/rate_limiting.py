@@ -26,7 +26,7 @@ class RateLimitMiddleware:
         self.last_cleanup = time.time()
 
     async def __call__(self, scope, receive, send) -> Dict[str, Any]:
-        if scope["type"] == "http":
+    if scope["type"] == "http":
             request = Request(scope, receive)
 
             # Skip rate limiting for health checks
@@ -122,8 +122,7 @@ class RateLimitMiddleware:
         )
 
     async def _cleanup_old_entries(self) -> Dict[str, Any]:
-        """Cleanup old rate limiting entries"""
-
+    """Cleanup old rate limiting entries"""
         current_time = time.time()
         if current_time - self.last_cleanup < self.cleanup_interval:
             return

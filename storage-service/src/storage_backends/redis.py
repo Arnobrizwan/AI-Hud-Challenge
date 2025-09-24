@@ -27,7 +27,7 @@ class RedisManager:
         self._initialized = False
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize Redis client"""
+    """Initialize Redis client"""
         if self._initialized:
             return
 
@@ -57,7 +57,7 @@ class RedisManager:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup Redis client"""
+    """Cleanup Redis client"""
         if self.redis_client:
     await self.redis_client.close()
             self.redis_client = None
@@ -259,7 +259,7 @@ class RedisManager:
             return 0
 
     async def get_cache_stats(self) -> Dict[str, Any]:
-        """Get Redis cache statistics"""
+    """Get Redis cache statistics"""
         if not self._initialized or not self.redis_client:
             raise RuntimeError("Redis Manager not initialized")
 
@@ -378,7 +378,7 @@ class RedisManager:
         return (hits / total) * 100
 
     async def _invalidate_search_caches_containing(self, article_id: str) -> Dict[str, Any]:
-        """Invalidate search caches that might contain the article"""
+    """Invalidate search caches that might contain the article"""
         try:
             # This is a simplified approach - in production, you might want to
             # maintain a mapping of which search results contain which articles

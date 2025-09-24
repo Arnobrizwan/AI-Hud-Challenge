@@ -51,9 +51,7 @@ async def evaluate_single_model(
     try:
         logger.info(f"Evaluating model {model_name} offline")
 
-        result = await evaluation_engine.offline_evaluator.evaluate_model(
-            model_config, datasets, metrics
-        )
+        result = await evaluation_engine.offline_evaluator.evaluate_model(model_config, datasets, metrics)
 
         return {
             "status": "success",

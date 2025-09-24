@@ -20,7 +20,7 @@ class AuthMiddleware:
         self.app = app
 
     async def __call__(self, scope, receive, send) -> Dict[str, Any]:
-        if scope["type"] == "http":
+    if scope["type"] == "http":
             request = Request(scope, receive)
 
             # Skip auth for health check and docs

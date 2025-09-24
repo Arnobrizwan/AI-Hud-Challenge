@@ -147,7 +147,7 @@ class BiasDetector:
         }
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize bias detection models"""
+    """Initialize bias detection models"""
         try:
             logger.info("Initializing bias detector...")
 
@@ -192,7 +192,7 @@ except Exception as e:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Clean up resources"""
+    """Clean up resources"""
         try:
             if self.political_classifier:
                 del self.political_classifier
@@ -699,7 +699,7 @@ except Exception as e:
         return detected_biases
 
     async def get_status(self) -> Dict[str, Any]:
-        """Get bias detector status"""
+    """Get bias detector status"""
         return {
             "initialized": self._initialized,
             "political_classifier_available": self.political_classifier is not None,

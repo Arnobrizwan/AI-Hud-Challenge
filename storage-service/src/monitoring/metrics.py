@@ -56,7 +56,7 @@ class MetricsCollector:
         self._metrics_task: asyncio.Task = None
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize metrics collection"""
+    """Initialize metrics collection"""
         if self._initialized:
             return
 
@@ -78,7 +78,7 @@ class MetricsCollector:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup metrics collection"""
+    """Cleanup metrics collection"""
         if self._metrics_task:
             self._metrics_task.cancel()
             try:
@@ -90,7 +90,7 @@ class MetricsCollector:
         logger.info("Metrics Collector cleanup complete")
 
     async def start_metrics_collection(self) -> Dict[str, Any]:
-        """Start background metrics collection"""
+    """Start background metrics collection"""
         if not self._initialized:
             return
 
@@ -101,7 +101,7 @@ class MetricsCollector:
         logger.info("Metrics collection started")
 
     async def _collect_metrics_loop(self) -> Dict[str, Any]:
-        """Background loop for collecting metrics"""
+    """Background loop for collecting metrics"""
         while True:
             try:
     await asyncio.sleep(60)  # Collect every minute
@@ -120,7 +120,7 @@ class MetricsCollector:
                 logger.error(f"Error in metrics collection: {e}")
 
     async def _collect_database_metrics(self) -> Dict[str, Any]:
-        """Collect database-related metrics"""
+    """Collect database-related metrics"""
         try:
             # This would typically query database connection pools
             # For now, we'll use placeholder values
@@ -130,7 +130,7 @@ class MetricsCollector:
             logger.error(f"Failed to collect database metrics: {e}")
 
     async def _collect_cache_metrics(self) -> Dict[str, Any]:
-        """Collect cache-related metrics"""
+    """Collect cache-related metrics"""
         try:
             # This would typically query cache statistics
             # For now, we'll use placeholder values
@@ -140,7 +140,7 @@ class MetricsCollector:
             logger.error(f"Failed to collect cache metrics: {e}")
 
     async def _collect_storage_metrics(self) -> Dict[str, Any]:
-        """Collect storage-related metrics"""
+    """Collect storage-related metrics"""
         try:
             # This would typically query storage backends
             # For now, we'll use placeholder values
@@ -190,7 +190,7 @@ class MetricsCollector:
         FULLTEXT_SEARCH_DURATION.observe(duration)
 
     async def get_metrics(self) -> Dict[str, Any]:
-        """Get current metrics as dictionary"""
+    """Get current metrics as dictionary"""
         try:
             return {
                 "timestamp": datetime.utcnow().isoformat(),

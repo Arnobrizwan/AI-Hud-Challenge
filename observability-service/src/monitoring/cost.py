@@ -108,8 +108,7 @@ class CostCollector:
         self.is_initialized = False
 
     async def initialize(self, config: Dict[str, Any] = None) -> Dict[str, Any]:
-        """Initialize cost collector"""
-
+    """Initialize cost collector"""
         # Set up data sources
         self.data_sources = config.get("data_sources", {}) if config else {}
 
@@ -306,7 +305,7 @@ class CostAnalyzer:
         self.optimizations = []
 
     async def analyze_costs(self, cost_data: List[CostData]) -> Dict[str, Any]:
-        """Analyze cost data and generate insights"""
+    """Analyze cost data and generate insights"""
         self.cost_data = cost_data
 
         # Calculate total costs
@@ -363,7 +362,7 @@ class CostAnalyzer:
         return service_costs
 
     def _calculate_trends(self, cost_data: List[CostData]) -> Dict[str, Any]:
-        """Calculate cost trends"""
+    """Calculate cost trends"""
         # Group by day
         daily_costs = {}
         for data in cost_data:
@@ -729,8 +728,7 @@ class CostMonitor:
         self.is_initialized = False
 
     async def initialize(self, config: Dict[str, Any] = None) -> Dict[str, Any]:
-        """Initialize cost monitoring"""
-
+    """Initialize cost monitoring"""
         await self.cost_collector.initialize(config)
         self.is_initialized = True
         logger.info("Cost monitor initialized")
@@ -740,7 +738,7 @@ class CostMonitor:
         return await self.cost_collector.collect_cost_metrics()
 
     async def analyze_costs(self) -> Dict[str, Any]:
-        """Analyze costs and generate insights"""
+    """Analyze costs and generate insights"""
         # Collect fresh cost data
         cost_data = await self.collect_cost_metrics()
 
@@ -805,6 +803,6 @@ class CostMonitor:
                 break
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup cost monitor"""
+    """Cleanup cost monitor"""
         self.is_initialized = False
         logger.info("Cost monitor cleaned up")

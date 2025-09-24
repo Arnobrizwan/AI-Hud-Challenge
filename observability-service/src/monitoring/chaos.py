@@ -107,8 +107,7 @@ class ChaosEngine:
         self.is_initialized = False
 
     async def initialize(self, config: Dict[str, Any] = None) -> Dict[str, Any]:
-        """Initialize chaos engineering"""
-
+    """Initialize chaos engineering"""
         # Load experiment definitions
         await self.load_experiment_definitions(config.get("experiments", []) if config else [])
 
@@ -135,8 +134,7 @@ class ChaosEngine:
             self.experiments[experiment.id] = experiment
 
     async def run_chaos_experiments(self) -> Dict[str, Any]:
-        """Run scheduled chaos experiments"""
-
+    """Run scheduled chaos experiments"""
         for experiment in self.experiments.values():
             if not experiment.enabled:
                 continue
@@ -336,7 +334,7 @@ class ChaosEngine:
         execution.results["kill_percentage"] = kill_percentage
 
     async def _collect_system_metrics(self) -> Dict[str, Any]:
-        """Collect system metrics for experiment analysis"""
+    """Collect system metrics for experiment analysis"""
         try:
             # This would collect actual system metrics
             # For now, return mock data
@@ -539,7 +537,7 @@ class ChaosEngine:
         ]
 
     async def get_reliability_summary(self) -> Dict[str, Any]:
-        """Get overall reliability summary"""
+    """Get overall reliability summary"""
         completed_executions = [
             e for e in self.executions.values() if e.status == ExperimentStatus.COMPLETED]
 
@@ -585,6 +583,6 @@ class ChaosEngine:
         }
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup chaos engine"""
+    """Cleanup chaos engine"""
         self.is_initialized = False
         logger.info("Chaos engine cleaned up")

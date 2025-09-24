@@ -40,7 +40,7 @@ class CacheCoordinator:
         self._initialized = False
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize cache coordination components"""
+    """Initialize cache coordination components"""
         if self._initialized:
             return
 
@@ -71,7 +71,7 @@ class CacheCoordinator:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup cache coordination components"""
+    """Cleanup cache coordination components"""
         logger.info("Cleaning up Cache Coordinator...")
 
         cleanup_tasks = []
@@ -360,7 +360,7 @@ class CacheCoordinator:
             raise
 
     async def get_cache_statistics(self) -> Dict[str, Any]:
-        """Get comprehensive cache statistics"""
+    """Get comprehensive cache statistics"""
         if not self._initialized:
             raise RuntimeError("Cache Coordinator not initialized")
 

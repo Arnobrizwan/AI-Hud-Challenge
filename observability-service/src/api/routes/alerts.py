@@ -85,12 +85,9 @@ class AlertProcessingResult(BaseModel):
 @router.post("/", response_model=AlertResponse)
 async def create_alert(alert_request: AlertRequest) -> Dict[str, Any]:
     """Create new alert"""
-
     try:
         if not observability_engine or not observability_engine.alerting_system:
-            raise HTTPException(
-                status_code=503,
-                detail="Alerting system not available")
+            raise HTTPException(status_code=503, detail="Alerting system not available")
 
         # Create alert
         alert_data = {
@@ -118,8 +115,7 @@ async def create_alert(alert_request: AlertRequest) -> Dict[str, Any]:
 
     except Exception as e:
         logger.error(f"Failed to create alert: {str(e)}")
-        raise HTTPException(status_code=500,
-                            detail=f"Failed to create alert: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to create alert: {str(e)}")
 
 
 @router.get("/", response_model=List[AlertResponse])
@@ -133,9 +129,7 @@ async def get_alerts(
 
     try:
         if not observability_engine or not observability_engine.alerting_system:
-            raise HTTPException(
-                status_code=503,
-                detail="Alerting system not available")
+            raise HTTPException(status_code=503, detail="Alerting system not available")
 
         # Get alerts from alert manager
         alert_manager = observability_engine.alerting_system.alert_manager
@@ -145,16 +139,13 @@ async def get_alerts(
         filtered_alerts = all_alerts
 
         if status:
-            filtered_alerts = [
-                a for a in filtered_alerts if a.status.value == status]
+            filtered_alerts = [a for a in filtered_alerts if a.status.value == status]
 
         if severity:
-            filtered_alerts = [
-                a for a in filtered_alerts if a.severity.value == severity]
+            filtered_alerts = [a for a in filtered_alerts if a.severity.value == severity]
 
         if source:
-            filtered_alerts = [
-                a for a in filtered_alerts if a.source == source]
+            filtered_alerts = [a for a in filtered_alerts if a.source == source]
 
         # Limit results
         filtered_alerts = filtered_alerts[:limit]
@@ -180,28 +171,22 @@ async def get_alerts(
 
     except Exception as e:
         logger.error(f"Failed to get alerts: {str(e)}")
-        raise HTTPException(status_code=500,
-                            detail=f"Failed to get alerts: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get alerts: {str(e)}")
 
 
 @router.get("/{alert_id}", response_model=AlertResponse)
 async def get_alert(alert_id: str) -> Dict[str, Any]:
     """Get specific alert by ID"""
-
     try:
         if not observability_engine or not observability_engine.alerting_system:
-            raise HTTPException(
-                status_code=503,
-                detail="Alerting system not available")
+            raise HTTPException(status_code=503, detail="Alerting system not available")
 
         # Get alert from alert manager
         alert_manager = observability_engine.alerting_system.alert_manager
         alert = await alert_manager.get_alert(alert_id)
 
         if not alert:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Alert {alert_id} not found")
+            raise HTTPException(status_code=404, detail=f"Alert {alert_id} not found")
 
         return AlertResponse(
             id=alert.id,
@@ -219,9 +204,7 @@ async def get_alert(alert_id: str) -> Dict[str, Any]:
         raise
     except Exception as e:
         logger.error(f"Failed to get alert {alert_id}: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get alert {alert_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get alert {alert_id}: {str(e)}")
 
 
 @router.put("/{alert_id}/acknowledge")
@@ -230,18 +213,14 @@ async def acknowledge_alert(alert_id: str, user: str = Body(..., embed=True)):
 
     try:
         if not observability_engine or not observability_engine.alerting_system:
-            raise HTTPException(
-                status_code=503,
-                detail="Alerting system not available")
+            raise HTTPException(status_code=503, detail="Alerting system not available")
 
         # Get alert
         alert_manager = observability_engine.alerting_system.alert_manager
         alert = await alert_manager.get_alert(alert_id)
 
         if not alert:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Alert {alert_id} not found")
+            raise HTTPException(status_code=404, detail=f"Alert {alert_id} not found")
 
         # Acknowledge alert
         alert.status = AlertStatus.ACKNOWLEDGED
@@ -259,9 +238,7 @@ async def acknowledge_alert(alert_id: str, user: str = Body(..., embed=True)):
         raise
     except Exception as e:
         logger.error(f"Failed to acknowledge alert {alert_id}: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to acknowledge alert {alert_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to acknowledge alert {alert_id}: {str(e)}")
 
 
 @router.put("/{alert_id}/resolve")
@@ -270,18 +247,14 @@ async def resolve_alert(alert_id: str, user: str = Body(..., embed=True)):
 
     try:
         if not observability_engine or not observability_engine.alerting_system:
-            raise HTTPException(
-                status_code=503,
-                detail="Alerting system not available")
+            raise HTTPException(status_code=503, detail="Alerting system not available")
 
         # Get alert
         alert_manager = observability_engine.alerting_system.alert_manager
         alert = await alert_manager.get_alert(alert_id)
 
         if not alert:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Alert {alert_id} not found")
+            raise HTTPException(status_code=404, detail=f"Alert {alert_id} not found")
 
         # Resolve alert
         alert.status = AlertStatus.RESOLVED
@@ -298,20 +271,15 @@ async def resolve_alert(alert_id: str, user: str = Body(..., embed=True)):
         raise
     except Exception as e:
         logger.error(f"Failed to resolve alert {alert_id}: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to resolve alert {alert_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to resolve alert {alert_id}: {str(e)}")
 
 
 @router.post("/rules", response_model=AlertRuleResponse)
 async def create_alert_rule(rule_request: AlertRuleRequest) -> Dict[str, Any]:
     """Create new alert rule"""
-
     try:
         if not observability_engine or not observability_engine.alerting_system:
-            raise HTTPException(
-                status_code=503,
-                detail="Alerting system not available")
+            raise HTTPException(status_code=503, detail="Alerting system not available")
 
         # Create alert rule
         rule_config = {
@@ -343,19 +311,15 @@ async def create_alert_rule(rule_request: AlertRuleRequest) -> Dict[str, Any]:
 
     except Exception as e:
         logger.error(f"Failed to create alert rule: {str(e)}")
-        raise HTTPException(status_code=500,
-                            detail=f"Failed to create alert rule: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to create alert rule: {str(e)}")
 
 
 @router.get("/rules", response_model=List[AlertRuleResponse])
 async def get_alert_rules() -> Dict[str, Any]:
     """Get all alert rules"""
-
     try:
         if not observability_engine or not observability_engine.alerting_system:
-            raise HTTPException(
-                status_code=503,
-                detail="Alerting system not available")
+            raise HTTPException(status_code=503, detail="Alerting system not available")
 
         # Get alert rules from alert manager
         alert_manager = observability_engine.alerting_system.alert_manager
@@ -384,27 +348,22 @@ async def get_alert_rules() -> Dict[str, Any]:
 
     except Exception as e:
         logger.error(f"Failed to get alert rules: {str(e)}")
-        raise HTTPException(status_code=500,
-                            detail=f"Failed to get alert rules: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get alert rules: {str(e)}")
 
 
 @router.get("/rules/{rule_id}", response_model=AlertRuleResponse)
 async def get_alert_rule(rule_id: str) -> Dict[str, Any]:
     """Get specific alert rule by ID"""
-
     try:
         if not observability_engine or not observability_engine.alerting_system:
-            raise HTTPException(
-                status_code=503,
-                detail="Alerting system not available")
+            raise HTTPException(status_code=503, detail="Alerting system not available")
 
         # Get alert rule from alert manager
         alert_manager = observability_engine.alerting_system.alert_manager
         rule = alert_manager.rules.get(rule_id)
 
         if not rule:
-            raise HTTPException(status_code=404,
-                                detail=f"Alert rule {rule_id} not found")
+            raise HTTPException(status_code=404, detail=f"Alert rule {rule_id} not found")
 
         return AlertRuleResponse(
             id=rule.id,
@@ -424,90 +383,67 @@ async def get_alert_rule(rule_id: str) -> Dict[str, Any]:
         raise
     except Exception as e:
         logger.error(f"Failed to get alert rule {rule_id}: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get alert rule {rule_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get alert rule {rule_id}: {str(e)}")
 
 
 @router.put("/rules/{rule_id}/enable")
 async def enable_alert_rule(rule_id: str) -> Dict[str, Any]:
     """Enable alert rule"""
-
     try:
         if not observability_engine or not observability_engine.alerting_system:
-            raise HTTPException(
-                status_code=503,
-                detail="Alerting system not available")
+            raise HTTPException(status_code=503, detail="Alerting system not available")
 
         # Get alert rule
         alert_manager = observability_engine.alerting_system.alert_manager
         rule = alert_manager.rules.get(rule_id)
 
         if not rule:
-            raise HTTPException(status_code=404,
-                                detail=f"Alert rule {rule_id} not found")
+            raise HTTPException(status_code=404, detail=f"Alert rule {rule_id} not found")
 
         # Enable rule
         rule.enabled = True
 
-        return {
-            "message": f"Alert rule {rule_id} enabled",
-            "rule_id": rule_id,
-            "enabled": True}
+        return {"message": f"Alert rule {rule_id} enabled", "rule_id": rule_id, "enabled": True}
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Failed to enable alert rule {rule_id}: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to enable alert rule {rule_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to enable alert rule {rule_id}: {str(e)}")
 
 
 @router.put("/rules/{rule_id}/disable")
 async def disable_alert_rule(rule_id: str) -> Dict[str, Any]:
     """Disable alert rule"""
-
     try:
         if not observability_engine or not observability_engine.alerting_system:
-            raise HTTPException(
-                status_code=503,
-                detail="Alerting system not available")
+            raise HTTPException(status_code=503, detail="Alerting system not available")
 
         # Get alert rule
         alert_manager = observability_engine.alerting_system.alert_manager
         rule = alert_manager.rules.get(rule_id)
 
         if not rule:
-            raise HTTPException(status_code=404,
-                                detail=f"Alert rule {rule_id} not found")
+            raise HTTPException(status_code=404, detail=f"Alert rule {rule_id} not found")
 
         # Disable rule
         rule.enabled = False
 
-        return {
-            "message": f"Alert rule {rule_id} disabled",
-            "rule_id": rule_id,
-            "enabled": False}
+        return {"message": f"Alert rule {rule_id} disabled", "rule_id": rule_id, "enabled": False}
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Failed to disable alert rule {rule_id}: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to disable alert rule {rule_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to disable alert rule {rule_id}: {str(e)}")
 
 
 @router.get("/active", response_model=List[AlertResponse])
 async def get_active_alerts() -> Dict[str, Any]:
     """Get active alerts"""
-
     try:
         if not observability_engine or not observability_engine.alerting_system:
-            raise HTTPException(
-                status_code=503,
-                detail="Alerting system not available")
+            raise HTTPException(status_code=503, detail="Alerting system not available")
 
         # Get active alerts
         active_alerts = await observability_engine.alerting_system.alert_manager.get_active_alerts()
@@ -533,21 +469,16 @@ async def get_active_alerts() -> Dict[str, Any]:
 
     except Exception as e:
         logger.error(f"Failed to get active alerts: {str(e)}")
-        raise HTTPException(status_code=500,
-                            detail=f"Failed to get active alerts: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get active alerts: {str(e)}")
 
 
 @router.get("/stats")
-async def get_alert_statistics(
-    time_window: int = Query(3600, description="Time window in seconds")
-):
+async def get_alert_statistics(time_window: int = Query(3600, description="Time window in seconds")):
     """Get alert statistics"""
 
     try:
         if not observability_engine or not observability_engine.alerting_system:
-            raise HTTPException(
-                status_code=503,
-                detail="Alerting system not available")
+            raise HTTPException(status_code=503, detail="Alerting system not available")
 
         # Get alert statistics
         alert_manager = observability_engine.alerting_system.alert_manager
@@ -559,17 +490,13 @@ async def get_alert_statistics(
 
         # Calculate statistics
         total_alerts = len(recent_alerts)
-        active_alerts = len(
-            [a for a in recent_alerts if a.status == AlertStatus.ACTIVE])
-        resolved_alerts = len(
-            [a for a in recent_alerts if a.status == AlertStatus.RESOLVED])
+        active_alerts = len([a for a in recent_alerts if a.status == AlertStatus.ACTIVE])
+        resolved_alerts = len([a for a in recent_alerts if a.status == AlertStatus.RESOLVED])
 
         # Group by severity
         severity_counts = {}
         for severity in AlertSeverity:
-            severity_counts[severity.value] = len(
-                [a for a in recent_alerts if a.severity == severity]
-            )
+            severity_counts[severity.value] = len([a for a in recent_alerts if a.severity == severity])
 
         # Group by source
         source_counts = {}
@@ -589,20 +516,15 @@ async def get_alert_statistics(
 
     except Exception as e:
         logger.error(f"Failed to get alert statistics: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get alert statistics: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get alert statistics: {str(e)}")
 
 
 @router.post("/test")
 async def test_alert_system() -> Dict[str, Any]:
     """Test alert system by creating a test alert"""
-
     try:
         if not observability_engine or not observability_engine.alerting_system:
-            raise HTTPException(
-                status_code=503,
-                detail="Alerting system not available")
+            raise HTTPException(status_code=503, detail="Alerting system not available")
 
         # Create test alert
         test_alert_data = {
@@ -625,5 +547,4 @@ async def test_alert_system() -> Dict[str, Any]:
 
     except Exception as e:
         logger.error(f"Failed to create test alert: {str(e)}")
-        raise HTTPException(status_code=500,
-                            detail=f"Failed to create test alert: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to create test alert: {str(e)}")

@@ -27,13 +27,13 @@ class SequentialTestingFramework:
         }
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the sequential testing framework"""
+    """Initialize the sequential testing framework"""
         logger.info("Initializing sequential testing framework...")
         # No specific initialization needed
         logger.info("Sequential testing framework initialized successfully")
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup sequential testing framework resources"""
+    """Cleanup sequential testing framework resources"""
         logger.info("Cleaning up sequential testing framework...")
         self.active_tests.clear()
         logger.info("Sequential testing framework cleanup completed")
@@ -72,7 +72,7 @@ class SequentialTestingFramework:
     async def add_data(
         self, test_id: str, control_value: float, treatment_value: float
     ) -> Dict[str, Any]:
-        """Add data point to sequential test"""
+    """Add data point to sequential test"""
         if test_id not in self.active_tests:
             raise ValueError(f"Sequential test {test_id} not found")
 
@@ -106,7 +106,7 @@ class SequentialTestingFramework:
         }
 
     async def analyze_test(self, test_id: str) -> Dict[str, Any]:
-        """Analyze sequential test results"""
+    """Analyze sequential test results"""
         if test_id not in self.active_tests:
             raise ValueError(f"Sequential test {test_id} not found")
 

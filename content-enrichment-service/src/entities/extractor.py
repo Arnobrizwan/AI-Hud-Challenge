@@ -66,10 +66,7 @@ class EntityExtractor:
             "url": [{"pattern": r'https?://[^\s<>"{}|\\^`\[\]]+', "label": "URL"}],
             "hashtag": [{"pattern": r"#\w+", "label": "HASHTAG"}],
             "mention": [{"pattern": r"@\w+", "label": "MENTION"}],
-            "cryptocurrency": [
-                {"pattern": r"\b(BTC|ETH|LTC|XRP|ADA|DOT|LINK|UNI|AAVE|COMP)\b",
-                 "label": "CRYPTO"}
-            ],
+            "cryptocurrency": [{"pattern": r"\b(BTC|ETH|LTC|XRP|ADA|DOT|LINK|UNI|AAVE|COMP)\b", "label": "CRYPTO"}],
             "stock_ticker": [
                 {
                     "pattern": r"\b[A-Z]{1,5}\b",
@@ -78,10 +75,7 @@ class EntityExtractor:
             ],
         }
 
-    async def extract_entities(
-            self,
-            text: str,
-            language: str = "en") -> List[Entity]:
+    async def extract_entities(self, text: str, language: str = "en") -> List[Entity]:
         """Extract entities from text with linking and disambiguation."""
         try:
             # Stage 1: spaCy NER for base entities
@@ -96,8 +90,7 @@ class EntityExtractor:
                 entity_type = self._map_spacy_label(ent.label_)
                 confidence = self._calculate_confidence(ent, entity_type)
 
-                if confidence >= self.confidence_thresholds.get(
-                        entity_type, 0.5):
+                if confidence >= self.confidence_thresholds.get(entity_type, 0.5):
                     entity = Entity(
                         text=ent.text,
                         label=entity_type,
@@ -137,10 +130,7 @@ class EntityExtractor:
             return resolved_entities
 
         except Exception as e:
-            logger.error(
-                "Entity extraction failed",
-                error=str(e),
-                exc_info=True)
+            logger.error("Entity extraction failed", error=str(e), exc_info=True)
             return []
 
     async def _extract_custom_entities(self, text: str) -> List[Entity]:
@@ -149,8 +139,7 @@ class EntityExtractor:
 
         for pattern_type, patterns in self.custom_patterns.items():
             for pattern_info in patterns:
-                matches = re.finditer(
-                    pattern_info["pattern"], text, re.IGNORECASE)
+                matches = re.finditer(pattern_info["pattern"], text, re.IGNORECASE)
 
                 for match in matches:
                     entity = Entity(
@@ -188,10 +177,7 @@ class EntityExtractor:
         }
         return mapping.get(spacy_label, EntityType.CUSTOM)
 
-    def _calculate_confidence(
-            self,
-            ent: Any,
-            entity_type: EntityType) -> float:
+    def _calculate_confidence(self, ent: Any, entity_type: EntityType) -> float:
         """Calculate confidence score for an entity."""
         base_confidence = 0.8  # Default confidence
 
@@ -207,9 +193,7 @@ class EntityExtractor:
         if hasattr(ent, "sent") and ent.sent:
             # Check if entity appears in proper context
             sent_text = ent.sent.text.lower()
-            if entity_type == EntityType.PERSON and any(
-                title in sent_text for title in ["mr", "ms", "dr", "prof"]
-            ):
+            if entity_type == EntityType.PERSON and any(title in sent_text for title in ["mr", "ms", "dr", "prof"]):
                 context_factor = 1.2
             elif entity_type == EntityType.ORGANIZATION and any(
                 word in sent_text for word in ["inc", "corp", "ltd", "llc"]
@@ -255,8 +239,7 @@ class EntityExtractor:
 
         return unique_entities
 
-    async def extract_entities_from_content(
-            self, content: ExtractedContent) -> List[Entity]:
+    async def extract_entities_from_content(self, content: ExtractedContent) -> List[Entity]:
         """Extract entities from ExtractedContent object."""
         # Combine title and content for better entity extraction
         full_text = f"{content.title}\n\n{content.content}"
@@ -266,7 +249,7 @@ class EntityExtractor:
         return await self.extract_entities(full_text, content.language)
 
     def get_entity_statistics(self, entities: List[Entity]) -> Dict[str, Any]:
-        """Get statistics about extracted entities."""
+    """Get statistics about extracted entities."""
         if not entities:
             return {}
 
@@ -287,8 +270,7 @@ class EntityExtractor:
         for entity in entities:
             # Count by type
             entity_type = entity.label.value
-            stats["entity_types"][entity_type] = stats["entity_types"].get(
-                entity_type, 0) + 1
+            stats["entity_types"][entity_type] = stats["entity_types"].get(entity_type, 0) + 1
 
             # Confidence distribution
             if entity.confidence > 0.8:

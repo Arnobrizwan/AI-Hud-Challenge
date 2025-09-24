@@ -43,7 +43,7 @@ class ABTestingFramework:
         self.experiment_data: Dict[str, ExperimentData] = {}
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the A/B testing framework"""
+    """Initialize the A/B testing framework"""
         try:
             logger.info("Initializing A/B testing framework...")
 
@@ -68,7 +68,7 @@ class ABTestingFramework:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup A/B testing framework resources"""
+    """Cleanup A/B testing framework resources"""
         try:
             logger.info("Cleaning up A/B testing framework...")
 

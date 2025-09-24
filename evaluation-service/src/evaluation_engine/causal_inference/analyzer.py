@@ -21,13 +21,13 @@ class CausalInferenceAnalyzer:
         self.instrumental_variables = InstrumentalVariablesAnalyzer()
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the causal inference analyzer"""
+    """Initialize the causal inference analyzer"""
         logger.info("Initializing causal inference analyzer...")
         # Initialize components
         logger.info("Causal inference analyzer initialized successfully")
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup causal inference analyzer resources"""
+    """Cleanup causal inference analyzer resources"""
         logger.info("Cleaning up causal inference analyzer...")
         logger.info("Causal inference analyzer cleanup completed")
 
@@ -67,7 +67,7 @@ class DifferenceInDifferencesAnalyzer:
     """Difference-in-differences causal analysis"""
 
     async def analyze(self, config: Dict[str, Any]) -> Dict[str, Any]:
-        """Perform difference-in-differences analysis"""
+    """Perform difference-in-differences analysis"""
         # Mock DiD analysis
         treatment_effect = np.random.uniform(0.05, 0.15)
         standard_error = np.random.uniform(0.01, 0.03)
@@ -90,7 +90,7 @@ class RegressionDiscontinuityAnalyzer:
     """Regression discontinuity causal analysis"""
 
     async def analyze(self, config: Dict[str, Any]) -> Dict[str, Any]:
-        """Perform regression discontinuity analysis"""
+    """Perform regression discontinuity analysis"""
         # Mock RD analysis
         discontinuity_effect = np.random.uniform(0.08, 0.20)
         standard_error = np.random.uniform(0.02, 0.04)
@@ -113,7 +113,7 @@ class InstrumentalVariablesAnalyzer:
     """Instrumental variables causal analysis"""
 
     async def analyze(self, config: Dict[str, Any]) -> Dict[str, Any]:
-        """Perform instrumental variables analysis"""
+    """Perform instrumental variables analysis"""
         # Mock IV analysis
         causal_effect = np.random.uniform(0.10, 0.25)
         standard_error = np.random.uniform(0.03, 0.05)

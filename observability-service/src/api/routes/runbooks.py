@@ -84,7 +84,6 @@ class StepResultResponse(BaseModel):
 @router.post("/", response_model=RunbookResponse)
 async def create_runbook(runbook_request: RunbookRequest) -> Dict[str, Any]:
     """Create new runbook"""
-
     try:
         if not observability_engine or not observability_engine.runbook_engine:
             raise HTTPException(
@@ -178,7 +177,6 @@ async def get_runbooks(
 @router.get("/{runbook_id}", response_model=RunbookResponse)
 async def get_runbook(runbook_id: str) -> Dict[str, Any]:
     """Get specific runbook by ID"""
-
     try:
         if not observability_engine or not observability_engine.runbook_engine:
             raise HTTPException(
@@ -319,7 +317,6 @@ async def get_runbook_executions(runbook_id: str, limit: int = Query(
             response_model=RunbookExecutionResponse)
 async def get_runbook_execution(execution_id: str) -> Dict[str, Any]:
     """Get specific runbook execution by ID"""
-
     try:
         if not observability_engine or not observability_engine.runbook_engine:
             raise HTTPException(
@@ -361,7 +358,6 @@ async def get_runbook_execution(execution_id: str) -> Dict[str, Any]:
 @router.put("/{runbook_id}/enable")
 async def enable_runbook(runbook_id: str) -> Dict[str, Any]:
     """Enable runbook"""
-
     try:
         if not observability_engine or not observability_engine.runbook_engine:
             raise HTTPException(
@@ -397,7 +393,6 @@ async def enable_runbook(runbook_id: str) -> Dict[str, Any]:
 @router.put("/{runbook_id}/disable")
 async def disable_runbook(runbook_id: str) -> Dict[str, Any]:
     """Disable runbook"""
-
     try:
         if not observability_engine or not observability_engine.runbook_engine:
             raise HTTPException(
@@ -485,7 +480,6 @@ async def search_runbooks(
 @router.get("/templates")
 async def get_runbook_templates() -> Dict[str, Any]:
     """Get available runbook templates"""
-
     try:
         # Return predefined runbook templates
         templates = [{"id": "service_restart",
@@ -562,7 +556,6 @@ async def get_runbook_templates() -> Dict[str, Any]:
 @router.post("/{runbook_id}/validate")
 async def validate_runbook(runbook_id: str) -> Dict[str, Any]:
     """Validate runbook definition"""
-
     try:
         if not observability_engine or not observability_engine.runbook_engine:
             raise HTTPException(

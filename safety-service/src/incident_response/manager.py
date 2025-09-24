@@ -49,7 +49,7 @@ class IncidentResponseManager:
         self.incident_counter = 0
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the incident response manager"""
+    """Initialize the incident response manager"""
         try:
             # Initialize all components
             await self.incident_classifier.initialize()
@@ -70,7 +70,7 @@ class IncidentResponseManager:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup resources"""
+    """Cleanup resources"""
         try:
     await self.incident_classifier.cleanup()
             await self.response_orchestrator.cleanup()
@@ -544,7 +544,7 @@ class IncidentResponseManager:
             return []
 
     async def cleanup_resolved_incidents(self) -> Dict[str, Any]:
-        """Cleanup old resolved incidents"""
+    """Cleanup old resolved incidents"""
         try:
             cutoff_date = datetime.utcnow() - timedelta(days=30)  # Keep for 30 days
 
@@ -565,7 +565,7 @@ class IncidentResponseManager:
             logger.error(f"Incident cleanup failed: {str(e)}")
 
     async def incident_monitoring_task(self) -> Dict[str, Any]:
-        """Background task for incident monitoring"""
+    """Background task for incident monitoring"""
         while True:
             try:
     await asyncio.sleep(300)  # Check every 5 minutes
@@ -587,7 +587,7 @@ class IncidentResponseManager:
                 await asyncio.sleep(300)
 
     async def incident_cleanup_task(self) -> Dict[str, Any]:
-        """Background task for incident cleanup"""
+    """Background task for incident cleanup"""
         while True:
             try:
     await asyncio.sleep(3600)  # Run every hour
@@ -607,7 +607,7 @@ class IncidentResponseManager:
         return f"incident_{self.incident_counter}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
 
     async def get_incident_statistics(self) -> Dict[str, Any]:
-        """Get incident statistics"""
+    """Get incident statistics"""
         try:
             return {
                 "active_incidents": len(self.active_incidents),

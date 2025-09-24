@@ -150,7 +150,7 @@ class MetricsCollector:
             registry=self.registry)
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize metrics collector."""
+    """Initialize metrics collector."""
         # Start background tasks
         asyncio.create_task(self._update_system_metrics())
         asyncio.create_task(self._persist_metrics())
@@ -351,7 +351,7 @@ class MetricsCollector:
         return generate_latest(self.registry)
 
     async def _update_system_metrics(self) -> Dict[str, Any]:
-        """Update system metrics periodically."""
+    """Update system metrics periodically."""
         while True:
             try:
                 # Update memory usage
@@ -378,7 +378,7 @@ class MetricsCollector:
                 await asyncio.sleep(60)
 
     async def _persist_metrics(self) -> Dict[str, Any]:
-        """Persist metrics to Redis periodically."""
+    """Persist metrics to Redis periodically."""
         while True:
             try:
                 # Persist counters

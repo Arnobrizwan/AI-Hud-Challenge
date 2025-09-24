@@ -53,7 +53,7 @@ class BaseAdapter(ABC):
 
     @abstractmethod
     def get_source_info(self) -> Dict[str, Any]:
-        """Get information about the source."""
+    """Get information about the source."""
         pass
 
     async def process(self) -> List[NormalizedArticle]:
@@ -286,7 +286,7 @@ class BaseAdapter(ABC):
         return True
 
     async def health_check(self) -> Dict[str, Any]:
-        """Perform health check on the adapter."""
+    """Perform health check on the adapter."""
         try:
             is_connected = await self.test_connection()
 

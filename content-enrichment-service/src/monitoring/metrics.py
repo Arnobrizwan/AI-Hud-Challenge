@@ -190,7 +190,7 @@ class MetricsCollector:
         )
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the metrics collector."""
+    """Initialize the metrics collector."""
         try:
             if settings.enable_metrics:
                 # Initialize Redis connection for distributed metrics
@@ -222,7 +222,7 @@ class MetricsCollector:
                 self.metrics = metrics_collector
 
             async def __call__(self, request: Request, call_next) -> Dict[str, Any]:
-                start_time = time.time()
+    start_time = time.time()
 
                 # Increment active requests
                 self.metrics.active_requests.inc()
@@ -469,21 +469,21 @@ class MetricsCollector:
                 error=str(e))
 
     async def record_cache_hit(self, cache_type: str) -> Dict[str, Any]:
-        """Record cache hit."""
+    """Record cache hit."""
         try:
             self.cache_hits.labels(cache_type=cache_type).inc()
         except Exception as e:
             logger.error("Failed to record cache hit", error=str(e))
 
     async def record_cache_miss(self, cache_type: str) -> Dict[str, Any]:
-        """Record cache miss."""
+    """Record cache miss."""
         try:
             self.cache_misses.labels(cache_type=cache_type).inc()
         except Exception as e:
             logger.error("Failed to record cache miss", error=str(e))
 
     async def record_error(self, error_type: str, component: str) -> Dict[str, Any]:
-        """Record error metrics."""
+    """Record error metrics."""
         try:
             self.errors_total.labels(
                 error_type=error_type,
@@ -492,7 +492,7 @@ class MetricsCollector:
             logger.error("Failed to record error metrics", error=str(e))
 
     async def _store_metrics_in_redis(self, metrics: Dict[str, Any]) -> Dict[str, Any]:
-        """Store metrics in Redis for distributed collection."""
+    """Store metrics in Redis for distributed collection."""
         try:
             if not self.redis_client:
                 return
@@ -507,7 +507,7 @@ class MetricsCollector:
             logger.error("Failed to store metrics in Redis", error=str(e))
 
     async def get_metrics(self) -> Dict[str, Any]:
-        """Get current metrics."""
+    """Get current metrics."""
         try:
             # Get Prometheus metrics
             prometheus_metrics = generate_latest(self.registry).decode("utf-8")
@@ -526,7 +526,7 @@ class MetricsCollector:
             return {"error": str(e)}
 
     async def _get_custom_metrics(self) -> Dict[str, Any]:
-        """Get custom metrics from Redis."""
+    """Get custom metrics from Redis."""
         try:
             if not self.redis_client:
                 return {}
@@ -557,7 +557,7 @@ class MetricsCollector:
             return {}
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup metrics collector resources."""
+    """Cleanup metrics collector resources."""
         try:
             if self.redis_client:
     await self.redis_client.close()

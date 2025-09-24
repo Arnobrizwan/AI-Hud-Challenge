@@ -389,7 +389,7 @@ class DocumentAIService:
             semaphore = asyncio.Semaphore(max_concurrent)
 
             async def process_with_semaphore(path: str) -> Dict[str, Any]:
-                async with semaphore:
+    async with semaphore:
                     return await self.process_document(path)
 
             tasks = [process_with_semaphore(path) for path in document_paths]

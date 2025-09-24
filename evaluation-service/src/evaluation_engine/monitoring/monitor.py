@@ -21,19 +21,19 @@ class EvaluationMonitoring:
         self.monitoring_active = False
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the monitoring service"""
+    """Initialize the monitoring service"""
         logger.info("Initializing evaluation monitoring...")
         # Initialize components
         logger.info("Evaluation monitoring initialized successfully")
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup monitoring service resources"""
+    """Cleanup monitoring service resources"""
         logger.info("Cleaning up evaluation monitoring...")
         self.monitoring_active = False
         logger.info("Evaluation monitoring cleanup completed")
 
     async def start_monitoring(self) -> Dict[str, Any]:
-        """Start continuous monitoring"""
+    """Start continuous monitoring"""
         logger.info("Starting evaluation monitoring...")
         self.monitoring_active = True
 
@@ -46,13 +46,12 @@ class EvaluationMonitoring:
                 await asyncio.sleep(60)  # Retry after 1 minute
 
     async def stop_monitoring(self) -> Dict[str, Any]:
-        """Stop continuous monitoring"""
+    """Stop continuous monitoring"""
         logger.info("Stopping evaluation monitoring...")
         self.monitoring_active = False
 
     async def _monitor_cycle(self) -> Dict[str, Any]:
-        """Single monitoring cycle"""
-
+    """Single monitoring cycle"""
         # Check all active experiments
         active_experiments = await self._get_active_experiments()
 
@@ -169,8 +168,7 @@ class AlertManager:
     """Manage and send alerts"""
 
     async def send_anomaly_alert(self, anomaly: Dict[str, Any]) -> Dict[str, Any]:
-        """Send alert for detected anomaly"""
-
+    """Send alert for detected anomaly"""
         logger.warning(f"Anomaly alert: {anomaly}")
         # In practice, this would send alerts via email, Slack, etc.
 
@@ -197,7 +195,6 @@ class DashboardUpdater:
         # In practice, this would update Grafana dashboards, etc.
 
     async def update_overall_dashboard(self, overall_metrics: Dict[str, Any]) -> Dict[str, Any]:
-        """Update overall evaluation dashboard"""
-
+    """Update overall evaluation dashboard"""
         logger.info("Updating overall evaluation dashboard")
         # In practice, this would update Grafana dashboards, etc.

@@ -28,8 +28,7 @@ class SourceConfigLoader:
         try:
             # Check if config file exists
             if not os.path.exists(self.config_path):
-                logger.warning(
-                    f"Source config file not found: {self.config_path}")
+                logger.warning(f"Source config file not found: {self.config_path}")
                 return []
 
             # Load YAML file
@@ -63,8 +62,7 @@ class SourceConfigLoader:
             logger.error(f"Error loading source configurations: {e}")
             return []
 
-    def _create_source_config(
-            self, source_data: Dict[str, Any]) -> Optional[SourceConfig]:
+    def _create_source_config(self, source_data: Dict[str, Any]) -> Optional[SourceConfig]:
         """Create SourceConfig from dictionary data."""
         try:
             # Get source type
@@ -92,16 +90,10 @@ class SourceConfigLoader:
                 url=source_data.get("url", ""),
                 enabled=source_data.get("enabled", True),
                 priority=source_data.get("priority", 1),
-                rate_limit=source_data.get(
-                    "rate_limit", self.global_config.get("default_rate_limit", 60)
-                ),
+                rate_limit=source_data.get("rate_limit", self.global_config.get("default_rate_limit", 60)),
                 timeout=source_data.get("timeout", self.global_config.get("default_timeout", 30)),
-                retry_attempts=source_data.get(
-                    "retry_attempts", self.global_config.get("default_retry_attempts", 3)
-                ),
-                backoff_factor=source_data.get(
-                    "backoff_factor", self.global_config.get("default_backoff_factor", 2.0)
-                ),
+                retry_attempts=source_data.get("retry_attempts", self.global_config.get("default_retry_attempts", 3)),
+                backoff_factor=source_data.get("backoff_factor", self.global_config.get("default_backoff_factor", 2.0)),
                 user_agent=source_data.get(
                     "user_agent", self.global_config.get("default_user_agent", settings.USER_AGENT)
                 ),
@@ -124,9 +116,7 @@ class SourceConfigLoader:
         """Get only enabled sources."""
         return [s for s in self.sources if s.enabled]
 
-    def get_sources_by_type(
-            self,
-            source_type: SourceType) -> List[SourceConfig]:
+    def get_sources_by_type(self, source_type: SourceType) -> List[SourceConfig]:
         """Get sources by type."""
         return [s for s in self.sources if s.type == source_type]
 
@@ -137,8 +127,7 @@ class SourceConfigLoader:
                 return source
         return None
 
-    def update_source_config(self, source_id: str,
-                             updates: Dict[str, Any]) -> bool:
+    def update_source_config(self, source_id: str, updates: Dict[str, Any]) -> bool:
         """Update source configuration."""
         source = self.get_source_by_id(source_id)
         if not source:
@@ -231,17 +220,11 @@ class SourceConfigLoader:
                 sources_data.append(source_dict)
 
             # Create complete config
-            config_data = {
-                "sources": sources_data,
-                "global_config": self.global_config}
+            config_data = {"sources": sources_data, "global_config": self.global_config}
 
             # Write to file
             with open(self.config_path, "w", encoding="utf-8") as file:
-                yaml.dump(
-                    config_data,
-                    file,
-                    default_flow_style=False,
-                    indent=2)
+                yaml.dump(config_data, file, default_flow_style=False, indent=2)
 
             logger.debug(f"Saved sources to {self.config_path}")
 
@@ -249,7 +232,7 @@ class SourceConfigLoader:
             logger.error(f"Error saving sources to file: {e}")
 
     def get_global_config(self) -> Dict[str, Any]:
-        """Get global configuration."""
+    """Get global configuration."""
         return self.global_config
 
     def update_global_config(self, updates: Dict[str, Any]) -> bool:
@@ -270,11 +253,7 @@ class SourceConfigLoader:
         validation_results = []
 
         for source in self.sources:
-            result = {
-                "source_id": source.id,
-                "valid": True,
-                "errors": [],
-                "warnings": []}
+            result = {"source_id": source.id, "valid": True, "errors": [], "warnings": []}
 
             # Check required fields
             if not source.id:
@@ -290,16 +269,13 @@ class SourceConfigLoader:
                 result["valid"] = False
 
             # Validate URL format
-            if source.url and not source.url.startswith(
-                    ("http://", "https://")):
-                result["errors"].append(
-                    "Source URL must start with http:// or https://")
+            if source.url and not source.url.startswith(("http://", "https://")):
+                result["errors"].append("Source URL must start with http:// or https://")
                 result["valid"] = False
 
             # Check priority range
             if source.priority < 1 or source.priority > 10:
-                result["warnings"].append(
-                    "Priority should be between 1 and 10")
+                result["warnings"].append("Priority should be between 1 and 10")
 
             # Check rate limit
             if source.rate_limit < 1:
@@ -314,7 +290,7 @@ class SourceConfigLoader:
         return validation_results
 
     def get_source_statistics(self) -> Dict[str, Any]:
-        """Get statistics about loaded sources."""
+    """Get statistics about loaded sources."""
         total_sources = len(self.sources)
         enabled_sources = len([s for s in self.sources if s.enabled])
         disabled_sources = total_sources - enabled_sources

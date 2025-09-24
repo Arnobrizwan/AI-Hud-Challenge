@@ -58,7 +58,7 @@ class MultidimensionalDriftDetector:
         self.is_initialized = False
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the drift detector"""
+    """Initialize the drift detector"""
         try:
             # Initialize all detectors
             for detector in self.statistical_detectors.values():
@@ -76,7 +76,7 @@ class MultidimensionalDriftDetector:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup resources"""
+    """Cleanup resources"""
         try:
             for detector in self.statistical_detectors.values():
     await detector.cleanup()

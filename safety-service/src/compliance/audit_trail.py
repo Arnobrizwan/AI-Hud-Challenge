@@ -93,7 +93,7 @@ class AuditTrailManager:
         }
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the audit trail manager"""
+    """Initialize the audit trail manager"""
         try:
             # Start cleanup task
             asyncio.create_task(self.cleanup_old_events())
@@ -106,7 +106,7 @@ class AuditTrailManager:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup resources"""
+    """Cleanup resources"""
         try:
             self.audit_events.clear()
             self.is_initialized = False
@@ -402,7 +402,7 @@ class AuditTrailManager:
             return []
 
     async def get_audit_summary(self) -> Dict[str, Any]:
-        """Get audit trail summary"""
+    """Get audit trail summary"""
         try:
             if not self.audit_events:
                 return {"message": "No audit events available"}
@@ -508,7 +508,7 @@ class AuditTrailManager:
             return ""
 
     async def cleanup_old_events(self) -> Dict[str, Any]:
-        """Background task to clean up old audit events"""
+    """Background task to clean up old audit events"""
         while True:
             try:
     await asyncio.sleep(3600)  # Run every hour

@@ -48,7 +48,7 @@ class SummaryCache:
         self._initialized = False
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize cache system"""
+    """Initialize cache system"""
         try:
             logger.info("Initializing summary cache...")
 
@@ -75,7 +75,7 @@ class SummaryCache:
             logger.warning("Using local cache only (Redis unavailable)")
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Clean up cache resources"""
+    """Clean up cache resources"""
         try:
             if self.redis_client:
     await self.redis_client.close()
@@ -290,7 +290,7 @@ class SummaryCache:
         entry.last_accessed = datetime.now()
 
     def _serialize_result(self, result: SummaryResult) -> Dict[str, Any]:
-        """Serialize SummaryResult for caching"""
+    """Serialize SummaryResult for caching"""
         try:
             # Convert to dictionary
             result_dict = result.dict()
@@ -322,7 +322,7 @@ class SummaryCache:
             return None
 
     async def get_stats(self) -> Dict[str, Any]:
-        """Get cache statistics"""
+    """Get cache statistics"""
         try:
             total_requests = self.cache_stats["hits"] + \
                 self.cache_stats["misses"]
@@ -345,7 +345,7 @@ class SummaryCache:
             return {}
 
     async def get_status(self) -> Dict[str, Any]:
-        """Get cache system status"""
+    """Get cache system status"""
         return {
             "initialized": self._initialized,
             "redis_available": self.redis_client is not None,

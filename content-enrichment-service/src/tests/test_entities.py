@@ -33,7 +33,7 @@ class TestEntityExtractor:
 
     @pytest.mark.asyncio
     async def test_extract_entities_basic(self, extractor, sample_content) -> Dict[str, Any]:
-        """Test basic entity extraction."""
+    """Test basic entity extraction."""
         entities = await extractor.extract_entities(sample_content.content)
 
         assert isinstance(entities, list)
@@ -60,7 +60,7 @@ class TestEntityExtractor:
 
     @pytest.mark.asyncio
     async def test_extract_custom_entities(self, extractor) -> Dict[str, Any]:
-        """Test custom entity extraction."""
+    """Test custom entity extraction."""
         text = "Contact us at support@example.com or call +1-555-123-4567. Visit https://example.com for more info."
 
         entities = await extractor._extract_custom_entities(text)
@@ -82,7 +82,7 @@ class TestEntityExtractor:
 
     @pytest.mark.asyncio
     async def test_entity_resolution(self, extractor) -> Dict[str, Any]:
-        """Test entity resolution and deduplication."""
+    """Test entity resolution and deduplication."""
         # Create mock entities with overlap
         entities = [
             Mock(
@@ -177,19 +177,19 @@ class TestEntityExtractor:
 
     @pytest.mark.asyncio
     async def test_extract_entities_empty_text(self, extractor) -> Dict[str, Any]:
-        """Test entity extraction with empty text."""
+    """Test entity extraction with empty text."""
         entities = await extractor.extract_entities("")
         assert entities == []
 
     @pytest.mark.asyncio
     async def test_extract_entities_short_text(self, extractor) -> Dict[str, Any]:
-        """Test entity extraction with very short text."""
+    """Test entity extraction with very short text."""
         entities = await extractor.extract_entities("Hi")
         assert isinstance(entities, list)  # Should not crash
 
     @pytest.mark.asyncio
     async def test_extract_entities_error_handling(self, extractor) -> Dict[str, Any]:
-        """Test error handling in entity extraction."""
+    """Test error handling in entity extraction."""
         with patch.object(extractor, "nlp") as mock_nlp:
             mock_nlp.side_effect = Exception("spaCy error")
 

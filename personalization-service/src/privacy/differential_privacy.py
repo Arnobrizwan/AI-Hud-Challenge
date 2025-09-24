@@ -247,7 +247,7 @@ class PrivacyPreservingPersonalization:
         return privatized
 
     def _privatize_features(self, features: Dict[str, Any]) -> Dict[str, Any]:
-        """Privatize recommendation features."""
+    """Privatize recommendation features."""
         privatized_features = {}
 
         for key, value in features.items():
@@ -318,7 +318,7 @@ class PrivacyPreservingPersonalization:
         return aggregated
 
     def get_privacy_metrics(self) -> Dict[str, Any]:
-        """Get privacy preservation metrics."""
+    """Get privacy preservation metrics."""
         return {
             "epsilon": self.dp.epsilon,
             "delta": self.dp.delta,

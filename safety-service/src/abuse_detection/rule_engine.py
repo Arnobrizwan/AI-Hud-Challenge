@@ -43,7 +43,7 @@ class AbuseRuleEngine:
         self.rule_stats = {}
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the rule engine"""
+    """Initialize the rule engine"""
         try:
             # Load predefined rules
             await self.load_predefined_rules()
@@ -52,15 +52,14 @@ class AbuseRuleEngine:
             await self.load_custom_rules()
 
             self.is_initialized = True
-            logger.info(
-                f"Abuse rule engine initialized with {len(self.rules)} rules")
+            logger.info(f"Abuse rule engine initialized with {len(self.rules)} rules")
 
         except Exception as e:
             logger.error(f"Failed to initialize rule engine: {str(e)}")
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup resources"""
+    """Cleanup resources"""
         try:
             self.rules.clear()
             self.rule_groups.clear()
@@ -72,10 +71,7 @@ class AbuseRuleEngine:
         except Exception as e:
             logger.error(f"Error during rule engine cleanup: {str(e)}")
 
-    async def check_abuse_rules(
-            self,
-            user_id: str,
-            activity_data: Any) -> List[RuleViolation]:
+    async def check_abuse_rules(self, user_id: str, activity_data: Any) -> List[RuleViolation]:
         """Check all applicable abuse rules"""
 
         if not self.is_initialized:
@@ -91,9 +87,7 @@ class AbuseRuleEngine:
 
                 try:
                     # Execute rule condition
-                    is_violated, violation_details = await self.execute_rule(
-                        rule, user_id, activity_data
-                    )
+                    is_violated, violation_details = await self.execute_rule(rule, user_id, activity_data)
 
                     if is_violated:
                         violation = RuleViolation(
@@ -121,9 +115,7 @@ class AbuseRuleEngine:
             logger.error(f"Rule checking failed: {str(e)}")
             return []
 
-    async def execute_rule(
-        self, rule: AbuseRule, user_id: str, activity_data: Any
-    ) -> tuple[bool, str]:
+    async def execute_rule(self, rule: AbuseRule, user_id: str, activity_data: Any) -> tuple[bool, str]:
         """Execute a specific rule and return violation status"""
         try:
             if rule.condition is None:
@@ -141,9 +133,7 @@ class AbuseRuleEngine:
             result = rule.condition(context)
 
             if isinstance(result, bool):
-                return result, (
-                    "Rule condition triggered" if result else "Rule condition not triggered"
-                )
+                return result, ("Rule condition triggered" if result else "Rule condition not triggered")
             elif isinstance(result, tuple) and len(result) == 2:
                 return result[0], result[1]
             else:
@@ -154,7 +144,7 @@ class AbuseRuleEngine:
             return False, f"Rule execution error: {str(e)}"
 
     async def load_predefined_rules(self) -> Dict[str, Any]:
-        """Load predefined abuse detection rules"""
+    """Load predefined abuse detection rules"""
         try:
             # High frequency requests rule
             self.add_rule(
@@ -164,10 +154,9 @@ class AbuseRuleEngine:
                     description="User making too many requests in a short time",
                     severity=ThreatLevel.MEDIUM,
                     condition=self.check_high_frequency_requests,
-                    parameters={
-                        "max_requests_per_minute": 60,
-                        "max_requests_per_hour": 1000},
-                ))
+                    parameters={"max_requests_per_minute": 60, "max_requests_per_hour": 1000},
+                )
+            )
 
             # Unusual request patterns rule
             self.add_rule(
@@ -189,13 +178,9 @@ class AbuseRuleEngine:
                     description="User using suspicious or automated user agent",
                     severity=ThreatLevel.MEDIUM,
                     condition=self.check_suspicious_user_agent,
-                    parameters={
-                        "suspicious_patterns": [
-                            "bot",
-                            "crawler",
-                            "scraper",
-                            "automated"]},
-                ))
+                    parameters={"suspicious_patterns": ["bot", "crawler", "scraper", "automated"]},
+                )
+            )
 
             # Geographic anomalies rule
             self.add_rule(
@@ -205,10 +190,9 @@ class AbuseRuleEngine:
                     description="User accessing from unusual geographic locations",
                     severity=ThreatLevel.MEDIUM,
                     condition=self.check_geographic_anomalies,
-                    parameters={
-                        "max_countries_per_hour": 3,
-                        "suspicious_countries": []},
-                ))
+                    parameters={"max_countries_per_hour": 3, "suspicious_countries": []},
+                )
+            )
 
             # Account age violations rule
             self.add_rule(
@@ -218,10 +202,9 @@ class AbuseRuleEngine:
                     description="New account exhibiting suspicious behavior",
                     severity=ThreatLevel.HIGH,
                     condition=self.check_account_age_violations,
-                    parameters={
-                        "min_account_age_hours": 24,
-                        "max_activity_for_new_account": 100},
-                ))
+                    parameters={"min_account_age_hours": 24, "max_activity_for_new_account": 100},
+                )
+            )
 
             # Content violations rule
             self.add_rule(
@@ -243,10 +226,9 @@ class AbuseRuleEngine:
                     description="Multiple failed authentication attempts",
                     severity=ThreatLevel.MEDIUM,
                     condition=self.check_authentication_failures,
-                    parameters={
-                        "max_failed_attempts": 5,
-                        "time_window_minutes": 15},
-                ))
+                    parameters={"max_failed_attempts": 5, "time_window_minutes": 15},
+                )
+            )
 
             # Resource abuse rule
             self.add_rule(
@@ -267,7 +249,7 @@ class AbuseRuleEngine:
             raise
 
     async def load_custom_rules(self) -> Dict[str, Any]:
-        """Load custom rules from configuration"""
+    """Load custom rules from configuration"""
         try:
             # This would load custom rules from a configuration file or database
             # For now, we'll add some example custom rules
@@ -337,11 +319,7 @@ class AbuseRuleEngine:
         except Exception as e:
             logger.error(f"Failed to remove rule {rule_id}: {str(e)}")
 
-    def update_rule_stats(
-            self,
-            rule_id: str,
-            violated: bool,
-            error: bool = False):
+    def update_rule_stats(self, rule_id: str, violated: bool, error: bool = False):
         """Update rule execution statistics"""
         try:
             if rule_id not in self.rule_stats:
@@ -362,12 +340,10 @@ class AbuseRuleEngine:
                 stats["violations"] += 1
 
         except Exception as e:
-            logger.error(
-                f"Failed to update rule stats for {rule_id}: {str(e)}")
+            logger.error(f"Failed to update rule stats for {rule_id}: {str(e)}")
 
     # Rule condition functions
-    def check_high_frequency_requests(
-            self, context: Dict[str, Any]) -> tuple[bool, str]:
+    def check_high_frequency_requests(self, context: Dict[str, Any]) -> tuple[bool, str]:
         """Check for high frequency requests"""
         try:
             activity_data = context["activity_data"]
@@ -389,8 +365,7 @@ class AbuseRuleEngine:
             logger.error(f"High frequency check failed: {str(e)}")
             return False, f"Check failed: {str(e)}"
 
-    def check_unusual_request_patterns(
-            self, context: Dict[str, Any]) -> tuple[bool, str]:
+    def check_unusual_request_patterns(self, context: Dict[str, Any]) -> tuple[bool, str]:
         """Check for unusual request patterns"""
         try:
             activity_data = context["activity_data"]
@@ -409,8 +384,7 @@ class AbuseRuleEngine:
             logger.error(f"Unusual pattern check failed: {str(e)}")
             return False, f"Check failed: {str(e)}"
 
-    def check_suspicious_user_agent(
-            self, context: Dict[str, Any]) -> tuple[bool, str]:
+    def check_suspicious_user_agent(self, context: Dict[str, Any]) -> tuple[bool, str]:
         """Check for suspicious user agent"""
         try:
             activity_data = context["activity_data"]
@@ -424,7 +398,9 @@ class AbuseRuleEngine:
                 for pattern in suspicious_patterns:
                     if pattern.lower() in user_agent_lower:
                         return (
-                            True, f"User agent '{user_agent}' matches suspicious pattern '{pattern}'", )
+                            True,
+                            f"User agent '{user_agent}' matches suspicious pattern '{pattern}'",
+                        )
 
             return False, "User agent appears legitimate"
 
@@ -432,8 +408,7 @@ class AbuseRuleEngine:
             logger.error(f"Suspicious user agent check failed: {str(e)}")
             return False, f"Check failed: {str(e)}"
 
-    def check_geographic_anomalies(
-            self, context: Dict[str, Any]) -> tuple[bool, str]:
+    def check_geographic_anomalies(self, context: Dict[str, Any]) -> tuple[bool, str]:
         """Check for geographic anomalies"""
         try:
             activity_data = context["activity_data"]
@@ -452,8 +427,7 @@ class AbuseRuleEngine:
             logger.error(f"Geographic anomaly check failed: {str(e)}")
             return False, f"Check failed: {str(e)}"
 
-    def check_account_age_violations(
-            self, context: Dict[str, Any]) -> tuple[bool, str]:
+    def check_account_age_violations(self, context: Dict[str, Any]) -> tuple[bool, str]:
         """Check for account age violations"""
         try:
             activity_data = context["activity_data"]
@@ -477,15 +451,13 @@ class AbuseRuleEngine:
             logger.error(f"Account age violation check failed: {str(e)}")
             return False, f"Check failed: {str(e)}"
 
-    def check_content_violations(
-            self, context: Dict[str, Any]) -> tuple[bool, str]:
+    def check_content_violations(self, context: Dict[str, Any]) -> tuple[bool, str]:
         """Check for content violations"""
         try:
             activity_data = context["activity_data"]
             params = context["rule_parameters"]
 
-            violations_count = getattr(
-                activity_data, "content_violations_count", 0)
+            violations_count = getattr(activity_data, "content_violations_count", 0)
             max_violations = params.get("max_violations_per_hour", 5)
 
             if violations_count > max_violations:
@@ -500,8 +472,7 @@ class AbuseRuleEngine:
             logger.error(f"Content violation check failed: {str(e)}")
             return False, f"Check failed: {str(e)}"
 
-    def check_authentication_failures(
-            self, context: Dict[str, Any]) -> tuple[bool, str]:
+    def check_authentication_failures(self, context: Dict[str, Any]) -> tuple[bool, str]:
         """Check for authentication failures"""
         try:
             activity_data = context["activity_data"]
@@ -522,8 +493,7 @@ class AbuseRuleEngine:
             logger.error(f"Authentication failure check failed: {str(e)}")
             return False, f"Check failed: {str(e)}"
 
-    def check_resource_abuse(
-            self, context: Dict[str, Any]) -> tuple[bool, str]:
+    def check_resource_abuse(self, context: Dict[str, Any]) -> tuple[bool, str]:
         """Check for resource abuse"""
         try:
             activity_data = context["activity_data"]
@@ -565,8 +535,7 @@ class AbuseRuleEngine:
             logger.error(f"API key abuse check failed: {str(e)}")
             return False, f"Check failed: {str(e)}"
 
-    def check_data_exfiltration(
-            self, context: Dict[str, Any]) -> tuple[bool, str]:
+    def check_data_exfiltration(self, context: Dict[str, Any]) -> tuple[bool, str]:
         """Check for data exfiltration patterns"""
         try:
             activity_data = context["activity_data"]
@@ -585,13 +554,11 @@ class AbuseRuleEngine:
             return False, f"Check failed: {str(e)}"
 
     async def get_rule_statistics(self) -> Dict[str, Any]:
-        """Get rule execution statistics"""
+    """Get rule execution statistics"""
         try:
             return {
-                "total_rules": len(
-                    self.rules),
-                "enabled_rules": sum(
-                    1 for rule in self.rules.values() if rule.enabled),
+                "total_rules": len(self.rules),
+                "enabled_rules": sum(1 for rule in self.rules.values() if rule.enabled),
                 "rule_stats": self.rule_stats,
                 "rule_groups": self.rule_groups,
             }

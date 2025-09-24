@@ -297,7 +297,7 @@ class JWTAuthService:
         return encoded_jwt
 
     def verify_token(self, token: str) -> Dict[str, Any]:
-        """Verify JWT token and return payload."""
+    """Verify JWT token and return payload."""
         try:
             payload = jwt.decode(
                 token, self.secret_key, algorithms=[

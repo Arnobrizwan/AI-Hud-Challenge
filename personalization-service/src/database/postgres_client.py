@@ -99,7 +99,7 @@ class PostgreSQLClient:
                 raise
 
     async def transaction(self) -> Dict[str, Any]:
-        """Get a transaction context manager."""
+    """Get a transaction context manager."""
         if not self.pool:
             raise RuntimeError("Database not connected")
 
@@ -153,7 +153,7 @@ class PostgreSQLClient:
         return await self.fetch_all(query, table_name)
 
     async def get_table_stats(self, table_name: str) -> Dict[str, Any]:
-        """Get table statistics."""
+    """Get table statistics."""
         query = """
         SELECT
             schemaname,
@@ -170,7 +170,7 @@ class PostgreSQLClient:
         return {"table_name": table_name, "columns": stats}
 
     async def get_database_size(self) -> Dict[str, Any]:
-        """Get database size information."""
+    """Get database size information."""
         query = """
         SELECT
             pg_database_size(current_database()) as database_size,
@@ -196,7 +196,7 @@ class PostgreSQLClient:
         return await self.fetch_all(query)
 
     async def get_connection_info(self) -> Dict[str, Any]:
-        """Get connection information."""
+    """Get connection information."""
         query = """
         SELECT
             current_database() as database_name,
@@ -209,7 +209,7 @@ class PostgreSQLClient:
         return await self.fetch_one(query) or {}
 
     async def get_health(self) -> Dict[str, Any]:
-        """Get database health status."""
+    """Get database health status."""
         try:
             # Test basic connectivity
             await self.fetch_val("SELECT 1")

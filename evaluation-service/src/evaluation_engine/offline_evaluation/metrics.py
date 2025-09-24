@@ -39,14 +39,12 @@ class RankingMetricsCalculator:
     """Specialized metrics for ranking models"""
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the calculator"""
+    """Initialize the calculator"""
         pass
 
-    async def calculate_metrics(self,
-                                predictions: np.ndarray,
-                                ground_truth: np.ndarray,
-                                additional_data: Dict[str,
-                                                      Any]) -> RankingMetrics:
+    async def calculate_metrics(
+        self, predictions: np.ndarray, ground_truth: np.ndarray, additional_data: Dict[str, Any]
+    ) -> RankingMetrics:
         """Calculate comprehensive ranking metrics"""
 
         logger.info("Calculating ranking metrics")
@@ -55,15 +53,12 @@ class RankingMetricsCalculator:
 
         # Precision@K for various K values
         for k in [1, 3, 5, 10, 20]:
-            metrics[f"precision_at_{k}"] = self.precision_at_k(
-                predictions, ground_truth, k)
-            metrics[f"recall_at_{k}"] = self.recall_at_k(
-                predictions, ground_truth, k)
+            metrics[f"precision_at_{k}"] = self.precision_at_k(predictions, ground_truth, k)
+            metrics[f"recall_at_{k}"] = self.recall_at_k(predictions, ground_truth, k)
 
         # NDCG@K for various K values
         for k in [5, 10, 20]:
-            metrics[f"ndcg_at_{k}"] = self.ndcg_at_k(
-                predictions, ground_truth, k)
+            metrics[f"ndcg_at_{k}"] = self.ndcg_at_k(predictions, ground_truth, k)
 
         # Mean Reciprocal Rank
         metrics["mrr"] = self.mean_reciprocal_rank(predictions, ground_truth)
@@ -73,36 +68,25 @@ class RankingMetricsCalculator:
 
         # Diversity metrics
         if "item_features" in additional_data:
-            metrics["intra_list_diversity"] = self.calculate_diversity(
-                predictions, additional_data["item_features"]
-            )
+            metrics["intra_list_diversity"] = self.calculate_diversity(predictions, additional_data["item_features"])
 
         # Coverage metrics
         if "catalog_size" in additional_data:
-            metrics["catalog_coverage"] = self.calculate_catalog_coverage(
-                predictions, additional_data["catalog_size"]
-            )
+            metrics["catalog_coverage"] = self.calculate_catalog_coverage(predictions, additional_data["catalog_size"])
 
         # Novelty metrics
         if "popularity_scores" in additional_data:
-            metrics["novelty"] = self.calculate_novelty(
-                predictions, additional_data["popularity_scores"]
-            )
+            metrics["novelty"] = self.calculate_novelty(predictions, additional_data["popularity_scores"])
 
         # Spearman correlation
-        metrics["spearman_correlation"] = self.spearman_correlation(
-            predictions, ground_truth)
+        metrics["spearman_correlation"] = self.spearman_correlation(predictions, ground_truth)
 
         # Kendall tau correlation
         metrics["kendall_tau"] = self.kendall_tau(predictions, ground_truth)
 
         return RankingMetrics(**metrics)
 
-    def precision_at_k(
-            self,
-            predictions: np.ndarray,
-            ground_truth: np.ndarray,
-            k: int) -> float:
+    def precision_at_k(self, predictions: np.ndarray, ground_truth: np.ndarray, k: int) -> float:
         """Calculate Precision@K"""
         if len(predictions) == 0:
             return 0.0
@@ -114,11 +98,7 @@ class RankingMetricsCalculator:
         relevant_items = np.sum(ground_truth[top_k_indices] > 0)
         return relevant_items / k
 
-    def recall_at_k(
-            self,
-            predictions: np.ndarray,
-            ground_truth: np.ndarray,
-            k: int) -> float:
+    def recall_at_k(self, predictions: np.ndarray, ground_truth: np.ndarray, k: int) -> float:
         """Calculate Recall@K"""
         if len(predictions) == 0:
             return 0.0
@@ -132,19 +112,14 @@ class RankingMetricsCalculator:
 
         return relevant_items / total_relevant if total_relevant > 0 else 0.0
 
-    def ndcg_at_k(
-            self,
-            predictions: np.ndarray,
-            ground_truth: np.ndarray,
-            k: int) -> float:
+    def ndcg_at_k(self, predictions: np.ndarray, ground_truth: np.ndarray, k: int) -> float:
         """Calculate NDCG@K"""
         if len(predictions) == 0:
             return 0.0
 
         def dcg_at_k(scores, k):
             scores = scores[:k]
-            return np.sum([score / np.log2(i + 2)
-                          for i, score in enumerate(scores)])
+            return np.sum([score / np.log2(i + 2) for i, score in enumerate(scores)])
 
         # Calculate DCG@K for predictions
         sorted_indices = np.argsort(predictions)[::-1]
@@ -156,10 +131,7 @@ class RankingMetricsCalculator:
 
         return dcg / idcg if idcg > 0 else 0.0
 
-    def mean_reciprocal_rank(
-            self,
-            predictions: np.ndarray,
-            ground_truth: np.ndarray) -> float:
+    def mean_reciprocal_rank(self, predictions: np.ndarray, ground_truth: np.ndarray) -> float:
         """Calculate Mean Reciprocal Rank"""
         if len(predictions) == 0:
             return 0.0
@@ -172,10 +144,7 @@ class RankingMetricsCalculator:
 
         return 0.0
 
-    def mean_average_precision(
-            self,
-            predictions: np.ndarray,
-            ground_truth: np.ndarray) -> float:
+    def mean_average_precision(self, predictions: np.ndarray, ground_truth: np.ndarray) -> float:
         """Calculate Mean Average Precision"""
         if len(predictions) == 0:
             return 0.0
@@ -196,10 +165,7 @@ class RankingMetricsCalculator:
 
         return precision_sum / len(relevant_indices)
 
-    def calculate_diversity(
-            self,
-            predictions: np.ndarray,
-            item_features: np.ndarray) -> float:
+    def calculate_diversity(self, predictions: np.ndarray, item_features: np.ndarray) -> float:
         """Calculate intra-list diversity"""
         if len(predictions) == 0 or item_features is None:
             return 0.0
@@ -215,17 +181,12 @@ class RankingMetricsCalculator:
         distances = []
         for i in range(len(top_k_indices)):
             for j in range(i + 1, len(top_k_indices)):
-                dist = np.linalg.norm(
-                    item_features[top_k_indices[i]] - item_features[top_k_indices[j]]
-                )
+                dist = np.linalg.norm(item_features[top_k_indices[i]] - item_features[top_k_indices[j]])
                 distances.append(dist)
 
         return np.mean(distances) if distances else 0.0
 
-    def calculate_catalog_coverage(
-            self,
-            predictions: np.ndarray,
-            catalog_size: int) -> float:
+    def calculate_catalog_coverage(self, predictions: np.ndarray, catalog_size: int) -> float:
         """Calculate catalog coverage"""
         if len(predictions) == 0:
             return 0.0
@@ -237,10 +198,7 @@ class RankingMetricsCalculator:
 
         return unique_items / catalog_size
 
-    def calculate_novelty(
-            self,
-            predictions: np.ndarray,
-            popularity_scores: np.ndarray) -> float:
+    def calculate_novelty(self, predictions: np.ndarray, popularity_scores: np.ndarray) -> float:
         """Calculate novelty (inverse of popularity)"""
         if len(predictions) == 0 or popularity_scores is None:
             return 0.0
@@ -253,10 +211,7 @@ class RankingMetricsCalculator:
         novelty_scores = 1.0 - popularity_scores[top_k_indices]
         return np.mean(novelty_scores)
 
-    def spearman_correlation(
-            self,
-            predictions: np.ndarray,
-            ground_truth: np.ndarray) -> float:
+    def spearman_correlation(self, predictions: np.ndarray, ground_truth: np.ndarray) -> float:
         """Calculate Spearman correlation"""
         if len(predictions) == 0 or len(ground_truth) == 0:
             return 0.0
@@ -264,10 +219,7 @@ class RankingMetricsCalculator:
         correlation, _ = spearmanr(predictions, ground_truth)
         return correlation if not np.isnan(correlation) else 0.0
 
-    def kendall_tau(
-            self,
-            predictions: np.ndarray,
-            ground_truth: np.ndarray) -> float:
+    def kendall_tau(self, predictions: np.ndarray, ground_truth: np.ndarray) -> float:
         """Calculate Kendall tau correlation"""
         if len(predictions) == 0 or len(ground_truth) == 0:
             return 0.0
@@ -280,14 +232,12 @@ class ClassificationMetricsCalculator:
     """Specialized metrics for classification models"""
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the calculator"""
+    """Initialize the calculator"""
         pass
 
-    async def calculate_metrics(self,
-                                predictions: np.ndarray,
-                                ground_truth: np.ndarray,
-                                additional_data: Dict[str,
-                                                      Any]) -> ClassificationMetrics:
+    async def calculate_metrics(
+        self, predictions: np.ndarray, ground_truth: np.ndarray, additional_data: Dict[str, Any]
+    ) -> ClassificationMetrics:
         """Calculate comprehensive classification metrics"""
 
         logger.info("Calculating classification metrics")
@@ -295,24 +245,15 @@ class ClassificationMetricsCalculator:
         # Convert predictions to binary if needed
         if predictions.ndim > 1:
             y_pred = np.argmax(predictions, axis=1)
-            y_pred_proba = predictions[:,
-                                       1] if predictions.shape[1] == 2 else predictions
+            y_pred_proba = predictions[:, 1] if predictions.shape[1] == 2 else predictions
         else:
             y_pred = (predictions > 0.5).astype(int)
             y_pred_proba = predictions
 
         # Basic metrics
         accuracy = accuracy_score(ground_truth, y_pred)
-        precision = precision_score(
-            ground_truth,
-            y_pred,
-            average="binary",
-            zero_division=0)
-        recall = recall_score(
-            ground_truth,
-            y_pred,
-            average="binary",
-            zero_division=0)
+        precision = precision_score(ground_truth, y_pred, average="binary", zero_division=0)
+        recall = recall_score(ground_truth, y_pred, average="binary", zero_division=0)
         f1 = f1_score(ground_truth, y_pred, average="binary", zero_division=0)
 
         # AUC metrics
@@ -345,14 +286,12 @@ class RegressionMetricsCalculator:
     """Specialized metrics for regression models"""
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the calculator"""
+    """Initialize the calculator"""
         pass
 
-    async def calculate_metrics(self,
-                                predictions: np.ndarray,
-                                ground_truth: np.ndarray,
-                                additional_data: Dict[str,
-                                                      Any]) -> RegressionMetrics:
+    async def calculate_metrics(
+        self, predictions: np.ndarray, ground_truth: np.ndarray, additional_data: Dict[str, Any]
+    ) -> RegressionMetrics:
         """Calculate comprehensive regression metrics"""
 
         logger.info("Calculating regression metrics")
@@ -372,17 +311,9 @@ class RegressionMetricsCalculator:
         # Mean Absolute Percentage Error
         mape = self.mean_absolute_percentage_error(ground_truth, predictions)
 
-        return RegressionMetrics(
-            mse=mse,
-            rmse=rmse,
-            mae=mae,
-            r2_score=r2,
-            mape=mape)
+        return RegressionMetrics(mse=mse, rmse=rmse, mae=mae, r2_score=r2, mape=mape)
 
-    def mean_absolute_percentage_error(
-            self,
-            y_true: np.ndarray,
-            y_pred: np.ndarray) -> float:
+    def mean_absolute_percentage_error(self, y_true: np.ndarray, y_pred: np.ndarray) -> float:
         """Calculate Mean Absolute Percentage Error"""
         if len(y_true) == 0:
             return 0.0
@@ -392,9 +323,7 @@ class RegressionMetricsCalculator:
         if not np.any(mask):
             return 0.0
 
-        mape = np.mean(
-            np.abs(
-                (y_true[mask] - y_pred[mask]) / y_true[mask])) * 100
+        mape = np.mean(np.abs((y_true[mask] - y_pred[mask]) / y_true[mask])) * 100
         return mape
 
 
@@ -402,14 +331,12 @@ class RecommendationMetricsCalculator:
     """Specialized metrics for recommendation models"""
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the calculator"""
+    """Initialize the calculator"""
         pass
 
-    async def calculate_metrics(self,
-                                predictions: np.ndarray,
-                                ground_truth: np.ndarray,
-                                additional_data: Dict[str,
-                                                      Any]) -> RecommendationMetrics:
+    async def calculate_metrics(
+        self, predictions: np.ndarray, ground_truth: np.ndarray, additional_data: Dict[str, Any]
+    ) -> RecommendationMetrics:
         """Calculate comprehensive recommendation metrics"""
 
         logger.info("Calculating recommendation metrics")
@@ -427,8 +354,7 @@ class RecommendationMetricsCalculator:
         novelty = self.calculate_novelty(predictions, additional_data)
 
         # Serendipity
-        serendipity = self.calculate_serendipity(
-            predictions, ground_truth, additional_data)
+        serendipity = self.calculate_serendipity(predictions, ground_truth, additional_data)
 
         return RecommendationMetrics(
             hit_rate=hit_rate,
@@ -438,10 +364,7 @@ class RecommendationMetricsCalculator:
             serendipity=serendipity,
         )
 
-    def calculate_hit_rate(
-            self,
-            predictions: np.ndarray,
-            ground_truth: np.ndarray) -> float:
+    def calculate_hit_rate(self, predictions: np.ndarray, ground_truth: np.ndarray) -> float:
         """Calculate hit rate"""
         if len(predictions) == 0:
             return 0.0
@@ -459,8 +382,7 @@ class RecommendationMetricsCalculator:
 
         return hits / len(predictions)
 
-    def calculate_coverage(self, predictions: np.ndarray,
-                           additional_data: Dict[str, Any]) -> float:
+    def calculate_coverage(self, predictions: np.ndarray, additional_data: Dict[str, Any]) -> float:
         """Calculate catalog coverage"""
         if len(predictions) == 0:
             return 0.0
@@ -476,9 +398,7 @@ class RecommendationMetricsCalculator:
         catalog_size = additional_data.get("catalog_size", len(predictions[0]))
         return len(all_recommended_items) / catalog_size
 
-    def calculate_diversity(
-        self, predictions: np.ndarray, additional_data: Dict[str, Any]
-    ) -> float:
+    def calculate_diversity(self, predictions: np.ndarray, additional_data: Dict[str, Any]) -> float:
         """Calculate diversity of recommendations"""
         if len(predictions) == 0:
             return 0.0
@@ -500,8 +420,7 @@ class RecommendationMetricsCalculator:
 
         return np.mean(diversity_scores) if diversity_scores else 0.0
 
-    def calculate_novelty(self, predictions: np.ndarray,
-                          additional_data: Dict[str, Any]) -> float:
+    def calculate_novelty(self, predictions: np.ndarray, additional_data: Dict[str, Any]) -> float:
         """Calculate novelty of recommendations"""
         if len(predictions) == 0:
             return 0.0
@@ -521,11 +440,9 @@ class RecommendationMetricsCalculator:
 
         return np.mean(novelty_scores)
 
-    def calculate_serendipity(self,
-                              predictions: np.ndarray,
-                              ground_truth: np.ndarray,
-                              additional_data: Dict[str,
-                                                    Any]) -> float:
+    def calculate_serendipity(
+        self, predictions: np.ndarray, ground_truth: np.ndarray, additional_data: Dict[str, Any]
+    ) -> float:
         """Calculate serendipity of recommendations"""
         if len(predictions) == 0:
             return 0.0
@@ -542,9 +459,7 @@ class RecommendationMetricsCalculator:
             relevant_items = ground_truth[top_k_indices] > 0
             if np.any(relevant_items):
                 # Simple serendipity: relevant items that are not too popular
-                popularity_scores = additional_data.get(
-                    "popularity_scores", np.ones(len(predictions[i]))
-                )
+                popularity_scores = additional_data.get("popularity_scores", np.ones(len(predictions[i])))
                 surprise_scores = 1.0 - popularity_scores[top_k_indices]
                 serendipity = np.mean(surprise_scores[relevant_items])
                 serendipity_scores.append(serendipity)
@@ -556,14 +471,12 @@ class ClusteringMetricsCalculator:
     """Specialized metrics for clustering models"""
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the calculator"""
+    """Initialize the calculator"""
         pass
 
-    async def calculate_metrics(self,
-                                predictions: np.ndarray,
-                                ground_truth: np.ndarray,
-                                additional_data: Dict[str,
-                                                      Any]) -> ClusteringMetrics:
+    async def calculate_metrics(
+        self, predictions: np.ndarray, ground_truth: np.ndarray, additional_data: Dict[str, Any]
+    ) -> ClusteringMetrics:
         """Calculate comprehensive clustering metrics"""
 
         logger.info("Calculating clustering metrics")
@@ -602,10 +515,7 @@ class ClusteringMetricsCalculator:
             inertia=inertia,
         )
 
-    def calculate_inertia(
-            self,
-            features: np.ndarray,
-            cluster_labels: np.ndarray) -> float:
+    def calculate_inertia(self, features: np.ndarray, cluster_labels: np.ndarray) -> float:
         """Calculate within-cluster sum of squares (inertia)"""
         if len(features) == 0:
             return 0.0
@@ -619,8 +529,7 @@ class ClusteringMetricsCalculator:
 
             if len(cluster_points) > 0:
                 cluster_center = np.mean(cluster_points, axis=0)
-                cluster_inertia = np.sum(
-                    (cluster_points - cluster_center) ** 2)
+                cluster_inertia = np.sum((cluster_points - cluster_center) ** 2)
                 inertia += cluster_inertia
 
         return inertia

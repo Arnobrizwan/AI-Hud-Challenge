@@ -89,11 +89,11 @@ class SSEManager:
         self.heartbeat_task: Optional[asyncio.Task] = None
 
     async def start_heartbeat_monitoring(self) -> Dict[str, Any]:
-        """Start heartbeat monitoring for all streams"""
+    """Start heartbeat monitoring for all streams"""
         self.heartbeat_task = asyncio.create_task(self._heartbeat_monitor())
 
     async def _heartbeat_monitor(self) -> Dict[str, Any]:
-        """Monitor and send heartbeats to active streams"""
+    """Monitor and send heartbeats to active streams"""
         while True:
             try:
     await asyncio.sleep(self.heartbeat_interval)
@@ -342,7 +342,7 @@ class SSEManager:
                     uuid.uuid4()), "send_initial_data": lambda data: None})()
 
     async def get_streams_status(self) -> Dict[str, Any]:
-        """Get status of active streams"""
+    """Get status of active streams"""
         return {
             "total_streams": len(self.active_streams),
             "active_streams": [

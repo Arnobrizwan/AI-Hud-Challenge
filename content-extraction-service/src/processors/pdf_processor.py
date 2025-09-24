@@ -327,7 +327,7 @@ class PDFProcessor:
             raise ContentProcessingError(f"Text extraction failed: {str(e)}")
 
     async def extract_metadata_only(self, pdf_url: str) -> Dict[str, Any]:
-        """Extract only metadata from PDF."""
+    """Extract only metadata from PDF."""
         try:
             result = await self.process_pdf(
                 pdf_url, include_images=False, include_tables=False, include_metadata=True
@@ -348,7 +348,7 @@ class PDFProcessor:
             return False
 
     async def get_pdf_info(self, pdf_url: str) -> Dict[str, Any]:
-        """Get basic information about PDF without full processing."""
+    """Get basic information about PDF without full processing."""
         try:
             import requests
 

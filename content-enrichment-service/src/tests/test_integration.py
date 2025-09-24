@@ -33,8 +33,8 @@ class TestContentEnrichmentPipeline:
 
     @pytest.mark.asyncio
     async def test_enrich_content_full_pipeline(
-            self, pipeline, sample_content):
-         -> Dict[str, Any]:"""Test full content enrichment pipeline."""
+            self, pipeline, sample_content) -> Dict[str, Any]:
+        """Test full content enrichment pipeline."""
         enriched = await pipeline.enrich_content(
             content=sample_content,
             processing_mode=ProcessingMode.REALTIME,
@@ -88,8 +88,8 @@ class TestContentEnrichmentPipeline:
 
     @pytest.mark.asyncio
     async def test_enrich_content_selective_components(
-            self, pipeline, sample_content):
-         -> Dict[str, Any]:"""Test enrichment with selective components."""
+            self, pipeline, sample_content) -> Dict[str, Any]:
+        """Test enrichment with selective components."""
         enriched = await pipeline.enrich_content(
             content=sample_content,
             include_entities=True,
@@ -110,7 +110,7 @@ class TestContentEnrichmentPipeline:
 
     @pytest.mark.asyncio
     async def test_enrich_content_batch_processing(self, pipeline) -> Dict[str, Any]:
-        """Test batch content enrichment."""
+    """Test batch content enrichment."""
         contents = [
             ExtractedContent(
                 title="Tech News 1",
@@ -147,7 +147,7 @@ class TestContentEnrichmentPipeline:
 
     @pytest.mark.asyncio
     async def test_enrich_content_error_handling(self, pipeline) -> Dict[str, Any]:
-        """Test error handling in content enrichment."""
+    """Test error handling in content enrichment."""
         # Test with invalid content
         invalid_content = ExtractedContent(
             title="", content="", content_type=ContentType.ARTICLE, language="en"  # Empty content
@@ -164,7 +164,7 @@ class TestContentEnrichmentPipeline:
 
     @pytest.mark.asyncio
     async def test_enrich_content_different_languages(self, pipeline) -> Dict[str, Any]:
-        """Test enrichment with different languages."""
+    """Test enrichment with different languages."""
         spanish_content = ExtractedContent(
             title="Noticias de Tecnología",
             content="Apple Inc. anunció hoy su nueva tecnología de inteligencia artificial. La empresa con sede en Cupertino, dirigida por el CEO Tim Cook, presentó una plataforma revolucionaria que promete transformar la industria tecnológica.",
@@ -265,7 +265,7 @@ class TestContentEnrichmentPipeline:
 
     @pytest.mark.asyncio
     async def test_enrich_content_large_content(self, pipeline) -> Dict[str, Any]:
-        """Test enrichment with large content."""
+    """Test enrichment with large content."""
         large_content = ExtractedContent(
             title="Large Article",
             content="This is a very long article. " * 1000,  # Large content
@@ -281,7 +281,7 @@ class TestContentEnrichmentPipeline:
 
     @pytest.mark.asyncio
     async def test_enrich_content_special_characters(self, pipeline) -> Dict[str, Any]:
-        """Test enrichment with special characters and unicode."""
+    """Test enrichment with special characters and unicode."""
         special_content = ExtractedContent(
             title="Special Characters & Unicode: 中文, العربية, हिन्दी",
             content="This article contains special characters: émojis 🚀, symbols ©®, and unicode text in multiple languages: 中文, العربية, हिन्दी, and more!",

@@ -389,7 +389,7 @@ class ImageProcessor:
             return "Unknown"
 
     async def get_image_metadata(self, image_data: bytes) -> Dict[str, Any]:
-        """Extract metadata from image."""
+    """Extract metadata from image."""
         try:
             image = Image.open(io.BytesIO(image_data))
 
@@ -420,7 +420,7 @@ class ImageProcessor:
             return {}
 
     async def validate_image(self, image_url: str) -> Dict[str, Any]:
-        """Validate image and return validation results."""
+    """Validate image and return validation results."""
         try:
             # Download image
             image_data = await self._download_image(image_url)

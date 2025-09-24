@@ -29,7 +29,7 @@ class OnlineEvaluator:
         self.active_evaluations: Dict[str, Dict[str, Any]] = {}
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the online evaluator"""
+    """Initialize the online evaluator"""
         try:
             logger.info("Initializing online evaluator...")
 
@@ -52,7 +52,7 @@ class OnlineEvaluator:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup online evaluator resources"""
+    """Cleanup online evaluator resources"""
         try:
             logger.info("Cleaning up online evaluator...")
 

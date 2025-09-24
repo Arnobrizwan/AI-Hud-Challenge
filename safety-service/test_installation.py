@@ -111,13 +111,8 @@ async def test_basic_functionality() -> Dict[str, Any]:
         request = SafetyMonitoringRequest(
             user_id="test_user_123",
             content="This is a test message for safety monitoring",
-            features={
-                "text_length": 45,
-                "sentiment": 0.2,
-                "toxicity_score": 0.1},
-            metadata={
-                "source": "test",
-                "timestamp": datetime.utcnow().isoformat()},
+            features={"text_length": 45, "sentiment": 0.2, "toxicity_score": 0.1},
+            metadata={"source": "test", "timestamp": datetime.utcnow().isoformat()},
         )
         print("✓ SafetyMonitoringRequest created successfully")
 
@@ -128,8 +123,7 @@ async def test_basic_functionality() -> Dict[str, Any]:
             print(f"  - Overall Score: {result.overall_score}")
             print(f"  - Requires Intervention: {result.requires_intervention}")
         except Exception as e:
-            print(
-                f"⚠ Safety monitoring failed (expected due to missing dependencies): {e}")
+            print(f"⚠ Safety monitoring failed (expected due to missing dependencies): {e}")
 
         # Cleanup
         await safety_engine.cleanup()
@@ -183,10 +177,7 @@ async def test_models() -> Dict[str, Any]:
         print("✓ SafetyMonitoringRequest model works")
 
         # Test SafetyStatus
-        status = SafetyStatus(
-            overall_score=0.8,
-            requires_intervention=False,
-            timestamp=datetime.utcnow())
+        status = SafetyStatus(overall_score=0.8, requires_intervention=False, timestamp=datetime.utcnow())
         print("✓ SafetyStatus model works")
 
         # Test other models
@@ -203,9 +194,7 @@ async def test_models() -> Dict[str, Any]:
         # abuse_request = AbuseDetectionRequest(...)
         print("✓ AbuseDetectionRequest model works (skipped)")
 
-        content_item = ContentItem(
-            id="test_content", text_content="Test content", user_id="test_user"
-        )
+        content_item = ContentItem(id="test_content", text_content="Test content", user_id="test_user")
         print("✓ ContentItem model works")
 
         return True

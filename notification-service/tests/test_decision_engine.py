@@ -174,7 +174,6 @@ async def test_process_notification_candidate_below_threshold(
 @pytest.mark.asyncio
 async def test_process_batch_notifications(decision_engine, sample_candidate) -> Dict[str, Any]:
     """Test processing batch notifications."""
-
     # Create multiple candidates
     candidates = [sample_candidate] * 3
 
@@ -217,7 +216,6 @@ async def test_process_batch_notifications(decision_engine, sample_candidate) ->
 @pytest.mark.asyncio
 async def test_execute_notification_delivery_success(decision_engine) -> Dict[str, Any]:
     """Test successful notification delivery."""
-
     # Create decision
     decision = MagicMock()
     decision.should_send = True
@@ -251,7 +249,6 @@ async def test_execute_notification_delivery_success(decision_engine) -> Dict[st
 @pytest.mark.asyncio
 async def test_execute_notification_delivery_retry_logic(decision_engine) -> Dict[str, Any]:
     """Test notification delivery with retry logic."""
-
     # Create decision
     decision = MagicMock()
     decision.should_send = True

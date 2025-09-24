@@ -38,7 +38,6 @@ class ServiceHealth(BaseModel):
 @router.get("/", response_model=HealthStatus)
 async def health_check() -> Dict[str, Any]:
     """Basic health check endpoint"""
-
     try:
         # Get application start time (would be set at startup)
         start_time = datetime.utcnow()  # This would be the actual start time
@@ -60,7 +59,6 @@ async def health_check() -> Dict[str, Any]:
 @router.get("/live", response_model=HealthStatus)
 async def liveness_check() -> Dict[str, Any]:
     """Kubernetes liveness probe endpoint"""
-
     try:
         # Basic liveness check - service is running
         return HealthStatus(
@@ -86,14 +84,10 @@ async def readiness_check(settings: Settings = Depends()):
 
         # Check if all critical services are healthy
         critical_services = ["database", "redis", "airflow"]
-        unhealthy_services = [
-            name for name,
-            health in services.items() if health.status != "healthy"]
+        unhealthy_services = [name for name, health in services.items() if health.status != "healthy"]
 
         if any(service in critical_services for service in unhealthy_services):
-            raise HTTPException(
-                status_code=503,
-                detail=f"Critical services unhealthy: {unhealthy_services}")
+            raise HTTPException(status_code=503, detail=f"Critical services unhealthy: {unhealthy_services}")
 
         return HealthStatus(
             status="ready",
@@ -117,10 +111,8 @@ async def detailed_health_check(settings: Settings = Depends()):
 
         # Calculate overall health
         total_services = len(services)
-        healthy_services = sum(
-            1 for health in services.values() if health.status == "healthy")
-        health_percentage = (healthy_services / total_services) * \
-            100 if total_services > 0 else 0
+        healthy_services = sum(1 for health in services.values() if health.status == "healthy")
+        health_percentage = (healthy_services / total_services) * 100 if total_services > 0 else 0
 
         overall_status = "healthy" if health_percentage >= 80 else "degraded"
 
@@ -129,14 +121,11 @@ async def detailed_health_check(settings: Settings = Depends()):
             "timestamp": datetime.utcnow().isoformat(),
             "version": "1.0.0",
             "health_percentage": health_percentage,
-            "services": {
-                name: health.dict() for name,
-                health in services.items()},
+            "services": {name: health.dict() for name, health in services.items()},
             "metrics": {
                 "total_services": total_services,
                 "healthy_services": healthy_services,
-                "unhealthy_services": total_services -
-                healthy_services,
+                "unhealthy_services": total_services - healthy_services,
             },
         }
 
@@ -192,10 +181,7 @@ async def check_database(settings: Settings) -> ServiceHealth:
         return ServiceHealth(
             name="database",
             status="unhealthy",
-            response_time_ms=(
-                datetime.utcnow() -
-                start_time).total_seconds() *
-            1000,
+            response_time_ms=(datetime.utcnow() - start_time).total_seconds() * 1000,
             last_check=datetime.utcnow(),
             error_message=str(e),
         )
@@ -221,10 +207,7 @@ async def check_redis(settings: Settings) -> ServiceHealth:
         return ServiceHealth(
             name="redis",
             status="unhealthy",
-            response_time_ms=(
-                datetime.utcnow() -
-                start_time).total_seconds() *
-            1000,
+            response_time_ms=(datetime.utcnow() - start_time).total_seconds() * 1000,
             last_check=datetime.utcnow(),
             error_message=str(e),
         )
@@ -250,10 +233,7 @@ async def check_airflow(settings: Settings) -> ServiceHealth:
         return ServiceHealth(
             name="airflow",
             status="unhealthy",
-            response_time_ms=(
-                datetime.utcnow() -
-                start_time).total_seconds() *
-            1000,
+            response_time_ms=(datetime.utcnow() - start_time).total_seconds() * 1000,
             last_check=datetime.utcnow(),
             error_message=str(e),
         )
@@ -279,10 +259,7 @@ async def check_vertex_ai(settings: Settings) -> ServiceHealth:
         return ServiceHealth(
             name="vertex_ai",
             status="unhealthy",
-            response_time_ms=(
-                datetime.utcnow() -
-                start_time).total_seconds() *
-            1000,
+            response_time_ms=(datetime.utcnow() - start_time).total_seconds() * 1000,
             last_check=datetime.utcnow(),
             error_message=str(e),
         )
@@ -308,10 +285,7 @@ async def check_mlflow(settings: Settings) -> ServiceHealth:
         return ServiceHealth(
             name="mlflow",
             status="unhealthy",
-            response_time_ms=(
-                datetime.utcnow() -
-                start_time).total_seconds() *
-            1000,
+            response_time_ms=(datetime.utcnow() - start_time).total_seconds() * 1000,
             last_check=datetime.utcnow(),
             error_message=str(e),
         )
@@ -337,10 +311,7 @@ async def check_prometheus(settings: Settings) -> ServiceHealth:
         return ServiceHealth(
             name="prometheus",
             status="unhealthy",
-            response_time_ms=(
-                datetime.utcnow() -
-                start_time).total_seconds() *
-            1000,
+            response_time_ms=(datetime.utcnow() - start_time).total_seconds() * 1000,
             last_check=datetime.utcnow(),
             error_message=str(e),
         )

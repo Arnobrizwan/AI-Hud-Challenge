@@ -40,7 +40,7 @@ class CachePolicies:
         self._content_type_configs: Dict[ContentType, Dict[str, Any]] = {}
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize cache policies"""
+    """Initialize cache policies"""
         if self._initialized:
             return
 
@@ -64,12 +64,12 @@ class CachePolicies:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup cache policies"""
+    """Cleanup cache policies"""
         self._initialized = False
         logger.info("Cache Policies cleanup complete")
 
     async def _initialize_strategy_configs(self) -> Dict[str, Any]:
-        """Initialize cache strategy configurations"""
+    """Initialize cache strategy configurations"""
         self._strategy_configs = {
             CacheStrategy.AGGRESSIVE: {
                 "memory_ttl": 1800,  # 30 minutes
@@ -104,7 +104,7 @@ class CachePolicies:
         }
 
     async def _initialize_content_type_configs(self) -> Dict[str, Any]:
-        """Initialize content type specific configurations"""
+    """Initialize content type specific configurations"""
         self._content_type_configs = {
             ContentType.ARTICLE: {
                 "base_ttl_multiplier": 1.0,
@@ -149,7 +149,7 @@ class CachePolicies:
         }
 
     async def _load_custom_policies(self) -> Dict[str, Any]:
-        """Load custom cache policies from configuration"""
+    """Load custom cache policies from configuration"""
         # This would typically load from a database or configuration file
         # For now, we'll use default policies
         self._policies = {
@@ -344,7 +344,7 @@ class CachePolicies:
             return config
 
     def _get_default_config(self) -> Dict[str, Any]:
-        """Get default cache configuration"""
+    """Get default cache configuration"""
         return {
             "memory_ttl": 600,
             "redis_ttl": 3600,

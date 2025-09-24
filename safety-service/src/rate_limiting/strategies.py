@@ -25,7 +25,7 @@ class BaseRateLimiter:
         self.redis_client = None
 
     async def initialize(self, redis_client) -> Dict[str, Any]:
-        """Initialize the rate limiter"""
+    """Initialize the rate limiter"""
         self.redis_client = redis_client
         self.is_initialized = True
 
@@ -122,7 +122,7 @@ class SlidingWindowRateLimiter(BaseRateLimiter):
             logger.error(f"Dynamic limit setting failed: {str(e)}")
 
     async def reset_limit(self, user_id: str, endpoint: str) -> Dict[str, Any]:
-        """Reset rate limit for user and endpoint"""
+    """Reset rate limit for user and endpoint"""
         try:
             key = self.get_key(user_id, endpoint)
             await self.redis_client.delete(key)
@@ -131,7 +131,7 @@ class SlidingWindowRateLimiter(BaseRateLimiter):
             logger.error(f"Rate limit reset failed: {str(e)}")
 
     async def reset_user_limits(self, user_id: str) -> Dict[str, Any]:
-        """Reset all rate limits for user"""
+    """Reset all rate limits for user"""
         try:
             pattern = f"{self.__class__.__name__}:{user_id}:*"
             keys = await self.redis_client.keys(pattern)
@@ -142,7 +142,7 @@ class SlidingWindowRateLimiter(BaseRateLimiter):
             logger.error(f"User rate limit reset failed: {str(e)}")
 
     async def get_status(self, user_id: str, endpoint: str) -> Dict[str, Any]:
-        """Get current rate limit status"""
+    """Get current rate limit status"""
         try:
             key = self.get_key(user_id, endpoint)
             window_data = await self.redis_client.get(key)
@@ -176,7 +176,7 @@ class SlidingWindowRateLimiter(BaseRateLimiter):
             return {"error": str(e)}
 
     async def get_statistics(self) -> Dict[str, Any]:
-        """Get rate limiter statistics"""
+    """Get rate limiter statistics"""
         try:
             # Get all keys for this limiter
             pattern = f"{self.__class__.__name__}:*"
@@ -285,7 +285,7 @@ class TokenBucketRateLimiter(BaseRateLimiter):
             logger.error(f"Dynamic limit setting failed: {str(e)}")
 
     async def reset_limit(self, user_id: str, endpoint: str) -> Dict[str, Any]:
-        """Reset rate limit for user and endpoint"""
+    """Reset rate limit for user and endpoint"""
         try:
             key = self.get_key(user_id, endpoint)
             await self.redis_client.delete(key)
@@ -294,7 +294,7 @@ class TokenBucketRateLimiter(BaseRateLimiter):
             logger.error(f"Rate limit reset failed: {str(e)}")
 
     async def reset_user_limits(self, user_id: str) -> Dict[str, Any]:
-        """Reset all rate limits for user"""
+    """Reset all rate limits for user"""
         try:
             pattern = f"{self.__class__.__name__}:{user_id}:*"
             keys = await self.redis_client.keys(pattern)
@@ -305,7 +305,7 @@ class TokenBucketRateLimiter(BaseRateLimiter):
             logger.error(f"User rate limit reset failed: {str(e)}")
 
     async def get_status(self, user_id: str, endpoint: str) -> Dict[str, Any]:
-        """Get current rate limit status"""
+    """Get current rate limit status"""
         try:
             key = self.get_key(user_id, endpoint)
             bucket_data = await self.redis_client.get(key)
@@ -338,7 +338,7 @@ class TokenBucketRateLimiter(BaseRateLimiter):
             return {"error": str(e)}
 
     async def get_statistics(self) -> Dict[str, Any]:
-        """Get rate limiter statistics"""
+    """Get rate limiter statistics"""
         try:
             # Get all keys for this limiter
             pattern = f"{self.__class__.__name__}:*"
@@ -477,7 +477,7 @@ class AdaptiveRateLimiter(BaseRateLimiter):
             logger.error(f"Dynamic limit setting failed: {str(e)}")
 
     async def reset_limit(self, user_id: str, endpoint: str) -> Dict[str, Any]:
-        """Reset rate limit for user and endpoint"""
+    """Reset rate limit for user and endpoint"""
         try:
             key = self.get_key(user_id, endpoint)
             await self.redis_client.delete(key)
@@ -486,7 +486,7 @@ class AdaptiveRateLimiter(BaseRateLimiter):
             logger.error(f"Rate limit reset failed: {str(e)}")
 
     async def reset_user_limits(self, user_id: str) -> Dict[str, Any]:
-        """Reset all rate limits for user"""
+    """Reset all rate limits for user"""
         try:
             pattern = f"{self.__class__.__name__}:{user_id}:*"
             keys = await self.redis_client.keys(pattern)
@@ -497,7 +497,7 @@ class AdaptiveRateLimiter(BaseRateLimiter):
             logger.error(f"User rate limit reset failed: {str(e)}")
 
     async def get_status(self, user_id: str, endpoint: str) -> Dict[str, Any]:
-        """Get current rate limit status"""
+    """Get current rate limit status"""
         try:
             key = self.get_key(user_id, endpoint)
             window_data = await self.redis_client.get(key)
@@ -530,7 +530,7 @@ class AdaptiveRateLimiter(BaseRateLimiter):
             return {"error": str(e)}
 
     async def get_statistics(self) -> Dict[str, Any]:
-        """Get rate limiter statistics"""
+    """Get rate limiter statistics"""
         try:
             # Get all keys for this limiter
             pattern = f"{self.__class__.__name__}:*"
@@ -647,7 +647,7 @@ class GeolocationBasedLimiter(BaseRateLimiter):
             return "OTHER"
 
     async def mark_location_suspicious(self, location: str) -> Dict[str, Any]:
-        """Mark a location as suspicious"""
+    """Mark a location as suspicious"""
         try:
             self.suspicious_locations.add(location)
             logger.info(f"Marked location {location} as suspicious")
@@ -656,7 +656,7 @@ class GeolocationBasedLimiter(BaseRateLimiter):
             logger.error(f"Failed to mark location as suspicious: {str(e)}")
 
     async def unmark_location_suspicious(self, location: str) -> Dict[str, Any]:
-        """Remove suspicious mark from location"""
+    """Remove suspicious mark from location"""
         try:
             self.suspicious_locations.discard(location)
             logger.info(f"Removed suspicious mark from location {location}")
@@ -707,7 +707,7 @@ class GeolocationBasedLimiter(BaseRateLimiter):
             return {"error": str(e)}
 
     async def get_statistics(self) -> Dict[str, Any]:
-        """Get rate limiter statistics"""
+    """Get rate limiter statistics"""
         try:
             # Get all keys for this limiter
             pattern = "geo_limit:*"

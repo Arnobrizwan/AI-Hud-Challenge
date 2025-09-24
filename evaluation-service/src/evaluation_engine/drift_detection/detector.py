@@ -27,13 +27,13 @@ class ModelDriftDetector:
         self.alerting_system = AlertingSystem()
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the drift detector"""
+    """Initialize the drift detector"""
         logger.info("Initializing drift detector...")
         # Initialize components
         logger.info("Drift detector initialized successfully")
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup drift detector resources"""
+    """Cleanup drift detector resources"""
         logger.info("Cleaning up drift detector...")
         logger.info("Drift detector cleanup completed")
 
@@ -85,7 +85,7 @@ class ModelDriftDetector:
     async def _detect_data_drift(
         self, model: Dict[str, Any], drift_config: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Detect drift in input feature distributions"""
+    """Detect drift in input feature distributions"""
         # Mock data drift detection
         feature_drift_results = {}
 
@@ -127,7 +127,7 @@ class ModelDriftDetector:
     async def _detect_prediction_drift(
         self, model: Dict[str, Any], drift_config: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Detect drift in model predictions"""
+    """Detect drift in model predictions"""
         # Mock prediction drift detection
         ks_statistic = np.random.uniform(0.1, 0.4)
         p_value = np.random.uniform(0.01, 0.05)

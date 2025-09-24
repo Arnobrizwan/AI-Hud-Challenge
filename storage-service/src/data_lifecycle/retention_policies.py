@@ -20,7 +20,7 @@ class RetentionPolicies:
         self._policies: List[RetentionPolicy] = []
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize retention policies"""
+    """Initialize retention policies"""
         self._initialized = True
 
         # Load default policies
@@ -44,7 +44,7 @@ class RetentionPolicies:
         logger.info("Retention Policies initialized")
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup retention policies"""
+    """Cleanup retention policies"""
         self._initialized = False
         logger.info("Retention Policies cleanup complete")
 
@@ -53,7 +53,7 @@ class RetentionPolicies:
         return [p for p in self._policies if p.is_active]
 
     async def get_statistics(self) -> Dict[str, Any]:
-        """Get retention policy statistics"""
+    """Get retention policy statistics"""
         return {
             "total_policies": len(self._policies),
             "active_policies": len([p for p in self._policies if p.is_active]),

@@ -41,7 +41,7 @@ class AnomalyDetectionSystem:
         self.user_behavior_history = {}
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the anomaly detection system"""
+    """Initialize the anomaly detection system"""
         try:
             # Initialize all detectors
             await self.isolation_forest.initialize()
@@ -58,7 +58,7 @@ class AnomalyDetectionSystem:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup resources"""
+    """Cleanup resources"""
         try:
     await self.isolation_forest.cleanup()
             await self.one_class_svm.cleanup()
@@ -363,7 +363,7 @@ class AnomalyDetectionSystem:
             logger.error(f"Historical data update failed: {str(e)}")
 
     async def train_models(self) -> Dict[str, Any]:
-        """Train anomaly detection models with historical data"""
+    """Train anomaly detection models with historical data"""
         try:
             if len(self.historical_metrics) < 100:
                 logger.warning("Insufficient historical data for training")
@@ -430,7 +430,7 @@ class AnomalyDetectionSystem:
             return []
 
     async def get_anomaly_statistics(self) -> Dict[str, Any]:
-        """Get anomaly detection statistics"""
+    """Get anomaly detection statistics"""
         try:
             if not self.historical_metrics:
                 return {"message": "No historical data available"}
@@ -465,7 +465,7 @@ class AnomalyDetectionSystem:
             return {"error": str(e)}
 
     async def get_system_health_trend(self, hours: int = 24) -> Dict[str, Any]:
-        """Get system health trend over time"""
+    """Get system health trend over time"""
         try:
             if not self.historical_metrics:
                 return {"message": "No historical data available"}

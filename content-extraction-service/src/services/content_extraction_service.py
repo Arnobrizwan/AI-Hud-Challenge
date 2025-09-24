@@ -309,7 +309,7 @@ class ContentExtractionService:
             )
 
     async def get_metrics(self) -> Dict[str, Any]:
-        """Get service metrics."""
+    """Get service metrics."""
         try:
             return await self.monitoring_service.get_metrics()
         except Exception as e:

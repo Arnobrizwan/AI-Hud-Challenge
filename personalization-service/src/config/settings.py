@@ -1,6 +1,5 @@
 """Configuration settings for the personalization service."""
 
-
 from pydantic import BaseSettings, Field
 
 

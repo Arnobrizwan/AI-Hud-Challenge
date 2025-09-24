@@ -38,7 +38,7 @@ class ComplianceMonitor:
         self.audit_trail_manager = AuditTrailManager()
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the compliance monitor"""
+    """Initialize the compliance monitor"""
         try:
             # Initialize all monitors
             await self.gdpr_monitor.initialize()
@@ -54,7 +54,7 @@ class ComplianceMonitor:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup resources"""
+    """Cleanup resources"""
         try:
     await self.gdpr_monitor.cleanup()
             await self.content_policy_monitor.cleanup()
@@ -227,7 +227,7 @@ class ComplianceMonitor:
             return []
 
     async def get_compliance_dashboard(self) -> Dict[str, Any]:
-        """Get compliance dashboard data"""
+    """Get compliance dashboard data"""
         try:
             dashboard_data = {
                 "timestamp": datetime.utcnow().isoformat(),
@@ -266,7 +266,7 @@ class ComplianceMonitor:
             return []
 
     async def get_compliance_trends(self, days: int = 30) -> Dict[str, Any]:
-        """Get compliance trends over time"""
+    """Get compliance trends over time"""
         try:
             # This would typically query historical data
             # For now, return mock data
@@ -344,7 +344,7 @@ class ComplianceMonitor:
             return ""
 
     async def schedule_compliance_checks(self) -> Dict[str, Any]:
-        """Schedule periodic compliance checks"""
+    """Schedule periodic compliance checks"""
         try:
             # This would set up scheduled compliance checks
             # For now, just log the action
@@ -354,7 +354,7 @@ class ComplianceMonitor:
             logger.error(f"Compliance check scheduling failed: {str(e)}")
 
     async def get_compliance_metrics(self) -> Dict[str, Any]:
-        """Get compliance metrics and statistics"""
+    """Get compliance metrics and statistics"""
         try:
             metrics = {
                 "timestamp": datetime.utcnow().isoformat(),

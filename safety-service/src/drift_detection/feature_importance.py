@@ -25,7 +25,7 @@ class FeatureImportanceMonitor:
         self.is_initialized = False
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the feature importance monitor"""
+    """Initialize the feature importance monitor"""
         try:
             self.is_initialized = True
             logger.info("Feature importance monitor initialized")
@@ -36,7 +36,7 @@ class FeatureImportanceMonitor:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup resources"""
+    """Cleanup resources"""
         try:
             self.is_initialized = False
             logger.info("Feature importance monitor cleanup completed")

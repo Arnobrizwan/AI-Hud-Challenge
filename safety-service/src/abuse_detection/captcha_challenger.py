@@ -91,7 +91,7 @@ class CaptchaChallenger:
         }
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the CAPTCHA challenger"""
+    """Initialize the CAPTCHA challenger"""
         try:
             # Start cleanup task
             asyncio.create_task(self.cleanup_expired_challenges())
@@ -104,7 +104,7 @@ class CaptchaChallenger:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup resources"""
+    """Cleanup resources"""
         try:
             self.active_challenges.clear()
             self.challenge_history.clear()
@@ -530,7 +530,7 @@ class CaptchaChallenger:
         ).hexdigest()[:16]
 
     async def cleanup_expired_challenges(self) -> Dict[str, Any]:
-        """Background task to clean up expired challenges"""
+    """Background task to clean up expired challenges"""
         while True:
             try:
     await asyncio.sleep(60)  # Run every minute
@@ -558,7 +558,7 @@ class CaptchaChallenger:
                 await asyncio.sleep(60)
 
     async def get_challenge_statistics(self) -> Dict[str, Any]:
-        """Get CAPTCHA challenge statistics"""
+    """Get CAPTCHA challenge statistics"""
         try:
             total_challenges = sum(len(history)
                                    for history in self.challenge_history.values())

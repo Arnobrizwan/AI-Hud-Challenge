@@ -1,6 +1,5 @@
 """Tests for MinHash implementation."""
 
-
 from src.algorithms.lsh.minhash import ContentFingerprinter, MinHashGenerator
 
 

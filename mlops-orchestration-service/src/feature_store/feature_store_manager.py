@@ -560,7 +560,7 @@ class FeatureValidator:
         self.validation_rules = {}
 
     async def initialize(self) -> Dict[str, Any]:
-        pass
+    pass
 
     async def validate_features(
         self, feature_definitions: List[FeatureDefinition]
@@ -590,7 +590,7 @@ class FeatureServingClient:
         self.vertex_ai_client = None
 
     async def initialize(self) -> Dict[str, Any]:
-        pass
+    pass
 
     async def get_online_features(self,
                                   feature_store_name: str,
@@ -619,10 +619,10 @@ class LineageTracker:
         self.lineage_data = {}
 
     async def initialize(self) -> Dict[str, Any]:
-        pass
+    pass
 
     async def track_feature_set_creation(self, feature_set: FeatureSet) -> Dict[str, Any]:
-        """Track feature set creation in lineage"""
+    """Track feature set creation in lineage"""
         pass
 
     async def get_feature_lineage(self, feature_name: str) -> FeatureLineage:

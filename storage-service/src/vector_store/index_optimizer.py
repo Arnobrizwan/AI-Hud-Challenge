@@ -22,12 +22,12 @@ class VectorIndexOptimizer:
         self._optimization_history: List[Dict[str, Any]] = []
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize index optimizer"""
+    """Initialize index optimizer"""
         self._initialized = True
         logger.info("Vector Index Optimizer initialized")
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup resources"""
+    """Cleanup resources"""
         self._initialized = False
         logger.info("Vector Index Optimizer cleanup complete")
 
@@ -67,7 +67,7 @@ class VectorIndexOptimizer:
             return {}
 
     def _optimize_for_speed(self) -> Dict[str, Any]:
-        """Optimize for query speed"""
+    """Optimize for query speed"""
         return {
             "hnsw_m": 32,  # Higher connectivity for better recall
             "ef_construction": 400,  # Higher construction effort
@@ -77,7 +77,7 @@ class VectorIndexOptimizer:
         }
 
     def _optimize_for_size(self) -> Dict[str, Any]:
-        """Optimize for index size"""
+    """Optimize for index size"""
         return {
             "hnsw_m": 8,  # Lower connectivity to reduce size
             "ef_construction": 100,  # Lower construction effort
@@ -87,7 +87,7 @@ class VectorIndexOptimizer:
         }
 
     def _optimize_for_throughput(self) -> Dict[str, Any]:
-        """Optimize for high query throughput"""
+    """Optimize for high query throughput"""
         return {
             "hnsw_m": 16,  # Balanced connectivity
             "ef_construction": 200,  # Balanced construction
@@ -97,7 +97,7 @@ class VectorIndexOptimizer:
         }
 
     def _optimize_balanced(self) -> Dict[str, Any]:
-        """Balanced optimization"""
+    """Balanced optimization"""
         return {
             "hnsw_m": 16,
             "ef_construction": 200,
@@ -299,7 +299,7 @@ class VectorIndexOptimizer:
             return self._optimization_history
 
     async def get_performance_summary(self) -> Dict[str, Any]:
-        """Get performance summary across all indexes"""
+    """Get performance summary across all indexes"""
         if not self._initialized or not self._index_performance:
             return {}
 

@@ -1,6 +1,5 @@
 """Database models using SQLAlchemy."""
 
-
 from sqlalchemy import (
     JSON,
     Boolean,

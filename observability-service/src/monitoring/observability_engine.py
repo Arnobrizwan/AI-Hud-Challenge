@@ -97,8 +97,7 @@ class ObservabilityEngine:
         )
 
     async def start_monitoring_loops(self) -> Dict[str, Any]:
-        """Start background monitoring tasks"""
-
+    """Start background monitoring tasks"""
         # Health monitoring loop
         self.monitoring_tasks.append(
             asyncio.create_task(
@@ -175,23 +174,23 @@ class ObservabilityEngine:
         )
 
     async def check_service_health(self) -> Dict[str, Any]:
-        """Check health of all microservices"""
+    """Check health of all microservices"""
         return await self.health_checker.check_all_services()
 
     async def check_infrastructure_health(self) -> Dict[str, Any]:
-        """Check infrastructure health (Kubernetes, databases, etc.)"""
+    """Check infrastructure health (Kubernetes, databases, etc.)"""
         return await self.health_checker.check_infrastructure()
 
     async def check_data_pipeline_health(self) -> Dict[str, Any]:
-        """Check data pipeline health"""
+    """Check data pipeline health"""
         return await self.health_checker.check_data_pipeline()
 
     async def check_ml_model_health(self) -> Dict[str, Any]:
-        """Check ML model health and performance"""
+    """Check ML model health and performance"""
         return await self.health_checker.check_ml_models()
 
     async def check_external_dependencies_health(self) -> Dict[str, Any]:
-        """Check external dependencies health"""
+    """Check external dependencies health"""
         return await self.health_checker.check_external_dependencies()
 
     def calculate_overall_health_score(
@@ -226,7 +225,7 @@ class ObservabilityEngine:
         return list(set(recommendations))  # Remove duplicates
 
     async def get_system_status(self) -> Dict[str, Any]:
-        """Get comprehensive system status"""
+    """Get comprehensive system status"""
         if not self.is_initialized:
             return {"status": "not_initialized"}
 
@@ -260,7 +259,7 @@ class ObservabilityEngine:
                 "timestamp": datetime.utcnow().isoformat()}
 
     async def _health_monitoring_loop(self) -> Dict[str, Any]:
-        """Background health monitoring loop"""
+    """Background health monitoring loop"""
         while True:
             try:
                 health_report = await self.collect_system_health()
@@ -283,7 +282,7 @@ class ObservabilityEngine:
                 await asyncio.sleep(60)
 
     async def _metrics_collection_loop(self) -> Dict[str, Any]:
-        """Background metrics collection loop"""
+    """Background metrics collection loop"""
         while True:
             try:
     await self.metrics_collector.collect_real_time_metrics()
@@ -294,7 +293,7 @@ class ObservabilityEngine:
                 await asyncio.sleep(30)
 
     async def _alert_processing_loop(self) -> Dict[str, Any]:
-        """Background alert processing loop"""
+    """Background alert processing loop"""
         while True:
             try:
     await self.alerting_system.process_pending_alerts()
@@ -305,7 +304,7 @@ class ObservabilityEngine:
                 await asyncio.sleep(10)
 
     async def _slo_monitoring_loop(self) -> Dict[str, Any]:
-        """Background SLO monitoring loop"""
+    """Background SLO monitoring loop"""
         while True:
             try:
     await self.slo_monitor.monitor_all_slos()
@@ -316,7 +315,7 @@ class ObservabilityEngine:
                 await asyncio.sleep(300)
 
     async def _cost_monitoring_loop(self) -> Dict[str, Any]:
-        """Background cost monitoring loop"""
+    """Background cost monitoring loop"""
         while True:
             try:
     await self.cost_monitor.collect_cost_metrics()
@@ -327,7 +326,7 @@ class ObservabilityEngine:
                 await asyncio.sleep(3600)
 
     async def _chaos_engineering_loop(self) -> Dict[str, Any]:
-        """Background chaos engineering loop"""
+    """Background chaos engineering loop"""
         while True:
             try:
     await self.chaos_engine.run_chaos_experiments()
@@ -338,7 +337,7 @@ class ObservabilityEngine:
                 await asyncio.sleep(1800)
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup resources"""
+    """Cleanup resources"""
         logger.info("Cleaning up observability engine...")
 
         # Cancel monitoring tasks

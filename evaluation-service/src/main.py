@@ -176,7 +176,7 @@ def create_app() -> FastAPI:
     # Health check endpoint
     @app.get("/health", tags=["health"])
     async def health_check() -> Dict[str, Any]:
-        """Health check endpoint"""
+    """Health check endpoint"""
         return {
             "status": "healthy",
             "service": "evaluation-suite",
@@ -187,7 +187,7 @@ def create_app() -> FastAPI:
     # Root endpoint
     @app.get("/", tags=["root"])
     async def root() -> Dict[str, Any]:
-        """Root endpoint with service information"""
+    """Root endpoint with service information"""
         return {
             "service": "Evaluation Suite Microservice",
             "description": "Comprehensive evaluation system for ML pipelines",

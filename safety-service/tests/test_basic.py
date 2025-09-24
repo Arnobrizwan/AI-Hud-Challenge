@@ -20,7 +20,7 @@ class TestSafetyMonitoringEngine:
 
     @pytest.fixture
     async def safety_engine(self) -> Dict[str, Any]:
-        """Create a safety engine instance for testing"""
+    """Create a safety engine instance for testing"""
         engine = SafetyMonitoringEngine()
         await engine.initialize()
         yield engine
@@ -43,7 +43,7 @@ class TestSafetyMonitoringEngine:
 
     @pytest.mark.asyncio
     async def test_safety_engine_initialization(self, safety_engine) -> Dict[str, Any]:
-        """Test that the safety engine initializes correctly"""
+    """Test that the safety engine initializes correctly"""
         assert safety_engine.is_initialized
         assert safety_engine.drift_detector is not None
         assert safety_engine.abuse_detector is not None
@@ -104,7 +104,7 @@ class TestDriftDetection:
 
     @pytest.fixture
     async def drift_detector(self) -> Dict[str, Any]:
-        """Create a drift detector instance for testing"""
+    """Create a drift detector instance for testing"""
         detector = MultidimensionalDriftDetector()
         await detector.initialize()
         yield detector
@@ -112,7 +112,7 @@ class TestDriftDetection:
 
     @pytest.mark.asyncio
     async def test_drift_detector_initialization(self, drift_detector) -> Dict[str, Any]:
-        """Test that the drift detector initializes correctly"""
+    """Test that the drift detector initializes correctly"""
         assert drift_detector.is_initialized
         assert drift_detector.statistical_detectors is not None
         assert drift_detector.concept_drift_detector is not None
@@ -120,7 +120,7 @@ class TestDriftDetection:
 
     @pytest.mark.asyncio
     async def test_drift_detection_basic(self, drift_detector) -> Dict[str, Any]:
-        """Test basic drift detection functionality"""
+    """Test basic drift detection functionality"""
         # Create mock data
         import numpy as np
         import pandas as pd
@@ -156,7 +156,7 @@ class TestAbuseDetection:
 
     @pytest.fixture
     async def abuse_detector(self) -> Dict[str, Any]:
-        """Create an abuse detector instance for testing"""
+    """Create an abuse detector instance for testing"""
         detector = AbuseDetectionSystem()
         await detector.initialize()
         yield detector
@@ -164,7 +164,7 @@ class TestAbuseDetection:
 
     @pytest.mark.asyncio
     async def test_abuse_detector_initialization(self, abuse_detector) -> Dict[str, Any]:
-        """Test that the abuse detector initializes correctly"""
+    """Test that the abuse detector initializes correctly"""
         assert abuse_detector.is_initialized
         assert abuse_detector.behavioral_analyzer is not None
         assert abuse_detector.graph_analyzer is not None
@@ -172,7 +172,7 @@ class TestAbuseDetection:
 
     @pytest.mark.asyncio
     async def test_abuse_detection_basic(self, abuse_detector) -> Dict[str, Any]:
-        """Test basic abuse detection functionality"""
+    """Test basic abuse detection functionality"""
         # Create mock activity data
         from src.abuse_detection.models import AbuseDetectionRequest, ActivityData
 
@@ -203,7 +203,7 @@ class TestContentModeration:
 
     @pytest.fixture
     async def content_moderator(self) -> Dict[str, Any]:
-        """Create a content moderator instance for testing"""
+    """Create a content moderator instance for testing"""
         moderator = ContentModerationEngine()
         await moderator.initialize()
         yield moderator
@@ -211,7 +211,7 @@ class TestContentModeration:
 
     @pytest.mark.asyncio
     async def test_content_moderator_initialization(self, content_moderator) -> Dict[str, Any]:
-        """Test that the content moderator initializes correctly"""
+    """Test that the content moderator initializes correctly"""
         assert content_moderator.is_initialized
         assert content_moderator.toxicity_detector is not None
         assert content_moderator.hate_speech_detector is not None
@@ -219,7 +219,7 @@ class TestContentModeration:
 
     @pytest.mark.asyncio
     async def test_content_moderation_basic(self, content_moderator) -> Dict[str, Any]:
-        """Test basic content moderation functionality"""
+    """Test basic content moderation functionality"""
         # Create mock content
         from src.content_moderation.models import ContentItem
 
@@ -244,7 +244,7 @@ class TestIntegration:
 
     @pytest.mark.asyncio
     async def test_end_to_end_safety_check(self) -> Dict[str, Any]:
-        """Test end-to-end safety checking workflow"""
+    """Test end-to-end safety checking workflow"""
         # Initialize all components
         safety_engine = SafetyMonitoringEngine()
         await safety_engine.initialize()
@@ -288,7 +288,7 @@ class TestIntegration:
 
     @pytest.mark.asyncio
     async def test_error_handling(self) -> Dict[str, Any]:
-        """Test error handling in safety monitoring"""
+    """Test error handling in safety monitoring"""
         safety_engine = SafetyMonitoringEngine()
         await safety_engine.initialize()
 

@@ -38,7 +38,7 @@ class CacheManager:
         asyncio.create_task(self._initialize_redis())
 
     async def _initialize_redis(self) -> Dict[str, Any]:
-        """Initialize Redis connection pool."""
+    """Initialize Redis connection pool."""
         try:
             self.redis_pool = redis.ConnectionPool.from_url(
                 self.redis_url,
@@ -146,7 +146,7 @@ class CacheManager:
             return False
 
     async def get_many(self, keys: List[str]) -> Dict[str, Any]:
-        """Get multiple values from cache."""
+    """Get multiple values from cache."""
         if not self.redis or not keys:
             return {}
 
@@ -288,7 +288,7 @@ class CacheManager:
         return self.hit_count / self.total_requests
 
     def get_stats(self) -> Dict[str, Any]:
-        """Get cache statistics."""
+    """Get cache statistics."""
         return {
             "hit_count": self.hit_count,
             "miss_count": self.miss_count,
@@ -298,13 +298,13 @@ class CacheManager:
         }
 
     async def clear_stats(self) -> Dict[str, Any]:
-        """Clear cache statistics."""
+    """Clear cache statistics."""
         self.hit_count = 0
         self.miss_count = 0
         self.total_requests = 0
 
     async def close(self) -> Dict[str, Any]:
-        """Close Redis connection."""
+    """Close Redis connection."""
         if self.redis:
     await self.redis.close()
             logger.info("Redis connection closed")
@@ -357,17 +357,17 @@ class FeatureCache:
         return await self.cache_manager.set(cache_key, results, ttl)
 
     async def invalidate_user_features(self, user_id: str) -> Dict[str, Any]:
-        """Invalidate all features for a user."""
+    """Invalidate all features for a user."""
         pattern = f"{self.feature_prefix}:*:{user_id}*"
         await self._invalidate_pattern(pattern)
 
     async def invalidate_article_features(self, article_id: str) -> Dict[str, Any]:
-        """Invalidate all features for an article."""
+    """Invalidate all features for an article."""
         pattern = f"{self.feature_prefix}:*:{article_id}*"
         await self._invalidate_pattern(pattern)
 
     async def _invalidate_pattern(self, pattern: str) -> Dict[str, Any]:
-        """Invalidate all keys matching pattern."""
+    """Invalidate all keys matching pattern."""
         if not self.cache_manager.redis:
             return
 
@@ -423,7 +423,7 @@ class RankingCache:
         return await self.cache_manager.set(cache_key, prediction, ttl)
 
     async def warm_up_cache(self, common_queries: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Warm up cache with common queries."""
+    """Warm up cache with common queries."""
         for query in common_queries:
             # This would precompute and cache common ranking results
             pass
@@ -448,17 +448,17 @@ class CacheOptimizer:
         pass
 
     async def precompute_features(self, article_ids: List[str]) -> Dict[str, Any]:
-        """Precompute features for articles."""
+    """Precompute features for articles."""
         # Implement feature precomputation
         pass
 
     async def compress_large_values(self, threshold: int = 1024) -> Dict[str, Any]:
-        """Compress large values in cache."""
+    """Compress large values in cache."""
         # Implement compression for large values
         pass
 
     async def get_cache_efficiency_metrics(self) -> Dict[str, Any]:
-        """Get cache efficiency metrics."""
+    """Get cache efficiency metrics."""
         stats = self.cache_manager.get_stats()
 
         return {

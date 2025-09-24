@@ -25,13 +25,13 @@ class PowerAnalyzer:
         }
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the power analyzer"""
+    """Initialize the power analyzer"""
         logger.info("Initializing power analyzer...")
         # No specific initialization needed
         logger.info("Power analyzer initialized successfully")
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup power analyzer resources"""
+    """Cleanup power analyzer resources"""
         logger.info("Cleaning up power analyzer...")
         # No specific cleanup needed
         logger.info("Power analyzer cleanup completed")

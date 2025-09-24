@@ -27,13 +27,13 @@ class BanditTestingFramework:
         }
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the bandit testing framework"""
+    """Initialize the bandit testing framework"""
         logger.info("Initializing bandit testing framework...")
         # No specific initialization needed
         logger.info("Bandit testing framework initialized successfully")
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup bandit testing framework resources"""
+    """Cleanup bandit testing framework resources"""
         logger.info("Cleaning up bandit testing framework...")
         self.active_bandits.clear()
         logger.info("Bandit testing framework cleanup completed")
@@ -98,14 +98,12 @@ class BanditTestingFramework:
         if arm not in bandit["rewards"]:
             return False
 
-        bandit["rewards"][arm].append(
-            {"reward": reward, "context": context, "timestamp": datetime.utcnow()}
-        )
+        bandit["rewards"][arm].append({"reward": reward, "context": context, "timestamp": datetime.utcnow()})
 
         return True
 
     async def analyze_bandit(self, bandit_id: str) -> Dict[str, Any]:
-        """Analyze bandit performance"""
+    """Analyze bandit performance"""
         if bandit_id not in self.active_bandits:
             raise ValueError(f"Bandit {bandit_id} not found")
 
@@ -140,8 +138,7 @@ class BanditTestingFramework:
         # Calculate regret (difference from optimal)
         optimal_reward = max(arm_stats[arm]["average_reward"] for arm in bandit["arms"])
         regret = sum(
-            (optimal_reward - arm_stats[arm]["average_reward"]) * arm_stats[arm]["pulls"]
-            for arm in bandit["arms"]
+            (optimal_reward - arm_stats[arm]["average_reward"]) * arm_stats[arm]["pulls"] for arm in bandit["arms"]
         )
 
         return {
@@ -154,9 +151,7 @@ class BanditTestingFramework:
             "analysis_timestamp": datetime.utcnow(),
         }
 
-    async def _epsilon_greedy(
-        self, bandit: Dict[str, Any], context: Optional[Dict[str, Any]] = None
-    ) -> str:
+    async def _epsilon_greedy(self, bandit: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> str:
         """Epsilon-greedy algorithm"""
 
         epsilon = bandit["parameters"].get("epsilon", 0.1)
@@ -197,9 +192,7 @@ class BanditTestingFramework:
 
         return max(ucb_values.keys(), key=lambda x: ucb_values[x])
 
-    async def _thompson_sampling(
-        self, bandit: Dict[str, Any], context: Optional[Dict[str, Any]] = None
-    ) -> str:
+    async def _thompson_sampling(self, bandit: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> str:
         """Thompson Sampling algorithm (Beta-Bernoulli)"""
 
         # Sample from Beta distribution for each arm
@@ -217,9 +210,7 @@ class BanditTestingFramework:
 
         return max(sampled_rewards.keys(), key=lambda x: sampled_rewards[x])
 
-    async def _softmax(
-        self, bandit: Dict[str, Any], context: Optional[Dict[str, Any]] = None
-    ) -> str:
+    async def _softmax(self, bandit: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> str:
         """Softmax algorithm"""
 
         temperature = bandit["parameters"].get("temperature", 1.0)
@@ -245,9 +236,7 @@ class BanditTestingFramework:
         probs = list(probabilities.values())
         return np.random.choice(arms, p=probs)
 
-    def _calculate_confidence_interval(
-        self, rewards: List[float], confidence: float = 0.95
-    ) -> Dict[str, float]:
+    def _calculate_confidence_interval(self, rewards: List[float], confidence: float = 0.95) -> Dict[str, float]:
         """Calculate confidence interval for rewards"""
 
         if len(rewards) < 2:

@@ -33,7 +33,7 @@ class TestFirebaseAuthService:
 
     @pytest_asyncio.fixture
     async def firebase_service(self) -> Dict[str, Any]:
-        """Create Firebase auth service for testing."""
+    """Create Firebase auth service for testing."""
         with patch("firebase_admin.initialize_app"), patch("firebase_admin._apps", {}):
             service = FirebaseAuthService()
             yield service
@@ -64,7 +64,7 @@ class TestFirebaseAuthService:
 
     @pytest.mark.asyncio
     async def test_validate_token_expired(self, firebase_service) -> Dict[str, Any]:
-        """Test token validation with expired token."""
+    """Test token validation with expired token."""
         token = "expired-firebase-token"
 
         with patch("firebase_admin.auth.verify_id_token") as mock_verify:
@@ -76,7 +76,7 @@ class TestFirebaseAuthService:
 
     @pytest.mark.asyncio
     async def test_validate_token_invalid(self, firebase_service) -> Dict[str, Any]:
-        """Test token validation with invalid token."""
+    """Test token validation with invalid token."""
         token = "invalid-firebase-token"
 
         with patch("firebase_admin.auth.verify_id_token") as mock_verify:
@@ -88,7 +88,7 @@ class TestFirebaseAuthService:
 
     @pytest.mark.asyncio
     async def test_validate_token_revoked(self, firebase_service) -> Dict[str, Any]:
-        """Test token validation with revoked token."""
+    """Test token validation with revoked token."""
         token = "revoked-firebase-token"
 
         with patch("firebase_admin.auth.verify_id_token") as mock_verify:
@@ -100,7 +100,7 @@ class TestFirebaseAuthService:
 
     @pytest.mark.asyncio
     async def test_get_user_by_uid_success(self, firebase_service) -> Dict[str, Any]:
-        """Test getting user by UID successfully."""
+    """Test getting user by UID successfully."""
         uid = "test-user-123"
 
         mock_user_record = Mock()
@@ -124,7 +124,7 @@ class TestFirebaseAuthService:
 
     @pytest.mark.asyncio
     async def test_get_user_by_uid_not_found(self, firebase_service) -> Dict[str, Any]:
-        """Test getting user by UID when user not found."""
+    """Test getting user by UID when user not found."""
         uid = "non-existent-user"
 
         with patch("firebase_admin.auth.get_user") as mock_get_user:
@@ -136,7 +136,7 @@ class TestFirebaseAuthService:
 
     @pytest.mark.asyncio
     async def test_revoke_tokens_success(self, firebase_service) -> Dict[str, Any]:
-        """Test successful token revocation."""
+    """Test successful token revocation."""
         uid = "test-user-123"
 
         with patch("firebase_admin.auth.revoke_refresh_tokens") as mock_revoke:
@@ -147,7 +147,7 @@ class TestFirebaseAuthService:
 
     @pytest.mark.asyncio
     async def test_revoke_tokens_failure(self, firebase_service) -> Dict[str, Any]:
-        """Test token revocation failure."""
+    """Test token revocation failure."""
         uid = "test-user-123"
 
         with patch("firebase_admin.auth.revoke_refresh_tokens") as mock_revoke:
@@ -288,7 +288,7 @@ class TestAuthService:
 
     @pytest.mark.asyncio
     async def test_authenticate_api_key_success(self, auth_service) -> Dict[str, Any]:
-        """Test successful API key authentication."""
+    """Test successful API key authentication."""
         request = LoginRequest(
             token="valid-api-key-token",
             provider=AuthProvider.API_KEY)
@@ -309,7 +309,7 @@ class TestAuthService:
 
     @pytest.mark.asyncio
     async def test_authenticate_unsupported_provider(self, auth_service) -> Dict[str, Any]:
-        """Test authentication with unsupported provider."""
+    """Test authentication with unsupported provider."""
         request = LoginRequest(
             token="some-token",
             provider="unsupported_provider")
@@ -336,7 +336,7 @@ class TestAuthService:
 
     @pytest.mark.asyncio
     async def test_validate_request_token_jwt_fallback(self, auth_service) -> Dict[str, Any]:
-        """Test token validation falling back to JWT after Firebase fails."""
+    """Test token validation falling back to JWT after Firebase fails."""
         request = TokenValidationRequest(
             token="valid-jwt-token",
             token_type=TokenType.ACCESS)
@@ -365,7 +365,7 @@ class TestAuthService:
 
     @pytest.mark.asyncio
     async def test_validate_request_token_invalid(self, auth_service) -> Dict[str, Any]:
-        """Test token validation with completely invalid token."""
+    """Test token validation with completely invalid token."""
         request = TokenValidationRequest(
             token="invalid-token",
             token_type=TokenType.ACCESS)
@@ -386,7 +386,7 @@ class TestAuthService:
 
     @pytest.mark.asyncio
     async def test_logout_success(self, auth_service) -> Dict[str, Any]:
-        """Test successful logout."""
+    """Test successful logout."""
         user_id = "test-user-123"
 
         auth_service.firebase_auth.revoke_tokens = AsyncMock(return_value=True)
@@ -396,7 +396,7 @@ class TestAuthService:
 
     @pytest.mark.asyncio
     async def test_logout_failure(self, auth_service) -> Dict[str, Any]:
-        """Test logout failure."""
+    """Test logout failure."""
         user_id = "test-user-123"
 
         auth_service.firebase_auth.revoke_tokens = AsyncMock(

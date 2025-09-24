@@ -95,9 +95,7 @@ async def get_cost_data(
 
     try:
         if not observability_engine or not observability_engine.cost_monitor:
-            raise HTTPException(
-                status_code=503,
-                detail="Cost monitor not available")
+            raise HTTPException(status_code=503, detail="Cost monitor not available")
 
         # Collect cost metrics
         cost_data = await observability_engine.cost_monitor.collect_cost_metrics()
@@ -106,16 +104,14 @@ async def get_cost_data(
         filtered_data = cost_data
 
         if category:
-            filtered_data = [
-                d for d in filtered_data if d.category.value == category]
+            filtered_data = [d for d in filtered_data if d.category.value == category]
 
         if service:
             filtered_data = [d for d in filtered_data if d.service == service]
 
         # Filter by time window
         cutoff_time = datetime.utcnow() - timedelta(seconds=time_window)
-        filtered_data = [
-            d for d in filtered_data if d.timestamp >= cutoff_time]
+        filtered_data = [d for d in filtered_data if d.timestamp >= cutoff_time]
 
         # Limit results
         filtered_data = filtered_data[:limit]
@@ -140,22 +136,16 @@ async def get_cost_data(
 
     except Exception as e:
         logger.error(f"Failed to get cost data: {str(e)}")
-        raise HTTPException(status_code=500,
-                            detail=f"Failed to get cost data: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get cost data: {str(e)}")
 
 
 @router.get("/summary", response_model=CostSummaryResponse)
-async def get_cost_summary(
-    time_window: int = Query(
-        604800,
-        description="Time window in seconds (default: 7 days)")):
+async def get_cost_summary(time_window: int = Query(604800, description="Time window in seconds (default: 7 days)")):
     """Get cost summary"""
 
     try:
         if not observability_engine or not observability_engine.cost_monitor:
-            raise HTTPException(
-                status_code=503,
-                detail="Cost monitor not available")
+            raise HTTPException(status_code=503, detail="Cost monitor not available")
 
         # Get cost summary
         time_window_delta = timedelta(seconds=time_window)
@@ -172,41 +162,32 @@ async def get_cost_summary(
 
     except Exception as e:
         logger.error(f"Failed to get cost summary: {str(e)}")
-        raise HTTPException(status_code=500,
-                            detail=f"Failed to get cost summary: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get cost summary: {str(e)}")
 
 
 @router.get("/analysis")
 async def get_cost_analysis() -> Dict[str, Any]:
     """Get cost analysis and insights"""
-
     try:
         if not observability_engine or not observability_engine.cost_monitor:
-            raise HTTPException(
-                status_code=503,
-                detail="Cost monitor not available")
+            raise HTTPException(status_code=503, detail="Cost monitor not available")
 
         # Get cost analysis
         analysis = await observability_engine.cost_monitor.analyze_costs()
 
-        return {"cost_analysis": analysis,
-                "generated_at": datetime.utcnow().isoformat()}
+        return {"cost_analysis": analysis, "generated_at": datetime.utcnow().isoformat()}
 
     except Exception as e:
         logger.error(f"Failed to get cost analysis: {str(e)}")
-        raise HTTPException(status_code=500,
-                            detail=f"Failed to get cost analysis: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get cost analysis: {str(e)}")
 
 
 @router.get("/alerts", response_model=List[CostAlertResponse])
 async def get_cost_alerts() -> Dict[str, Any]:
     """Get active cost alerts"""
-
     try:
         if not observability_engine or not observability_engine.cost_monitor:
-            raise HTTPException(
-                status_code=503,
-                detail="Cost monitor not available")
+            raise HTTPException(status_code=503, detail="Cost monitor not available")
 
         # Get active alerts
         alerts = await observability_engine.cost_monitor.get_active_alerts()
@@ -234,23 +215,18 @@ async def get_cost_alerts() -> Dict[str, Any]:
 
     except Exception as e:
         logger.error(f"Failed to get cost alerts: {str(e)}")
-        raise HTTPException(status_code=500,
-                            detail=f"Failed to get cost alerts: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get cost alerts: {str(e)}")
 
 
 @router.post("/alerts/{alert_id}/resolve")
-async def resolve_cost_alert(alert_id: str,
-                             user: str = Body(...,
-                                              embed=True),
-                             notes: Optional[str] = Body(None,
-                                                         embed=True)):
+async def resolve_cost_alert(
+    alert_id: str, user: str = Body(..., embed=True), notes: Optional[str] = Body(None, embed=True)
+):
     """Resolve cost alert"""
 
     try:
         if not observability_engine or not observability_engine.cost_monitor:
-            raise HTTPException(
-                status_code=503,
-                detail="Cost monitor not available")
+            raise HTTPException(status_code=503, detail="Cost monitor not available")
 
         # Resolve alert
         await observability_engine.cost_monitor.resolve_alert(alert_id, user, notes)
@@ -265,20 +241,15 @@ async def resolve_cost_alert(alert_id: str,
 
     except Exception as e:
         logger.error(f"Failed to resolve cost alert {alert_id}: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to resolve cost alert {alert_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to resolve cost alert {alert_id}: {str(e)}")
 
 
 @router.post("/budgets", response_model=CostBudgetResponse)
 async def create_cost_budget(budget_request: CostBudgetRequest) -> Dict[str, Any]:
     """Create cost budget"""
-
     try:
         if not observability_engine or not observability_engine.cost_monitor:
-            raise HTTPException(
-                status_code=503,
-                detail="Cost monitor not available")
+            raise HTTPException(status_code=503, detail="Cost monitor not available")
 
         # Create budget data
         budget_data = {
@@ -310,23 +281,18 @@ async def create_cost_budget(budget_request: CostBudgetRequest) -> Dict[str, Any
 
     except Exception as e:
         logger.error(f"Failed to create cost budget: {str(e)}")
-        raise HTTPException(status_code=500,
-                            detail=f"Failed to create cost budget: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to create cost budget: {str(e)}")
 
 
 @router.get("/budgets", response_model=List[CostBudgetResponse])
 async def get_cost_budgets() -> Dict[str, Any]:
     """Get all cost budgets"""
-
     try:
         if not observability_engine or not observability_engine.cost_monitor:
-            raise HTTPException(
-                status_code=503,
-                detail="Cost monitor not available")
+            raise HTTPException(status_code=503, detail="Cost monitor not available")
 
         # Get budgets from alert manager
-        budgets = list(
-            observability_engine.cost_monitor.alert_manager.budgets.values())
+        budgets = list(observability_engine.cost_monitor.alert_manager.budgets.values())
 
         # Convert to response format
         budget_responses = []
@@ -350,27 +316,21 @@ async def get_cost_budgets() -> Dict[str, Any]:
 
     except Exception as e:
         logger.error(f"Failed to get cost budgets: {str(e)}")
-        raise HTTPException(status_code=500,
-                            detail=f"Failed to get cost budgets: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get cost budgets: {str(e)}")
 
 
 @router.get("/budgets/{budget_id}", response_model=CostBudgetResponse)
 async def get_cost_budget(budget_id: str) -> Dict[str, Any]:
     """Get specific cost budget by ID"""
-
     try:
         if not observability_engine or not observability_engine.cost_monitor:
-            raise HTTPException(
-                status_code=503,
-                detail="Cost monitor not available")
+            raise HTTPException(status_code=503, detail="Cost monitor not available")
 
         # Get budget
-        budget = observability_engine.cost_monitor.alert_manager.budgets.get(
-            budget_id)
+        budget = observability_engine.cost_monitor.alert_manager.budgets.get(budget_id)
 
         if not budget:
-            raise HTTPException(status_code=404,
-                                detail=f"Cost budget {budget_id} not found")
+            raise HTTPException(status_code=404, detail=f"Cost budget {budget_id} not found")
 
         return CostBudgetResponse(
             id=budget.id,
@@ -389,23 +349,16 @@ async def get_cost_budget(budget_id: str) -> Dict[str, Any]:
         raise
     except Exception as e:
         logger.error(f"Failed to get cost budget {budget_id}: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get cost budget {budget_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get cost budget {budget_id}: {str(e)}")
 
 
 @router.get("/trends")
-async def get_cost_trends(
-    time_window: int = Query(
-        2592000,
-        description="Time window in seconds (default: 30 days)")):
+async def get_cost_trends(time_window: int = Query(2592000, description="Time window in seconds (default: 30 days)")):
     """Get cost trends over time"""
 
     try:
         if not observability_engine or not observability_engine.cost_monitor:
-            raise HTTPException(
-                status_code=503,
-                detail="Cost monitor not available")
+            raise HTTPException(status_code=503, detail="Cost monitor not available")
 
         # This would query historical cost data
         # For now, return mock trends
@@ -419,14 +372,8 @@ async def get_cost_trends(
                     "change_percent": 12.5,
                     "daily_average": 50.02,
                 },
-                "compute_costs": {
-                    "current": 800.25,
-                    "trend": "stable",
-                    "change_percent": 2.1},
-                "storage_costs": {
-                    "current": 200.75,
-                    "trend": "increasing",
-                    "change_percent": 25.3},
+                "compute_costs": {"current": 800.25, "trend": "stable", "change_percent": 2.1},
+                "storage_costs": {"current": 200.75, "trend": "increasing", "change_percent": 25.3},
                 "third_party_costs": {
                     "current": 499.50,
                     "trend": "decreasing",
@@ -440,19 +387,15 @@ async def get_cost_trends(
 
     except Exception as e:
         logger.error(f"Failed to get cost trends: {str(e)}")
-        raise HTTPException(status_code=500,
-                            detail=f"Failed to get cost trends: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get cost trends: {str(e)}")
 
 
 @router.get("/optimization")
 async def get_cost_optimization_recommendations() -> Dict[str, Any]:
     """Get cost optimization recommendations"""
-
     try:
         if not observability_engine or not observability_engine.cost_monitor:
-            raise HTTPException(
-                status_code=503,
-                detail="Cost monitor not available")
+            raise HTTPException(status_code=503, detail="Cost monitor not available")
 
         # Get cost analysis for optimization recommendations
         analysis = await observability_engine.cost_monitor.analyze_costs()
@@ -480,35 +423,25 @@ async def get_cost_optimization_recommendations() -> Dict[str, Any]:
         return {
             "optimization_recommendations": recommendations,
             "total_recommendations": len(recommendations),
-            "potential_total_savings": sum(
-                opt.potential_savings for opt in optimizations),
+            "potential_total_savings": sum(opt.potential_savings for opt in optimizations),
             "generated_at": datetime.utcnow().isoformat(),
         }
 
     except Exception as e:
-        logger.error(
-            f"Failed to get cost optimization recommendations: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get cost optimization recommendations: {str(e)}")
+        logger.error(f"Failed to get cost optimization recommendations: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get cost optimization recommendations: {str(e)}")
 
 
 @router.get("/breakdown")
 async def get_cost_breakdown(
-        group_by: str = Query(
-            "category",
-            description="Group by: category, service, region"),
-    time_window: int = Query(
-            604800,
-            description="Time window in seconds (default: 7 days)"),
+    group_by: str = Query("category", description="Group by: category, service, region"),
+    time_window: int = Query(604800, description="Time window in seconds (default: 7 days)"),
 ):
     """Get cost breakdown by category, service, or region"""
 
     try:
         if not observability_engine or not observability_engine.cost_monitor:
-            raise HTTPException(
-                status_code=503,
-                detail="Cost monitor not available")
+            raise HTTPException(status_code=503, detail="Cost monitor not available")
 
         # Collect cost data
         cost_data = await observability_engine.cost_monitor.collect_cost_metrics()
@@ -538,8 +471,7 @@ async def get_cost_breakdown(
         breakdown_with_percentages = {}
         for key, amount in breakdown.items():
             percentage = (amount / total_cost * 100) if total_cost > 0 else 0
-            breakdown_with_percentages[key] = {
-                "amount": amount, "percentage": percentage}
+            breakdown_with_percentages[key] = {"amount": amount, "percentage": percentage}
 
         return {
             "group_by": group_by,
@@ -551,19 +483,15 @@ async def get_cost_breakdown(
 
     except Exception as e:
         logger.error(f"Failed to get cost breakdown: {str(e)}")
-        raise HTTPException(status_code=500,
-                            detail=f"Failed to get cost breakdown: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get cost breakdown: {str(e)}")
 
 
 @router.post("/collect")
 async def trigger_cost_collection() -> Dict[str, Any]:
     """Trigger immediate cost data collection"""
-
     try:
         if not observability_engine or not observability_engine.cost_monitor:
-            raise HTTPException(
-                status_code=503,
-                detail="Cost monitor not available")
+            raise HTTPException(status_code=503, detail="Cost monitor not available")
 
         # Trigger cost collection
         cost_data = await observability_engine.cost_monitor.collect_cost_metrics()
@@ -576,6 +504,4 @@ async def trigger_cost_collection() -> Dict[str, Any]:
 
     except Exception as e:
         logger.error(f"Failed to trigger cost collection: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to trigger cost collection: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to trigger cost collection: {str(e)}")

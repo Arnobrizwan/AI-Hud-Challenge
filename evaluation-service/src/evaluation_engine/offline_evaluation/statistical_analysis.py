@@ -19,11 +19,11 @@ class StatisticalAnalyzer:
         self.confidence_levels = [0.90, 0.95, 0.99]
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the statistical analyzer"""
+    """Initialize the statistical analyzer"""
         pass
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup statistical analyzer resources"""
+    """Cleanup statistical analyzer resources"""
         pass
 
     async def bootstrap_confidence_interval(
@@ -328,7 +328,7 @@ class StatisticalAnalyzer:
         }
 
     async def perform_normality_test(self, data: np.ndarray) -> Dict[str, Any]:
-        """Perform normality test (Shapiro-Wilk)"""
+    """Perform normality test (Shapiro-Wilk)"""
         logger.info("Performing normality test")
 
         # Shapiro-Wilk test (good for small samples)

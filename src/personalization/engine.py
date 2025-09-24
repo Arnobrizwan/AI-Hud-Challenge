@@ -37,7 +37,7 @@ class PersonalizationEngine:
         asyncio.create_task(self._initialize_models())
 
     async def _initialize_models(self) -> Dict[str, Any]:
-        """Initialize ML models for personalization."""
+    """Initialize ML models for personalization."""
         try:
             # Load pre-trained models or train on historical data
             await self._load_user_profiles()
@@ -49,12 +49,12 @@ class PersonalizationEngine:
                 error=str(e))
 
     async def _load_user_profiles(self) -> Dict[str, Any]:
-        """Load user profiles from cache or database."""
+    """Load user profiles from cache or database."""
         # In production, this would load from a database
         pass
 
     async def _train_collaborative_filter(self) -> Dict[str, Any]:
-        """Train collaborative filtering model."""
+    """Train collaborative filtering model."""
         # In production, this would train on historical interaction data
         pass
 

@@ -56,7 +56,7 @@ class ContentSummarizationEngine:
         self._model_status = {}
 
     async def warm_up(self) -> Dict[str, Any]:
-        """Warm up all models for faster inference"""
+    """Warm up all models for faster inference"""
         logger.info("Warming up summarization models...")
 
         try:
@@ -93,7 +93,7 @@ class ContentSummarizationEngine:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Clean up resources"""
+    """Clean up resources"""
         logger.info("Cleaning up summarization engine...")
 
         try:
@@ -521,7 +521,7 @@ class ContentSummarizationEngine:
             raise
 
     async def get_status(self) -> Dict[str, Any]:
-        """Get engine status and model information"""
+    """Get engine status and model information"""
         return {
             "initialized": self._initialized,
             "model_status": self._model_status,

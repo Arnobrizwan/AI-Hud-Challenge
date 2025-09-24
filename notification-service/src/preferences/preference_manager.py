@@ -251,7 +251,7 @@ class NotificationPreferenceManager:
                 f"Failed to update relevance threshold: {str(e)}")
 
     async def get_preference_analytics(self, user_id: str) -> Dict[str, Any]:
-        """Get preference analytics for user."""
+    """Get preference analytics for user."""
         try:
             prefs = await self.get_preferences(user_id)
 

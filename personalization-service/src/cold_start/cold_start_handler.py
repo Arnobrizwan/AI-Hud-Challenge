@@ -410,7 +410,7 @@ class ColdStartHandler:
         return min(1.0, interaction_count / 500.0)
 
     async def get_cold_start_analytics(self) -> Dict[str, Any]:
-        """Get analytics about cold start handling."""
+    """Get analytics about cold start handling."""
         # Get new users in last 30 days
         new_users_query = """
         SELECT COUNT(*) as count

@@ -161,7 +161,7 @@ class TrendAnalyzer:
     """Analyze trends in feedback data"""
 
     def analyze_trends(self, data: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Analyze trends in time series data"""
+    """Analyze trends in time series data"""
         # This would implement trend analysis
         # For now, return empty trends
         return {}

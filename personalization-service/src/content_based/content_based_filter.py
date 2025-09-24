@@ -250,8 +250,7 @@ class ContentBasedFilter:
         return {
             "tfidf_model": tfidf_info,
             "embedding_model": embedding_info,
-            "cache_hit_rate":
-    await self._get_cache_hit_rate(),
+            "cache_hit_rate": await self._get_cache_hit_rate(),
         }
 
     async def _get_cache_hit_rate(self) -> float:

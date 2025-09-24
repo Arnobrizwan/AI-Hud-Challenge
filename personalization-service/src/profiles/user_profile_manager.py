@@ -75,7 +75,7 @@ class UserProfileManager:
         return profile
 
     async def _get_demographic_template(self, user_id: str) -> Dict[str, Any]:
-        """Get demographic-based profile template."""
+    """Get demographic-based profile template."""
         # This would typically use demographic data or similar user patterns
         # For now, return a default template
         return {
@@ -328,7 +328,7 @@ class UserProfileManager:
         )
 
     async def get_user_statistics(self, user_id: str) -> Dict[str, Any]:
-        """Get user statistics and activity."""
+    """Get user statistics and activity."""
         profile = await self.get_or_create_profile(user_id)
 
         # Get recent interactions
@@ -366,7 +366,7 @@ class UserProfileManager:
         logger.info(f"Deleted profile for user: {user_id}")
 
     async def get_profile_analytics(self) -> Dict[str, Any]:
-        """Get analytics about user profiles."""
+    """Get analytics about user profiles."""
         # Get total users
         total_users = await self.postgres.fetch_one("SELECT COUNT(*) as count FROM user_profiles")
 

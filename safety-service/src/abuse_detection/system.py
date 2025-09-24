@@ -46,7 +46,7 @@ class AbuseDetectionSystem:
         self.captcha_challenger = CaptchaChallenger()
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the abuse detection system"""
+    """Initialize the abuse detection system"""
         try:
             # Initialize all components
             await self.behavioral_analyzer.initialize()
@@ -65,7 +65,7 @@ class AbuseDetectionSystem:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup resources"""
+    """Cleanup resources"""
         try:
     await self.behavioral_analyzer.cleanup()
             await self.graph_analyzer.cleanup()

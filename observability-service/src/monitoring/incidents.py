@@ -117,8 +117,7 @@ class IncidentManager:
         self.is_initialized = False
 
     async def initialize(self, config: Dict[str, Any] = None) -> Dict[str, Any]:
-        """Initialize incident management"""
-
+    """Initialize incident management"""
         # Load incident templates
         await self.load_incident_templates(config.get("templates", []) if config else [])
 
@@ -126,8 +125,7 @@ class IncidentManager:
         logger.info("Incident manager initialized")
 
     async def load_incident_templates(self, templates: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Load incident response templates"""
-
+    """Load incident response templates"""
         for template_data in templates:
             template = IncidentTemplate(
                 id=template_data["id"],
@@ -204,8 +202,7 @@ class IncidentManager:
         return incident
 
     async def trigger_incident_response(self, incident: Incident) -> Dict[str, Any]:
-        """Trigger incident response procedures"""
-
+    """Trigger incident response procedures"""
         # Find applicable template
         template = self._find_incident_template(incident)
 
@@ -228,8 +225,7 @@ class IncidentManager:
         await self._send_incident_notifications(incident)
 
     async def trigger_emergency_response(self, incident_id: str) -> Dict[str, Any]:
-        """Trigger emergency response procedures"""
-
+    """Trigger emergency response procedures"""
         incident = self.incidents.get(incident_id)
         if not incident:
             logger.error(
@@ -334,8 +330,7 @@ class IncidentManager:
             f"Escalated incident {incident.id} to level {escalation_level}")
 
     async def _execute_runbook(self, incident: Incident, step: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute incident runbook"""
-
+    """Execute incident runbook"""
         runbook_id = step.get("runbook_id")
         if runbook_id:
             # This would integrate with runbook engine
@@ -343,8 +338,7 @@ class IncidentManager:
                 f"Executing runbook {runbook_id} for incident {incident.id}")
 
     async def _assign_incident(self, incident: Incident, step: Dict[str, Any]) -> Dict[str, Any]:
-        """Assign incident to team member"""
-
+    """Assign incident to team member"""
         assignee = step.get("assignee")
         if assignee:
             incident.assigned_to = assignee
@@ -358,20 +352,17 @@ class IncidentManager:
             )
 
     async def _send_incident_notifications(self, incident: Incident) -> Dict[str, Any]:
-        """Send incident notifications"""
-
+    """Send incident notifications"""
         # This would integrate with notification system
         logger.info(f"Sending incident notifications for {incident.id}")
 
     async def _send_emergency_notifications(self, incident: Incident) -> Dict[str, Any]:
-        """Send emergency notifications"""
-
+    """Send emergency notifications"""
         # This would send to emergency channels
         logger.info(f"Sending emergency notifications for {incident.id}")
 
     async def _execute_emergency_runbooks(self, incident: Incident) -> Dict[str, Any]:
-        """Execute emergency runbooks"""
-
+    """Execute emergency runbooks"""
         # This would execute emergency response runbooks
         logger.info(f"Executing emergency runbooks for {incident.id}")
 
@@ -409,8 +400,7 @@ class IncidentManager:
             await self._handle_incident_closure(incident)
 
     async def _handle_incident_resolution(self, incident: Incident) -> Dict[str, Any]:
-        """Handle incident resolution"""
-
+    """Handle incident resolution"""
         # Trigger post-mortem creation for high severity incidents
         if incident.severity in [
             IncidentSeverity.HIGH,
@@ -423,8 +413,7 @@ class IncidentManager:
         logger.info(f"Incident {incident.id} resolved")
 
     async def _handle_incident_closure(self, incident: Incident) -> Dict[str, Any]:
-        """Handle incident closure"""
-
+    """Handle incident closure"""
         # Archive incident data
         logger.info(f"Incident {incident.id} closed")
 
@@ -579,6 +568,6 @@ class IncidentManager:
         return total_time / len(resolved_incidents) / 3600  # Convert to hours
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup incident manager"""
+    """Cleanup incident manager"""
         self.is_initialized = False
         logger.info("Incident manager cleaned up")

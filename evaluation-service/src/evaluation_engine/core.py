@@ -38,7 +38,7 @@ class EvaluationEngine:
         self.evaluation_history: List[EvaluationResults] = []
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the evaluation engine"""
+    """Initialize the evaluation engine"""
         try:
             logger.info("Initializing evaluation engine...")
 
@@ -61,7 +61,7 @@ class EvaluationEngine:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup evaluation engine resources"""
+    """Cleanup evaluation engine resources"""
         try:
             logger.info("Cleaning up evaluation engine...")
 
@@ -450,7 +450,7 @@ class EvaluationEngine:
         return recommendations
 
     async def log_evaluation_results(self, results: EvaluationResults) -> Dict[str, Any]:
-        """Log evaluation results to MLflow"""
+    """Log evaluation results to MLflow"""
         try:
     await self.mlflow_client.log_evaluation_results(results)
             logger.info(

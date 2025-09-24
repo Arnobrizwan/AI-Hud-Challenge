@@ -24,14 +24,14 @@ class TestSlidingWindowRateLimiter:
 
     @pytest_asyncio.fixture
     async def limiter(self, mock_redis) -> Dict[str, Any]:
-        """Create rate limiter for testing."""
+    """Create rate limiter for testing."""
         limiter = SlidingWindowRateLimiter()
         limiter.redis_pool = mock_redis
         yield limiter
 
     @pytest.mark.asyncio
     async def test_check_rate_limit_within_limit(self, limiter, mock_redis) -> Dict[str, Any]:
-        """Test rate limit check when within limit."""
+    """Test rate limit check when within limit."""
         key = "test-user"
         limit = 10
         window = 60
@@ -54,7 +54,7 @@ class TestSlidingWindowRateLimiter:
 
     @pytest.mark.asyncio
     async def test_check_rate_limit_exceeded(self, limiter, mock_redis) -> Dict[str, Any]:
-        """Test rate limit check when limit is exceeded."""
+    """Test rate limit check when limit is exceeded."""
         key = "test-user"
         limit = 10
         window = 60
@@ -73,7 +73,7 @@ class TestSlidingWindowRateLimiter:
 
     @pytest.mark.asyncio
     async def test_check_rate_limit_redis_failure(self, limiter, mock_redis) -> Dict[str, Any]:
-        """Test rate limit check when Redis fails."""
+    """Test rate limit check when Redis fails."""
         key = "test-user"
         limit = 10
         window = 60
@@ -92,7 +92,7 @@ class TestSlidingWindowRateLimiter:
 
     @pytest.mark.asyncio
     async def test_reset_rate_limit_success(self, limiter, mock_redis) -> Dict[str, Any]:
-        """Test successful rate limit reset."""
+    """Test successful rate limit reset."""
         key = "test-user"
 
         mock_redis.delete = AsyncMock(return_value=1)
@@ -104,7 +104,7 @@ class TestSlidingWindowRateLimiter:
 
     @pytest.mark.asyncio
     async def test_reset_rate_limit_not_found(self, limiter, mock_redis) -> Dict[str, Any]:
-        """Test rate limit reset when key doesn't exist."""
+    """Test rate limit reset when key doesn't exist."""
         key = "non-existent-user"
 
         mock_redis.delete = AsyncMock(return_value=0)
@@ -115,7 +115,7 @@ class TestSlidingWindowRateLimiter:
 
     @pytest.mark.asyncio
     async def test_get_rate_limit_info(self, limiter, mock_redis) -> Dict[str, Any]:
-        """Test getting rate limit information."""
+    """Test getting rate limit information."""
         key = "test-user"
         limit = 10
         window = 60
@@ -140,7 +140,7 @@ class TestDistributedRateLimiter:
 
     @pytest_asyncio.fixture
     async def distributed_limiter(self, mock_redis) -> Dict[str, Any]:
-        """Create distributed rate limiter for testing."""
+    """Create distributed rate limiter for testing."""
         limiter = DistributedRateLimiter()
         limiter.limiter.redis_pool = mock_redis
         yield limiter
@@ -169,7 +169,7 @@ class TestDistributedRateLimiter:
 
     @pytest.mark.asyncio
     async def test_check_ip_rate_limit(self, distributed_limiter) -> Dict[str, Any]:
-        """Test IP-specific rate limiting."""
+    """Test IP-specific rate limiting."""
         ip_address = "192.168.1.1"
 
         with patch.object(distributed_limiter.limiter, "check_rate_limit") as mock_check:
@@ -189,7 +189,7 @@ class TestDistributedRateLimiter:
 
     @pytest.mark.asyncio
     async def test_check_endpoint_rate_limit(self, distributed_limiter) -> Dict[str, Any]:
-        """Test endpoint-specific rate limiting."""
+    """Test endpoint-specific rate limiting."""
         endpoint = "login"
         identifier = "user-123"
         limit = 10
@@ -261,7 +261,7 @@ class TestDistributedRateLimiter:
 
     @pytest.mark.asyncio
     async def test_reset_user_rate_limit(self, distributed_limiter) -> Dict[str, Any]:
-        """Test resetting user rate limit."""
+    """Test resetting user rate limit."""
         user_id = "test-user-123"
 
         with patch.object(distributed_limiter.limiter, "reset_rate_limit") as mock_reset:
@@ -274,7 +274,7 @@ class TestDistributedRateLimiter:
 
     @pytest.mark.asyncio
     async def test_health_check_success(self, distributed_limiter, mock_redis) -> Dict[str, Any]:
-        """Test health check success."""
+    """Test health check success."""
         mock_redis.ping = AsyncMock()
 
         with patch.object(distributed_limiter.limiter, "_get_redis") as mock_get_redis:
@@ -287,7 +287,7 @@ class TestDistributedRateLimiter:
 
     @pytest.mark.asyncio
     async def test_health_check_failure(self, distributed_limiter, mock_redis) -> Dict[str, Any]:
-        """Test health check failure."""
+    """Test health check failure."""
         mock_redis.ping = AsyncMock(side_effect=Exception("Redis error"))
 
         with patch.object(distributed_limiter.limiter, "_get_redis") as mock_get_redis:
@@ -304,7 +304,7 @@ class TestRateLimiterIntegration:
 
     @pytest.mark.asyncio
     async def test_rate_limit_integration_with_redis(self, mock_redis) -> Dict[str, Any]:
-        """Test rate limiter integration with Redis."""
+    """Test rate limiter integration with Redis."""
         limiter = SlidingWindowRateLimiter()
         limiter.redis_pool = mock_redis
 
@@ -339,7 +339,7 @@ class TestRateLimiterIntegration:
 
     @pytest.mark.asyncio
     async def test_concurrent_rate_limit_checks(self, mock_redis) -> Dict[str, Any]:
-        """Test concurrent rate limit checks."""
+    """Test concurrent rate limit checks."""
         import asyncio
 
         limiter = SlidingWindowRateLimiter()
@@ -377,7 +377,7 @@ class TestRateLimiterPerformance:
 
     @pytest.mark.asyncio
     async def test_rate_limiter_performance(self, mock_redis) -> Dict[str, Any]:
-        """Test rate limiter performance under load."""
+    """Test rate limiter performance under load."""
         import asyncio
         import time
 

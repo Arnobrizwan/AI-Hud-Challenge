@@ -41,9 +41,7 @@ async def create_experiment(
 
 
 @online_evaluation_router.post("/experiments/{experiment_id}/start")
-async def start_experiment(
-    experiment_id: str, evaluation_engine: EvaluationEngine = Depends(get_evaluation_engine)
-):
+async def start_experiment(experiment_id: str, evaluation_engine: EvaluationEngine = Depends(get_evaluation_engine)):
     """Start an A/B test experiment"""
 
     try:
@@ -68,9 +66,7 @@ async def start_experiment(
 
 
 @online_evaluation_router.post("/experiments/{experiment_id}/stop")
-async def stop_experiment(
-    experiment_id: str, evaluation_engine: EvaluationEngine = Depends(get_evaluation_engine)
-):
+async def stop_experiment(experiment_id: str, evaluation_engine: EvaluationEngine = Depends(get_evaluation_engine)):
     """Stop an A/B test experiment"""
 
     try:
@@ -105,9 +101,7 @@ async def analyze_experiment(
     try:
         logger.info(f"Analyzing experiment {experiment_id} with {analysis_type} analysis")
 
-        analysis = await evaluation_engine.ab_tester.analyze_experiment(
-            experiment_id, analysis_type
-        )
+        analysis = await evaluation_engine.ab_tester.analyze_experiment(experiment_id, analysis_type)
 
         return {
             "status": "success",
@@ -142,9 +136,7 @@ async def record_event(
         )
 
         if not success:
-            raise HTTPException(
-                status_code=404, detail="Experiment not found or event recording failed"
-            )
+            raise HTTPException(status_code=404, detail="Experiment not found or event recording failed")
 
         return {
             "status": "success",
@@ -187,9 +179,7 @@ async def list_experiments(
 
 
 @online_evaluation_router.get("/experiments/{experiment_id}")
-async def get_experiment(
-    experiment_id: str, evaluation_engine: EvaluationEngine = Depends(get_evaluation_engine)
-):
+async def get_experiment(experiment_id: str, evaluation_engine: EvaluationEngine = Depends(get_evaluation_engine)):
     """Get experiment details"""
 
     try:
@@ -223,9 +213,7 @@ async def create_bandit(
     try:
         logger.info("Creating multi-armed bandit")
 
-        bandit_id = await evaluation_engine.online_evaluator.bandit_tester.create_bandit(
-            bandit_config
-        )
+        bandit_id = await evaluation_engine.online_evaluator.bandit_tester.create_bandit(bandit_config)
 
         return {
             "status": "success",
@@ -276,9 +264,7 @@ async def update_reward(
     try:
         logger.info(f"Updating reward for bandit {bandit_id}, arm {arm}")
 
-        success = await evaluation_engine.online_evaluator.bandit_tester.update_reward(
-            bandit_id, arm, reward, context
-        )
+        success = await evaluation_engine.online_evaluator.bandit_tester.update_reward(bandit_id, arm, reward, context)
 
         if not success:
             raise HTTPException(status_code=404, detail="Bandit not found or reward update failed")

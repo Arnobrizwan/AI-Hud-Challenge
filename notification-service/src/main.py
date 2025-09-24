@@ -121,7 +121,7 @@ def create_app() -> FastAPI:
     # Health check endpoint
     @app.get("/health")
     async def health_check() -> Dict[str, Any]:
-        """Health check endpoint."""
+    """Health check endpoint."""
         return {
             "status": "healthy",
             "service": "notification-decisioning",
@@ -130,7 +130,7 @@ def create_app() -> FastAPI:
     # Metrics endpoint
     @app.get("/metrics")
     async def metrics() -> Dict[str, Any]:
-        """Prometheus metrics endpoint."""
+    """Prometheus metrics endpoint."""
         return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
     return app

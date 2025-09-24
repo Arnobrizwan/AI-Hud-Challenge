@@ -22,7 +22,7 @@ class HealthChecker:
         self._health_checks: List[callable] = []
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize health checker"""
+    """Initialize health checker"""
         if self._initialized:
             return
 
@@ -45,17 +45,14 @@ class HealthChecker:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup health checker"""
+    """Cleanup health checker"""
         self._initialized = False
         logger.info("Health Checker cleanup complete")
 
     async def check_health(self) -> HealthCheck:
         """Perform comprehensive health check"""
         if not self._initialized:
-            return HealthCheck(
-                status="unhealthy",
-                timestamp=datetime.utcnow(),
-                services={})
+            return HealthCheck(status="unhealthy", timestamp=datetime.utcnow(), services={})
 
         try:
             services = {}
@@ -84,17 +81,11 @@ class HealthChecker:
                     }
                     overall_status = "unhealthy"
 
-            return HealthCheck(
-                status=overall_status,
-                timestamp=datetime.utcnow(),
-                services=services)
+            return HealthCheck(status=overall_status, timestamp=datetime.utcnow(), services=services)
 
         except Exception as e:
             logger.error(f"Health check failed: {e}")
-            return HealthCheck(
-                status="unhealthy",
-                timestamp=datetime.utcnow(),
-                services={})
+            return HealthCheck(status="unhealthy", timestamp=datetime.utcnow(), services={})
 
     async def _check_postgresql(self) -> ServiceStatus:
         """Check PostgreSQL health"""

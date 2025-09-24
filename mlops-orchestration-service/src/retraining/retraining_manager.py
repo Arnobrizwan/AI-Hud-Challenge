@@ -546,10 +546,10 @@ class RetrainingTriggerMonitor:
         self.triggers = {}
 
     async def initialize(self) -> Dict[str, Any]:
-        pass
+    pass
 
     async def register_trigger(self, trigger: RetrainingTrigger) -> Dict[str, Any]:
-        """Register a retraining trigger"""
+    """Register a retraining trigger"""
         self.triggers[trigger.id] = trigger
 
     async def update_trigger_status(
@@ -566,7 +566,7 @@ class DataQualityMonitor:
         pass
 
     async def initialize(self) -> Dict[str, Any]:
-        pass
+    pass
 
     async def calculate_drift_scores(
         self, model_name: str, features: List[str]
@@ -586,7 +586,7 @@ class ModelPerformanceMonitor:
         pass
 
     async def initialize(self) -> Dict[str, Any]:
-        pass
+    pass
 
     async def get_recent_metrics(
         self, model_name: str, metric: str, window_minutes: int
@@ -601,7 +601,7 @@ class RetrainingScheduler:
         pass
 
     async def initialize(self) -> Dict[str, Any]:
-        pass
+    pass
 
     async def is_time_for_retraining(self, trigger: ScheduledTrigger) -> bool:
         """Check if it's time for scheduled retraining"""

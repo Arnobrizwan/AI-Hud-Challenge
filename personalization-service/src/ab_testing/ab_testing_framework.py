@@ -355,7 +355,7 @@ class ABTestingFramework:
         return await self.postgres.fetch_all(query, datetime.utcnow())
 
     async def get_experiment_analytics(self) -> Dict[str, Any]:
-        """Get analytics about all experiments."""
+    """Get analytics about all experiments."""
         try:
             # Get all experiments
             all_experiments = await self.postgres.fetch_all(

@@ -25,7 +25,7 @@ class SummaryQualityScorer:
         self._initialized = False
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize quality scoring tools"""
+    """Initialize quality scoring tools"""
         try:
             logger.info("Initializing summary quality scorer...")
 
@@ -39,7 +39,7 @@ class SummaryQualityScorer:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Clean up resources"""
+    """Clean up resources"""
         try:
     await self.validator.cleanup()
         except Exception as e:
@@ -73,7 +73,7 @@ class SummaryQualityScorer:
             )
 
     async def get_status(self) -> Dict[str, Any]:
-        """Get quality scorer status"""
+    """Get quality scorer status"""
         return {
             "initialized": self._initialized,
             "validator_status":

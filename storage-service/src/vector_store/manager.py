@@ -37,7 +37,7 @@ class VectorStoreManager:
         self._initialized = False
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize vector store components"""
+    """Initialize vector store components"""
         if self._initialized:
             return
 
@@ -61,7 +61,7 @@ class VectorStoreManager:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup resources"""
+    """Cleanup resources"""
         logger.info("Cleaning up Vector Store Manager...")
 
         cleanup_tasks = []
@@ -240,7 +240,7 @@ class VectorStoreManager:
             raise
 
     async def refresh_indexes(self, content_id: str) -> Dict[str, Any]:
-        """Refresh vector indexes for content"""
+    """Refresh vector indexes for content"""
         if not self._initialized or not self.postgres_vector:
             return
 

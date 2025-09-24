@@ -8,7 +8,6 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-
 from src.config.settings import Settings
 from src.infrastructure.kubernetes_client import KubernetesClient
 from src.infrastructure.load_balancer import LoadBalancer

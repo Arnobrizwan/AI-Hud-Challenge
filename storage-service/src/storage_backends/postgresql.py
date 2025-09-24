@@ -26,7 +26,7 @@ class PostgreSQLManager:
         self._initialized = False
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize PostgreSQL connection pool"""
+    """Initialize PostgreSQL connection pool"""
         if self._initialized:
             return
 
@@ -58,7 +58,7 @@ class PostgreSQLManager:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup connection pool"""
+    """Cleanup connection pool"""
         if self.pool:
     await self.pool.close()
             self.pool = None
@@ -67,7 +67,7 @@ class PostgreSQLManager:
         logger.info("PostgreSQL Manager cleanup complete")
 
     async def _initialize_schema(self) -> Dict[str, Any]:
-        """Initialize database schema"""
+    """Initialize database schema"""
         try:
     async with self.pool.acquire() as conn:
                 # Create articles table
@@ -145,7 +145,7 @@ class PostgreSQLManager:
             raise
 
     async def store_article_metadata(self, article: Article) -> Dict[str, Any]:
-        """Store article metadata in PostgreSQL"""
+    """Store article metadata in PostgreSQL"""
         if not self._initialized or not self.pool:
             raise RuntimeError("PostgreSQL Manager not initialized")
 
@@ -201,7 +201,7 @@ class PostgreSQLManager:
             raise
 
     async def get_article_metadata(self, article_id: str) -> Dict[str, Any]:
-        """Get article metadata from PostgreSQL"""
+    """Get article metadata from PostgreSQL"""
         if not self._initialized or not self.pool:
             raise RuntimeError("PostgreSQL Manager not initialized")
 
@@ -387,7 +387,7 @@ class PostgreSQLManager:
             raise
 
     async def delete_article(self, article_id: str) -> Dict[str, Any]:
-        """Delete article from PostgreSQL"""
+    """Delete article from PostgreSQL"""
         if not self._initialized or not self.pool:
             raise RuntimeError("PostgreSQL Manager not initialized")
 
@@ -407,7 +407,7 @@ class PostgreSQLManager:
             raise
 
     async def get_article_stats(self) -> Dict[str, Any]:
-        """Get article statistics"""
+    """Get article statistics"""
         if not self._initialized or not self.pool:
             raise RuntimeError("PostgreSQL Manager not initialized")
 

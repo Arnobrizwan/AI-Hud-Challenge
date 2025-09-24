@@ -160,9 +160,7 @@ async def resolve_alert(
 
 
 @monitoring_router.post("/alerts/{alert_id}/acknowledge")
-async def acknowledge_alert(
-    alert_id: str, evaluation_engine: EvaluationEngine = Depends(get_evaluation_engine)
-):
+async def acknowledge_alert(alert_id: str, evaluation_engine: EvaluationEngine = Depends(get_evaluation_engine)):
     """Acknowledge a monitoring alert"""
 
     try:

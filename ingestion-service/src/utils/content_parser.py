@@ -70,23 +70,17 @@ class ContentParser:
             script.decompose()
 
         # Remove comments
-        for comment in soup.find_all(
-            string=lambda text: isinstance(
-                text, Comment)):
+        for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
             comment.extract()
 
         # Remove empty elements
         for element in soup.find_all():
-            if not element.get_text(strip=True) and not element.find(
-                    ["img", "br", "hr"]):
+            if not element.get_text(strip=True) and not element.find(["img", "br", "hr"]):
                 element.decompose()
 
         return str(soup)
 
-    def extract_text_from_html(
-            self,
-            html_content: str,
-            use_readability: bool = True) -> str:
+    def extract_text_from_html(self, html_content: str, use_readability: bool = True) -> str:
         """Extract clean text from HTML content."""
         if use_readability:
             try:
@@ -225,8 +219,7 @@ class ContentParser:
                     data = json.loads(json_ld.string)
                     if isinstance(data, dict) and "author" in data:
                         author_data = data["author"]
-                        if isinstance(
-                                author_data, dict) and "name" in author_data:
+                        if isinstance(author_data, dict) and "name" in author_data:
                             author = author_data["name"]
                         elif isinstance(author_data, str):
                             author = author_data
@@ -241,10 +234,7 @@ class ContentParser:
 
         return self.clean_text(author) if author else None
 
-    def extract_image_url(
-            self,
-            html_content: str,
-            base_url: str = None) -> Optional[str]:
+    def extract_image_url(self, html_content: str, base_url: str = None) -> Optional[str]:
         """Extract main image URL from HTML content."""
         soup = BeautifulSoup(html_content, "lxml")
 
@@ -270,9 +260,7 @@ class ContentParser:
 
         # 4. Article image
         if not image_url:
-            article_img = soup.find(
-                "img", class_=re.compile(
-                    r"article|main|featured", re.I))
+            article_img = soup.find("img", class_=re.compile(r"article|main|featured", re.I))
             if article_img and article_img.get("src"):
                 image_url = article_img.get("src")
 
@@ -315,9 +303,7 @@ class ContentParser:
                 pass
 
         # 4. Class-based tags
-        tag_elements = soup.find_all(
-            class_=re.compile(
-                r"tag|category|topic", re.I))
+        tag_elements = soup.find_all(class_=re.compile(r"tag|category|topic", re.I))
         for element in tag_elements:
             text = element.get_text(strip=True)
             if text:
@@ -346,7 +332,7 @@ class ContentParser:
             return "en"  # Default to English
 
     def calculate_reading_metrics(self, text: str) -> Dict[str, Any]:
-        """Calculate reading metrics for text content."""
+    """Calculate reading metrics for text content."""
         if not text:
             return {
                 "word_count": 0,
@@ -382,8 +368,7 @@ class ContentParser:
             "flesch_kincaid_grade": round(flesch_grade, 2),
         }
 
-    def extract_publication_date(
-            self, html_content: str) -> Optional[datetime]:
+    def extract_publication_date(self, html_content: str) -> Optional[datetime]:
         """Extract publication date from HTML content."""
         soup = BeautifulSoup(html_content, "lxml")
 
@@ -429,10 +414,7 @@ class ContentParser:
 
         return None
 
-    def extract_canonical_url(
-            self,
-            html_content: str,
-            base_url: str = None) -> Optional[str]:
+    def extract_canonical_url(self, html_content: str, base_url: str = None) -> Optional[str]:
         """Extract canonical URL from HTML content."""
         soup = BeautifulSoup(html_content, "lxml")
 
@@ -442,8 +424,7 @@ class ContentParser:
             canonical_url = canonical_link.get("href")
 
             # Convert relative URL to absolute
-            if base_url and not canonical_url.startswith(
-                    ("http://", "https://")):
+            if base_url and not canonical_url.startswith(("http://", "https://")):
                 canonical_url = urljoin(base_url, canonical_url)
 
             return canonical_url

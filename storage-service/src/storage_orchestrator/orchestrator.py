@@ -60,7 +60,7 @@ class StorageOrchestrator:
         self._storage_tasks: List[StorageTask] = []
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize all storage managers"""
+    """Initialize all storage managers"""
         if self._initialized:
             return
 
@@ -101,7 +101,7 @@ class StorageOrchestrator:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup resources"""
+    """Cleanup resources"""
         logger.info("Cleaning up Storage Orchestrator...")
 
         cleanup_tasks = []
@@ -310,7 +310,7 @@ class StorageOrchestrator:
             raise
 
     async def update_search_indexes(self, article_id: str) -> Dict[str, Any]:
-        """Update search indexes for an article"""
+    """Update search indexes for an article"""
         if not self._initialized:
             return
 
@@ -328,7 +328,7 @@ class StorageOrchestrator:
                 f"Failed to update indexes for article {article_id}: {e}")
 
     async def update_cache_warmup(self, article_id: str) -> Dict[str, Any]:
-        """Warm up cache for an article"""
+    """Warm up cache for an article"""
         if not self._initialized or not self.cache_coordinator:
             return
 

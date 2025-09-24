@@ -56,7 +56,6 @@ class SystemHealthResponse(BaseModel):
 @router.get("/", response_model=HealthResponse)
 async def health_check() -> Dict[str, Any]:
     """Basic health check endpoint"""
-
     try:
         # Get basic service info
         uptime = 0.0  # This would be calculated from service start time
@@ -90,11 +89,9 @@ async def health_check() -> Dict[str, Any]:
 @router.get("/detailed", response_model=SystemHealthResponse)
 async def detailed_health_check() -> Dict[str, Any]:
     """Detailed health check with system status"""
-
     try:
         if not observability_engine:
-            raise HTTPException(status_code=503,
-                                detail="Observability engine not initialized")
+            raise HTTPException(status_code=503, detail="Observability engine not initialized")
 
         # Get comprehensive health report
         health_report = await observability_engine.collect_system_health()
@@ -112,18 +109,15 @@ async def detailed_health_check() -> Dict[str, Any]:
 
     except Exception as e:
         logger.error(f"Detailed health check failed: {str(e)}")
-        raise HTTPException(status_code=500,
-                            detail=f"Health check failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Health check failed: {str(e)}")
 
 
 @router.get("/services", response_model=List[ServiceHealthResponse])
 async def get_services_health() -> Dict[str, Any]:
     """Get health status of all services"""
-
     try:
         if not observability_engine:
-            raise HTTPException(status_code=503,
-                                detail="Observability engine not initialized")
+            raise HTTPException(status_code=503, detail="Observability engine not initialized")
 
         # Get service health
         service_health = await observability_engine.check_service_health()
@@ -133,44 +127,39 @@ async def get_services_health() -> Dict[str, Any]:
             if isinstance(health_data, dict):
                 responses.append(
                     ServiceHealthResponse(
-                        service_name=service_name, status=health_data.get(
-                            "status", "unknown"), health_score=health_data.get(
-                            "health_score", 0.0), response_time=health_data.get(
-                            "response_time", 0.0), last_checked=health_data.get(
-                            "last_checked", datetime.utcnow().isoformat()), details=health_data.get(
-                            "details", {}), ))
+                        service_name=service_name,
+                        status=health_data.get("status", "unknown"),
+                        health_score=health_data.get("health_score", 0.0),
+                        response_time=health_data.get("response_time", 0.0),
+                        last_checked=health_data.get("last_checked", datetime.utcnow().isoformat()),
+                        details=health_data.get("details", {}),
+                    )
+                )
 
         return responses
 
     except Exception as e:
         logger.error(f"Failed to get services health: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get services health: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get services health: {str(e)}")
 
 
 @router.get("/services/{service_name}", response_model=ServiceHealthResponse)
 async def get_service_health(service_name: str) -> Dict[str, Any]:
     """Get health status of specific service"""
-
     try:
         if not observability_engine:
-            raise HTTPException(status_code=503,
-                                detail="Observability engine not initialized")
+            raise HTTPException(status_code=503, detail="Observability engine not initialized")
 
         # Get specific service health
         service_health = await observability_engine.check_service_health()
 
         if service_name not in service_health:
-            raise HTTPException(status_code=404,
-                                detail=f"Service {service_name} not found")
+            raise HTTPException(status_code=404, detail=f"Service {service_name} not found")
 
         health_data = service_health[service_name]
 
         if not isinstance(health_data, dict):
-            raise HTTPException(
-                status_code=500,
-                detail=f"Invalid health data for {service_name}")
+            raise HTTPException(status_code=500, detail=f"Invalid health data for {service_name}")
 
         return ServiceHealthResponse(
             service_name=service_name,
@@ -184,116 +173,90 @@ async def get_service_health(service_name: str) -> Dict[str, Any]:
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(
-            f"Failed to get health for service {service_name}: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get health for service {service_name}: {str(e)}")
+        logger.error(f"Failed to get health for service {service_name}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get health for service {service_name}: {str(e)}")
 
 
 @router.get("/infrastructure")
 async def get_infrastructure_health() -> Dict[str, Any]:
     """Get infrastructure health status"""
-
     try:
         if not observability_engine:
-            raise HTTPException(status_code=503,
-                                detail="Observability engine not initialized")
+            raise HTTPException(status_code=503, detail="Observability engine not initialized")
 
         # Get infrastructure health
         infra_health = await observability_engine.check_infrastructure_health()
 
-        return {"infrastructure_health": infra_health,
-                "timestamp": datetime.utcnow().isoformat()}
+        return {"infrastructure_health": infra_health, "timestamp": datetime.utcnow().isoformat()}
 
     except Exception as e:
         logger.error(f"Failed to get infrastructure health: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get infrastructure health: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get infrastructure health: {str(e)}")
 
 
 @router.get("/pipeline")
 async def get_pipeline_health() -> Dict[str, Any]:
     """Get data pipeline health status"""
-
     try:
         if not observability_engine:
-            raise HTTPException(status_code=503,
-                                detail="Observability engine not initialized")
+            raise HTTPException(status_code=503, detail="Observability engine not initialized")
 
         # Get pipeline health
         pipeline_health = await observability_engine.check_data_pipeline_health()
 
-        return {"pipeline_health": pipeline_health,
-                "timestamp": datetime.utcnow().isoformat()}
+        return {"pipeline_health": pipeline_health, "timestamp": datetime.utcnow().isoformat()}
 
     except Exception as e:
         logger.error(f"Failed to get pipeline health: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get pipeline health: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get pipeline health: {str(e)}")
 
 
 @router.get("/ml-models")
 async def get_ml_models_health() -> Dict[str, Any]:
     """Get ML models health status"""
-
     try:
         if not observability_engine:
-            raise HTTPException(status_code=503,
-                                detail="Observability engine not initialized")
+            raise HTTPException(status_code=503, detail="Observability engine not initialized")
 
         # Get ML models health
         ml_health = await observability_engine.check_ml_model_health()
 
-        return {"ml_models_health": ml_health,
-                "timestamp": datetime.utcnow().isoformat()}
+        return {"ml_models_health": ml_health, "timestamp": datetime.utcnow().isoformat()}
 
     except Exception as e:
         logger.error(f"Failed to get ML models health: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get ML models health: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get ML models health: {str(e)}")
 
 
 @router.get("/dependencies")
 async def get_dependencies_health() -> Dict[str, Any]:
     """Get external dependencies health status"""
-
     try:
         if not observability_engine:
-            raise HTTPException(status_code=503,
-                                detail="Observability engine not initialized")
+            raise HTTPException(status_code=503, detail="Observability engine not initialized")
 
         # Get dependencies health
         deps_health = await observability_engine.check_external_dependencies_health()
 
-        return {"dependencies_health": deps_health,
-                "timestamp": datetime.utcnow().isoformat()}
+        return {"dependencies_health": deps_health, "timestamp": datetime.utcnow().isoformat()}
 
     except Exception as e:
         logger.error(f"Failed to get dependencies health: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get dependencies health: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get dependencies health: {str(e)}")
 
 
 @router.post("/services/{service_name}/check")
 async def trigger_service_health_check(service_name: str) -> Dict[str, Any]:
     """Trigger immediate health check for specific service"""
-
     try:
         if not observability_engine:
-            raise HTTPException(status_code=503,
-                                detail="Observability engine not initialized")
+            raise HTTPException(status_code=503, detail="Observability engine not initialized")
 
         # Trigger health check
         health_data = await observability_engine.check_service_health()
 
         if service_name not in health_data:
-            raise HTTPException(status_code=404,
-                                detail=f"Service {service_name} not found")
+            raise HTTPException(status_code=404, detail=f"Service {service_name} not found")
 
         return {
             "message": f"Health check triggered for {service_name}",
@@ -305,21 +268,16 @@ async def trigger_service_health_check(service_name: str) -> Dict[str, Any]:
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(
-            f"Failed to trigger health check for {service_name}: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to trigger health check for {service_name}: {str(e)}")
+        logger.error(f"Failed to trigger health check for {service_name}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to trigger health check for {service_name}: {str(e)}")
 
 
 @router.get("/metrics/summary")
 async def get_health_metrics_summary() -> Dict[str, Any]:
     """Get health metrics summary"""
-
     try:
         if not observability_engine:
-            raise HTTPException(status_code=503,
-                                detail="Observability engine not initialized")
+            raise HTTPException(status_code=503, detail="Observability engine not initialized")
 
         # Get system status
         system_status = await observability_engine.get_system_status()
@@ -336,6 +294,4 @@ async def get_health_metrics_summary() -> Dict[str, Any]:
 
     except Exception as e:
         logger.error(f"Failed to get health metrics summary: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get health metrics summary: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get health metrics summary: {str(e)}")

@@ -419,7 +419,7 @@ class FirestoreService:
             return None
 
     def _article_to_dict(self, article: NormalizedArticle) -> Dict[str, Any]:
-        """Convert article to Firestore-compatible dictionary."""
+    """Convert article to Firestore-compatible dictionary."""
         return {
             "id": article.id,
             "url": article.url,
@@ -570,7 +570,7 @@ class FirestoreService:
             return None
 
     def _batch_to_dict(self, batch: ProcessingBatch) -> Dict[str, Any]:
-        """Convert batch to Firestore-compatible dictionary."""
+    """Convert batch to Firestore-compatible dictionary."""
         return {
             "batch_id": batch.batch_id,
             "source_id": batch.source_id,
@@ -632,7 +632,7 @@ class FirestoreService:
             return None
 
     def _metrics_to_dict(self, metrics: ContentMetrics) -> Dict[str, Any]:
-        """Convert metrics to Firestore-compatible dictionary."""
+    """Convert metrics to Firestore-compatible dictionary."""
         return {
             "source_id": metrics.source_id,
             "date": metrics.date,

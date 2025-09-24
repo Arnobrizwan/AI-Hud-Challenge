@@ -152,7 +152,7 @@ class RunbookExecutionEngine:
         self.active_executions = {}
 
     async def setup_environment(self, config: Dict[str, Any]) -> Dict[str, Any]:
-        """Set up execution environment"""
+    """Set up execution environment"""
         self.execution_environment = config
         logger.info("Runbook execution environment configured")
 
@@ -637,7 +637,7 @@ class RunbookRegistry:
         self.runbooks = {}
 
     async def store_runbook(self, runbook: Runbook) -> Dict[str, Any]:
-        """Store runbook definition"""
+    """Store runbook definition"""
         self.runbooks[runbook.id] = runbook
         logger.info(f"Stored runbook: {runbook.name}")
 
@@ -695,8 +695,7 @@ class RunbookEngine:
         logger.info("Runbook engine initialized")
 
     async def load_runbook_definitions(self, runbooks_path: str) -> Dict[str, Any]:
-        """Load runbook definitions from configuration"""
-
+    """Load runbook definitions from configuration"""
         try:
             with open(runbooks_path, "r") as f:
                 runbooks_data = json.load(f)
@@ -834,7 +833,7 @@ class RunbookEngine:
         return runbook
 
     async def validate_runbook(self, runbook: Runbook) -> Dict[str, Any]:
-        """Validate runbook definition"""
+    """Validate runbook definition"""
         errors = []
 
         # Check required fields
@@ -860,7 +859,7 @@ class RunbookEngine:
         return {"is_valid": len(errors) == 0, "errors": errors}
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup runbook engine"""
+    """Cleanup runbook engine"""
         self.is_initialized = False
         logger.info("Runbook engine cleaned up")
 
@@ -872,8 +871,7 @@ class AuditLogger:
         self.audit_logs = []
 
     async def log_runbook_execution(self, execution: RunbookExecution) -> Dict[str, Any]:
-        """Log runbook execution for audit"""
-
+    """Log runbook execution for audit"""
         audit_entry = {
             "execution_id": execution.id,
             "runbook_id": execution.runbook_id,

@@ -31,13 +31,13 @@ class StatisticalTester:
         }
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the statistical tester"""
+    """Initialize the statistical tester"""
         logger.info("Initializing statistical tester...")
         # No specific initialization needed
         logger.info("Statistical tester initialized successfully")
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup statistical tester resources"""
+    """Cleanup statistical tester resources"""
         logger.info("Cleaning up statistical tester...")
         # No specific cleanup needed
         logger.info("Statistical tester cleanup completed")

@@ -39,7 +39,7 @@ class FactualConsistencyChecker:
         self._initialized = False
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize consistency checking tools"""
+    """Initialize consistency checking tools"""
         try:
             logger.info("Initializing factual consistency checker...")
 
@@ -61,7 +61,7 @@ except Exception as e:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Clean up resources"""
+    """Clean up resources"""
         try:
             if self.sentence_model:
                 del self.sentence_model
@@ -282,7 +282,7 @@ except Exception as e:
             return 0.5
 
     async def get_status(self) -> Dict[str, Any]:
-        """Get consistency checker status"""
+    """Get consistency checker status"""
         return {
             "initialized": self._initialized,
             "spacy_available": self.nlp is not None,

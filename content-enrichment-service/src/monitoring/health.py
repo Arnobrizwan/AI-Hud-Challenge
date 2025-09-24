@@ -33,7 +33,7 @@ class HealthChecker:
         self.check_interval = 30  # seconds
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize health checker components."""
+    """Initialize health checker components."""
         try:
             # Initialize Redis connection
             self.redis_client = redis.from_url(
@@ -49,7 +49,7 @@ class HealthChecker:
             logger.error("Failed to initialize health checker", error=str(e))
 
     async def check_health(self) -> Dict[str, Any]:
-        """Check overall service health."""
+    """Check overall service health."""
         try:
             current_time = datetime.utcnow()
 
@@ -71,7 +71,7 @@ class HealthChecker:
             }
 
     async def _perform_health_checks(self) -> Dict[str, Any]:
-        """Perform comprehensive health checks."""
+    """Perform comprehensive health checks."""
         try:
             components = {}
 
@@ -111,7 +111,7 @@ class HealthChecker:
             }
 
     async def _check_system_health(self) -> Dict[str, Any]:
-        """Check system resource health."""
+    """Check system resource health."""
         try:
             # CPU usage
             cpu_percent = psutil.cpu_percent(interval=1)
@@ -157,7 +157,7 @@ class HealthChecker:
             return {"healthy": False, "error": str(e)}
 
     async def _check_redis_health(self) -> Dict[str, Any]:
-        """Check Redis health."""
+    """Check Redis health."""
         try:
             if not self.redis_client:
                 return {
@@ -204,7 +204,7 @@ class HealthChecker:
             return {"healthy": False, "error": str(e)}
 
     async def _check_database_health(self) -> Dict[str, Any]:
-        """Check database health."""
+    """Check database health."""
         try:
             if not self.db_engine:
                 return {
@@ -244,7 +244,7 @@ class HealthChecker:
             return {"healthy": False, "error": str(e)}
 
     async def _check_models_health(self) -> Dict[str, Any]:
-        """Check AI/ML models health."""
+    """Check AI/ML models health."""
         try:
             # This is a simplified check
             # In practice, you'd check if models are loaded and responding
@@ -268,7 +268,7 @@ class HealthChecker:
             return {"healthy": False, "error": str(e)}
 
     async def _check_spacy_model(self) -> Dict[str, Any]:
-        """Check spaCy model health."""
+    """Check spaCy model health."""
         try:
             import spacy
 
@@ -288,7 +288,7 @@ class HealthChecker:
             return {"healthy": False, "error": str(e)}
 
     async def _check_transformer_models(self) -> Dict[str, Any]:
-        """Check transformer models health."""
+    """Check transformer models health."""
         try:
             # This is a simplified check
             # In practice, you'd test actual model inference
@@ -304,7 +304,7 @@ class HealthChecker:
             return {"healthy": False, "error": str(e)}
 
     async def _check_custom_models(self) -> Dict[str, Any]:
-        """Check custom models health."""
+    """Check custom models health."""
         try:
             # Check if model files exist
             import os
@@ -328,7 +328,7 @@ class HealthChecker:
             return {"healthy": False, "error": str(e)}
 
     async def _check_external_services_health(self) -> Dict[str, Any]:
-        """Check external services health."""
+    """Check external services health."""
         try:
             # Check Google Cloud services
             google_cloud_healthy = await self._check_google_cloud_health()
@@ -373,7 +373,7 @@ class HealthChecker:
             return False
 
     async def get_detailed_health(self) -> Dict[str, Any]:
-        """Get detailed health information."""
+    """Get detailed health information."""
         try:
             # Force a fresh health check
             await self._perform_health_checks()
@@ -394,7 +394,7 @@ class HealthChecker:
             return {"status": "unhealthy", "error": str(e), "detailed": True}
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup health checker resources."""
+    """Cleanup health checker resources."""
         try:
             if self.redis_client:
     await self.redis_client.close()

@@ -101,22 +101,10 @@ app.add_middleware(AuthMiddleware)
 app.add_middleware(MonitoringMiddleware)
 
 # Include routers
-app.include_router(
-    feedback_router,
-    prefix="/api/v1/feedback",
-    tags=["feedback"])
-app.include_router(
-    editorial_router,
-    prefix="/api/v1/editorial",
-    tags=["editorial"])
-app.include_router(
-    annotation_router,
-    prefix="/api/v1/annotation",
-    tags=["annotation"])
-app.include_router(
-    analytics_router,
-    prefix="/api/v1/analytics",
-    tags=["analytics"])
+app.include_router(feedback_router, prefix="/api/v1/feedback", tags=["feedback"])
+app.include_router(editorial_router, prefix="/api/v1/editorial", tags=["editorial"])
+app.include_router(annotation_router, prefix="/api/v1/annotation", tags=["annotation"])
+app.include_router(analytics_router, prefix="/api/v1/analytics", tags=["analytics"])
 
 
 @app.get("/health")
@@ -172,9 +160,7 @@ async def http_exception_handler(request, exc) -> Dict[str, Any]:
     """Global HTTP exception handler"""
     return JSONResponse(
         status_code=exc.status_code,
-        content=ErrorResponse(
-            error=exc.detail,
-            status_code=exc.status_code).dict(),
+        content=ErrorResponse(error=exc.detail, status_code=exc.status_code).dict(),
     )
 
 
@@ -182,15 +168,12 @@ async def http_exception_handler(request, exc) -> Dict[str, Any]:
 async def general_exception_handler(request, exc) -> Dict[str, Any]:
     """Global exception handler"""
     logger.error("Unhandled exception", error=str(exc), path=request.url.path)
-    return JSONResponse(status_code=500, content=ErrorResponse(
-        error="Internal server error", status_code=500).dict(), )
+    return JSONResponse(
+        status_code=500,
+        content=ErrorResponse(error="Internal server error", status_code=500).dict(),
+    )
 
 
 if __name__ == "__main__":
     settings = get_settings()
-    uvicorn.run(
-        "src.main:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=settings.debug,
-        log_level="info")
+    uvicorn.run("src.main:app", host="0.0.0.0", port=8000, reload=settings.debug, log_level="info")

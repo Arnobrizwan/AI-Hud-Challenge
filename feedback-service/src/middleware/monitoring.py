@@ -18,7 +18,7 @@ class MonitoringMiddleware:
         self.app = app
 
     async def __call__(self, scope, receive, send) -> Dict[str, Any]:
-        if scope["type"] == "http":
+    if scope["type"] == "http":
             request = Request(scope, receive)
             start_time = time.time()
 

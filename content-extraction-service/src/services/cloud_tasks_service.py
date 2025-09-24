@@ -32,8 +32,7 @@ class CloudTasksService:
         self.client = tasks_v2.CloudTasksClient()
 
         # Queue path
-        self.queue_path = self.client.queue_path(
-            project_id, location, queue_name)
+        self.queue_path = self.client.queue_path(project_id, location, queue_name)
 
     async def create_extraction_task(
         self,
@@ -58,10 +57,7 @@ class CloudTasksService:
             logger.info(f"Creating extraction task for URL: {url}")
 
             # Prepare task payload
-            payload = {
-                "url": url,
-                "timestamp": datetime.utcnow().isoformat(),
-                **task_data}
+            payload = {"url": url, "timestamp": datetime.utcnow().isoformat(), **task_data}
 
             # Create task
             task = {
@@ -85,8 +81,7 @@ class CloudTasksService:
                 task_name = f"extract-{url.replace('://', '-').replace('/', '-')}-{int(datetime.utcnow().timestamp())}"
 
             # Create the task
-            response = self.client.create_task(
-                parent=self.queue_path, task=task, task_id=task_name)
+            response = self.client.create_task(parent=self.queue_path, task=task, task_id=task_name)
 
             logger.info(f"Task created successfully: {response.name}")
             return response.name
@@ -115,24 +110,18 @@ class CloudTasksService:
             List of task names/IDs
         """
         try:
-            logger.info(
-                f"Creating batch extraction tasks for {len(urls)} URLs")
+            logger.info(f"Creating batch extraction tasks for {len(urls)} URLs")
 
             task_names = []
 
             # Split URLs into batches
             for i in range(0, len(urls), batch_size):
-                batch_urls = urls[i: i + batch_size]
+                batch_urls = urls[i : i + batch_size]
                 batch_task_data = {
                     **task_data,
                     "batch_urls": batch_urls,
-                    "batch_index": i //
-                    batch_size,
-                    "total_batches": (
-                        len(urls) +
-                        batch_size -
-                        1) //
-                    batch_size,
+                    "batch_index": i // batch_size,
+                    "total_batches": (len(urls) + batch_size - 1) // batch_size,
                 }
 
                 # Create batch task
@@ -153,7 +142,7 @@ class CloudTasksService:
             raise TaskProcessingError(f"Batch task creation failed: {str(e)}")
 
     async def get_task_status(self, task_name: str) -> Dict[str, Any]:
-        """
+    """
         Get task status and information.
 
         Args:
@@ -180,13 +169,10 @@ class CloudTasksService:
             }
 
         except Exception as e:
-            logger.error(
-                f"Task status retrieval failed for {task_name}: {str(e)}")
+            logger.error(f"Task status retrieval failed for {task_name}: {str(e)}")
             return {"name": task_name, "state": "UNKNOWN", "error": str(e)}
 
-    async def list_tasks(
-        self, limit: int = 100, filter_expression: Optional[str] = None
-    ) -> List[Dict[str, Any]]:
+    async def list_tasks(self, limit: int = 100, filter_expression: Optional[str] = None) -> List[Dict[str, Any]]:
         """
         List tasks in the queue.
 
@@ -273,7 +259,7 @@ class CloudTasksService:
             return 0
 
     async def get_queue_stats(self) -> Dict[str, Any]:
-        """
+    """
         Get queue statistics.
 
         Returns:
@@ -325,11 +311,9 @@ class CloudTasksService:
         # This would be the actual endpoint URL in production
         return f"https://{self.project_id}.run.app/api/v1/tasks/extract"
 
-    async def create_retry_task(self,
-                                original_task_name: str,
-                                retry_data: Dict[str,
-                                                 Any],
-                                delay_seconds: int = 60) -> str:
+    async def create_retry_task(
+        self, original_task_name: str, retry_data: Dict[str, Any], delay_seconds: int = 60
+    ) -> str:
         """
         Create a retry task for a failed task.
 
@@ -364,11 +348,9 @@ class CloudTasksService:
             logger.error(f"Retry task creation failed: {str(e)}")
             raise TaskProcessingError(f"Retry task creation failed: {str(e)}")
 
-    async def schedule_periodic_task(self,
-                                     task_data: Dict[str,
-                                                     Any],
-                                     cron_expression: str,
-                                     task_name: Optional[str] = None) -> str:
+    async def schedule_periodic_task(
+        self, task_data: Dict[str, Any], cron_expression: str, task_name: Optional[str] = None
+    ) -> str:
         """
         Schedule a periodic task using cron expression.
 
@@ -381,8 +363,7 @@ class CloudTasksService:
             Task name/ID
         """
         try:
-            logger.info(
-                f"Scheduling periodic task with cron: {cron_expression}")
+            logger.info(f"Scheduling periodic task with cron: {cron_expression}")
 
             # For Cloud Tasks, we'll create a task that schedules itself
             # This is a simplified implementation
@@ -403,5 +384,4 @@ class CloudTasksService:
 
         except Exception as e:
             logger.error(f"Periodic task scheduling failed: {str(e)}")
-            raise TaskProcessingError(
-                f"Periodic task scheduling failed: {str(e)}")
+            raise TaskProcessingError(f"Periodic task scheduling failed: {str(e)}")

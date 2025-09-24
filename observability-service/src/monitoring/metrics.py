@@ -323,8 +323,7 @@ class MetricsCollector:
         logger.info("Metrics collector initialized")
 
     async def _register_custom_metrics(self) -> Dict[str, Any]:
-        """Register custom metrics"""
-
+    """Register custom metrics"""
         # Custom business metrics
         self.custom_metrics.register_metric(
             "custom_user_satisfaction",
@@ -348,7 +347,7 @@ class MetricsCollector:
         )
 
     async def start_metrics_collection(self) -> Dict[str, Any]:
-        """Start background metrics collection"""
+    """Start background metrics collection"""
         if self.is_running:
             return
 
@@ -357,7 +356,7 @@ class MetricsCollector:
         logger.info("Started metrics collection")
 
     async def _collection_loop(self) -> Dict[str, Any]:
-        """Background metrics collection loop"""
+    """Background metrics collection loop"""
         while self.is_running:
             try:
     await self.collect_real_time_metrics()
@@ -469,7 +468,7 @@ class MetricsCollector:
         return metrics
 
     async def _update_prometheus_metrics(self, metrics: Dict[str, float]) -> Dict[str, Any]:
-        """Update Prometheus metrics with collected values"""
+    """Update Prometheus metrics with collected values"""
         try:
             # Update system metrics
             if "cpu_usage_percent" in metrics:
@@ -502,7 +501,7 @@ class MetricsCollector:
             logger.error(f"Failed to update Prometheus metrics: {str(e)}")
 
     async def get_metrics_summary(self) -> Dict[str, Any]:
-        """Get summary of current metrics"""
+    """Get summary of current metrics"""
         try:
             metrics = await self.collect_real_time_metrics()
 
@@ -537,6 +536,6 @@ class MetricsCollector:
         return CONTENT_TYPE_LATEST
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup metrics collector"""
+    """Cleanup metrics collector"""
         self.is_running = False
         logger.info("Metrics collector cleaned up")

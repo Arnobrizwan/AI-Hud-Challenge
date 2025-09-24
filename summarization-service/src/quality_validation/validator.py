@@ -46,7 +46,7 @@ class SummaryQualityValidator:
         self._initialized = False
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize models and tools"""
+    """Initialize models and tools"""
         try:
             logger.info("Initializing quality validator...")
 
@@ -80,7 +80,7 @@ except Exception as e:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Clean up resources"""
+    """Clean up resources"""
         try:
             if self.sentence_model:
                 del self.sentence_model
@@ -553,7 +553,7 @@ except Exception as e:
         return await self.validate_summary_quality(original, summary)
 
     async def get_status(self) -> Dict[str, Any]:
-        """Get validator status"""
+    """Get validator status"""
         return {
             "initialized": self._initialized,
             "rouge_available": self.rouge_scorer is not None,

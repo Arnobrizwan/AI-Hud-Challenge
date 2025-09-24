@@ -28,13 +28,13 @@ class BayesianTestingFramework:
         }
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the Bayesian testing framework"""
+    """Initialize the Bayesian testing framework"""
         logger.info("Initializing Bayesian testing framework...")
         # No specific initialization needed
         logger.info("Bayesian testing framework initialized successfully")
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup Bayesian testing framework resources"""
+    """Cleanup Bayesian testing framework resources"""
         logger.info("Cleaning up Bayesian testing framework...")
         self.active_tests.clear()
         logger.info("Bayesian testing framework cleanup completed")
@@ -69,7 +69,7 @@ class BayesianTestingFramework:
     async def add_data(
         self, test_id: str, control_value: float, treatment_value: float
     ) -> Dict[str, Any]:
-        """Add data point to Bayesian test"""
+    """Add data point to Bayesian test"""
         if test_id not in self.active_tests:
             raise ValueError(f"Bayesian test {test_id} not found")
 
@@ -97,7 +97,7 @@ class BayesianTestingFramework:
         }
 
     async def analyze_test(self, test_id: str) -> Dict[str, Any]:
-        """Analyze Bayesian test results"""
+    """Analyze Bayesian test results"""
         if test_id not in self.active_tests:
             raise ValueError(f"Bayesian test {test_id} not found")
 
@@ -128,8 +128,7 @@ class BayesianTestingFramework:
         }
 
     async def _update_posteriors(self, test: Dict[str, Any]) -> Dict[str, Any]:
-        """Update posterior distributions"""
-
+    """Update posterior distributions"""
         method = test["method"]
 
         if method not in self.bayesian_methods:
@@ -139,8 +138,7 @@ class BayesianTestingFramework:
         await self.bayesian_methods[method](test)
 
     async def _beta_binomial_test(self, test: Dict[str, Any]) -> Dict[str, Any]:
-        """Beta-Binomial Bayesian test for conversion rates"""
-
+    """Beta-Binomial Bayesian test for conversion rates"""
         control_data = np.array(test["control_data"])
         treatment_data = np.array(test["treatment_data"])
 
@@ -169,8 +167,7 @@ class BayesianTestingFramework:
         }
 
     async def _normal_normal_test(self, test: Dict[str, Any]) -> Dict[str, Any]:
-        """Normal-Normal Bayesian test for continuous metrics"""
-
+    """Normal-Normal Bayesian test for continuous metrics"""
         control_data = np.array(test["control_data"])
         treatment_data = np.array(test["treatment_data"])
 
@@ -225,8 +222,7 @@ class BayesianTestingFramework:
             }
 
     async def _gamma_poisson_test(self, test: Dict[str, Any]) -> Dict[str, Any]:
-        """Gamma-Poisson Bayesian test for count data"""
-
+    """Gamma-Poisson Bayesian test for count data"""
         control_data = np.array(test["control_data"])
         treatment_data = np.array(test["treatment_data"])
 

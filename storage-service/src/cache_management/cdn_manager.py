@@ -26,7 +26,7 @@ class CDNManager:
         self._zone_id = None
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize CDN client"""
+    """Initialize CDN client"""
         if self._initialized:
             return
 
@@ -55,7 +55,7 @@ class CDNManager:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup CDN client"""
+    """Cleanup CDN client"""
         if self._cdn_client and hasattr(self._cdn_client, "close"):
     await self._cdn_client.close()
 
@@ -63,7 +63,7 @@ class CDNManager:
         logger.info("CDN Manager cleanup complete")
 
     async def _initialize_cloudflare(self) -> Dict[str, Any]:
-        """Initialize Cloudflare CDN client"""
+    """Initialize Cloudflare CDN client"""
         try:
             self._api_key = getattr(self.settings, "cloudflare_api_key", None)
             self._zone_id = getattr(self.settings, "cloudflare_zone_id", None)
@@ -90,7 +90,7 @@ class CDNManager:
             await self._initialize_mock_cdn()
 
     async def _initialize_cloudfront(self) -> Dict[str, Any]:
-        """Initialize AWS CloudFront client"""
+    """Initialize AWS CloudFront client"""
         try:
             import boto3
 
@@ -109,7 +109,7 @@ class CDNManager:
             await self._initialize_mock_cdn()
 
     async def _initialize_gcp_cdn(self) -> Dict[str, Any]:
-        """Initialize Google Cloud CDN client"""
+    """Initialize Google Cloud CDN client"""
         try:
             from google.cloud import compute_v1
 
@@ -124,12 +124,12 @@ class CDNManager:
             await self._initialize_mock_cdn()
 
     async def _initialize_mock_cdn(self) -> Dict[str, Any]:
-        """Initialize mock CDN for development/testing"""
+    """Initialize mock CDN for development/testing"""
         self._cdn_client = MockCDNClient()
         logger.info("Using mock CDN client")
 
     async def _test_cloudflare_connection(self) -> Dict[str, Any]:
-        """Test Cloudflare API connection"""
+    """Test Cloudflare API connection"""
         try:
     async with self._cdn_client.get(
                 f"https://api.cloudflare.com/client/v4/zones/{self._zone_id}"
@@ -226,7 +226,7 @@ class CDNManager:
             return 0
 
     async def get_statistics(self) -> Dict[str, Any]:
-        """Get CDN statistics"""
+    """Get CDN statistics"""
         if not self._initialized:
             return {}
 
@@ -294,7 +294,7 @@ class CDNManager:
             return []
 
     async def _get_cdn_statistics(self) -> Dict[str, Any]:
-        """Get CDN statistics"""
+    """Get CDN statistics"""
         if hasattr(self._cdn_client, "get_statistics"):
             return await self._cdn_client.get_statistics()
         else:
@@ -364,7 +364,7 @@ class MockCDNClient:
                 key, pattern)]
 
     async def get_statistics(self) -> Dict[str, Any]:
-        """Get mock CDN statistics"""
+    """Get mock CDN statistics"""
         total_requests = self._stats["hits"] + self._stats["misses"]
         hit_rate = (
             self._stats["hits"] /

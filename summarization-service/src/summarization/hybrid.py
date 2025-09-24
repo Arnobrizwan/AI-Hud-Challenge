@@ -32,7 +32,7 @@ class HybridSummarizer:
         self._initialized = False
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize all components"""
+    """Initialize all components"""
         try:
             logger.info("Initializing hybrid summarizer...")
 
@@ -48,7 +48,7 @@ class HybridSummarizer:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Clean up resources"""
+    """Clean up resources"""
         try:
     await self.extractive_summarizer.cleanup()
             await self.abstractive_summarizer.cleanup()
@@ -405,7 +405,7 @@ class HybridSummarizer:
         return variants
 
     async def get_status(self) -> Dict[str, Any]:
-        """Get hybrid summarizer status"""
+    """Get hybrid summarizer status"""
         return {
             "initialized": self._initialized,
             "extractive_available": (

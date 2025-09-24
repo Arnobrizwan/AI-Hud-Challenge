@@ -24,7 +24,7 @@ class AuthMiddleware:
         self.settings = get_settings()
 
     async def __call__(self, scope, receive, send) -> Dict[str, Any]:
-        if scope["type"] == "http":
+    if scope["type"] == "http":
             request = Request(scope, receive)
 
             # Skip auth for health checks and public endpoints
@@ -57,8 +57,7 @@ class AuthMiddleware:
                    for public_path in public_paths)
 
     async def _validate_request(self, request: Request) -> Dict[str, Any]:
-        """Validate request authentication"""
-
+    """Validate request authentication"""
         # Extract authorization header
         authorization = request.headers.get("Authorization")
         if not authorization:

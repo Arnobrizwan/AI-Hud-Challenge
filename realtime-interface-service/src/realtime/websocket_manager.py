@@ -49,19 +49,19 @@ class HeartbeatManager:
         self.monitoring_tasks: Dict[str, asyncio.Task] = {}
 
     async def start_monitoring(self, connection: WebSocketConnection) -> Dict[str, Any]:
-        """Start heartbeat monitoring for a connection"""
+    """Start heartbeat monitoring for a connection"""
         task = asyncio.create_task(self._monitor_connection(connection))
         self.monitoring_tasks[connection.id] = task
 
     async def stop_monitoring(self, connection_id: str) -> Dict[str, Any]:
-        """Stop heartbeat monitoring for a connection"""
+    """Stop heartbeat monitoring for a connection"""
         if connection_id in self.monitoring_tasks:
             task = self.monitoring_tasks[connection_id]
             task.cancel()
             del self.monitoring_tasks[connection_id]
 
     async def _monitor_connection(self, connection: WebSocketConnection) -> Dict[str, Any]:
-        """Monitor connection health with heartbeats"""
+    """Monitor connection health with heartbeats"""
         missed_heartbeats = 0
 
         while connection.is_active:
@@ -93,7 +93,7 @@ class HeartbeatManager:
                 break
 
     async def _send_heartbeat(self, connection: WebSocketConnection) -> Dict[str, Any]:
-        """Send heartbeat ping to connection"""
+    """Send heartbeat ping to connection"""
         try:
             heartbeat_message = {
                 "type": "heartbeat",
@@ -137,7 +137,7 @@ class MessageQueue:
         return messages
 
     async def clear_queue(self, connection_id: str) -> Dict[str, Any]:
-        """Clear message queue for a connection"""
+    """Clear message queue for a connection"""
         if connection_id in self.queues:
             self.queues[connection_id].clear()
 
@@ -156,12 +156,12 @@ class WebSocketManager:
         self.heartbeat_task: Optional[asyncio.Task] = None
 
     async def start_heartbeat_monitoring(self) -> Dict[str, Any]:
-        """Start global heartbeat monitoring task"""
+    """Start global heartbeat monitoring task"""
         self.heartbeat_task = asyncio.create_task(
             self._global_heartbeat_monitor())
 
     async def _global_heartbeat_monitor(self) -> Dict[str, Any]:
-        """Global heartbeat monitoring for all connections"""
+    """Global heartbeat monitoring for all connections"""
         while True:
             try:
     await asyncio.sleep(30)  # Check every 30 seconds
@@ -231,7 +231,7 @@ class WebSocketManager:
     await self.cleanup_connection(connection)
 
     async def receive_messages(self, connection: WebSocketConnection) -> Dict[str, Any]:
-        """Receive messages from WebSocket connection"""
+    """Receive messages from WebSocket connection"""
         while connection.is_active:
             try:
                 message = await connection.websocket.receive_json()
@@ -387,7 +387,7 @@ class WebSocketManager:
             )
 
     async def add_to_group(self, connection_id: str, group_id: str) -> Dict[str, Any]:
-        """Add connection to group"""
+    """Add connection to group"""
         if group_id not in self.connection_groups:
             self.connection_groups[group_id] = set()
 
@@ -397,7 +397,7 @@ class WebSocketManager:
             self.active_connections[connection_id].groups.add(group_id)
 
     async def remove_from_group(self, connection_id: str, group_id: str) -> Dict[str, Any]:
-        """Remove connection from group"""
+    """Remove connection from group"""
         if group_id in self.connection_groups:
             self.connection_groups[group_id].discard(connection_id)
 
@@ -490,7 +490,7 @@ class WebSocketManager:
         )
 
     async def cleanup_connection(self, connection: WebSocketConnection) -> Dict[str, Any]:
-        """Clean up connection resources"""
+    """Clean up connection resources"""
         try:
             # Stop heartbeat monitoring
             await self.heartbeat_manager.stop_monitoring(connection.id)
@@ -522,7 +522,7 @@ class WebSocketManager:
                 f"Error cleaning up connection {connection.id}: {str(e)}")
 
     async def get_connections_status(self) -> Dict[str, Any]:
-        """Get status of active connections"""
+    """Get status of active connections"""
         return {
             "total_connections": len(
                 self.active_connections),

@@ -105,8 +105,7 @@ class AuthMiddleware:
         return user
 
     async def require_permission(self, permission: str) -> Dict[str, Any]:
-        """Require specific permission for endpoint access."""
-
+    """Require specific permission for endpoint access."""
         async def permission_checker(
             user: Dict[str, Any] = Depends(self.require_auth),
         ) -> Dict[str, Any]:
@@ -122,8 +121,7 @@ class AuthMiddleware:
         return permission_checker
 
     async def require_role(self, role: str) -> Dict[str, Any]:
-        """Require specific role for endpoint access."""
-
+    """Require specific role for endpoint access."""
         async def role_checker(user: Dict[str, Any] = Depends(
                 self.require_auth)) -> Dict[str, Any]:
             user_roles = user.get("roles", [])

@@ -98,8 +98,7 @@ class TraceManager:
         logger.info("Distributed tracing initialized successfully")
 
     async def _setup_exporters(self, config: TracingConfig) -> Dict[str, Any]:
-        """Set up trace exporters"""
-
+    """Set up trace exporters"""
         if config.jaeger_enabled:
             try:
                 jaeger_exporter = JaegerExporter(
@@ -131,8 +130,7 @@ class TraceManager:
                 logger.error(f"Failed to configure OTLP exporter: {str(e)}")
 
     async def _instrument_libraries(self) -> Dict[str, Any]:
-        """Instrument third-party libraries"""
-
+    """Instrument third-party libraries"""
         try:
             # FastAPI instrumentation
             FastAPIInstrumentor().instrument()
@@ -420,8 +418,7 @@ class TraceManager:
             return {"error": str(e)}
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup tracing resources"""
-
+    """Cleanup tracing resources"""
         if self.span_processor:
             self.span_processor.shutdown()
 

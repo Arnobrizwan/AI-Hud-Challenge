@@ -310,7 +310,7 @@ class TestServiceIntegration:
 
     @pytest.mark.asyncio
     async def test_auth_service_integration(self, mock_firebase_auth) -> Dict[str, Any]:
-        """Test authentication service integration."""
+    """Test authentication service integration."""
         from src.models.auth import AuthProvider, LoginRequest
         from src.services.auth_service import auth_service
 
@@ -329,7 +329,7 @@ class TestServiceIntegration:
 
     @pytest.mark.asyncio
     async def test_rate_limiter_integration(self, mock_redis) -> Dict[str, Any]:
-        """Test rate limiter service integration."""
+    """Test rate limiter service integration."""
         from src.services.rate_limiter import rate_limiter
 
         # Test the actual rate limiter with mocked Redis

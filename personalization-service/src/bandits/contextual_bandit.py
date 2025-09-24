@@ -263,6 +263,5 @@ class ContextualBandit:
         return {
             "current_algorithm": self.current_algorithm,
             "available_algorithms": list(self.algorithms.keys()),
-            "algorithms":
-    await self.get_algorithm_statistics(),
+            "algorithms": await self.get_algorithm_statistics(),
         }

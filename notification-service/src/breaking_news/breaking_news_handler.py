@@ -297,7 +297,7 @@ class BreakingNewsHandler:
             return users[:max_count]
 
     async def get_breaking_news_analytics(self) -> Dict[str, Any]:
-        """Get breaking news analytics."""
+    """Get breaking news analytics."""
         try:
             analytics = {
                 "breaking_news_criteria": self.breaking_news_criteria,

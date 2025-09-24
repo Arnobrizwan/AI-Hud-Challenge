@@ -60,7 +60,7 @@ class ContentPolicyMonitor:
         }
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the content policy monitor"""
+    """Initialize the content policy monitor"""
         try:
             self.is_initialized = True
             logger.info("Content policy monitor initialized")
@@ -71,7 +71,7 @@ class ContentPolicyMonitor:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup resources"""
+    """Cleanup resources"""
         try:
             self.is_initialized = False
             logger.info("Content policy monitor cleanup completed")
@@ -502,7 +502,7 @@ class ContentPolicyMonitor:
             return []
 
     async def get_compliance_status(self) -> Dict[str, Any]:
-        """Get current content policy compliance status"""
+    """Get current content policy compliance status"""
         try:
             return {
                 "enabled": self.config.content_policy_enabled,
@@ -520,7 +520,7 @@ class ContentPolicyMonitor:
             return {"error": str(e)}
 
     async def generate_detailed_report(self) -> Dict[str, Any]:
-        """Generate detailed content policy compliance report"""
+    """Generate detailed content policy compliance report"""
         try:
             report = {
                 "report_type": "content_policy_detailed",

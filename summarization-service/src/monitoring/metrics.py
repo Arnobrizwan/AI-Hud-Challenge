@@ -79,19 +79,10 @@ class MetricsCollector:
         self.error_rates = deque(maxlen=1000)
 
         # Method-specific metrics
-        self.method_metrics = defaultdict(
-            lambda: {
-                "count": 0,
-                "total_time": 0.0,
-                "avg_quality": 0.0,
-                "errors": 0})
+        self.method_metrics = defaultdict(lambda: {"count": 0, "total_time": 0.0, "avg_quality": 0.0, "errors": 0})
 
         # Language-specific metrics
-        self.language_metrics = defaultdict(
-            lambda: {
-                "count": 0,
-                "avg_processing_time": 0.0,
-                "avg_quality": 0.0})
+        self.language_metrics = defaultdict(lambda: {"count": 0, "avg_processing_time": 0.0, "avg_quality": 0.0})
 
         # A/B test metrics
         self.ab_test_metrics = defaultdict(
@@ -108,15 +99,13 @@ class MetricsCollector:
         self._stop_monitoring = False
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize metrics collection"""
+    """Initialize metrics collection"""
         try:
             logger.info("Initializing metrics collector...")
 
             # Start background monitoring
             self._stop_monitoring = False
-            self._monitoring_thread = threading.Thread(
-                target=self._monitor_system_resources, daemon=True
-            )
+            self._monitoring_thread = threading.Thread(target=self._monitor_system_resources, daemon=True)
             self._monitoring_thread.start()
 
             self._initialized = True
@@ -127,7 +116,7 @@ class MetricsCollector:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Clean up metrics collection"""
+    """Clean up metrics collection"""
         try:
             self._stop_monitoring = True
             if self._monitoring_thread:
@@ -175,12 +164,10 @@ class MetricsCollector:
             # Update averages
             if self.service_metrics.successful_requests > 0:
                 self.service_metrics.average_processing_time = (
-                    self.service_metrics.total_processing_time
-                    / self.service_metrics.successful_requests
+                    self.service_metrics.total_processing_time / self.service_metrics.successful_requests
                 )
                 self.service_metrics.average_quality_score = (
-                    self.service_metrics.total_quality_score
-                    / self.service_metrics.successful_requests
+                    self.service_metrics.total_quality_score / self.service_metrics.successful_requests
                 )
 
             # Record time-series data
@@ -192,8 +179,7 @@ class MetricsCollector:
             self.method_metrics[method]["count"] += 1
             self.method_metrics[method]["total_time"] += result.processing_stats.total_time
             self.method_metrics[method]["avg_quality"] = (
-                self.method_metrics[method]["avg_quality"]
-                * (self.method_metrics[method]["count"] - 1)
+                self.method_metrics[method]["avg_quality"] * (self.method_metrics[method]["count"] - 1)
                 + result.quality_metrics.overall_score
             ) / self.method_metrics[method]["count"]
 
@@ -201,13 +187,11 @@ class MetricsCollector:
             language = result.language_detected.value
             self.language_metrics[language]["count"] += 1
             self.language_metrics[language]["avg_processing_time"] = (
-                self.language_metrics[language]["avg_processing_time"]
-                * (self.language_metrics[language]["count"] - 1)
+                self.language_metrics[language]["avg_processing_time"] * (self.language_metrics[language]["count"] - 1)
                 + result.processing_stats.total_time
             ) / self.language_metrics[language]["count"]
             self.language_metrics[language]["avg_quality"] = (
-                self.language_metrics[language]["avg_quality"]
-                * (self.language_metrics[language]["count"] - 1)
+                self.language_metrics[language]["avg_quality"] * (self.language_metrics[language]["count"] - 1)
                 + result.quality_metrics.overall_score
             ) / self.language_metrics[language]["count"]
 
@@ -219,10 +203,7 @@ class MetricsCollector:
         except Exception as e:
             logger.error(f"Failed to record summarization metrics: {str(e)}")
 
-    def record_batch_metrics(
-            self,
-            total_requests: int,
-            successful_requests: int):
+    def record_batch_metrics(self, total_requests: int, successful_requests: int):
         """Record metrics for batch processing"""
         try:
             self.service_metrics.total_requests += total_requests
@@ -297,19 +278,16 @@ class MetricsCollector:
         while not self._stop_monitoring:
             try:
                 # CPU usage
-                self.performance_metrics.cpu_usage = psutil.cpu_percent(
-                    interval=1)
+                self.performance_metrics.cpu_usage = psutil.cpu_percent(interval=1)
 
                 # Memory usage
                 memory = psutil.virtual_memory()
                 self.performance_metrics.memory_usage = memory.percent
-                self.performance_metrics.memory_available = memory.available / \
-                    (1024**3)  # GB
+                self.performance_metrics.memory_available = memory.available / (1024**3)  # GB
 
                 # Disk usage
                 disk = psutil.disk_usage("/")
-                self.performance_metrics.disk_usage = (
-                    disk.used / disk.total) * 100
+                self.performance_metrics.disk_usage = (disk.used / disk.total) * 100
 
                 # Network I/O
                 net_io = psutil.net_io_counters()
@@ -339,29 +317,21 @@ class MetricsCollector:
                 time.sleep(30)  # Wait longer on error
 
     async def get_metrics(self) -> Dict[str, Any]:
-        """Get comprehensive metrics"""
+    """Get comprehensive metrics"""
         try:
             # Calculate derived metrics
             total_requests = self.service_metrics.total_requests
-            success_rate = (
-                self.service_metrics.successful_requests / total_requests
-                if total_requests > 0
+            success_rate = self.service_metrics.successful_requests / total_requests if total_requests > 0 else 0
+
+            cache_hit_rate = (
+                self.service_metrics.cache_hits / (self.service_metrics.cache_hits + self.service_metrics.cache_misses)
+                if (self.service_metrics.cache_hits + self.service_metrics.cache_misses) > 0
                 else 0
             )
 
-            cache_hit_rate = (
-                self.service_metrics.cache_hits /
-                (
-                    self.service_metrics.cache_hits +
-                    self.service_metrics.cache_misses) if (
-                    self.service_metrics.cache_hits +
-                    self.service_metrics.cache_misses) > 0 else 0)
-
             # Calculate trends
-            processing_time_trend = self._calculate_trend(
-                list(self.processing_times))
-            quality_score_trend = self._calculate_trend(
-                list(self.quality_scores))
+            processing_time_trend = self._calculate_trend(list(self.processing_times))
+            quality_score_trend = self._calculate_trend(list(self.quality_scores))
             error_rate_trend = self._calculate_trend(list(self.error_rates))
 
             return {
@@ -397,24 +367,18 @@ class MetricsCollector:
                     "quality_distribution": self.quality_metrics.quality_distribution,
                     "total_quality_checks": self.quality_metrics.total_quality_checks,
                 },
-                "method_metrics": dict(
-                    self.method_metrics),
-                "language_metrics": dict(
-                    self.language_metrics),
-                "ab_test_metrics": dict(
-                    self.ab_test_metrics),
+                "method_metrics": dict(self.method_metrics),
+                "language_metrics": dict(self.language_metrics),
+                "ab_test_metrics": dict(self.ab_test_metrics),
                 "trends": {
                     "processing_time_trend": processing_time_trend,
                     "quality_score_trend": quality_score_trend,
                     "error_rate_trend": error_rate_trend,
                 },
                 "time_series": {
-                    "processing_times": list(
-                        self.processing_times),
-                    "quality_scores": list(
-                        self.quality_scores),
-                    "error_rates": list(
-                        self.error_rates),
+                    "processing_times": list(self.processing_times),
+                    "quality_scores": list(self.quality_scores),
+                    "error_rates": list(self.error_rates),
                 },
             }
 
@@ -436,8 +400,7 @@ class MetricsCollector:
             x_mean = sum(x) / n
             y_mean = sum(values) / n
 
-            numerator = sum((x[i] - x_mean) * (values[i] - y_mean)
-                            for i in range(n))
+            numerator = sum((x[i] - x_mean) * (values[i] - y_mean) for i in range(n))
             denominator = sum((x[i] - x_mean) ** 2 for i in range(n))
 
             if denominator == 0:
@@ -457,11 +420,10 @@ class MetricsCollector:
             return "error"
 
     async def get_status(self) -> Dict[str, Any]:
-        """Get metrics collector status"""
+    """Get metrics collector status"""
         return {
             "initialized": self._initialized,
-            "monitoring_active": self._monitoring_thread is not None
-            and self._monitoring_thread.is_alive(),
+            "monitoring_active": self._monitoring_thread is not None and self._monitoring_thread.is_alive(),
             "total_requests": self.service_metrics.total_requests,
             "last_updated": self.service_metrics.last_updated.isoformat(),
         }

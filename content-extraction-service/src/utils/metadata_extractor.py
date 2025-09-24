@@ -164,7 +164,7 @@ class MetadataExtractor:
         return twitter_data
 
     async def _extract_json_ld(self, soup: BeautifulSoup) -> Dict[str, Any]:
-        """Extract JSON-LD structured data."""
+    """Extract JSON-LD structured data."""
         json_ld_data = {}
 
         try:

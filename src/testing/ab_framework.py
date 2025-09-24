@@ -40,7 +40,7 @@ class ABTestingFramework:
         asyncio.create_task(self._initialize_experiments())
 
     async def _initialize_experiments(self) -> Dict[str, Any]:
-        """Initialize default A/B test experiments."""
+    """Initialize default A/B test experiments."""
         try:
             # Create default ranking algorithm experiment
             ranking_experiment = ABTestExperiment(
@@ -250,7 +250,7 @@ class ABTestingFramework:
             logger.error("Failed to record experiment result", error=str(e))
 
     async def get_experiment_stats(self, experiment: str) -> Dict[str, Any]:
-        """Get statistics for an experiment."""
+    """Get statistics for an experiment."""
         try:
             exp = self.experiments.get(experiment)
             if not exp:
@@ -425,7 +425,7 @@ class ABTestingFramework:
         return experiments
 
     async def analyze_experiment(self, experiment_id: str) -> Dict[str, Any]:
-        """Perform statistical analysis of experiment results."""
+    """Perform statistical analysis of experiment results."""
         try:
             exp = self.experiments.get(experiment_id)
             if not exp:

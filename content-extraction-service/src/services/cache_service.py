@@ -37,8 +37,7 @@ class CacheService:
 
         # Get bucket and collection references
         self.bucket = self.storage_client.bucket(bucket_name)
-        self.cache_collection = self.firestore_client.collection(
-            collection_name)
+        self.cache_collection = self.firestore_client.collection(collection_name)
 
     async def get_content(self, url: str) -> Optional[ExtractedContent]:
         """
@@ -117,11 +116,8 @@ class CacheService:
                 "url": url,
                 "cache_key": cache_key,
                 "created_at": datetime.utcnow(),
-                "expires_at": datetime.utcnow() +
-                timedelta(
-                    hours=self.ttl_hours),
-                "content_size": len(
-                    json.dumps(content_data)),
+                "expires_at": datetime.utcnow() + timedelta(hours=self.ttl_hours),
+                "content_size": len(json.dumps(content_data)),
                 "content_type": content.content_type,
                 "word_count": content.word_count,
                 "quality_score": content.quality_metrics.overall_quality,
@@ -166,8 +162,7 @@ class CacheService:
 
             # Query expired entries
             now = datetime.utcnow()
-            expired_docs = self.cache_collection.where(
-                "expires_at", "<", now).stream()
+            expired_docs = self.cache_collection.where("expires_at", "<", now).stream()
 
             cleared_count = 0
             for doc in expired_docs:
@@ -183,7 +178,7 @@ class CacheService:
             return 0
 
     async def get_cache_stats(self) -> Dict[str, Any]:
-        """
+    """
         Get cache statistics.
 
         Returns:
@@ -196,8 +191,7 @@ class CacheService:
 
             # Get expired entries
             now = datetime.utcnow()
-            expired_docs = self.cache_collection.where(
-                "expires_at", "<", now).stream()
+            expired_docs = self.cache_collection.where("expires_at", "<", now).stream()
             expired_entries = sum(1 for _ in expired_docs)
 
             # Get storage usage
@@ -235,16 +229,14 @@ class CacheService:
                 return True
 
             if isinstance(expires_at, str):
-                expires_at = datetime.fromisoformat(
-                    expires_at.replace("Z", "+00:00"))
+                expires_at = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
 
             return datetime.utcnow() > expires_at
         except Exception as e:
             logger.warning(f"Cache expiration check failed: {str(e)}")
             return True
 
-    async def _get_content_from_storage(
-            self, cache_key: str) -> Optional[Dict[str, Any]]:
+    async def _get_content_from_storage(self, cache_key: str) -> Optional[Dict[str, Any]]:
         """Get content from Cloud Storage."""
         try:
             blob_name = f"content/{cache_key}.json"
@@ -260,16 +252,14 @@ class CacheService:
             logger.warning(f"Content retrieval from storage failed: {str(e)}")
             return None
 
-    async def _store_content_in_storage(
-            self, cache_key: str, content_data: Dict[str, Any]) -> None:
+    async def _store_content_in_storage(self, cache_key: str, content_data: Dict[str, Any]) -> None:
         """Store content in Cloud Storage."""
         try:
             blob_name = f"content/{cache_key}.json"
             blob = self.bucket.blob(blob_name)
 
             content_json = json.dumps(content_data, default=str)
-            blob.upload_from_string(
-                content_json, content_type="application/json")
+            blob.upload_from_string(content_json, content_type="application/json")
 
         except Exception as e:
             logger.error(f"Content storage failed: {str(e)}")
@@ -334,12 +324,10 @@ class CacheService:
             firestore_query = self.cache_collection
 
             if content_type:
-                firestore_query = firestore_query.where(
-                    "content_type", "==", content_type)
+                firestore_query = firestore_query.where("content_type", "==", content_type)
 
             if min_quality_score is not None:
-                firestore_query = firestore_query.where(
-                    "quality_score", ">=", min_quality_score)
+                firestore_query = firestore_query.where("quality_score", ">=", min_quality_score)
 
             # Execute query
             docs = firestore_query.limit(limit).stream()
@@ -353,9 +341,7 @@ class CacheService:
             # Filter by query if provided
             if query:
                 query_lower = query.lower()
-                results = [
-                    result for result in results if query_lower in result.get(
-                        "url", "").lower()]
+                results = [result for result in results if query_lower in result.get("url", "").lower()]
 
             return results
 

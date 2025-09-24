@@ -25,16 +25,16 @@ class WebScrapingAdapter(BaseAdapter):
         self.page = None
 
     async def __aenter__(self) -> Dict[str, Any]:
-        """Async context manager entry."""
+    """Async context manager entry."""
         await self._initialize_browser()
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> Dict[str, Any]:
-        """Async context manager exit."""
+    """Async context manager exit."""
         await self._cleanup_browser()
 
     async def _initialize_browser(self) -> Dict[str, Any]:
-        """Initialize Playwright browser."""
+    """Initialize Playwright browser."""
         try:
             from playwright.async_api import async_playwright
 
@@ -69,7 +69,7 @@ class WebScrapingAdapter(BaseAdapter):
             raise
 
     async def _cleanup_browser(self) -> Dict[str, Any]:
-        """Cleanup browser resources."""
+    """Cleanup browser resources."""
         try:
             if self.page:
     await self.page.close()
@@ -239,7 +239,7 @@ class WebScrapingAdapter(BaseAdapter):
             return None
 
     async def _wait_for_content(self) -> Dict[str, Any]:
-        """Wait for content to load on the page."""
+    """Wait for content to load on the page."""
         try:
             # Wait for main content selectors
             content_selectors = self.scraping_config.get(
@@ -465,7 +465,7 @@ class WebScrapingAdapter(BaseAdapter):
             return False
 
     def get_source_info(self) -> Dict[str, Any]:
-        """Get information about the web scraping source."""
+    """Get information about the web scraping source."""
         return {
             "type": "Web Scraping",
             "url": self.source_config.url,

@@ -393,7 +393,7 @@ class NotificationContentOptimizer:
             return Priority.LOW
 
     async def get_optimization_analytics(self, user_id: str) -> Dict[str, Any]:
-        """Get content optimization analytics for user."""
+    """Get content optimization analytics for user."""
         try:
             analytics = {
                 "user_id": user_id,

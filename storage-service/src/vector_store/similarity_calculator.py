@@ -21,19 +21,16 @@ class SimilarityCalculator:
         self._initialized = False
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize similarity calculator"""
+    """Initialize similarity calculator"""
         self._initialized = True
         logger.info("Similarity Calculator initialized")
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup resources"""
+    """Cleanup resources"""
         self._initialized = False
         logger.info("Similarity Calculator cleanup complete")
 
-    def calculate_cosine_similarity(
-            self,
-            vector1: List[float],
-            vector2: List[float]) -> float:
+    def calculate_cosine_similarity(self, vector1: List[float], vector2: List[float]) -> float:
         """Calculate cosine similarity between two vectors"""
         try:
             v1 = np.array(vector1, dtype=np.float32)
@@ -52,10 +49,7 @@ class SimilarityCalculator:
             logger.error(f"Failed to calculate cosine similarity: {e}")
             return 0.0
 
-    def calculate_euclidean_distance(
-            self,
-            vector1: List[float],
-            vector2: List[float]) -> float:
+    def calculate_euclidean_distance(self, vector1: List[float], vector2: List[float]) -> float:
         """Calculate Euclidean distance between two vectors"""
         try:
             v1 = np.array(vector1, dtype=np.float32)
@@ -68,10 +62,7 @@ class SimilarityCalculator:
             logger.error(f"Failed to calculate Euclidean distance: {e}")
             return float("inf")
 
-    def calculate_manhattan_distance(
-            self,
-            vector1: List[float],
-            vector2: List[float]) -> float:
+    def calculate_manhattan_distance(self, vector1: List[float], vector2: List[float]) -> float:
         """Calculate Manhattan distance between two vectors"""
         try:
             v1 = np.array(vector1, dtype=np.float32)
@@ -84,10 +75,7 @@ class SimilarityCalculator:
             logger.error(f"Failed to calculate Manhattan distance: {e}")
             return float("inf")
 
-    def calculate_dot_product(
-            self,
-            vector1: List[float],
-            vector2: List[float]) -> float:
+    def calculate_dot_product(self, vector1: List[float], vector2: List[float]) -> float:
         """Calculate dot product between two vectors"""
         try:
             v1 = np.array(vector1, dtype=np.float32)
@@ -125,8 +113,7 @@ class SimilarityCalculator:
                 base_score = result.similarity_score
 
                 # Apply boosting factors
-                boosted_score = self._apply_boosting_factors(
-                    base_score, result, search_params)
+                boosted_score = self._apply_boosting_factors(base_score, result, search_params)
 
                 # Create new result with boosted score
                 reranked_result = SimilarityResult(
@@ -139,8 +126,7 @@ class SimilarityCalculator:
                 reranked_results.append(reranked_result)
 
             # Sort by boosted score
-            reranked_results.sort(
-                key=lambda x: x.similarity_score, reverse=True)
+            reranked_results.sort(key=lambda x: x.similarity_score, reverse=True)
 
             logger.info(
                 f"Re-ranking completed, top score: {reranked_results[0].similarity_score if reranked_results else 0}"
@@ -153,10 +139,8 @@ class SimilarityCalculator:
             return results
 
     def _apply_boosting_factors(
-            self,
-            base_score: float,
-            result: SimilarityResult,
-            search_params: SimilaritySearchParams) -> float:
+        self, base_score: float, result: SimilarityResult, search_params: SimilaritySearchParams
+    ) -> float:
         """Apply boosting factors to similarity score"""
         boosted_score = base_score
 
@@ -165,8 +149,7 @@ class SimilarityCalculator:
             try:
                 from datetime import datetime, timedelta
 
-                created_at = datetime.fromisoformat(
-                    result.metadata["created_at"])
+                created_at = datetime.fromisoformat(result.metadata["created_at"])
                 days_old = (datetime.utcnow() - created_at).days
 
                 # Boost newer content
@@ -202,9 +185,7 @@ class SimilarityCalculator:
     ) -> List[float]:
         """Calculate similarities for multiple vectors efficiently"""
         try:
-            query_array = np.array(
-                query_vector, dtype=np.float32).reshape(
-                1, -1)
+            query_array = np.array(query_vector, dtype=np.float32).reshape(1, -1)
             candidates_array = np.array(candidate_vectors, dtype=np.float32)
 
             # Use sklearn for efficient batch calculation
@@ -216,9 +197,7 @@ class SimilarityCalculator:
             logger.error(f"Failed to calculate batch similarities: {e}")
             return [0.0] * len(candidate_vectors)
 
-    def find_duplicates(
-        self, vectors: List[List[float]], threshold: float = 0.95
-    ) -> List[Tuple[int, int, float]]:
+    def find_duplicates(self, vectors: List[List[float]], threshold: float = 0.95) -> List[Tuple[int, int, float]]:
         """Find duplicate vectors based on similarity threshold"""
         try:
             duplicates = []

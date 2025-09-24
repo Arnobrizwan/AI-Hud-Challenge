@@ -26,7 +26,7 @@ class ElasticsearchManager:
         self._index_templates = {}
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize Elasticsearch client and indexes"""
+    """Initialize Elasticsearch client and indexes"""
         if self._initialized:
             return
 
@@ -62,7 +62,7 @@ class ElasticsearchManager:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup Elasticsearch client"""
+    """Cleanup Elasticsearch client"""
         if self.es_client:
     await self.es_client.close()
             self.es_client = None
@@ -71,7 +71,7 @@ class ElasticsearchManager:
         logger.info("Elasticsearch Manager cleanup complete")
 
     async def _initialize_index_templates(self) -> Dict[str, Any]:
-        """Initialize Elasticsearch index templates"""
+    """Initialize Elasticsearch index templates"""
         try:
             # Article index template
             article_template = {
@@ -135,7 +135,7 @@ class ElasticsearchManager:
             raise
 
     async def _create_default_indexes(self) -> Dict[str, Any]:
-        """Create default indexes"""
+    """Create default indexes"""
         try:
             # Create current month index
             current_date = datetime.utcnow()
@@ -275,7 +275,7 @@ class ElasticsearchManager:
             raise
 
     async def get_article_content(self, article_id: str) -> Dict[str, Any]:
-        """Get article content from Elasticsearch"""
+    """Get article content from Elasticsearch"""
         if not self._initialized or not self.es_client:
             raise RuntimeError("Elasticsearch Manager not initialized")
 
@@ -295,7 +295,7 @@ class ElasticsearchManager:
             raise
 
     async def refresh_index(self, article_id: str) -> Dict[str, Any]:
-        """Refresh index for an article"""
+    """Refresh index for an article"""
         if not self._initialized or not self.es_client:
             return
 
@@ -308,7 +308,7 @@ class ElasticsearchManager:
                 f"Failed to refresh index for article {article_id}: {e}")
 
     async def delete_article(self, article_id: str) -> Dict[str, Any]:
-        """Delete article from all indices"""
+    """Delete article from all indices"""
         if not self._initialized or not self.es_client:
             raise RuntimeError("Elasticsearch Manager not initialized")
 
@@ -460,7 +460,7 @@ class ElasticsearchManager:
         return processed
 
     def _explain_query(self, query: Dict[str, Any]) -> Dict[str, Any]:
-        """Explain query structure"""
+    """Explain query structure"""
         return {
             "query_type": type(query).__name__,
             "query_structure": query,

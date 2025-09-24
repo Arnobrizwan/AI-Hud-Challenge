@@ -71,7 +71,7 @@ class MetricsCollector:
             self.histograms[name] = self.histograms[name][-1000:]
 
     def get_metrics_summary(self) -> Dict[str, Any]:
-        """Get summary of all metrics."""
+    """Get summary of all metrics."""
         return {
             "counters": dict(self.counters),
             "gauges": dict(self.gauges),
@@ -204,7 +204,7 @@ class RankingMetricsCollector(MetricsCollector):
             logger.error("Failed to record ranking metrics", error=str(e))
 
     async def record_error(self, error_type: str = "unknown") -> Dict[str, Any]:
-        """Record ranking error."""
+    """Record ranking error."""
         try:
             self.error_count += 1
             self.increment_counter("errors")
@@ -258,7 +258,7 @@ class RankingMetricsCollector(MetricsCollector):
         }
 
     def get_algorithm_comparison(self) -> Dict[str, Any]:
-        """Compare performance across algorithms."""
+    """Compare performance across algorithms."""
         algorithm_metrics = defaultdict(list)
 
         for metrics in self.performance_metrics:
@@ -405,7 +405,7 @@ class HealthChecker:
         self.alerts: List[Dict[str, Any]] = []
 
     async def check_health(self) -> Dict[str, Any]:
-        """Perform health check."""
+    """Perform health check."""
         health_status = {
             "status": "healthy",
             "timestamp": datetime.utcnow().isoformat(),
@@ -497,7 +497,7 @@ class MetricsExporter:
         asyncio.create_task(self._export_loop())
 
     async def _export_loop(self) -> Dict[str, Any]:
-        """Export metrics periodically."""
+    """Export metrics periodically."""
         while self.export_enabled:
             try:
     await self.export_metrics()
@@ -507,7 +507,7 @@ class MetricsExporter:
                 await asyncio.sleep(self.export_interval)
 
     async def export_metrics(self) -> Dict[str, Any]:
-        """Export metrics to external systems."""
+    """Export metrics to external systems."""
         try:
             # Get metrics summaries
             ranking_summary = self.ranking_collector.get_performance_summary()

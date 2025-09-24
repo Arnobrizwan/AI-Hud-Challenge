@@ -97,9 +97,7 @@ async def create_online_evaluation(
 
 
 @evaluation_router.get("/{evaluation_id}", response_model=GetEvaluationResponse)
-async def get_evaluation(
-    evaluation_id: str, evaluation_engine: EvaluationEngine = Depends(get_evaluation_engine)
-):
+async def get_evaluation(evaluation_id: str, evaluation_engine: EvaluationEngine = Depends(get_evaluation_engine)):
     """Get evaluation details"""
 
     try:
@@ -139,9 +137,7 @@ async def list_evaluations(
 
 
 @evaluation_router.delete("/{evaluation_id}")
-async def cancel_evaluation(
-    evaluation_id: str, evaluation_engine: EvaluationEngine = Depends(get_evaluation_engine)
-):
+async def cancel_evaluation(evaluation_id: str, evaluation_engine: EvaluationEngine = Depends(get_evaluation_engine)):
     """Cancel a running evaluation"""
 
     try:

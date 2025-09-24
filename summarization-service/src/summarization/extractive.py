@@ -41,7 +41,7 @@ class BertExtractiveSummarizer:
         self._initialized = False
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize models and tokenizers"""
+    """Initialize models and tokenizers"""
         try:
             logger.info("Initializing BERT extractive summarizer...")
 
@@ -63,7 +63,7 @@ except Exception as e:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Clean up resources"""
+    """Clean up resources"""
         try:
             if self.model:
                 del self.model

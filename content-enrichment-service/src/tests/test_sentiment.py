@@ -75,7 +75,7 @@ class TestSentimentAnalyzer:
 
     @pytest.mark.asyncio
     async def test_analyze_sentiment_neutral(self, analyzer, neutral_content) -> Dict[str, Any]:
-        """Test sentiment analysis for neutral content."""
+    """Test sentiment analysis for neutral content."""
         sentiment = await analyzer.analyze_sentiment(neutral_content)
 
         assert sentiment.sentiment in [
@@ -115,7 +115,7 @@ class TestSentimentAnalyzer:
 
     @pytest.mark.asyncio
     async def test_analyze_sentiment_error_handling(self, analyzer) -> Dict[str, Any]:
-        """Test error handling in sentiment analysis."""
+    """Test error handling in sentiment analysis."""
         # Test with empty content
         empty_content = ExtractedContent(
             title="",
@@ -177,7 +177,7 @@ class TestSentimentAnalyzer:
 
     @pytest.mark.asyncio
     async def test_detect_sentiment_shift(self, analyzer) -> Dict[str, Any]:
-        """Test sentiment shift detection."""
+    """Test sentiment shift detection."""
         old_analysis = Mock(
             sentiment=SentimentLabel.NEGATIVE,
             confidence=0.8,
@@ -201,7 +201,7 @@ class TestSentimentAnalyzer:
 
     @pytest.mark.asyncio
     async def test_analyze_sentiment_multilingual(self, analyzer) -> Dict[str, Any]:
-        """Test sentiment analysis with different languages."""
+    """Test sentiment analysis with different languages."""
         # Test with Spanish content
         spanish_content = ExtractedContent(
             title="Tecnología Increíble",

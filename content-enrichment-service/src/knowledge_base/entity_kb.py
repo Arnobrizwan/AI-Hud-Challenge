@@ -364,7 +364,7 @@ class EntityKnowledgeBase:
             "data": result, "timestamp": time.time()}
 
     async def get_entity_statistics(self) -> Dict[str, Any]:
-        """Get knowledge base statistics."""
+    """Get knowledge base statistics."""
         try:
     async with self.session_factory() as session:
                 query = text(

@@ -273,7 +273,7 @@ class WebSocketManager:
         logger.info("WebSocket manager cleaned up")
 
     def get_connection_stats(self) -> Dict[str, Any]:
-        """Get connection statistics"""
+    """Get connection statistics"""
         return {
             "active_connections": len(self.active_connections),
             "total_messages_sent": sum(

@@ -26,9 +26,7 @@ async def analyze_business_impact(
     try:
         logger.info(f"Analyzing business impact for metrics: {business_metrics}")
 
-        analysis = await evaluation_engine.business_impact_analyzer.analyze(
-            business_metrics, evaluation_period
-        )
+        analysis = await evaluation_engine.business_impact_analyzer.analyze(business_metrics, evaluation_period)
 
         return {
             "status": "success",
@@ -80,8 +78,10 @@ async def analyze_engagement_impact(
         logger.info("Analyzing engagement impact")
 
         # Mock engagement impact analysis
-        engagement_impact = await evaluation_engine.business_impact_analyzer.engagement_analyzer.analyze_engagement_impact(
-            pre_period_data, post_period_data
+        engagement_impact = (
+            await evaluation_engine.business_impact_analyzer.engagement_analyzer.analyze_engagement_impact(
+                pre_period_data, post_period_data
+            )
         )
 
         return {
@@ -158,7 +158,6 @@ async def calculate_roi(
 @business_impact_router.get("/metrics")
 async def get_business_metrics() -> Dict[str, Any]:
     """Get available business metrics"""
-
     try:
         metrics = {
             "revenue": {

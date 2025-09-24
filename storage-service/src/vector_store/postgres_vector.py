@@ -26,7 +26,7 @@ class PostgreSQLVectorStore:
         self._initialized = False
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize PostgreSQL connection pool"""
+    """Initialize PostgreSQL connection pool"""
         if self._initialized:
             return
 
@@ -56,7 +56,7 @@ class PostgreSQLVectorStore:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup connection pool"""
+    """Cleanup connection pool"""
         if self.pool:
     await self.pool.close()
             self.pool = None
@@ -65,7 +65,7 @@ class PostgreSQLVectorStore:
         logger.info("PostgreSQL Vector Store cleanup complete")
 
     async def _initialize_schema(self) -> Dict[str, Any]:
-        """Initialize database schema for vector operations"""
+    """Initialize database schema for vector operations"""
         try:
     async with self.pool.acquire() as conn:
                 # Enable pgvector extension
@@ -207,7 +207,7 @@ class PostgreSQLVectorStore:
             raise
 
     async def execute_ddl(self, ddl: str) -> Dict[str, Any]:
-        """Execute DDL statement"""
+    """Execute DDL statement"""
         if not self._initialized or not self.pool:
             raise RuntimeError("PostgreSQL Vector Store not initialized")
 
@@ -220,7 +220,7 @@ class PostgreSQLVectorStore:
             raise
 
     async def refresh_indexes(self, content_id: str) -> Dict[str, Any]:
-        """Refresh indexes for a specific content ID"""
+    """Refresh indexes for a specific content ID"""
         if not self._initialized or not self.pool:
             return
 
@@ -272,7 +272,7 @@ class PostgreSQLVectorStore:
             raise
 
     async def get_vector_stats(self) -> Dict[str, Any]:
-        """Get vector store statistics"""
+    """Get vector store statistics"""
         if not self._initialized or not self.pool:
             raise RuntimeError("PostgreSQL Vector Store not initialized")
 

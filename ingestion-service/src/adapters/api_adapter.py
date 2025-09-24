@@ -341,7 +341,7 @@ class APIAdapter(BaseAdapter):
             return False
 
     def get_source_info(self) -> Dict[str, Any]:
-        """Get information about the API source."""
+    """Get information about the API source."""
         return {
             "type": "REST API",
             "url": self.source_config.url,

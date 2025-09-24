@@ -28,11 +28,11 @@ class CrossValidator:
         }
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the cross validator"""
+    """Initialize the cross validator"""
         pass
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup cross validator resources"""
+    """Cleanup cross validator resources"""
         pass
 
     async def cross_validate_model(

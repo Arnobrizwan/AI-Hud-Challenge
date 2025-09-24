@@ -24,11 +24,11 @@ class BaseStatisticalDetector:
         self.is_initialized = False
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the detector"""
+    """Initialize the detector"""
         self.is_initialized = True
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup resources"""
+    """Cleanup resources"""
         pass
 
     async def test(

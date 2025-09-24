@@ -36,7 +36,7 @@ class AuditLogger:
         self.encryption_enabled = True
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the audit logger"""
+    """Initialize the audit logger"""
         try:
             # Initialize storage and services
             await self.initialize_storage()
@@ -53,7 +53,7 @@ class AuditLogger:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup resources"""
+    """Cleanup resources"""
         try:
             self.audit_events.clear()
             self.audit_logs.clear()
@@ -623,7 +623,7 @@ class AuditLogger:
             raise
 
     async def audit_cleanup_task(self) -> Dict[str, Any]:
-        """Background task for cleaning up old audit data"""
+    """Background task for cleaning up old audit data"""
         while True:
             try:
     await asyncio.sleep(3600)  # Run every hour
@@ -656,7 +656,7 @@ class AuditLogger:
                 await asyncio.sleep(3600)
 
     async def audit_compression_task(self) -> Dict[str, Any]:
-        """Background task for compressing audit data"""
+    """Background task for compressing audit data"""
         while True:
             try:
     await asyncio.sleep(3600)  # Run every hour
@@ -673,7 +673,7 @@ class AuditLogger:
                 await asyncio.sleep(3600)
 
     async def initialize_storage(self) -> Dict[str, Any]:
-        """Initialize audit storage"""
+    """Initialize audit storage"""
         try:
             # Placeholder for storage initialization
             logger.info("Audit storage initialized")

@@ -17,12 +17,12 @@ class ArchivalService:
         self._initialized = False
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize archival service"""
+    """Initialize archival service"""
         self._initialized = True
         logger.info("Archival Service initialized")
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup archival service"""
+    """Cleanup archival service"""
         self._initialized = False
         logger.info("Archival Service cleanup complete")
 
@@ -58,5 +58,5 @@ class ArchivalService:
         return {"anonymized_count": 0}
 
     async def get_statistics(self) -> Dict[str, Any]:
-        """Get archival statistics"""
+    """Get archival statistics"""
         return {"timestamp": datetime.utcnow().isoformat()}

@@ -24,7 +24,7 @@ class RateLimiter:
         self.cache_ttl = 60  # 1 minute TTL for local cache
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize Redis connection."""
+    """Initialize Redis connection."""
         try:
             self.redis_client = redis.from_url(
                 settings.redis_url,
@@ -206,7 +206,7 @@ class RateLimiter:
             return False
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup resources."""
+    """Cleanup resources."""
         try:
             if self.redis_client:
     await self.redis_client.close()
@@ -222,7 +222,7 @@ class RateLimitMiddleware:
         self.rate_limiter = rate_limiter
 
     async def __call__(self, request: Request, call_next) -> Dict[str, Any]:
-        """Process request with rate limiting."""
+    """Process request with rate limiting."""
         try:
             # Get client identifier
             client_ip = request.client.host

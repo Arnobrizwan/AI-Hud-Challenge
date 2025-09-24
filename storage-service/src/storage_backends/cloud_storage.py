@@ -28,7 +28,7 @@ class MediaStorageManager:
         self._bucket_name = None
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize cloud storage client"""
+    """Initialize cloud storage client"""
         if self._initialized:
             return
 
@@ -56,7 +56,7 @@ class MediaStorageManager:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup cloud storage client"""
+    """Cleanup cloud storage client"""
         if self._storage_client:
             if hasattr(self._storage_client, "close"):
     await self._storage_client.close()
@@ -66,7 +66,7 @@ class MediaStorageManager:
         logger.info("Cloud Storage Manager cleanup complete")
 
     async def _initialize_aws_s3(self, config) -> Dict[str, Any]:
-        """Initialize AWS S3 client"""
+    """Initialize AWS S3 client"""
         try:
             import boto3
             from botocore.config import Config
@@ -93,7 +93,7 @@ class MediaStorageManager:
             raise
 
     async def _initialize_gcp_storage(self, config) -> Dict[str, Any]:
-        """Initialize Google Cloud Storage client"""
+    """Initialize Google Cloud Storage client"""
         try:
             from google.cloud import storage
             from google.oauth2 import service_account
@@ -128,7 +128,7 @@ class MediaStorageManager:
             raise
 
     async def _initialize_azure_blob(self, config) -> Dict[str, Any]:
-        """Initialize Azure Blob Storage client"""
+    """Initialize Azure Blob Storage client"""
         try:
             from azure.storage.blob.aio import BlobServiceClient
 
@@ -280,7 +280,7 @@ class MediaStorageManager:
             raise
 
     async def restore_backup(self, backup_key: str) -> Dict[str, Any]:
-        """Restore data from backup"""
+    """Restore data from backup"""
         if not self._initialized or not self._storage_client:
             raise RuntimeError("Cloud Storage Manager not initialized")
 
@@ -502,18 +502,18 @@ class MediaStorageManager:
             return False
 
     async def _delete_file_s3(self, file_key: str) -> Dict[str, Any]:
-        """Delete file from AWS S3"""
+    """Delete file from AWS S3"""
         self._storage_client.delete_object(
             Bucket=self._bucket_name, Key=file_key)
 
     async def _delete_file_gcp(self, file_key: str) -> Dict[str, Any]:
-        """Delete file from Google Cloud Storage"""
+    """Delete file from Google Cloud Storage"""
         bucket = self._storage_client.bucket(self._bucket_name)
         blob = bucket.blob(file_key)
         blob.delete()
 
     async def _delete_file_azure(self, file_key: str) -> Dict[str, Any]:
-        """Delete file from Azure Blob Storage"""
+    """Delete file from Azure Blob Storage"""
         container_client = self._storage_client.get_container_client("media")
         blob_client = container_client.get_blob_client(file_key)
         blob_client.delete_blob()

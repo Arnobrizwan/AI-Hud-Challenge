@@ -19,17 +19,17 @@ class GDPRProcessor:
         self._initialized = False
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize GDPR processor"""
+    """Initialize GDPR processor"""
         self._initialized = True
         logger.info("GDPR Processor initialized")
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup GDPR processor"""
+    """Cleanup GDPR processor"""
         self._initialized = False
         logger.info("GDPR Processor cleanup complete")
 
     async def export_user_data(self, user_id: str) -> Dict[str, Any]:
-        """Export user data for GDPR compliance"""
+    """Export user data for GDPR compliance"""
         # Placeholder implementation
         return {
             "user_id": user_id,
@@ -58,5 +58,5 @@ class GDPRProcessor:
         }
 
     async def get_statistics(self) -> Dict[str, Any]:
-        """Get GDPR processor statistics"""
+    """Get GDPR processor statistics"""
         return {"timestamp": datetime.utcnow().isoformat()}

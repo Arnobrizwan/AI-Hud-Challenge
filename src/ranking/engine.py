@@ -56,7 +56,7 @@ class ContentRankingEngine:
         asyncio.create_task(self._load_models())
 
     async def _load_models(self) -> Dict[str, Any]:
-        """Load ML models asynchronously."""
+    """Load ML models asynchronously."""
         try:
             # In production, load from model registry
             # For now, create a dummy model for demonstration

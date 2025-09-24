@@ -209,7 +209,7 @@ class SlidingWindowRateLimiter:
                 window_seconds=window_seconds)
 
     async def close(self) -> Dict[str, Any]:
-        """Close Redis connection."""
+    """Close Redis connection."""
         if self.redis_pool:
     await self.redis_pool.close()
             logger.info("Redis connection closed")
@@ -355,7 +355,7 @@ class DistributedRateLimiter:
             return False
 
     async def close(self) -> Dict[str, Any]:
-        """Close rate limiter connections."""
+    """Close rate limiter connections."""
         await self.limiter.close()
 
 

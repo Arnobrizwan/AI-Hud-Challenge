@@ -17,12 +17,12 @@ class BackupManager:
         self._initialized = False
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize backup manager"""
+    """Initialize backup manager"""
         self._initialized = True
         logger.info("Backup Manager initialized")
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup backup manager"""
+    """Cleanup backup manager"""
         self._initialized = False
         logger.info("Backup Manager cleanup complete")
 
@@ -39,7 +39,7 @@ class BackupManager:
         }
 
     async def restore_backup(self, backup_name: str) -> Dict[str, Any]:
-        """Restore from backup"""
+    """Restore from backup"""
         # Placeholder implementation
         return {
             "backup_name": backup_name,
@@ -48,5 +48,5 @@ class BackupManager:
         }
 
     async def get_statistics(self) -> Dict[str, Any]:
-        """Get backup manager statistics"""
+    """Get backup manager statistics"""
         return {"timestamp": datetime.utcnow().isoformat()}

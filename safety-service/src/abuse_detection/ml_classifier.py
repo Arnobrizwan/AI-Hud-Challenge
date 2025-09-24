@@ -45,7 +45,7 @@ class AbuseClassificationModel:
         os.makedirs(self.model_dir, exist_ok=True)
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the ML classifier"""
+    """Initialize the ML classifier"""
         try:
             # Try to load existing models
             await self.load_models()
@@ -62,7 +62,7 @@ class AbuseClassificationModel:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup resources"""
+    """Cleanup resources"""
         try:
             # Save models before cleanup
             await self.save_models()
@@ -309,7 +309,7 @@ class AbuseClassificationModel:
             return {}
 
     async def create_models(self) -> Dict[str, Any]:
-        """Create new ML models"""
+    """Create new ML models"""
         try:
             # Create primary model (Random Forest)
             self.primary_model = RandomForestClassifier(
@@ -337,7 +337,7 @@ class AbuseClassificationModel:
             raise
 
     async def train_models_with_synthetic_data(self) -> Dict[str, Any]:
-        """Train models with synthetic data for demonstration"""
+    """Train models with synthetic data for demonstration"""
         try:
             # Generate synthetic training data
             n_samples = 1000
@@ -397,7 +397,7 @@ class AbuseClassificationModel:
             raise
 
     async def save_models(self) -> Dict[str, Any]:
-        """Save trained models to disk"""
+    """Save trained models to disk"""
         try:
             if self.primary_model is not None:
                 joblib.dump(
@@ -439,7 +439,7 @@ class AbuseClassificationModel:
             logger.error(f"Model saving failed: {str(e)}")
 
     async def load_models(self) -> Dict[str, Any]:
-        """Load trained models from disk"""
+    """Load trained models from disk"""
         try:
             # Load primary model
             primary_model_path = os.path.join(
@@ -479,7 +479,7 @@ class AbuseClassificationModel:
             logger.error(f"Model loading failed: {str(e)}")
 
     async def retrain_models(self, training_data: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Retrain models with new data"""
+    """Retrain models with new data"""
         try:
             if not training_data:
                 logger.warning("No training data provided for retraining")
@@ -534,7 +534,7 @@ class AbuseClassificationModel:
             logger.error(f"Model retraining failed: {str(e)}")
 
     async def get_model_performance(self) -> Dict[str, Any]:
-        """Get model performance metrics"""
+    """Get model performance metrics"""
         try:
             return {
                 "model_version": self.model_version,

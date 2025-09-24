@@ -37,11 +37,11 @@ class FeatureEvaluator:
         }
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the feature evaluator"""
+    """Initialize the feature evaluator"""
         pass
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup feature evaluator resources"""
+    """Cleanup feature evaluator resources"""
         pass
 
     async def evaluate_feature_importance(

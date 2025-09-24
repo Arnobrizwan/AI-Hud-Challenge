@@ -21,8 +21,7 @@ class LoggingMiddleware:
         self.logger = logger
 
     async def __call__(self, request: Request, call_next) -> Dict[str, Any]:
-        """Log request and response"""
-
+    """Log request and response"""
         # Generate request ID
         request_id = str(uuid.uuid4())
         request.state.request_id = request_id
@@ -72,12 +71,7 @@ class LoggingMiddleware:
             headers=self.get_safe_headers(request.headers),
         )
 
-    async def log_response(
-            self,
-            request: Request,
-            response: Response,
-            process_time: float,
-            request_id: str) -> None:
+    async def log_response(self, request: Request, response: Response, process_time: float, request_id: str) -> None:
         """Log outgoing response"""
 
         # Extract response information
@@ -95,12 +89,7 @@ class LoggingMiddleware:
             content_length=content_length,
         )
 
-    async def log_error(
-            self,
-            request: Request,
-            error: Exception,
-            process_time: float,
-            request_id: str) -> None:
+    async def log_error(self, request: Request, error: Exception, process_time: float, request_id: str) -> None:
         """Log request error"""
 
         # Log error
@@ -134,11 +123,7 @@ class LoggingMiddleware:
         """Get headers with sensitive information removed"""
 
         safe_headers = {}
-        sensitive_headers = {
-            "authorization",
-            "cookie",
-            "x-api-key",
-            "x-auth-token"}
+        sensitive_headers = {"authorization", "cookie", "x-api-key", "x-auth-token"}
 
         for key, value in headers.items():
             if key.lower() not in sensitive_headers:
@@ -151,9 +136,7 @@ class LoggingMiddleware:
     def get_content_length(self, response: Response) -> int:
         """Get response content length"""
 
-        if hasattr(
-                response,
-                "headers") and "content-length" in response.headers:
+        if hasattr(response, "headers") and "content-length" in response.headers:
             return int(response.headers["content-length"])
 
         if hasattr(response, "body") and response.body:
@@ -169,8 +152,7 @@ class StructuredLoggingMiddleware:
         self.logger = logger
 
     async def __call__(self, request: Request, call_next) -> Dict[str, Any]:
-        """Log structured request and response data"""
-
+    """Log structured request and response data"""
         # Generate request ID
         request_id = str(uuid.uuid4())
         request.state.request_id = request_id
@@ -204,14 +186,11 @@ class StructuredLoggingMiddleware:
             log_data.update(
                 {
                     "status_code": response.status_code,
-                    "process_time_ms": round(
-                        process_time * 1000,
-                        2),
+                    "process_time_ms": round(process_time * 1000, 2),
                     "response_content_length": self.get_content_length(response),
-                    "response_content_type": response.headers.get(
-                        "content-type",
-                        "unknown"),
-                })
+                    "response_content_type": response.headers.get("content-type", "unknown"),
+                }
+            )
 
             # Log response
             self.logger.info("Request completed", **log_data)
@@ -256,9 +235,7 @@ class StructuredLoggingMiddleware:
     def get_content_length(self, response: Response) -> int:
         """Get response content length"""
 
-        if hasattr(
-                response,
-                "headers") and "content-length" in response.headers:
+        if hasattr(response, "headers") and "content-length" in response.headers:
             return int(response.headers["content-length"])
 
         if hasattr(response, "body") and response.body:
@@ -274,8 +251,7 @@ class MLPipelineLoggingMiddleware:
         self.logger = logger
 
     async def __call__(self, request: Request, call_next) -> Dict[str, Any]:
-        """Log ML pipeline specific operations"""
-
+    """Log ML pipeline specific operations"""
         # Check if this is an ML pipeline related request
         if not self.is_ml_pipeline_request(request):
             return await call_next(request)
@@ -309,9 +285,7 @@ class MLPipelineLoggingMiddleware:
                 request_id=request_id,
                 pipeline_context=pipeline_context,
                 status_code=response.status_code,
-                process_time_ms=round(
-                    process_time * 1000,
-                    2),
+                process_time_ms=round(process_time * 1000, 2),
             )
 
             return response
@@ -327,9 +301,7 @@ class MLPipelineLoggingMiddleware:
                 pipeline_context=pipeline_context,
                 error_type=type(e).__name__,
                 error_message=str(e),
-                process_time_ms=round(
-                    process_time * 1000,
-                    2),
+                process_time_ms=round(process_time * 1000, 2),
             )
 
             raise
@@ -346,11 +318,10 @@ class MLPipelineLoggingMiddleware:
             "/api/v1/retraining/",
         ]
 
-        return any(request.url.path.startswith(path)
-                   for path in ml_pipeline_paths)
+        return any(request.url.path.startswith(path) for path in ml_pipeline_paths)
 
     def extract_pipeline_context(self, request: Request) -> Dict[str, Any]:
-        """Extract ML pipeline context from request"""
+    """Extract ML pipeline context from request"""
         context = {"path": request.url.path, "method": request.method}
 
         # Extract pipeline ID from path

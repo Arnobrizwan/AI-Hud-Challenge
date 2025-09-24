@@ -26,7 +26,7 @@ class TimeseriesDBManager:
         self._initialized = False
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize TimescaleDB connection pool"""
+    """Initialize TimescaleDB connection pool"""
         if self._initialized:
             return
 
@@ -58,7 +58,7 @@ class TimeseriesDBManager:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup connection pool"""
+    """Cleanup connection pool"""
         if self.pool:
     await self.pool.close()
             self.pool = None
@@ -67,7 +67,7 @@ class TimeseriesDBManager:
         logger.info("TimescaleDB Manager cleanup complete")
 
     async def _initialize_schema(self) -> Dict[str, Any]:
-        """Initialize TimescaleDB schema"""
+    """Initialize TimescaleDB schema"""
         try:
     async with self.pool.acquire() as conn:
                 # Enable TimescaleDB extension
@@ -132,7 +132,7 @@ class TimeseriesDBManager:
             raise
 
     async def _create_continuous_aggregates(self) -> Dict[str, Any]:
-        """Create continuous aggregates for common queries"""
+    """Create continuous aggregates for common queries"""
         try:
     async with self.pool.acquire() as conn:
                 # Daily article metrics
@@ -197,7 +197,7 @@ class TimeseriesDBManager:
             logger.warning(f"Failed to create continuous aggregates: {e}")
 
     async def record_article_metrics(self, article: Article) -> Dict[str, Any]:
-        """Record metrics for an article"""
+    """Record metrics for an article"""
         if not self._initialized or not self.pool:
             raise RuntimeError("TimescaleDB Manager not initialized")
 
@@ -240,7 +240,7 @@ class TimeseriesDBManager:
             raise
 
     def _calculate_article_metrics(self, article: Article) -> Dict[str, Any]:
-        """Calculate various metrics for an article"""
+    """Calculate various metrics for an article"""
         # Word count
         word_count = len(article.content.split()) if article.content else 0
 

@@ -336,8 +336,7 @@ class EscalationEngine:
         return None
 
     async def _handle_escalation(self, escalation_id: str) -> Dict[str, Any]:
-        """Handle escalation process"""
-
+    """Handle escalation process"""
         escalation = self.active_escalations.get(escalation_id)
         if not escalation:
             return
@@ -402,8 +401,7 @@ class AlertingSystem:
         logger.info("Alerting system initialized")
 
     async def load_alerting_rules(self, rules_path: str) -> Dict[str, Any]:
-        """Load alerting rules from configuration"""
-
+    """Load alerting rules from configuration"""
         try:
             with open(rules_path, "r") as f:
                 rules_data = json.load(f)
@@ -459,11 +457,11 @@ class AlertingSystem:
             self.escalation_engine.escalation_policies[policy.id] = policy_config
 
     async def start_alert_processing(self) -> Dict[str, Any]:
-        """Start background alert processing"""
+    """Start background alert processing"""
         asyncio.create_task(self._alert_processing_loop())
 
     async def _alert_processing_loop(self) -> Dict[str, Any]:
-        """Background alert processing loop"""
+    """Background alert processing loop"""
         while True:
             try:
     await self.process_pending_alerts()
@@ -582,12 +580,12 @@ class AlertingSystem:
         return alert
 
     async def process_pending_alerts(self) -> Dict[str, Any]:
-        """Process pending alerts"""
+    """Process pending alerts"""
         # This would process alerts from a queue or database
         pass
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup alerting system"""
+    """Cleanup alerting system"""
         self.is_initialized = False
         logger.info("Alerting system cleaned up")
 
@@ -600,11 +598,11 @@ class AlertManager:
         self.rules = {}
 
     async def store_alert(self, alert: Alert) -> Dict[str, Any]:
-        """Store alert"""
+    """Store alert"""
         self.alerts[alert.id] = alert
 
     async def store_rule(self, rule: AlertRule) -> Dict[str, Any]:
-        """Store alerting rule"""
+    """Store alerting rule"""
         self.rules[rule.id] = rule
 
     async def get_alert(self, alert_id: str) -> Optional[Alert]:

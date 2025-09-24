@@ -103,7 +103,6 @@ class PostMortemResponse(BaseModel):
 @router.post("/", response_model=IncidentResponse)
 async def create_incident(incident_request: IncidentRequest) -> Dict[str, Any]:
     """Create new incident"""
-
     try:
         if not observability_engine or not observability_engine.incident_manager:
             raise HTTPException(
@@ -264,7 +263,6 @@ async def get_incidents(
 @router.get("/active", response_model=List[IncidentResponse])
 async def get_active_incidents() -> Dict[str, Any]:
     """Get active incidents"""
-
     try:
         if not observability_engine or not observability_engine.incident_manager:
             raise HTTPException(
@@ -311,7 +309,6 @@ async def get_active_incidents() -> Dict[str, Any]:
 @router.get("/{incident_id}", response_model=IncidentResponse)
 async def get_incident(incident_id: str) -> Dict[str, Any]:
     """Get specific incident by ID"""
-
     try:
         if not observability_engine or not observability_engine.incident_manager:
             raise HTTPException(
@@ -444,7 +441,6 @@ async def update_incident(incident_id: str,
 @router.get("/{incident_id}/timeline")
 async def get_incident_timeline(incident_id: str) -> Dict[str, Any]:
     """Get incident timeline"""
-
     try:
         if not observability_engine or not observability_engine.incident_manager:
             raise HTTPException(
@@ -529,7 +525,6 @@ async def create_post_mortem(
 @router.get("/{incident_id}/post-mortem", response_model=PostMortemResponse)
 async def get_post_mortem(incident_id: str) -> Dict[str, Any]:
     """Get post-mortem for incident"""
-
     try:
         if not observability_engine or not observability_engine.incident_manager:
             raise HTTPException(

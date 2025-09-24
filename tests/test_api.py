@@ -36,13 +36,8 @@ def sample_article():
         "content": "This is test content",
         "url": "https://example.com/article/1",
         "published_at": "2024-01-01T00:00:00Z",
-        "source": {
-            "id": "source_1",
-            "name": "Test Source",
-            "domain": "test.com"},
-        "author": {
-            "id": "author_1",
-            "name": "Test Author"},
+        "source": {"id": "source_1", "name": "Test Source", "domain": "test.com"},
+        "author": {"id": "author_1", "name": "Test Author"},
         "word_count": 500,
         "reading_time": 2,
         "quality_score": 0.8,
@@ -135,9 +130,7 @@ def test_get_experiments_endpoint(client):
     """Test get experiments endpoint."""
     with patch("src.main.ab_framework") as mock_framework:
         mock_framework.get_all_experiments = AsyncMock(
-            return_value=[
-                {"experiment_id": "test_experiment", "name": "Test Experiment", "is_active": True}
-            ]
+            return_value=[{"experiment_id": "test_experiment", "name": "Test Experiment", "is_active": True}]
         )
 
         response = client.get("/experiments")
@@ -151,10 +144,8 @@ def test_get_experiment_stats_endpoint(client):
     """Test get experiment stats endpoint."""
     with patch("src.main.ab_framework") as mock_framework:
         mock_framework.get_experiment_stats = AsyncMock(
-            return_value={
-                "experiment_id": "test_experiment",
-                "total_users": 100,
-                "variants": {}})
+            return_value={"experiment_id": "test_experiment", "total_users": 100, "variants": {}}
+        )
 
         response = client.get("/experiments/test_experiment/stats")
         assert response.status_code == 200
@@ -196,8 +187,7 @@ def test_get_algorithm_comparison_endpoint(client):
 def test_get_cache_stats_endpoint(client):
     """Test get cache stats endpoint."""
     with patch("src.main.cache_manager") as mock_cache:
-        mock_cache.get_stats.return_value = {
-            "hit_count": 80, "miss_count": 20, "hit_rate": 0.8}
+        mock_cache.get_stats.return_value = {"hit_count": 80, "miss_count": 20, "hit_rate": 0.8}
 
         response = client.get("/cache/stats")
         assert response.status_code == 200
@@ -239,9 +229,7 @@ def test_rank_content_missing_user_id(client):
 
 def test_rank_content_limit_exceeded(client):
     """Test ranking request with limit exceeding maximum."""
-    invalid_request = {
-        "user_id": "test_user",
-        "limit": 200}  # Exceeds maximum of 100
+    invalid_request = {"user_id": "test_user", "limit": 200}  # Exceeds maximum of 100
 
     response = client.post("/rank", json=invalid_request)
     assert response.status_code == 422  # Validation error
@@ -250,8 +238,7 @@ def test_rank_content_limit_exceeded(client):
 def test_rank_content_ranking_error(client, sample_ranking_request):
     """Test ranking endpoint error handling."""
     with patch("src.main.ranking_engine") as mock_engine:
-        mock_engine.rank_content = AsyncMock(
-            side_effect=Exception("Ranking failed"))
+        mock_engine.rank_content = AsyncMock(side_effect=Exception("Ranking failed"))
 
         response = client.post("/rank", json=sample_ranking_request)
         assert response.status_code == 500
@@ -264,8 +251,7 @@ def test_rank_content_ranking_error(client, sample_ranking_request):
 def test_health_check_error(client):
     """Test health check error handling."""
     with patch("src.main.health_checker") as mock_health:
-        mock_health.check_health = AsyncMock(
-            side_effect=Exception("Health check failed"))
+        mock_health.check_health = AsyncMock(side_effect=Exception("Health check failed"))
 
         response = client.get("/health")
         assert response.status_code == 200  # Should still return 200 with error details
@@ -345,8 +331,7 @@ def test_error_handlers(client):
 
     # Test 500 error handling
     with patch("src.main.ranking_engine") as mock_engine:
-        mock_engine.rank_content = AsyncMock(
-            side_effect=Exception("Test error"))
+        mock_engine.rank_content = AsyncMock(side_effect=Exception("Test error"))
 
         response = client.post("/rank", json={"user_id": "test"})
         assert response.status_code == 500

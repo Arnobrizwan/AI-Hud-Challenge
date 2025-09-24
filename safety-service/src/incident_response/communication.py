@@ -163,7 +163,7 @@ The incident response team continues to work on resolution.
         self.active_communications: Dict[str, Dict[str, Any]] = {}
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the communication manager"""
+    """Initialize the communication manager"""
         try:
             # Initialize communication services
             await self.initialize_communication_services()
@@ -181,7 +181,7 @@ The incident response team continues to work on resolution.
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup resources"""
+    """Cleanup resources"""
         try:
             # Clear communication tracking
             self.communication_log.clear()
@@ -537,7 +537,7 @@ The incident response team continues to work on resolution.
             return None
 
     async def get_communication_statistics(self) -> Dict[str, Any]:
-        """Get communication statistics"""
+    """Get communication statistics"""
         try:
             return {
                 "total_communications": len(
@@ -593,7 +593,7 @@ The incident response team continues to work on resolution.
             return 0.0
 
     async def communication_monitoring_task(self) -> Dict[str, Any]:
-        """Background task for monitoring communications"""
+    """Background task for monitoring communications"""
         while True:
             try:
     await asyncio.sleep(300)  # Check every 5 minutes
@@ -619,7 +619,7 @@ The incident response team continues to work on resolution.
                 await asyncio.sleep(300)
 
     async def communication_cleanup_task(self) -> Dict[str, Any]:
-        """Background task for cleaning up old communications"""
+    """Background task for cleaning up old communications"""
         while True:
             try:
     await asyncio.sleep(3600)  # Run every hour
@@ -644,7 +644,7 @@ The incident response team continues to work on resolution.
                 await asyncio.sleep(3600)
 
     async def initialize_communication_services(self) -> Dict[str, Any]:
-        """Initialize communication services"""
+    """Initialize communication services"""
         try:
             # Placeholder for communication service initialization
             logger.info("Communication services initialized")

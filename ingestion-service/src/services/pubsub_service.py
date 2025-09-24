@@ -255,7 +255,7 @@ class PubSubService:
                 raise
 
     async def get_topic_info(self, topic_name: str) -> Dict[str, Any]:
-        """Get information about a topic."""
+    """Get information about a topic."""
         try:
             topic_path = self.publisher.topic_path(self.project_id, topic_name)
             topic = self.publisher.get_topic(request={"topic": topic_path})

@@ -39,7 +39,7 @@ class GDPRComplianceMonitor:
         self.data_processing_activities = {}
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the GDPR monitor"""
+    """Initialize the GDPR monitor"""
         try:
             self.is_initialized = True
             logger.info("GDPR compliance monitor initialized")
@@ -49,7 +49,7 @@ class GDPRComplianceMonitor:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup resources"""
+    """Cleanup resources"""
         try:
             self.is_initialized = False
             logger.info("GDPR compliance monitor cleanup completed")
@@ -368,7 +368,7 @@ class GDPRComplianceMonitor:
             return []
 
     async def get_compliance_status(self) -> Dict[str, Any]:
-        """Get current GDPR compliance status"""
+    """Get current GDPR compliance status"""
         try:
             return {
                 "enabled": self.config.gdpr_enabled,
@@ -386,7 +386,7 @@ class GDPRComplianceMonitor:
             return {"error": str(e)}
 
     async def generate_detailed_report(self) -> Dict[str, Any]:
-        """Generate detailed GDPR compliance report"""
+    """Generate detailed GDPR compliance report"""
         try:
             report = {
                 "report_type": "gdpr_detailed",
@@ -469,7 +469,7 @@ class GDPRComplianceMonitor:
             return False
 
     async def get_data_processing_activities(self) -> Dict[str, Any]:
-        """Get all registered data processing activities"""
+    """Get all registered data processing activities"""
         try:
             return {
                 "activities": self.data_processing_activities,

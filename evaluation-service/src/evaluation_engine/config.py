@@ -47,9 +47,7 @@ class Settings(BaseSettings):
     # Vertex AI settings
     VERTEX_AI_PROJECT_ID: str = Field(..., env="VERTEX_AI_PROJECT_ID")
     VERTEX_AI_LOCATION: str = Field(default="us-central1", env="VERTEX_AI_LOCATION")
-    VERTEX_AI_CREDENTIALS_PATH: Optional[str] = Field(
-        default=None, env="VERTEX_AI_CREDENTIALS_PATH"
-    )
+    VERTEX_AI_CREDENTIALS_PATH: Optional[str] = Field(default=None, env="VERTEX_AI_CREDENTIALS_PATH")
 
     # Monitoring settings
     PROMETHEUS_ENDPOINT: str = Field(default="http://localhost:9090", env="PROMETHEUS_ENDPOINT")

@@ -38,7 +38,7 @@ class SentimentAnalyzer:
         asyncio.create_task(self._initialize_models())
 
     async def _initialize_models(self) -> Dict[str, Any]:
-        """Initialize sentiment and emotion analysis models."""
+    """Initialize sentiment and emotion analysis models."""
         try:
             # Load sentiment analysis model
             self.sentiment_pipeline = pipeline(
@@ -112,7 +112,7 @@ except Exception as e:
                 polarity=0.0)
 
     async def _analyze_with_transformers(self, text: str) -> Dict[str, Any]:
-        """Analyze sentiment using transformer models."""
+    """Analyze sentiment using transformer models."""
         try:
             # Get sentiment scores
             sentiment_scores = self.sentiment_pipeline(text)
@@ -149,7 +149,7 @@ except Exception as e:
             return await self._analyze_with_fallback(text)
 
     async def _analyze_with_fallback(self, text: str) -> Dict[str, Any]:
-        """Analyze sentiment using fallback methods."""
+    """Analyze sentiment using fallback methods."""
         try:
             # Use VADER sentiment analyzer
             vader_scores = self.vader_analyzer.polarity_scores(text)

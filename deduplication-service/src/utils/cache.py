@@ -22,7 +22,7 @@ class CacheManager:
         self.default_ttl = settings.cache_ttl
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize cache manager."""
+    """Initialize cache manager."""
         # Test connection
         await self.redis.ping()
 
@@ -376,5 +376,5 @@ class CacheManager:
             return 0
 
     async def close(self) -> Dict[str, Any]:
-        """Close cache manager."""
+    """Close cache manager."""
         await self.redis.close()

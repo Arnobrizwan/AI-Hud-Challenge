@@ -93,7 +93,7 @@ class EscalationManager:
         }
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the escalation manager"""
+    """Initialize the escalation manager"""
         try:
             # Initialize notification services
             await self.initialize_notification_services()
@@ -110,7 +110,7 @@ class EscalationManager:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup resources"""
+    """Cleanup resources"""
         try:
             # Clear escalation tracking
             self.active_escalations.clear()
@@ -443,7 +443,7 @@ This incident has been escalated to your level and requires immediate attention.
             return []
 
     async def get_escalation_statistics(self) -> Dict[str, Any]:
-        """Get escalation statistics"""
+    """Get escalation statistics"""
         try:
             return {
                 "active_escalations": len(self.active_escalations),
@@ -527,7 +527,7 @@ This incident has been escalated to your level and requires immediate attention.
             return 0.0
 
     async def escalation_monitoring_task(self) -> Dict[str, Any]:
-        """Background task for monitoring escalations"""
+    """Background task for monitoring escalations"""
         while True:
             try:
     await asyncio.sleep(300)  # Check every 5 minutes
@@ -558,7 +558,7 @@ This incident has been escalated to your level and requires immediate attention.
                 await asyncio.sleep(300)
 
     async def escalation_cleanup_task(self) -> Dict[str, Any]:
-        """Background task for cleaning up old escalations"""
+    """Background task for cleaning up old escalations"""
         while True:
             try:
     await asyncio.sleep(3600)  # Run every hour
@@ -586,7 +586,7 @@ This incident has been escalated to your level and requires immediate attention.
                 await asyncio.sleep(3600)
 
     async def initialize_notification_services(self) -> Dict[str, Any]:
-        """Initialize notification services"""
+    """Initialize notification services"""
         try:
             # Placeholder for notification service initialization
             logger.info("Notification services initialized")

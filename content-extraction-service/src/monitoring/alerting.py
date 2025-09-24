@@ -214,7 +214,7 @@ class AlertManager:
         logger.info("Added notification handler")
 
     async def start_monitoring(self) -> Dict[str, Any]:
-        """Start alert monitoring."""
+    """Start alert monitoring."""
         if self.is_running:
             return
 
@@ -230,12 +230,12 @@ class AlertManager:
                 await asyncio.sleep(60)
 
     async def stop_monitoring(self) -> Dict[str, Any]:
-        """Stop alert monitoring."""
+    """Stop alert monitoring."""
         self.is_running = False
         logger.info("Stopped alert monitoring")
 
     async def _evaluate_alerts(self) -> Dict[str, Any]:
-        """Evaluate all alert rules."""
+    """Evaluate all alert rules."""
         for rule in self.alert_rules:
             try:
                 current_value = await self._get_metric_value(rule.metric_name)
@@ -266,7 +266,7 @@ class AlertManager:
             return 0.0
 
     async def _trigger_alert(self, rule: AlertRule, current_value: float) -> Dict[str, Any]:
-        """Trigger alert."""
+    """Trigger alert."""
         alert_id = f"{rule.name}_{int(datetime.utcnow().timestamp())}"
 
         alert = Alert(
@@ -292,7 +292,7 @@ class AlertManager:
             f"Alert triggered: {alert.title} (value: {current_value})")
 
     async def _send_notifications(self, alert: Alert) -> Dict[str, Any]:
-        """Send alert notifications."""
+    """Send alert notifications."""
         for handler in self.notification_handlers:
             try:
     await handler(alert)
@@ -300,7 +300,7 @@ class AlertManager:
                 logger.error(f"Notification handler failed: {str(e)}")
 
     async def resolve_alert(self, alert_id: str) -> Dict[str, Any]:
-        """Resolve alert."""
+    """Resolve alert."""
         if alert_id in self.alerts:
             alert = self.alerts[alert_id]
             alert.status = AlertStatus.RESOLVED
@@ -308,7 +308,7 @@ class AlertManager:
             logger.info(f"Alert resolved: {alert.title}")
 
     async def suppress_alert(self, alert_id: str) -> Dict[str, Any]:
-        """Suppress alert."""
+    """Suppress alert."""
         if alert_id in self.alerts:
             alert = self.alerts[alert_id]
             alert.status = AlertStatus.SUPPRESSED
@@ -330,7 +330,7 @@ class AlertManager:
                 if alert.component == component]
 
     def get_alert_summary(self) -> Dict[str, Any]:
-        """Get alert summary."""
+    """Get alert summary."""
         total_alerts = len(self.alerts)
         active_alerts = len(self.get_active_alerts())
 

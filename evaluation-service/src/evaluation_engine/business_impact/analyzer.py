@@ -24,13 +24,13 @@ class BusinessImpactAnalyzer:
         self.causal_impact = CausalImpact()
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the business impact analyzer"""
+    """Initialize the business impact analyzer"""
         logger.info("Initializing business impact analyzer...")
         # Initialize components
         logger.info("Business impact analyzer initialized successfully")
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup business impact analyzer resources"""
+    """Cleanup business impact analyzer resources"""
         logger.info("Cleaning up business impact analyzer...")
         logger.info("Business impact analyzer cleanup completed")
 

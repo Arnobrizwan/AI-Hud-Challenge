@@ -120,7 +120,7 @@ class LSHIndex:
         await self._update_stats("articles_added", len(articles))
 
     async def get_index_stats(self) -> Dict[str, Any]:
-        """Get LSH index statistics.
+    """Get LSH index statistics.
 
         Returns:
             Dictionary with index statistics

@@ -54,7 +54,7 @@ class OfflineEvaluator:
         self.executor = ThreadPoolExecutor(max_workers=4)
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the offline evaluator"""
+    """Initialize the offline evaluator"""
         try:
             logger.info("Initializing offline evaluator...")
 
@@ -75,7 +75,7 @@ class OfflineEvaluator:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup offline evaluator resources"""
+    """Cleanup offline evaluator resources"""
         try:
             logger.info("Cleaning up offline evaluator...")
 
@@ -216,7 +216,7 @@ class OfflineEvaluator:
         return result
 
     async def _load_model(self, model_config: Dict[str, Any]) -> Dict[str, Any]:
-        """Load model from configuration"""
+    """Load model from configuration"""
         # This would typically load from MLflow, local file, or other model registry
         # For now, return a mock model
         model_type = model_config.get("type", "classification")

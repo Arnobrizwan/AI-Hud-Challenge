@@ -23,7 +23,7 @@ class RequestLoggingMiddleware:
         self.settings = get_settings()
 
     async def __call__(self, scope, receive, send) -> Dict[str, Any]:
-        if scope["type"] == "http":
+    if scope["type"] == "http":
             request = Request(scope, receive)
 
             # Start timing
@@ -56,8 +56,7 @@ class RequestLoggingMiddleware:
     await self.app(scope, receive, send)
 
     async def _log_request(self, request: Request) -> Dict[str, Any]:
-        """Log incoming request"""
-
+    """Log incoming request"""
         try:
             # Extract request information
             request_data = {
@@ -170,7 +169,7 @@ class RequestLoggingMiddleware:
                        for path in skip_paths)
 
     def _mask_sensitive_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Mask sensitive data in logs"""
+    """Mask sensitive data in logs"""
         sensitive_keys = [
             "authorization",
             "x-api-key",
@@ -193,8 +192,7 @@ class StructuredRequestLoggingMiddleware(RequestLoggingMiddleware):
     """Structured request logging middleware with JSON output"""
 
     async def _log_request(self, request: Request) -> Dict[str, Any]:
-        """Log incoming request with structured data"""
-
+    """Log incoming request with structured data"""
         try:
             # Extract request information
             request_data = {

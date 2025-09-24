@@ -58,23 +58,14 @@ class LanguageDetector:
 
             # Validate detected language
             if detected_lang in self.supported_languages:
-                logger.info(
-                    "Language detected",
-                    language=detected_lang,
-                    text_length=len(text))
+                logger.info("Language detected", language=detected_lang, text_length=len(text))
                 return detected_lang
             else:
-                logger.warning(
-                    "Unsupported language detected",
-                    language=detected_lang,
-                    falling_back_to="en")
+                logger.warning("Unsupported language detected", language=detected_lang, falling_back_to="en")
                 return "en"
 
         except Exception as e:
-            logger.error(
-                "Language detection failed",
-                error=str(e),
-                falling_back_to="en")
+            logger.error("Language detection failed", error=str(e), falling_back_to="en")
             return "en"
 
     def _clean_text(self, text: str) -> str:
@@ -123,36 +114,26 @@ class LanguageDetector:
         return language_code in self.supported_languages
 
     async def get_language_statistics(self, texts: list) -> Dict[str, Any]:
-        """Get language detection statistics."""
+    """Get language detection statistics."""
         try:
             results = await self.detect_multiple(texts)
 
             # Count languages
             language_counts = {}
             for language in results.values():
-                language_counts[language] = language_counts.get(
-                    language, 0) + 1
+                language_counts[language] = language_counts.get(language, 0) + 1
 
             # Calculate percentages
             total_texts = len(texts)
-            language_percentages = {
-                lang: (
-                    count /
-                    total_texts) *
-                100 for lang,
-                count in language_counts.items()}
+            language_percentages = {lang: (count / total_texts) * 100 for lang, count in language_counts.items()}
 
             return {
                 "total_texts": total_texts,
                 "language_distribution": language_counts,
                 "language_percentages": language_percentages,
-                "most_common_language": (
-                    max(language_counts, key=language_counts.get) if language_counts else "en"
-                ),
+                "most_common_language": (max(language_counts, key=language_counts.get) if language_counts else "en"),
             }
 
         except Exception as e:
-            logger.error(
-                "Language statistics calculation failed",
-                error=str(e))
+            logger.error("Language statistics calculation failed", error=str(e))
             return {}

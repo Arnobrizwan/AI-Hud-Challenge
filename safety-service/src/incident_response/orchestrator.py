@@ -64,7 +64,7 @@ class ResponseOrchestrator:
         }
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize the response orchestrator"""
+    """Initialize the response orchestrator"""
         try:
             # Initialize any required services
             await self.initialize_services()
@@ -82,7 +82,7 @@ class ResponseOrchestrator:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Cleanup resources"""
+    """Cleanup resources"""
         try:
             # Cancel active actions
             for action_id in list(self.active_actions.keys()):
@@ -530,7 +530,7 @@ class ResponseOrchestrator:
             return None
 
     async def get_action_statistics(self) -> Dict[str, Any]:
-        """Get action execution statistics"""
+    """Get action execution statistics"""
         try:
             return {
                 "active_actions": len(self.active_actions),
@@ -568,7 +568,7 @@ class ResponseOrchestrator:
             return 0.0
 
     async def action_monitoring_task(self) -> Dict[str, Any]:
-        """Background task for monitoring active actions"""
+    """Background task for monitoring active actions"""
         while True:
             try:
     await asyncio.sleep(60)  # Check every minute
@@ -597,7 +597,7 @@ class ResponseOrchestrator:
                 await asyncio.sleep(60)
 
     async def action_cleanup_task(self) -> Dict[str, Any]:
-        """Background task for cleaning up old actions"""
+    """Background task for cleaning up old actions"""
         while True:
             try:
     await asyncio.sleep(3600)  # Run every hour
@@ -635,7 +635,7 @@ class ResponseOrchestrator:
                 await asyncio.sleep(3600)
 
     async def initialize_services(self) -> Dict[str, Any]:
-        """Initialize any required services"""
+    """Initialize any required services"""
         try:
             # Placeholder for service initialization
             logger.info("Response orchestrator services initialized")

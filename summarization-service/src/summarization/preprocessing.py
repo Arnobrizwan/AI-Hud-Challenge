@@ -42,7 +42,7 @@ class ContentPreprocessor:
         self._initialized = False
 
     async def initialize(self) -> Dict[str, Any]:
-        """Initialize preprocessing tools"""
+    """Initialize preprocessing tools"""
         try:
             logger.info("Initializing content preprocessor...")
 
@@ -70,7 +70,7 @@ except Exception as e:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-        """Clean up resources"""
+    """Clean up resources"""
         try:
             if self.nlp:
                 del self.nlp
@@ -263,7 +263,7 @@ except Exception as e:
             return ContentType.GENERAL
 
     async def _extract_metadata(self, text: str) -> Dict[str, Any]:
-        """Extract additional metadata from text"""
+    """Extract additional metadata from text"""
         try:
             metadata = {}
 
@@ -359,7 +359,7 @@ except Exception as e:
             return []
 
     async def get_status(self) -> Dict[str, Any]:
-        """Get preprocessor status"""
+    """Get preprocessor status"""
         return {
             "initialized": self._initialized,
             "spacy_available": self.nlp is not None,

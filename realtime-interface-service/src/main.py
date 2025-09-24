@@ -3,12 +3,13 @@ Realtime Interface Service
 Generated for News Aggregation Pipeline
 """
 
+import asyncio
+import os
+from typing import Any, Dict
+
+import structlog
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import Dict, Any
-import structlog
-import os
-import asyncio
 
 # Configure logging
 structlog.configure(
@@ -21,7 +22,7 @@ structlog.configure(
         structlog.processors.StackInfoRenderer(),
         structlog.processors.format_exc_info,
         structlog.processors.UnicodeDecoder(),
-        structlog.processors.JSONRenderer()
+        structlog.processors.JSONRenderer(),
     ],
     context_class=dict,
     logger_factory=structlog.stdlib.LoggerFactory(),
@@ -34,37 +35,30 @@ logger = structlog.get_logger()
 app = FastAPI(
     title="Realtime Interface Service",
     description="Realtime Interface microservice for News Aggregation Pipeline",
-    version="1.0.0"
+    version="1.0.0",
 )
+
 
 # Health check endpoint
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
-    return {
-        "status": "healthy",
-        "service": "realtime-interfaces",
-        "version": "1.0.0"
-    }
+    return {"status": "healthy", "service": "realtime-interfaces", "version": "1.0.0"}
+
 
 # Ready check endpoint
 @app.get("/ready")
 async def ready_check():
     """Readiness check endpoint"""
-    return {
-        "status": "ready",
-        "service": "realtime-interfaces"
-    }
+    return {"status": "ready", "service": "realtime-interfaces"}
+
 
 # Root endpoint
 @app.get("/")
 async def root():
     """Root endpoint"""
-    return {
-        "message": "Welcome to Realtime Interface Service",
-        "service": "realtime-interfaces",
-        "status": "running"
-    }
+    return {"message": "Welcome to Realtime Interface Service", "service": "realtime-interfaces", "status": "running"}
+
 
 # Placeholder endpoint for service-specific functionality
 @app.get("/api/v1/status")
@@ -73,9 +67,11 @@ async def get_status():
     return {
         "service": "realtime-interfaces",
         "status": "operational",
-        "environment": os.getenv("ENVIRONMENT", "development")
+        "environment": os.getenv("ENVIRONMENT", "development"),
     }
+
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -148,7 +148,7 @@ class HealthChecker:
             return False
 
     async def _check_memory(self) -> Dict[str, Any]:
-        """Check memory usage."""
+    """Check memory usage."""
         try:
             import psutil
 
@@ -170,7 +170,7 @@ class HealthChecker:
             return False
 
     async def _check_disk(self) -> Dict[str, Any]:
-        """Check disk usage."""
+    """Check disk usage."""
         try:
             import psutil
 

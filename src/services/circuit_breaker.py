@@ -93,7 +93,7 @@ class CircuitBreaker:
             config=self.config.__dict__)
 
     async def __aenter__(self) -> Dict[str, Any]:
-        """Async context manager entry."""
+    """Async context manager entry."""
         await self._check_and_update_state()
 
         if self.state == CircuitBreakerState.OPEN:
@@ -103,7 +103,7 @@ class CircuitBreaker:
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> Dict[str, Any]:
-        """Async context manager exit."""
+    """Async context manager exit."""
         if exc_type is None:
     await self._record_success()
         elif issubclass(exc_type, self.config.expected_exception):
@@ -151,7 +151,7 @@ class CircuitBreaker:
             return sync_wrapper
 
     async def _check_and_update_state(self) -> Dict[str, Any]:
-        """Check and update circuit breaker state."""
+    """Check and update circuit breaker state."""
         async with self._lock:
             current_time = time.time()
 
@@ -167,7 +167,7 @@ class CircuitBreaker:
                     self._transition_to_closed()
 
     async def _record_success(self) -> Dict[str, Any]:
-        """Record successful request."""
+    """Record successful request."""
         async with self._lock:
             self.stats.success_count += 1
             self.stats.total_requests += 1
@@ -185,7 +185,7 @@ class CircuitBreaker:
             )
 
     async def _record_failure(self) -> Dict[str, Any]:
-        """Record failed request."""
+    """Record failed request."""
         async with self._lock:
             self.stats.failure_count += 1
             self.stats.total_requests += 1
@@ -282,7 +282,7 @@ class CircuitBreaker:
         return self.state == CircuitBreakerState.HALF_OPEN
 
     def get_stats(self) -> Dict[str, Any]:
-        """Get circuit breaker statistics."""
+    """Get circuit breaker statistics."""
         return {
             "name": self.name,
             "state": self.state.name,
