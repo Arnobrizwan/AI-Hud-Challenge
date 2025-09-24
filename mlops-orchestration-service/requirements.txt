@@ -78,7 +78,7 @@ feast==0.34.0
 
 # Model serving
 bentoml==1.1.7
-torchserve==0.8.2
+torchserve==0.12.0
 
 # Testing (optional)
 pytest==7.4.3
