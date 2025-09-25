@@ -21,7 +21,7 @@ class LoggingMiddleware:
         self.logger = logger
 
     async def __call__(self, request: Request, call_next) -> Dict[str, Any]:
-    """Log request and response"""
+        """Log request and response"""
         # Generate request ID
         request_id = str(uuid.uuid4())
         request.state.request_id = request_id
@@ -152,7 +152,7 @@ class StructuredLoggingMiddleware:
         self.logger = logger
 
     async def __call__(self, request: Request, call_next) -> Dict[str, Any]:
-    """Log structured request and response data"""
+        """Log structured request and response data"""
         # Generate request ID
         request_id = str(uuid.uuid4())
         request.state.request_id = request_id
@@ -251,7 +251,7 @@ class MLPipelineLoggingMiddleware:
         self.logger = logger
 
     async def __call__(self, request: Request, call_next) -> Dict[str, Any]:
-    """Log ML pipeline specific operations"""
+        """Log ML pipeline specific operations"""
         # Check if this is an ML pipeline related request
         if not self.is_ml_pipeline_request(request):
             return await call_next(request)
@@ -321,7 +321,7 @@ class MLPipelineLoggingMiddleware:
         return any(request.url.path.startswith(path) for path in ml_pipeline_paths)
 
     def extract_pipeline_context(self, request: Request) -> Dict[str, Any]:
-    """Extract ML pipeline context from request"""
+        """Extract ML pipeline context from request"""
         context = {"path": request.url.path, "method": request.method}
 
         # Extract pipeline ID from path

@@ -24,7 +24,7 @@ class RateLimitMiddleware:
         self.requests: Dict[str, list] = {}
 
     async def __call__(self, request: Request, call_next) -> Dict[str, Any]:
-    """Process rate limiting for each request"""
+        """Process rate limiting for each request"""
         # Skip rate limiting for health checks
         if request.url.path in ["/health", "/health/live", "/health/ready"]:
             return await call_next(request)
@@ -152,7 +152,7 @@ class AdvancedRateLimitMiddleware:
         self.requests: Dict[str, Dict[str, list]] = {}
 
     async def __call__(self, request: Request, call_next) -> Dict[str, Any]:
-    """Process advanced rate limiting for each request"""
+        """Process advanced rate limiting for each request"""
         # Skip rate limiting for health checks
         if request.url.path in ["/health", "/health/live", "/health/ready"]:
             return await call_next(request)

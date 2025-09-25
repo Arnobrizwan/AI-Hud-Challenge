@@ -68,13 +68,10 @@ class ModelMonitoringService:
             logger.info("Model Monitoring Service initialized successfully")
 
         except Exception as e:
-            logger.error(
-                f"Failed to initialize Model Monitoring Service: {str(e)}")
+            logger.error(f"Failed to initialize Model Monitoring Service: {str(e)}")
             raise
 
-    async def setup_model_monitoring(
-        self, model_name: str, monitoring_config: MonitoringConfig
-    ) -> None:
+    async def setup_model_monitoring(self, model_name: str, monitoring_config: MonitoringConfig) -> None:
         """Set up monitoring for a model"""
 
         try:
@@ -96,21 +93,16 @@ class ModelMonitoringService:
             await self._setup_alerting_rules(model_name, monitoring_config)
 
             # Start monitoring task
-            monitoring_task = asyncio.create_task(
-                self._monitor_model(model_name, monitoring_config)
-            )
+            monitoring_task = asyncio.create_task(self._monitor_model(model_name, monitoring_config))
             self._monitoring_tasks[model_name] = monitoring_task
 
             logger.info(f"Monitoring setup completed for {model_name}")
 
         except Exception as e:
-            logger.error(
-                f"Failed to setup monitoring for {model_name}: {str(e)}")
+            logger.error(f"Failed to setup monitoring for {model_name}: {str(e)}")
             raise MonitoringError(f"Monitoring setup failed: {str(e)}")
 
-    async def setup_pipeline_monitoring(
-        self, pipeline_id: str, monitoring_config: MonitoringConfig
-    ) -> None:
+    async def setup_pipeline_monitoring(self, pipeline_id: str, monitoring_config: MonitoringConfig) -> None:
         """Set up monitoring for a pipeline"""
 
         try:
@@ -122,13 +114,11 @@ class ModelMonitoringService:
             # Set up pipeline dashboard
             await self._create_pipeline_dashboard(pipeline_id, monitoring_config)
 
-            logger.info(
-                f"Pipeline monitoring setup completed for {pipeline_id}")
+            logger.info(f"Pipeline monitoring setup completed for {pipeline_id}")
 
         except Exception as e:
             logger.error(f"Failed to setup pipeline monitoring: {str(e)}")
-            raise MonitoringError(
-                f"Pipeline monitoring setup failed: {str(e)}")
+            raise MonitoringError(f"Pipeline monitoring setup failed: {str(e)}")
 
     async def setup_deployment_monitoring(
         self,
@@ -151,13 +141,11 @@ class ModelMonitoringService:
             # Set up performance monitoring
             await self._setup_performance_monitoring(deployment_id, model_name, monitoring_config)
 
-            logger.info(
-                f"Deployment monitoring setup completed for {deployment_id}")
+            logger.info(f"Deployment monitoring setup completed for {deployment_id}")
 
         except Exception as e:
             logger.error(f"Failed to setup deployment monitoring: {str(e)}")
-            raise MonitoringError(
-                f"Deployment monitoring setup failed: {str(e)}")
+            raise MonitoringError(f"Deployment monitoring setup failed: {str(e)}")
 
     async def start_performance_monitoring(self) -> None:
         """Start performance monitoring for all models"""
@@ -168,17 +156,14 @@ class ModelMonitoringService:
             # Start monitoring task for each model
             for model_name, config in self._monitoring_configs.items():
                 if model_name not in self._monitoring_tasks:
-                    task = asyncio.create_task(
-                        self._monitor_model_performance(
-                            model_name, config))
+                    task = asyncio.create_task(self._monitor_model_performance(model_name, config))
                     self._monitoring_tasks[f"{model_name}_performance"] = task
 
             logger.info("Performance monitoring started")
 
         except Exception as e:
             logger.error(f"Failed to start performance monitoring: {str(e)}")
-            raise MonitoringError(
-                f"Performance monitoring startup failed: {str(e)}")
+            raise MonitoringError(f"Performance monitoring startup failed: {str(e)}")
 
     async def stop_performance_monitoring(self) -> None:
         """Stop performance monitoring"""
@@ -200,10 +185,7 @@ class ModelMonitoringService:
         except Exception as e:
             logger.error(f"Failed to stop performance monitoring: {str(e)}")
 
-    async def log_model_metrics(
-            self,
-            model_name: str,
-            metrics: ModelMetrics) -> None:
+    async def log_model_metrics(self, model_name: str, metrics: ModelMetrics) -> None:
         """Log model metrics"""
 
         try:
@@ -215,8 +197,7 @@ class ModelMonitoringService:
 
             # Keep only recent metrics (last 24 hours)
             cutoff_time = datetime.utcnow() - timedelta(hours=24)
-            self._metrics_cache[model_name] = [
-                m for m in self._metrics_cache[model_name] if m.timestamp > cutoff_time]
+            self._metrics_cache[model_name] = [m for m in self._metrics_cache[model_name] if m.timestamp > cutoff_time]
 
             # Send to Prometheus
             await self.prometheus_client.record_model_metrics(model_name, metrics)
@@ -227,8 +208,7 @@ class ModelMonitoringService:
         except Exception as e:
             logger.error(f"Failed to log metrics for {model_name}: {str(e)}")
 
-    async def log_feature_serving_metrics(
-            self, metrics: Dict[str, Any]) -> None:
+    async def log_feature_serving_metrics(self, metrics: Dict[str, Any]) -> None:
         """Log feature serving metrics"""
 
         try:
@@ -239,10 +219,8 @@ class ModelMonitoringService:
             logger.error(f"Failed to log feature serving metrics: {str(e)}")
 
     async def detect_data_drift(
-            self,
-            model_name: str,
-            current_data: pd.DataFrame,
-            reference_data: pd.DataFrame) -> DriftDetectionResult:
+        self, model_name: str, current_data: pd.DataFrame, reference_data: pd.DataFrame
+    ) -> DriftDetectionResult:
         """Detect data drift between current and reference data"""
 
         try:
@@ -261,8 +239,7 @@ class ModelMonitoringService:
                     reference_values = reference_data[column].dropna()
 
                     if len(current_values) > 0 and len(reference_values) > 0:
-                        ks_statistic, p_value = stats.ks_2samp(
-                            reference_values, current_values)
+                        ks_statistic, p_value = stats.ks_2samp(reference_values, current_values)
                         drift_scores[column] = ks_statistic
 
                         # Check if drift is significant
@@ -273,11 +250,11 @@ class ModelMonitoringService:
                                     "drift_score": ks_statistic,
                                     "p_value": p_value,
                                     "severity": "high" if ks_statistic > 0.2 else "medium",
-                                })
+                                }
+                            )
 
             # Calculate overall drift score
-            overall_drift_score = max(
-                drift_scores.values()) if drift_scores else 0
+            overall_drift_score = max(drift_scores.values()) if drift_scores else 0
 
             # Create drift detection result
             result = DriftDetectionResult(
@@ -291,15 +268,13 @@ class ModelMonitoringService:
 
             # Send drift alerts if detected
             if result.is_drift_detected:
-    await self._send_drift_alert(result)
+                await self._send_drift_alert(result)
 
-            logger.info(
-                f"Data drift detection completed for {model_name}: {overall_drift_score}")
+            logger.info(f"Data drift detection completed for {model_name}: {overall_drift_score}")
             return result
 
         except Exception as e:
-            logger.error(
-                f"Failed to detect data drift for {model_name}: {str(e)}")
+            logger.error(f"Failed to detect data drift for {model_name}: {str(e)}")
             raise MonitoringError(f"Data drift detection failed: {str(e)}")
 
     async def generate_performance_report(
@@ -330,8 +305,7 @@ class ModelMonitoringService:
             alerts_summary = await self._get_alerts_for_period(model_name, start_time, end_time)
 
             # Calculate model health score
-            health_score = self._calculate_health_score(
-                metrics_summary, alerts_summary)
+            health_score = self._calculate_health_score(metrics_summary, alerts_summary)
 
             report = PerformanceReport(
                 model_name=model_name,
@@ -347,10 +321,8 @@ class ModelMonitoringService:
             return report
 
         except Exception as e:
-            logger.error(
-                f"Failed to generate performance report for {model_name}: {str(e)}")
-            raise MonitoringError(
-                f"Performance report generation failed: {str(e)}")
+            logger.error(f"Failed to generate performance report for {model_name}: {str(e)}")
+            raise MonitoringError(f"Performance report generation failed: {str(e)}")
 
     async def get_model_health(self, model_name: str) -> ModelHealth:
         """Get current model health status"""
@@ -363,8 +335,7 @@ class ModelMonitoringService:
             active_alerts = await self._get_active_alerts(model_name)
 
             # Calculate health score
-            health_score = self._calculate_health_score_from_metrics(
-                recent_metrics)
+            health_score = self._calculate_health_score_from_metrics(recent_metrics)
 
             # Determine health status
             if health_score >= 0.9:
@@ -383,14 +354,10 @@ class ModelMonitoringService:
             )
 
         except Exception as e:
-            logger.error(
-                f"Failed to get model health for {model_name}: {str(e)}")
+            logger.error(f"Failed to get model health for {model_name}: {str(e)}")
             raise MonitoringError(f"Model health retrieval failed: {str(e)}")
 
-    async def _monitor_model(
-            self,
-            model_name: str,
-            config: MonitoringConfig) -> None:
+    async def _monitor_model(self, model_name: str, config: MonitoringConfig) -> None:
         """Monitor a specific model"""
 
         while True:
@@ -403,7 +370,7 @@ class ModelMonitoringService:
 
                 # Check for data drift
                 if config.drift_detection_enabled:
-    await self._check_data_drift(model_name, config)
+                    await self._check_data_drift(model_name, config)
 
                 # Wait before next check
                 await asyncio.sleep(config.monitoring_interval_seconds)
@@ -415,10 +382,7 @@ class ModelMonitoringService:
                 logger.error(f"Error monitoring {model_name}: {str(e)}")
                 await asyncio.sleep(60)  # Wait before retrying
 
-    async def _monitor_model_performance(
-            self,
-            model_name: str,
-            config: MonitoringConfig) -> None:
+    async def _monitor_model_performance(self, model_name: str, config: MonitoringConfig) -> None:
         """Monitor model performance metrics"""
 
         while True:
@@ -433,17 +397,13 @@ class ModelMonitoringService:
                 await asyncio.sleep(config.performance_monitoring_interval_seconds)
 
             except asyncio.CancelledError:
-                logger.info(
-                    f"Performance monitoring cancelled for {model_name}")
+                logger.info(f"Performance monitoring cancelled for {model_name}")
                 break
             except Exception as e:
-                logger.error(
-                    f"Error in performance monitoring for {model_name}: {str(e)}")
+                logger.error(f"Error in performance monitoring for {model_name}: {str(e)}")
                 await asyncio.sleep(60)
 
-    async def _collect_model_metrics(
-        self, model_name: str, config: MonitoringConfig
-    ) -> ModelMetrics:
+    async def _collect_model_metrics(self, model_name: str, config: MonitoringConfig) -> ModelMetrics:
         """Collect model metrics"""
 
         # This would implement actual metrics collection
@@ -457,9 +417,7 @@ class ModelMonitoringService:
             timestamp=datetime.utcnow(),
         )
 
-    async def _collect_performance_metrics(
-        self, model_name: str, config: MonitoringConfig
-    ) -> ModelMetrics:
+    async def _collect_performance_metrics(self, model_name: str, config: MonitoringConfig) -> ModelMetrics:
         """Collect performance-specific metrics"""
 
         # This would implement performance metrics collection
@@ -472,10 +430,7 @@ class ModelMonitoringService:
             timestamp=datetime.utcnow(),
         )
 
-    async def _check_metric_alerts(
-            self,
-            model_name: str,
-            metrics: ModelMetrics) -> None:
+    async def _check_metric_alerts(self, model_name: str, metrics: ModelMetrics) -> None:
         """Check if metrics trigger any alerts"""
 
         config = self._monitoring_configs.get(model_name)
@@ -485,12 +440,9 @@ class ModelMonitoringService:
         # Check each alert rule
         for rule in config.alert_rules:
             if await self._evaluate_alert_rule(rule, metrics):
-    await self._trigger_alert(model_name, rule, metrics)
+                await self._trigger_alert(model_name, rule, metrics)
 
-    async def _evaluate_alert_rule(
-            self,
-            rule: AlertRule,
-            metrics: ModelMetrics) -> bool:
+    async def _evaluate_alert_rule(self, rule: AlertRule, metrics: ModelMetrics) -> bool:
         """Evaluate if an alert rule should trigger"""
 
         metric_value = getattr(metrics, rule.metric_name, None)
@@ -508,11 +460,7 @@ class ModelMonitoringService:
 
         return False
 
-    async def _trigger_alert(
-            self,
-            model_name: str,
-            rule: AlertRule,
-            metrics: ModelMetrics) -> None:
+    async def _trigger_alert(self, model_name: str, rule: AlertRule, metrics: ModelMetrics) -> None:
         """Trigger an alert"""
 
         alert = PerformanceAlert(
@@ -534,17 +482,14 @@ class ModelMonitoringService:
 
         logger.warning(f"Alert triggered for {model_name}: {alert.message}")
 
-    async def _send_drift_alert(
-            self, drift_result: DriftDetectionResult) -> None:
+    async def _send_drift_alert(self, drift_result: DriftDetectionResult) -> None:
         """Send data drift alert"""
 
         alert = DriftAlert(
-            id=str(
-                uuid4()),
+            id=str(uuid4()),
             model_name=drift_result.model_name,
             drift_score=drift_result.overall_drift_score,
-            affected_features=len(
-                drift_result.drift_alerts),
+            affected_features=len(drift_result.drift_alerts),
             message=f"Data drift detected: {drift_result.overall_drift_score:.3f}",
             triggered_at=datetime.utcnow(),
         )
@@ -557,9 +502,7 @@ class ModelMonitoringService:
 
         logger.warning(f"Drift alert sent for {drift_result.model_name}")
 
-    def _calculate_health_score(
-        self, metrics_summary: Dict[str, Any], alerts_summary: List[Any]
-    ) -> float:
+    def _calculate_health_score(self, metrics_summary: Dict[str, Any], alerts_summary: List[Any]) -> float:
         """Calculate model health score"""
 
         # Base score
@@ -582,8 +525,7 @@ class ModelMonitoringService:
 
         return max(0.0, min(1.0, health_score))
 
-    def _calculate_health_score_from_metrics(
-            self, metrics: List[ModelMetrics]) -> float:
+    def _calculate_health_score_from_metrics(self, metrics: List[ModelMetrics]) -> float:
         """Calculate health score from recent metrics"""
 
         if not metrics:
@@ -600,9 +542,8 @@ class ModelMonitoringService:
 
         return max(0.0, min(1.0, health_score))
 
-    def _calculate_metrics_summary(
-            self, metrics: List[ModelMetrics]) -> Dict[str, Any]:
-    """Calculate summary statistics for metrics"""
+    def _calculate_metrics_summary(self, metrics: List[ModelMetrics]) -> Dict[str, Any]:
+        """Calculate summary statistics for metrics"""
         if not metrics:
             return {}
 
@@ -622,21 +563,15 @@ class ModelMonitoringService:
         if model_name not in self._metrics_cache:
             return []
 
-        return [m for m in self._metrics_cache[model_name]
-                if start_time <= m.timestamp <= end_time]
+        return [m for m in self._metrics_cache[model_name] if start_time <= m.timestamp <= end_time]
 
-    async def _get_recent_metrics(
-            self,
-            model_name: str,
-            hours: int) -> List[ModelMetrics]:
+    async def _get_recent_metrics(self, model_name: str, hours: int) -> List[ModelMetrics]:
         """Get recent metrics for a model"""
 
         cutoff_time = datetime.utcnow() - timedelta(hours=hours)
         return await self._get_metrics_for_period(model_name, cutoff_time, datetime.utcnow())
 
-    async def _get_alerts_for_period(
-        self, model_name: str, start_time: datetime, end_time: datetime
-    ) -> List[Any]:
+    async def _get_alerts_for_period(self, model_name: str, start_time: datetime, end_time: datetime) -> List[Any]:
         """Get alerts for a specific time period"""
 
         return [
@@ -654,8 +589,7 @@ class ModelMonitoringService:
             if alert.model_name == model_name and alert.status == "active"
         ]
 
-    async def _validate_monitoring_config(
-            self, config: MonitoringConfig) -> None:
+    async def _validate_monitoring_config(self, config: MonitoringConfig) -> None:
         """Validate monitoring configuration"""
 
         if not config.monitoring_interval_seconds:
@@ -664,57 +598,38 @@ class ModelMonitoringService:
         if not config.alert_rules:
             raise ValidationError("At least one alert rule is required")
 
-    async def _setup_prometheus_metrics(
-            self,
-            model_name: str,
-            config: MonitoringConfig) -> None:
+    async def _setup_prometheus_metrics(self, model_name: str, config: MonitoringConfig) -> None:
         """Set up Prometheus metrics for a model"""
 
         await self.prometheus_client.setup_model_metrics(model_name, config)
 
-    async def _create_monitoring_dashboard(
-        self, model_name: str, config: MonitoringConfig
-    ) -> MonitoringDashboard:
+    async def _create_monitoring_dashboard(self, model_name: str, config: MonitoringConfig) -> MonitoringDashboard:
         """Create monitoring dashboard for a model"""
 
         dashboard = await self.grafana_client.create_model_dashboard(model_name, config)
         return dashboard
 
-    async def _setup_alerting_rules(
-            self,
-            model_name: str,
-            config: MonitoringConfig) -> None:
+    async def _setup_alerting_rules(self, model_name: str, config: MonitoringConfig) -> None:
         """Set up alerting rules for a model"""
 
         await self.alert_manager.setup_model_alerts(model_name, config.alert_rules)
 
-    async def _setup_pipeline_metrics(
-            self,
-            pipeline_id: str,
-            config: MonitoringConfig) -> None:
+    async def _setup_pipeline_metrics(self, pipeline_id: str, config: MonitoringConfig) -> None:
         """Set up pipeline-specific metrics"""
 
         await self.prometheus_client.setup_pipeline_metrics(pipeline_id, config)
 
-    async def _create_pipeline_dashboard(
-            self,
-            pipeline_id: str,
-            config: MonitoringConfig) -> None:
+    async def _create_pipeline_dashboard(self, pipeline_id: str, config: MonitoringConfig) -> None:
         """Create pipeline monitoring dashboard"""
 
         await self.grafana_client.create_pipeline_dashboard(pipeline_id, config)
 
-    async def _setup_deployment_metrics(
-        self, deployment_id: str, endpoint_url: str, config: MonitoringConfig
-    ) -> None:
+    async def _setup_deployment_metrics(self, deployment_id: str, endpoint_url: str, config: MonitoringConfig) -> None:
         """Set up deployment-specific metrics"""
 
         await self.prometheus_client.setup_deployment_metrics(deployment_id, endpoint_url, config)
 
-    async def _setup_health_checks(
-            self,
-            deployment_id: str,
-            endpoint_url: str) -> None:
+    async def _setup_health_checks(self, deployment_id: str, endpoint_url: str) -> None:
         """Set up health checks for deployment"""
 
         # Implement health check setup
@@ -727,10 +642,7 @@ class ModelMonitoringService:
 
         await self.prometheus_client.setup_performance_metrics(deployment_id, model_name, config)
 
-    async def _check_data_drift(
-            self,
-            model_name: str,
-            config: MonitoringConfig) -> None:
+    async def _check_data_drift(self, model_name: str, config: MonitoringConfig) -> None:
         """Check for data drift"""
 
         # This would implement actual drift detection

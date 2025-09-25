@@ -53,7 +53,7 @@ async def setup_retraining_triggers(
     """Setup automated retraining triggers for a model"""
 
     try:
-    await retraining_manager.setup_retraining_triggers(model_name=model_name, trigger_config=request.trigger_config)
+        await retraining_manager.setup_retraining_triggers(model_name=model_name, trigger_config=request.trigger_config)
 
         return SetupRetrainingResponse(
             model_name=model_name,

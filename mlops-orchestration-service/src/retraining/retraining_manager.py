@@ -70,22 +70,17 @@ class AutomatedRetrainingManager:
             await self.deployment_manager.initialize()
             await self.scheduler.initialize()
 
-            logger.info(
-                "Automated Retraining Manager initialized successfully")
+            logger.info("Automated Retraining Manager initialized successfully")
 
         except Exception as e:
-            logger.error(
-                f"Failed to initialize Automated Retraining Manager: {str(e)}")
+            logger.error(f"Failed to initialize Automated Retraining Manager: {str(e)}")
             raise
 
-    async def setup_retraining_triggers(
-        self, model_name: str, trigger_config: RetrainingTriggerConfig
-    ) -> None:
+    async def setup_retraining_triggers(self, model_name: str, trigger_config: RetrainingTriggerConfig) -> None:
         """Set up automated retraining triggers"""
 
         try:
-            logger.info(
-                f"Setting up retraining triggers for model: {model_name}")
+            logger.info(f"Setting up retraining triggers for model: {model_name}")
 
             triggers = []
 
@@ -144,8 +139,7 @@ class AutomatedRetrainingManager:
             # Start monitoring tasks
             await self._start_trigger_monitoring(model_name, triggers)
 
-            logger.info(
-                f"Set up {len(triggers)} retraining triggers for {model_name}")
+            logger.info(f"Set up {len(triggers)} retraining triggers for {model_name}")
 
         except Exception as e:
             logger.error(f"Failed to setup retraining triggers: {str(e)}")
@@ -158,27 +152,21 @@ class AutomatedRetrainingManager:
             logger.info("Starting trigger monitoring...")
 
             # Start monitoring task for each model
-            models = set(
-                trigger.model_name for trigger in self._active_triggers.values())
+            models = set(trigger.model_name for trigger in self._active_triggers.values())
 
             for model_name in models:
                 model_triggers = [
-                    trigger
-                    for trigger in self._active_triggers.values()
-                    if trigger.model_name == model_name
+                    trigger for trigger in self._active_triggers.values() if trigger.model_name == model_name
                 ]
 
-                task = asyncio.create_task(
-                    self._monitor_model_triggers(
-                        model_name, model_triggers))
+                task = asyncio.create_task(self._monitor_model_triggers(model_name, model_triggers))
                 self._monitoring_tasks[model_name] = task
 
             logger.info(f"Started monitoring for {len(models)} models")
 
         except Exception as e:
             logger.error(f"Failed to start trigger monitoring: {str(e)}")
-            raise RetrainingError(
-                f"Trigger monitoring startup failed: {str(e)}")
+            raise RetrainingError(f"Trigger monitoring startup failed: {str(e)}")
 
     async def stop_trigger_monitoring(self) -> None:
         """Stop monitoring all triggers"""
@@ -211,14 +199,12 @@ class AutomatedRetrainingManager:
                 trigger_fired = await self._evaluate_trigger(trigger)
 
                 if trigger_fired:
-    await self._initiate_retraining(trigger)
+                    await self._initiate_retraining(trigger)
 
         except Exception as e:
             logger.error(f"Failed to check retraining triggers: {str(e)}")
 
-    async def _monitor_model_triggers(
-        self, model_name: str, triggers: List[RetrainingTrigger]
-    ) -> None:
+    async def _monitor_model_triggers(self, model_name: str, triggers: List[RetrainingTrigger]) -> None:
         """Monitor triggers for a specific model"""
 
         while True:
@@ -230,18 +216,16 @@ class AutomatedRetrainingManager:
                     trigger_fired = await self._evaluate_trigger(trigger)
 
                     if trigger_fired:
-    await self._initiate_retraining(trigger)
+                        await self._initiate_retraining(trigger)
 
                 # Wait before next check
                 await asyncio.sleep(self.settings.retraining_check_interval)
 
             except asyncio.CancelledError:
-                logger.info(
-                    f"Trigger monitoring cancelled for model: {model_name}")
+                logger.info(f"Trigger monitoring cancelled for model: {model_name}")
                 break
             except Exception as e:
-                logger.error(
-                    f"Error in trigger monitoring for {model_name}: {str(e)}")
+                logger.error(f"Error in trigger monitoring for {model_name}: {str(e)}")
                 await asyncio.sleep(60)  # Wait before retrying
 
     async def _evaluate_trigger(self, trigger: RetrainingTrigger) -> bool:
@@ -256,7 +240,7 @@ class AutomatedRetrainingManager:
                 return await self._evaluate_scheduled_trigger(trigger)
             elif isinstance(trigger, DataVolumeTrigger):
                 return await self._evaluate_data_volume_trigger(trigger)
-        else:
+            else:
                 logger.warning(f"Unknown trigger type: {type(trigger)}")
                 return False
 
@@ -264,8 +248,7 @@ class AutomatedRetrainingManager:
             logger.error(f"Failed to evaluate trigger {trigger.id}: {str(e)}")
             return False
 
-    async def _evaluate_performance_trigger(
-            self, trigger: PerformanceTrigger) -> bool:
+    async def _evaluate_performance_trigger(self, trigger: PerformanceTrigger) -> bool:
         """Evaluate performance degradation trigger"""
 
         try:
@@ -285,8 +268,7 @@ class AutomatedRetrainingManager:
             # Check if performance is below threshold
             if avg_performance < trigger.threshold:
                 logger.info(
-                    f"Performance trigger fired for {trigger.model_name}: "
-                    f"{avg_performance} < {trigger.threshold}"
+                    f"Performance trigger fired for {trigger.model_name}: " f"{avg_performance} < {trigger.threshold}"
                 )
                 return True
 
@@ -324,8 +306,7 @@ class AutomatedRetrainingManager:
             logger.error(f"Failed to evaluate drift trigger: {str(e)}")
             return False
 
-    async def _evaluate_scheduled_trigger(
-            self, trigger: ScheduledTrigger) -> bool:
+    async def _evaluate_scheduled_trigger(self, trigger: ScheduledTrigger) -> bool:
         """Evaluate scheduled trigger"""
 
         try:
@@ -336,20 +317,16 @@ class AutomatedRetrainingManager:
             logger.error(f"Failed to evaluate scheduled trigger: {str(e)}")
             return False
 
-    async def _evaluate_data_volume_trigger(
-            self, trigger: DataVolumeTrigger) -> bool:
+    async def _evaluate_data_volume_trigger(self, trigger: DataVolumeTrigger) -> bool:
         """Evaluate data volume trigger"""
 
         try:
             # Get new data volume since last retraining
-            new_data_volume = await self.data_monitor.get_new_data_volume(
-                model_name=trigger.model_name
-            )
+            new_data_volume = await self.data_monitor.get_new_data_volume(model_name=trigger.model_name)
 
             if new_data_volume >= trigger.threshold:
                 logger.info(
-                    f"Data volume trigger fired for {trigger.model_name}: "
-                    f"{new_data_volume} >= {trigger.threshold}"
+                    f"Data volume trigger fired for {trigger.model_name}: " f"{new_data_volume} >= {trigger.threshold}"
                 )
                 return True
 
@@ -363,9 +340,7 @@ class AutomatedRetrainingManager:
         """Initiate automated retraining process"""
 
         try:
-            logger.info(
-                f"Initiating retraining for {trigger.model_name} due to trigger: {trigger.type}"
-            )
+            logger.info(f"Initiating retraining for {trigger.model_name} due to trigger: {trigger.type}")
 
             # Check if retraining is already in progress
             active_retraining = [
@@ -375,15 +350,13 @@ class AutomatedRetrainingManager:
             ]
 
             if active_retraining:
-                logger.info(
-                    f"Retraining already in progress for {trigger.model_name}")
+                logger.info(f"Retraining already in progress for {trigger.model_name}")
                 return
 
             # Get current model configuration
             current_model = await self.model_registry.get_current_model(trigger.model_name)
             if not current_model:
-                logger.error(
-                    f"No current model found for {trigger.model_name}")
+                logger.error(f"No current model found for {trigger.model_name}")
                 return
 
             # Prepare retraining configuration
@@ -403,18 +376,14 @@ class AutomatedRetrainingManager:
             self._retraining_jobs[retraining_result.id] = retraining_result
 
             # Submit retraining job
-            training_result = await self.training_orchestrator.execute_training_pipeline(
-                retraining_config
-            )
+            training_result = await self.training_orchestrator.execute_training_pipeline(retraining_config)
 
             retraining_result.training_result = training_result
 
             # Evaluate retrained model
             if training_result.registered_model_version:
                 # Trigger A/B test to compare with current model
-                await self._initiate_model_comparison(
-                    current_model, training_result.registered_model_version
-                )
+                await self._initiate_model_comparison(current_model, training_result.registered_model_version)
 
                 retraining_result.status = RetrainingStatus.COMPLETED
             else:
@@ -422,24 +391,17 @@ class AutomatedRetrainingManager:
                 retraining_result.error_message = "Model did not meet quality threshold"
 
             retraining_result.completed_at = datetime.utcnow()
-            retraining_result.duration = (
-                retraining_result.completed_at - retraining_result.started_at
-            )
+            retraining_result.duration = retraining_result.completed_at - retraining_result.started_at
 
-            logger.info(
-                f"Retraining completed for {trigger.model_name}: {retraining_result.status}"
-            )
+            logger.info(f"Retraining completed for {trigger.model_name}: {retraining_result.status}")
 
         except Exception as e:
             logger.error(f"Retraining initiation failed: {str(e)}")
             if retraining_result.id in self._retraining_jobs:
                 self._retraining_jobs[retraining_result.id].status = RetrainingStatus.FAILED
-                self._retraining_jobs[retraining_result.id].error_message = str(
-                    e)
+                self._retraining_jobs[retraining_result.id].error_message = str(e)
 
-    async def _prepare_retraining_config(
-        self, current_model: Dict[str, Any], trigger: RetrainingTrigger
-    ) -> Any:
+    async def _prepare_retraining_config(self, current_model: Dict[str, Any], trigger: RetrainingTrigger) -> Any:
         """Prepare retraining configuration based on current model and trigger"""
 
         # This would create a TrainingConfig based on the current model
@@ -486,22 +448,15 @@ class AutomatedRetrainingManager:
         except Exception as e:
             logger.error(f"A/B test initiation failed: {str(e)}")
 
-    async def get_retraining_status(
-            self, model_name: str) -> List[RetrainingResult]:
+    async def get_retraining_status(self, model_name: str) -> List[RetrainingResult]:
         """Get retraining status for a model"""
 
-        return [job for job in self._retraining_jobs.values()
-                if job.model_name == model_name]
+        return [job for job in self._retraining_jobs.values() if job.model_name == model_name]
 
-    async def get_trigger_status(
-            self, model_name: str) -> List[RetrainingTrigger]:
+    async def get_trigger_status(self, model_name: str) -> List[RetrainingTrigger]:
         """Get trigger status for a model"""
 
-        return [
-            trigger
-            for trigger in self._active_triggers.values()
-            if trigger.model_name == model_name
-        ]
+        return [trigger for trigger in self._active_triggers.values() if trigger.model_name == model_name]
 
     async def disable_trigger(self, trigger_id: str) -> bool:
         """Disable a retraining trigger"""
@@ -546,17 +501,14 @@ class RetrainingTriggerMonitor:
         self.triggers = {}
 
     async def initialize(self) -> Dict[str, Any]:
-    pass
+        pass
 
     async def register_trigger(self, trigger: RetrainingTrigger) -> Dict[str, Any]:
-    """Register a retraining trigger"""
+        """Register a retraining trigger"""
         self.triggers[trigger.id] = trigger
 
-    async def update_trigger_status(
-            self,
-            trigger_id: str,
-            status: TriggerStatus):
-         -> Dict[str, Any]:"""Update trigger status"""
+    async def update_trigger_status(self, trigger_id: str, status: TriggerStatus) -> Dict[str, Any]:
+        """Update trigger status"""
         if trigger_id in self.triggers:
             self.triggers[trigger_id].status = status
 
@@ -566,11 +518,9 @@ class DataQualityMonitor:
         pass
 
     async def initialize(self) -> Dict[str, Any]:
-    pass
+        pass
 
-    async def calculate_drift_scores(
-        self, model_name: str, features: List[str]
-    ) -> Dict[str, float]:
+    async def calculate_drift_scores(self, model_name: str, features: List[str]) -> Dict[str, float]:
         """Calculate drift scores for features"""
         # Implement drift detection logic
         return {feature: 0.1 for feature in features}
@@ -586,11 +536,9 @@ class ModelPerformanceMonitor:
         pass
 
     async def initialize(self) -> Dict[str, Any]:
-    pass
+        pass
 
-    async def get_recent_metrics(
-        self, model_name: str, metric: str, window_minutes: int
-    ) -> List[float]:
+    async def get_recent_metrics(self, model_name: str, metric: str, window_minutes: int) -> List[float]:
         """Get recent performance metrics"""
         # Implement metrics retrieval
         return [0.85, 0.87, 0.83, 0.86, 0.84]
@@ -601,7 +549,7 @@ class RetrainingScheduler:
         pass
 
     async def initialize(self) -> Dict[str, Any]:
-    pass
+        pass
 
     async def is_time_for_retraining(self, trigger: ScheduledTrigger) -> bool:
         """Check if it's time for scheduled retraining"""

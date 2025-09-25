@@ -177,7 +177,7 @@ class ModelTrainingOrchestrator:
             raise TrainingError(f"Data preparation failed: {str(e)}")
 
     async def _create_experiment(self, config: TrainingConfig) -> Dict[str, Any]:
-    """Create MLflow experiment for training"""
+        """Create MLflow experiment for training"""
         experiment_name = f"{config.model_name}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
 
         experiment = {
@@ -200,7 +200,7 @@ class ModelTrainingOrchestrator:
     async def _optimize_hyperparameters(
         self, config: TrainingConfig, training_data: TrainingData, experiment_id: str
     ) -> Dict[str, Any]:
-    """Optimize hyperparameters using Optuna"""
+        """Optimize hyperparameters using Optuna"""
 
         def objective(trial):
             # Sample hyperparameters
@@ -387,7 +387,7 @@ class ModelTrainingOrchestrator:
         experiment_id: str,
         config: TrainingConfig,
     ) -> Dict[str, Any]:
-    """Register trained model in model registry"""
+        """Register trained model in model registry"""
         try:
             logger.info("Registering trained model...")
 

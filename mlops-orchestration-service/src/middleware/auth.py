@@ -28,7 +28,7 @@ class AuthMiddleware:
         self.expiration_hours = settings.jwt_expiration_hours
 
     async def __call__(self, request: Request, call_next) -> Dict[str, Any]:
-    """Process authentication for each request"""
+        """Process authentication for each request"""
         # Skip authentication for health checks and docs
         if request.url.path in ["/health", "/docs", "/redoc", "/openapi.json"]:
             return await call_next(request)
@@ -69,7 +69,7 @@ class AuthMiddleware:
         return None
 
     def validate_token(self, token: str) -> Dict[str, Any]:
-    """Validate JWT token"""
+        """Validate JWT token"""
         try:
             payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
 

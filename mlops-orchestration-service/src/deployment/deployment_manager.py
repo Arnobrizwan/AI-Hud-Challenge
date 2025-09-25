@@ -144,7 +144,7 @@ class ModelDeploymentManager:
             # Test blue deployment
             health_check = await self._test_deployment_health(blue_endpoint, config)
             if not health_check.is_healthy:
-    await self._cleanup_endpoint(blue_endpoint)
+                await self._cleanup_endpoint(blue_endpoint)
                 raise DeploymentError(f"Blue deployment health check failed: {health_check.failure_reason}")
 
             # Switch traffic to blue (now becomes green)
@@ -154,7 +154,7 @@ class ModelDeploymentManager:
 
             # Cleanup old green deployment
             if current_endpoint:
-    await self._cleanup_endpoint(current_endpoint)
+                await self._cleanup_endpoint(current_endpoint)
 
             return DeploymentInfo(
                 endpoint_url=blue_endpoint.endpoint_name,
@@ -354,7 +354,7 @@ class ModelDeploymentManager:
             # Test deployment
             health_check = await self._test_deployment_health(endpoint, config)
             if not health_check.is_healthy:
-    await self._cleanup_endpoint(endpoint)
+                await self._cleanup_endpoint(endpoint)
                 raise DeploymentError(f"Deployment health check failed: {health_check.failure_reason}")
 
             return DeploymentInfo(

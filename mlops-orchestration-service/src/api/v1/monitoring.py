@@ -45,7 +45,7 @@ async def setup_model_monitoring(
     """Setup monitoring for a model"""
 
     try:
-    await monitoring_service.setup_model_monitoring(
+        await monitoring_service.setup_model_monitoring(
             model_name=request.config.model_name, monitoring_config=request.config
         )
 

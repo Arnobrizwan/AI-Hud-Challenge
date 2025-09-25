@@ -92,9 +92,9 @@ async def lifespan(app: FastAPI) -> Dict[str, Any]:
 
         # Cleanup resources
         if retraining_manager:
-    await retraining_manager.stop_trigger_monitoring()
+            await retraining_manager.stop_trigger_monitoring()
         if monitoring_service:
-    await monitoring_service.stop_performance_monitoring()
+            await monitoring_service.stop_performance_monitoring()
 
         logger.info("MLOps Orchestration Service shutdown complete")
 
@@ -129,30 +129,12 @@ def create_app() -> FastAPI:
 
     # Include routers
     app.include_router(health_router, prefix="/health", tags=["health"])
-    app.include_router(
-        pipelines.router,
-        prefix="/api/v1/pipelines",
-        tags=["pipelines"])
-    app.include_router(
-        training.router,
-        prefix="/api/v1/training",
-        tags=["training"])
-    app.include_router(
-        deployment.router,
-        prefix="/api/v1/deployment",
-        tags=["deployment"])
-    app.include_router(
-        monitoring.router,
-        prefix="/api/v1/monitoring",
-        tags=["monitoring"])
-    app.include_router(
-        features.router,
-        prefix="/api/v1/features",
-        tags=["features"])
-    app.include_router(
-        retraining.router,
-        prefix="/api/v1/retraining",
-        tags=["retraining"])
+    app.include_router(pipelines.router, prefix="/api/v1/pipelines", tags=["pipelines"])
+    app.include_router(training.router, prefix="/api/v1/training", tags=["training"])
+    app.include_router(deployment.router, prefix="/api/v1/deployment", tags=["deployment"])
+    app.include_router(monitoring.router, prefix="/api/v1/monitoring", tags=["monitoring"])
+    app.include_router(features.router, prefix="/api/v1/features", tags=["features"])
+    app.include_router(retraining.router, prefix="/api/v1/retraining", tags=["retraining"])
 
     return app
 
@@ -197,9 +179,4 @@ def get_resource_manager() -> ResourceManager:
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(
-        "main:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=True,
-        log_level="info")
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True, log_level="info")

@@ -114,7 +114,7 @@ class MLOpsPipelineOrchestrator:
 
             # Set up monitoring
             if pipeline_config.monitoring_enabled:
-    await self.monitoring_service.setup_pipeline_monitoring(pipeline)
+                await self.monitoring_service.setup_pipeline_monitoring(pipeline)
 
             pipeline.status = PipelineStatus.READY
             logger.info(f"ML pipeline created successfully: {pipeline.id}")
@@ -273,15 +273,15 @@ class MLOpsPipelineOrchestrator:
             ]
 
             for execution in running_executions:
-    await self.stop_pipeline_execution(execution.id)
+                await self.stop_pipeline_execution(execution.id)
 
             # Cleanup orchestration resources
             if pipeline.orchestrator == "airflow" and pipeline.airflow_dag_id:
-    await self.airflow_client.delete_dag(pipeline.airflow_dag_id)
+                await self.airflow_client.delete_dag(pipeline.airflow_dag_id)
             elif pipeline.orchestrator == "vertex_ai" and pipeline.vertex_pipeline_id:
-    await self.vertex_ai_client.delete_pipeline(pipeline.vertex_pipeline_id)
+                await self.vertex_ai_client.delete_pipeline(pipeline.vertex_pipeline_id)
             elif pipeline.orchestrator == "kubeflow" and pipeline.kubeflow_pipeline_id:
-    await self.kubeflow_client.delete_pipeline(pipeline.kubeflow_pipeline_id)
+                await self.kubeflow_client.delete_pipeline(pipeline.kubeflow_pipeline_id)
 
             # Remove from registry
             del self._pipelines[pipeline_id]
@@ -305,11 +305,11 @@ class MLOpsPipelineOrchestrator:
             pipeline = await self.get_pipeline(execution.pipeline_id)
 
             if pipeline.orchestrator == "airflow":
-    await self.airflow_client.stop_dag_run(dag_id=pipeline.airflow_dag_id, run_id=execution.external_run_id)
+                await self.airflow_client.stop_dag_run(dag_id=pipeline.airflow_dag_id, run_id=execution.external_run_id)
             elif pipeline.orchestrator == "vertex_ai":
-    await self.vertex_ai_client.cancel_pipeline_job(execution.external_run_id)
+                await self.vertex_ai_client.cancel_pipeline_job(execution.external_run_id)
             elif pipeline.orchestrator == "kubeflow":
-    await self.kubeflow_client.stop_pipeline_run(execution.external_run_id)
+                await self.kubeflow_client.stop_pipeline_run(execution.external_run_id)
 
             # Update execution status
             execution.status = PipelineStatus.STOPPED

@@ -217,7 +217,7 @@ async def update_pipeline_status(
     """Update pipeline status"""
 
     try:
-    await orchestrator.update_pipeline_status(pipeline_id, status)
+        await orchestrator.update_pipeline_status(pipeline_id, status)
 
         return {"message": f"Pipeline status updated to '{status.value}'"}
 
