@@ -1,9 +1,13 @@
-# docker-compose.dev.yml - Complete local development stack
+# docker-compose.dev.yml - Local development stack
+# Usage: 
+#   make dev-up        # All 16 services (10-15 minutes)
+#   make dev-up-fast   # Core services only (3-5 minutes)
 version: '3.8'
 
 services:
   # ==================== INFRASTRUCTURE ====================
   redis:
+    profiles: ["full"]
     image: redis:7-alpine
     ports: ["6379:6379"]
     volumes: ["redis_data:/data"]
@@ -14,6 +18,7 @@ services:
       retries: 3
 
   postgres:
+    profiles: ["full"]
     image: pgvector/pgvector:pg15
     environment:
       POSTGRES_DB: newshub
@@ -30,6 +35,7 @@ services:
       retries: 5
 
   elasticsearch:
+    profiles: ["full"]
     image: elasticsearch:8.8.0
     environment:
       - discovery.type=single-node
@@ -39,6 +45,7 @@ services:
     volumes: ["elasticsearch_data:/usr/share/elasticsearch/data"]
 
   prometheus:
+    profiles: ["full"]
     image: prom/prometheus:latest
     ports: ["9090:9090"]
     volumes:
@@ -46,6 +53,7 @@ services:
       - prometheus_data:/prometheus
 
   grafana:
+    profiles: ["full"]
     image: grafana/grafana:latest
     ports: ["3001:3000"]
     environment:
@@ -56,6 +64,7 @@ services:
       - ./monitoring/datasources:/etc/grafana/provisioning/datasources
 
   mlflow:
+    profiles: ["full"]
     image: python:3.11-slim
     ports: ["5000:5000"]
     command: >
@@ -68,6 +77,7 @@ services:
 
   # ==================== CORE SERVICES (1-8) ====================
   foundations-guards:
+    profiles: ["full"]
     build: 
       context: ./safety-service
       dockerfile: Dockerfile.dev
@@ -75,10 +85,16 @@ services:
     environment:
       - REDIS_URL=redis://redis:6379
       - DATABASE_URL=postgresql://newshub:dev_password@postgres:5432/newshub
-    depends_on: [redis, postgres]
+    depends_on: 
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
     volumes: ["./safety-service:/app"]
+    profiles: ["fast", "full"]
 
   ingestion-normalization:
+    profiles: ["full"]
     build: 
       context: ./ingestion-service
       dockerfile: Dockerfile.dev
@@ -86,10 +102,18 @@ services:
     environment:
       - REDIS_URL=redis://redis:6379
       - DATABASE_URL=postgresql://newshub:dev_password@postgres:5432/newshub
-    depends_on: [redis, postgres, foundations-guards]
+    depends_on: 
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      foundations-guards:
+        condition: service_started
     volumes: ["./ingestion-service:/app"]
+    profiles: ["fast", "full"]
 
   content-extraction:
+    profiles: ["full"]
     build:
       context: ./content-extraction-service
       dockerfile: Dockerfile.dev
@@ -97,10 +121,16 @@ services:
     environment:
       - REDIS_URL=redis://redis:6379
       - DATABASE_URL=postgresql://newshub:dev_password@postgres:5432/newshub
-    depends_on: [redis, postgres]
+    depends_on: 
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
     volumes: ["./content-extraction-service:/app"]
+    profiles: ["fast", "full"]
 
   enrichment:
+    profiles: ["full"]
     build:
       context: ./content-enrichment-service
       dockerfile: Dockerfile.dev
@@ -111,8 +141,10 @@ services:
       - ELASTICSEARCH_URL=http://elasticsearch:9200
     depends_on: [redis, postgres, elasticsearch]
     volumes: ["./content-enrichment-service:/app"]
+    profiles: ["full"]
 
   deduplication:
+    profiles: ["full"]
     build:
       context: ./deduplication-service
       dockerfile: Dockerfile.dev
@@ -124,6 +156,7 @@ services:
     volumes: ["./deduplication-service:/app"]
 
   ranking:
+    profiles: ["full"]
     build:
       context: ./src
       dockerfile: Dockerfile.dev
@@ -136,6 +169,7 @@ services:
     volumes: ["./src:/app"]
 
   summarization:
+    profiles: ["full"]
     build:
       context: ./summarization-service
       dockerfile: Dockerfile.dev
@@ -147,6 +181,7 @@ services:
     volumes: ["./summarization-service:/app"]
 
   personalization:
+    profiles: ["full"]
     build:
       context: ./personalization-service
       dockerfile: Dockerfile.dev
@@ -160,6 +195,7 @@ services:
 
   # ==================== INTELLIGENCE SERVICES (9-12) ====================
   notification-decisioning:
+    profiles: ["full"]
     build:
       context: ./notification-service
       dockerfile: Dockerfile.dev
@@ -171,6 +207,7 @@ services:
     volumes: ["./notification-service:/app"]
 
   feedback-human-loop:
+    profiles: ["full"]
     build:
       context: ./feedback-service
       dockerfile: Dockerfile.dev
@@ -183,6 +220,7 @@ services:
     volumes: ["./feedback-service:/app"]
 
   evaluation-suite:
+    profiles: ["full"]
     build:
       context: ./evaluation-service
       dockerfile: Dockerfile.dev
@@ -195,6 +233,7 @@ services:
     volumes: ["./evaluation-service:/app"]
 
   mlops-orchestration:
+    profiles: ["full"]
     build:
       context: ./mlops-orchestration-service
       dockerfile: Dockerfile.dev
@@ -208,6 +247,7 @@ services:
 
   # ==================== PLATFORM SERVICES (13-16) ====================
   drift-abuse-safety:
+    profiles: ["full"]
     build:
       context: ./safety-service
       dockerfile: Dockerfile.dev
@@ -220,6 +260,7 @@ services:
     volumes: ["./safety-service:/app"]
 
   storage-indexing:
+    profiles: ["full"]
     build:
       context: ./storage-service
       dockerfile: Dockerfile.dev
@@ -232,6 +273,7 @@ services:
     volumes: ["./storage-service:/app"]
 
   realtime-interfaces:
+    profiles: ["full"]
     build:
       context: ./realtime-interface-service
       dockerfile: Dockerfile.dev
@@ -243,6 +285,7 @@ services:
     volumes: ["./realtime-interface-service:/app"]
 
   observability-runbooks:
+    profiles: ["full"]
     build:
       context: ./observability-service
       dockerfile: Dockerfile.dev
@@ -266,22 +309,11 @@ services:
       - foundations-guards
       - ingestion-normalization
       - content-extraction
-      - enrichment
-      - deduplication
-      - ranking
-      - summarization
-      - personalization
-      - notification-decisioning
-      - feedback-human-loop
-      - evaluation-suite
-      - mlops-orchestration
-      - drift-abuse-safety
-      - storage-indexing
-      - realtime-interfaces
-      - observability-runbooks
     volumes: ["./src:/app"]
+    profiles: ["fast", "full"]
 
   admin-ui:
+    profiles: ["full"]
     build:
       context: ./feedback-service/frontend
       dockerfile: Dockerfile.dev
@@ -300,5 +332,6 @@ volumes:
 
 networks:
   default:
+    profiles: ["full"]
     name: news-hub-network
 

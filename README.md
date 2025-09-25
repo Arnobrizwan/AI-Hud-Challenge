@@ -121,7 +121,7 @@ open http://localhost:3000  # Admin UI
 open http://localhost:3001  # Grafana (admin/admin)
 ```
 
-**💡 Tip**: If the build gets stuck, use `make dev-up-fast` for faster development!
+**💡 Tip**: Use `make dev-up-fast` for faster development with core services only!
 
 ### **Daily Development**
 ```bash
@@ -686,9 +686,13 @@ docker-compose -f docker-compose.dev-simple.yml logs foundations-guards
 DEBUG=true make dev-up-fast
 ```
 
-### **📚 Detailed Troubleshooting**
+### **📚 Quick Fixes**
 
-For comprehensive troubleshooting guide, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
+If you encounter issues:
+1. **Build stuck**: Use `make dev-up-fast` instead of `make dev-up`
+2. **Port conflicts**: Kill processes using ports 8000-8016
+3. **Memory issues**: Increase Docker memory to 8GB+ in Docker Desktop
+4. **Database issues**: Restart with `docker-compose -f docker-compose.dev.yml restart postgres`
 
 ## 🎉 Success!
 
