@@ -24,15 +24,38 @@ dev-up:
 	@echo "   • MLflow: http://localhost:5000"
 	@echo "📊 Run 'make dev-logs' to see all service logs"
 
+# 🚀 FAST DEVELOPMENT - CORE SERVICES ONLY (3-5 minutes)
+dev-up-fast:
+	@echo "🚀 Starting Core Services (Fast Development)..."
+	@docker-compose -f docker-compose.dev-simple.yml up --build -d
+	@echo "⏳ Waiting for core services to be ready..."
+	@./scripts/wait-for-services-simple.sh
+	@echo "✅ Core services are running!"
+	@echo "🌐 Access points:"
+	@echo "   • API Gateway: http://localhost:8000"
+	@echo "   • Foundations: http://localhost:8001"
+	@echo "   • Ingestion: http://localhost:8002"
+	@echo "   • Extraction: http://localhost:8003"
+	@echo "📊 Run 'make dev-logs-fast' to see service logs"
+
 dev-down:
 	@echo "🛑 Stopping all services..."
 	@docker-compose -f docker-compose.dev.yml down -v
 	@echo "✅ All services stopped and volumes removed"
 
+dev-down-fast:
+	@echo "🛑 Stopping core services..."
+	@docker-compose -f docker-compose.dev-simple.yml down -v
+	@echo "✅ Core services stopped and volumes removed"
+
 dev-restart: dev-down dev-up
+dev-restart-fast: dev-down-fast dev-up-fast
 
 dev-logs:
 	@docker-compose -f docker-compose.dev.yml logs -f
+
+dev-logs-fast:
+	@docker-compose -f docker-compose.dev-simple.yml logs -f
 
 dev-test:
 	@echo "🧪 Running comprehensive tests..."

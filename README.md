@@ -86,12 +86,30 @@ gh workflow run deploy-production.yml --ref main
 ```
 
 ### **First Time Setup**
+
+#### **Option 1: Fast Development (Recommended - 3-5 minutes)**
 ```bash
 # 1. Clone the repository
 git clone <your-repo>
 cd news-hub-pipeline
 
-# 2. Start all services (first time takes 5-10 minutes)
+# 2. Start core services only (fastest)
+make dev-up-fast
+
+# 3. Test the API
+curl http://localhost:8000/health
+
+# 4. Access the system
+open http://localhost:8000  # API Gateway
+```
+
+#### **Option 2: Full Development (10-15 minutes)**
+```bash
+# 1. Clone the repository
+git clone <your-repo>
+cd news-hub-pipeline
+
+# 2. Start all 16 services
 make dev-up
 
 # 3. Wait for services to be ready
@@ -102,6 +120,8 @@ open http://localhost:8000  # API Gateway
 open http://localhost:3000  # Admin UI
 open http://localhost:3001  # Grafana (admin/admin)
 ```
+
+**💡 Tip**: If the build gets stuck, use `make dev-up-fast` for faster development!
 
 ### **Daily Development**
 ```bash
@@ -584,6 +604,26 @@ make clean         # Clean Docker cache and images
 
 ## 🔧 Troubleshooting
 
+### **🚨 Build Stuck for 10+ Seconds?**
+
+**Quick Fix:**
+```bash
+# Use fast development mode (3-5 minutes)
+make dev-up-fast
+
+# Check logs
+make dev-logs-fast
+
+# Stop when done
+make dev-down-fast
+```
+
+**Root Causes:**
+- Circular dependencies between services
+- Missing health endpoints
+- Resource conflicts (memory/CPU)
+- Infinite wait loops in health checks
+
 ### **Common Issues**
 
 #### Services Won't Start
@@ -593,7 +633,7 @@ docker --version
 
 # Clean up and restart
 make dev-clean
-make dev-up
+make dev-up-fast  # Use fast mode
 ```
 
 #### Port Conflicts
@@ -611,7 +651,7 @@ sudo kill -9 $(lsof -t -i:8000-8016)
 docker ps | grep postgres
 
 # Restart database
-docker-compose -f docker-compose.dev.yml restart postgres
+docker-compose -f docker-compose.dev-simple.yml restart postgres
 ```
 
 #### Memory Issues
@@ -619,9 +659,8 @@ docker-compose -f docker-compose.dev.yml restart postgres
 # Increase Docker memory limit in Docker Desktop
 # Settings > Resources > Memory: 8GB+
 
-# Or reduce service replicas
-export WORKER_COUNT=1
-make dev-up
+# Or use fast mode with fewer services
+make dev-up-fast
 ```
 
 ### **Health Checks**
@@ -632,20 +671,24 @@ curl http://localhost:8000/health
 # Check specific service
 curl http://localhost:8001/health  # Safety Service
 curl http://localhost:8002/health  # Ingestion Service
-# ... etc for all services
+curl http://localhost:8003/health  # Content Extraction
 ```
 
 ### **Logs and Debugging**
 ```bash
-# View all logs
-make dev-logs
+# View all logs (fast mode)
+make dev-logs-fast
 
 # View specific service logs
-docker-compose -f docker-compose.dev.yml logs ingestion-normalization
+docker-compose -f docker-compose.dev-simple.yml logs foundations-guards
 
 # Debug mode
-DEBUG=true make dev-up
+DEBUG=true make dev-up-fast
 ```
+
+### **📚 Detailed Troubleshooting**
+
+For comprehensive troubleshooting guide, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
 
 ## 🎉 Success!
 

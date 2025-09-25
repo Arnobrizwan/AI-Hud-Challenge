@@ -215,6 +215,7 @@ services:
     environment:
       - REDIS_URL=redis://redis:6379
       - DATABASE_URL=postgresql://newshub:dev_password@postgres:5432/newshub
+      - SERVICE_MODE=drift_abuse  # Different mode for drift detection
     depends_on: [redis, postgres]
     volumes: ["./safety-service:/app"]
 
