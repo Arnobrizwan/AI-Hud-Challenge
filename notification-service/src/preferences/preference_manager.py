@@ -61,17 +61,11 @@ class NotificationPreferenceManager:
             return prefs
 
         except Exception as e:
-            logger.error(
-                "Error getting user preferences",
-                user_id=user_id,
-                error=str(e),
-                exc_info=True)
+            logger.error("Error getting user preferences", user_id=user_id, error=str(e), exc_info=True)
             # Return default preferences
             return self._create_default_preferences(user_id)
 
-    async def update_preferences(
-        self, user_id: str, preferences: NotificationPreferences
-    ) -> NotificationPreferences:
+    async def update_preferences(self, user_id: str, preferences: NotificationPreferences) -> NotificationPreferences:
         """Update user notification preferences."""
 
         try:
@@ -90,13 +84,8 @@ class NotificationPreferenceManager:
             return preferences
 
         except Exception as e:
-            logger.error(
-                "Error updating user preferences",
-                user_id=user_id,
-                error=str(e),
-                exc_info=True)
-            raise PreferenceManagementError(
-                f"Failed to update preferences: {str(e)}")
+            logger.error("Error updating user preferences", user_id=user_id, error=str(e), exc_info=True)
+            raise PreferenceManagementError(f"Failed to update preferences: {str(e)}")
 
     async def update_notification_type_preference(
         self, user_id: str, notification_type: NotificationType, enabled: bool
@@ -132,9 +121,7 @@ class NotificationPreferenceManager:
                 notification_type=notification_type.value,
                 error=str(e),
             )
-            raise PreferenceManagementError(
-                f"Failed to update notification type preference: {str(e)}"
-            )
+            raise PreferenceManagementError(f"Failed to update notification type preference: {str(e)}")
 
     async def update_delivery_channel_preference(
         self, user_id: str, channel: DeliveryChannel, enabled: bool
@@ -170,20 +157,15 @@ class NotificationPreferenceManager:
                 channel=channel.value,
                 error=str(e),
             )
-            raise PreferenceManagementError(
-                f"Failed to update delivery channel preference: {str(e)}"
-            )
+            raise PreferenceManagementError(f"Failed to update delivery channel preference: {str(e)}")
 
-    async def update_quiet_hours(
-        self, user_id: str, start_hour: int, end_hour: int
-    ) -> NotificationPreferences:
+    async def update_quiet_hours(self, user_id: str, start_hour: int, end_hour: int) -> NotificationPreferences:
         """Update user's quiet hours."""
 
         try:
             # Validate hours
             if not (0 <= start_hour <= 23) or not (0 <= end_hour <= 23):
-                raise PreferenceManagementError(
-                    "Invalid quiet hours: must be between 0-23")
+                raise PreferenceManagementError("Invalid quiet hours: must be between 0-23")
 
             # Get current preferences
             prefs = await self.get_preferences(user_id)
@@ -195,34 +177,23 @@ class NotificationPreferenceManager:
             # Update preferences
             updated_prefs = await self.update_preferences(user_id, prefs)
 
-            logger.info(
-                "Updated quiet hours",
-                user_id=user_id,
-                start_hour=start_hour,
-                end_hour=end_hour)
+            logger.info("Updated quiet hours", user_id=user_id, start_hour=start_hour, end_hour=end_hour)
 
             return updated_prefs
 
         except Exception as e:
-            logger.error(
-                "Error updating quiet hours",
-                user_id=user_id,
-                error=str(e))
-            raise PreferenceManagementError(
-                f"Failed to update quiet hours: {str(e)}")
+            logger.error("Error updating quiet hours", user_id=user_id, error=str(e))
+            raise PreferenceManagementError(f"Failed to update quiet hours: {str(e)}")
 
     async def update_relevance_threshold(
-            self,
-            user_id: str,
-            notification_type: NotificationType,
-            threshold: float) -> NotificationPreferences:
+        self, user_id: str, notification_type: NotificationType, threshold: float
+    ) -> NotificationPreferences:
         """Update relevance threshold for notification type."""
 
         try:
             # Validate threshold
             if not (0.0 <= threshold <= 1.0):
-                raise PreferenceManagementError(
-                    "Invalid threshold: must be between 0.0 and 1.0")
+                raise PreferenceManagementError("Invalid threshold: must be between 0.0 and 1.0")
 
             # Get current preferences
             prefs = await self.get_preferences(user_id)
@@ -243,48 +214,34 @@ class NotificationPreferenceManager:
             return updated_prefs
 
         except Exception as e:
-            logger.error(
-                "Error updating relevance threshold",
-                user_id=user_id,
-                error=str(e))
-            raise PreferenceManagementError(
-                f"Failed to update relevance threshold: {str(e)}")
+            logger.error("Error updating relevance threshold", user_id=user_id, error=str(e))
+            raise PreferenceManagementError(f"Failed to update relevance threshold: {str(e)}")
 
     async def get_preference_analytics(self, user_id: str) -> Dict[str, Any]:
-    """Get preference analytics for user."""
+        """Get preference analytics for user."""
         try:
             prefs = await self.get_preferences(user_id)
 
             analytics = {
                 "user_id": user_id,
-                "enabled_types": [
-                    t.value for t in prefs.enabled_types],
-                "delivery_channels": [
-                    c.value for c in prefs.delivery_channels],
-                "quiet_hours": {
-                    "start": prefs.quiet_hours_start,
-                    "end": prefs.quiet_hours_end},
+                "enabled_types": [t.value for t in prefs.enabled_types],
+                "delivery_channels": [c.value for c in prefs.delivery_channels],
+                "quiet_hours": {"start": prefs.quiet_hours_start, "end": prefs.quiet_hours_end},
                 "timezone": prefs.timezone,
                 "allow_emojis": prefs.allow_emojis,
                 "max_daily_notifications": prefs.max_daily_notifications,
                 "max_hourly_notifications": prefs.max_hourly_notifications,
-                "relevance_thresholds": {
-                    k.value: v for k,
-                    v in prefs.relevance_thresholds.items()},
+                "relevance_thresholds": {k.value: v for k, v in prefs.relevance_thresholds.items()},
                 "preference_diversity": self._calculate_preference_diversity(prefs),
             }
 
             return analytics
 
         except Exception as e:
-            logger.error(
-                "Error getting preference analytics",
-                user_id=user_id,
-                error=str(e))
+            logger.error("Error getting preference analytics", user_id=user_id, error=str(e))
             return {}
 
-    async def _fetch_preferences_from_db(
-            self, user_id: str) -> NotificationPreferences:
+    async def _fetch_preferences_from_db(self, user_id: str) -> NotificationPreferences:
         """Fetch preferences from database."""
 
         try:
@@ -300,9 +257,7 @@ class NotificationPreferenceManager:
                     return NotificationPreferences(
                         user_id=row.user_id,
                         enabled_types=[NotificationType(t) for t in (row.enabled_types or [])],
-                        delivery_channels=[
-                            DeliveryChannel(c) for c in (row.delivery_channels or [])
-                        ],
+                        delivery_channels=[DeliveryChannel(c) for c in (row.delivery_channels or [])],
                         quiet_hours_start=row.quiet_hours_start,
                         quiet_hours_end=row.quiet_hours_end,
                         timezone=row.timezone or "UTC",
@@ -310,8 +265,7 @@ class NotificationPreferenceManager:
                         max_daily_notifications=row.max_daily_notifications or 50,
                         max_hourly_notifications=row.max_hourly_notifications or 10,
                         relevance_thresholds={
-                            NotificationType(k): v
-                            for k, v in (row.relevance_thresholds or {}).items()
+                            NotificationType(k): v for k, v in (row.relevance_thresholds or {}).items()
                         },
                         metadata=row.metadata or {},
                     )
@@ -323,9 +277,7 @@ class NotificationPreferenceManager:
             logger.error(f"Error fetching preferences from database: {e}")
             return self._create_default_preferences(user_id)
 
-    async def _update_preferences_in_db(
-        self, user_id: str, preferences: NotificationPreferences
-    ) -> None:
+    async def _update_preferences_in_db(self, user_id: str, preferences: NotificationPreferences) -> None:
         """Update preferences in database."""
 
         try:
@@ -365,9 +317,7 @@ class NotificationPreferenceManager:
                             "allow_emojis": preferences.allow_emojis,
                             "max_daily_notifications": preferences.max_daily_notifications,
                             "max_hourly_notifications": preferences.max_hourly_notifications,
-                            "relevance_thresholds": {
-                                k.value: v for k, v in preferences.relevance_thresholds.items()
-                            },
+                            "relevance_thresholds": {k.value: v for k, v in preferences.relevance_thresholds.items()},
                             "metadata": preferences.metadata,
                             "updated_at": datetime.utcnow(),
                         },
@@ -397,9 +347,7 @@ class NotificationPreferenceManager:
                             "allow_emojis": preferences.allow_emojis,
                             "max_daily_notifications": preferences.max_daily_notifications,
                             "max_hourly_notifications": preferences.max_hourly_notifications,
-                            "relevance_thresholds": {
-                                k.value: v for k, v in preferences.relevance_thresholds.items()
-                            },
+                            "relevance_thresholds": {k.value: v for k, v in preferences.relevance_thresholds.items()},
                             "metadata": preferences.metadata,
                             "created_at": datetime.utcnow(),
                             "updated_at": datetime.utcnow(),
@@ -410,11 +358,9 @@ class NotificationPreferenceManager:
 
         except Exception as e:
             logger.error(f"Error updating preferences in database: {e}")
-            raise PreferenceManagementError(
-                f"Database update failed: {str(e)}")
+            raise PreferenceManagementError(f"Database update failed: {str(e)}")
 
-    def _create_default_preferences(
-            self, user_id: str) -> NotificationPreferences:
+    def _create_default_preferences(self, user_id: str) -> NotificationPreferences:
         """Create default notification preferences for user."""
 
         return NotificationPreferences(
@@ -442,15 +388,12 @@ class NotificationPreferenceManager:
             metadata={},
         )
 
-    def _calculate_preference_diversity(
-            self, prefs: NotificationPreferences) -> Dict[str, float]:
+    def _calculate_preference_diversity(self, prefs: NotificationPreferences) -> Dict[str, float]:
         """Calculate preference diversity metrics."""
 
         return {
             "notification_type_diversity": len(prefs.enabled_types) / len(NotificationType),
             "channel_diversity": len(prefs.delivery_channels) / len(DeliveryChannel),
-            "threshold_diversity": len(set(prefs.relevance_thresholds.values()))
-            / len(NotificationType),
-            "has_quiet_hours": prefs.quiet_hours_start is not None
-            and prefs.quiet_hours_end is not None,
+            "threshold_diversity": len(set(prefs.relevance_thresholds.values())) / len(NotificationType),
+            "has_quiet_hours": prefs.quiet_hours_start is not None and prefs.quiet_hours_end is not None,
         }

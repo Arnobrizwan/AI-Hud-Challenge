@@ -30,7 +30,7 @@ class TimingFeatureExtractor:
     async def extract_timing_features(
         self, user_id: str, notification_type: NotificationType, current_time: datetime
     ) -> Dict[str, Any]:
-    """Extract features for timing prediction."""
+        """Extract features for timing prediction."""
         features = {}
 
         # Time-based features
@@ -46,15 +46,9 @@ class TimingFeatureExtractor:
         features["user_timezone_offset"] = await self._get_user_timezone_offset(user_id)
 
         # Notification type features
-        features["notification_type_breaking"] = (
-            1 if notification_type == NotificationType.BREAKING_NEWS else 0
-        )
-        features["notification_type_personalized"] = (
-            1 if notification_type == NotificationType.PERSONALIZED else 0
-        )
-        features["notification_type_trending"] = (
-            1 if notification_type == NotificationType.TRENDING else 0
-        )
+        features["notification_type_breaking"] = 1 if notification_type == NotificationType.BREAKING_NEWS else 0
+        features["notification_type_personalized"] = 1 if notification_type == NotificationType.PERSONALIZED else 0
+        features["notification_type_trending"] = 1 if notification_type == NotificationType.TRENDING else 0
 
         # Historical engagement features
         features["avg_engagement_hour"] = await self._get_avg_engagement_hour(user_id)
@@ -62,9 +56,8 @@ class TimingFeatureExtractor:
 
         return features
 
-    def extract_time_window_features(
-            self, window_start: datetime) -> Dict[str, Any]:
-    """Extract features for a specific time window."""
+    def extract_time_window_features(self, window_start: datetime) -> Dict[str, Any]:
+        """Extract features for a specific time window."""
         return {
             "window_hour": window_start.hour,
             "window_day_of_week": window_start.weekday(),
@@ -105,22 +98,18 @@ class TimezoneHandler:
         return pytz.timezone(timezone_name)
 
     def apply_timezone_constraints(
-            self,
-            scheduled_time: datetime,
-            user_id: str,
-            notification_type: NotificationType) -> datetime:
+        self, scheduled_time: datetime, user_id: str, notification_type: NotificationType
+    ) -> datetime:
         """Apply timezone and business rule constraints."""
 
         # Apply quiet hours (e.g., no notifications between 10 PM and 8 AM)
         if 22 <= scheduled_time.hour or scheduled_time.hour < 8:
             # Move to next available time
             if scheduled_time.hour >= 22:
-                scheduled_time = scheduled_time.replace(
-                    hour=8, minute=0, second=0, microsecond=0)
+                scheduled_time = scheduled_time.replace(hour=8, minute=0, second=0, microsecond=0)
                 scheduled_time += timedelta(days=1)
             else:
-                scheduled_time = scheduled_time.replace(
-                    hour=8, minute=0, second=0, microsecond=0)
+                scheduled_time = scheduled_time.replace(hour=8, minute=0, second=0, microsecond=0)
 
         return scheduled_time
 
@@ -143,7 +132,7 @@ class NotificationTimingModel:
 
         # If no model exists, create and train a new one
         if not self.is_trained:
-    await self._create_and_train_model()
+            await self._create_and_train_model()
 
         logger.info("Notification timing model initialized successfully")
 
@@ -153,9 +142,7 @@ class NotificationTimingModel:
         # Model cleanup if needed
         pass
 
-    async def predict_optimal_time(
-        self, user_id: str, notification_type: NotificationType
-    ) -> OptimalTiming:
+    async def predict_optimal_time(self, user_id: str, notification_type: NotificationType) -> OptimalTiming:
         """Predict when user is most likely to engage with notification."""
 
         try:
@@ -164,31 +151,25 @@ class NotificationTimingModel:
             current_time = datetime.now(user_timezone)
 
             # Extract timing features
-            features = await self.feature_extractor.extract_timing_features(
-                user_id, notification_type, current_time
-            )
+            features = await self.feature_extractor.extract_timing_features(user_id, notification_type, current_time)
 
             # Predict engagement probability for different time windows
-            time_windows = self._generate_time_windows(
-                current_time, hours_ahead=24)
+            time_windows = self._generate_time_windows(current_time, hours_ahead=24)
             predictions = []
 
             for window_start in time_windows:
                 window_features = features.copy()
-                window_features.update(
-                    self.feature_extractor.extract_time_window_features(window_start))
+                window_features.update(self.feature_extractor.extract_time_window_features(window_start))
 
                 # Prepare features for prediction
                 feature_vector = np.array([list(window_features.values())])
 
                 # Predict engagement probability
                 if self.model and self.is_trained:
-                    engagement_prob = self.model.predict_proba(feature_vector)[
-                        0][1]
+                    engagement_prob = self.model.predict_proba(feature_vector)[0][1]
                 else:
                     # Fallback to heuristic-based prediction
-                    engagement_prob = self._heuristic_engagement_prediction(
-                        window_features)
+                    engagement_prob = self._heuristic_engagement_prediction(window_features)
 
                 predictions.append(
                     TimingPrediction(
@@ -199,8 +180,7 @@ class NotificationTimingModel:
                 )
 
             # Select optimal timing based on highest engagement probability
-            optimal_prediction = max(
-                predictions, key=lambda x: x.engagement_probability)
+            optimal_prediction = max(predictions, key=lambda x: x.engagement_probability)
 
             # Apply business rules and constraints
             scheduled_time = self.timezone_handler.apply_timezone_constraints(
@@ -210,16 +190,13 @@ class NotificationTimingModel:
             return OptimalTiming(
                 scheduled_time=scheduled_time,
                 predicted_engagement=optimal_prediction.engagement_probability,
-                alternative_times=[
-                    p.scheduled_time for p in predictions if p != optimal_prediction
-                ][:3],
+                alternative_times=[p.scheduled_time for p in predictions if p != optimal_prediction][:3],
                 confidence=optimal_prediction.engagement_probability,
             )
 
         except Exception as e:
             logger.error(f"Error predicting optimal timing: {str(e)}")
-            raise TimingPredictionError(
-                f"Failed to predict optimal timing: {str(e)}")
+            raise TimingPredictionError(f"Failed to predict optimal timing: {str(e)}")
 
     async def update_model_from_feedback(self, delivery_result) -> None:
         """Update timing model based on user engagement feedback."""
@@ -240,10 +217,7 @@ class NotificationTimingModel:
             logger.error(f"Error updating model from feedback: {str(e)}")
             raise TimingPredictionError(f"Failed to update model: {str(e)}")
 
-    def _generate_time_windows(
-            self,
-            current_time: datetime,
-            hours_ahead: int) -> List[datetime]:
+    def _generate_time_windows(self, current_time: datetime, hours_ahead: int) -> List[datetime]:
         """Generate time windows for prediction."""
         windows = []
 
@@ -253,8 +227,7 @@ class NotificationTimingModel:
 
         return windows
 
-    def _heuristic_engagement_prediction(
-            self, features: Dict[str, Any]) -> float:
+    def _heuristic_engagement_prediction(self, features: Dict[str, Any]) -> float:
         """Heuristic-based engagement prediction when ML model is not available."""
 
         # Base engagement probability
@@ -307,8 +280,7 @@ class NotificationTimingModel:
         X, y = self._generate_synthetic_training_data()
 
         # Train Random Forest model
-        self.model = RandomForestClassifier(
-            n_estimators=100, max_depth=10, random_state=42)
+        self.model = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=42)
 
         # Fit scaler and model
         X_scaled = self.feature_extractor.scaler.fit_transform(X)
@@ -359,9 +331,7 @@ class NotificationTimingModel:
             model_path = settings.TIMING_MODEL_PATH
             os.makedirs(os.path.dirname(model_path), exist_ok=True)
 
-            model_data = {
-                "model": self.model,
-                "scaler": self.feature_extractor.scaler}
+            model_data = {"model": self.model, "scaler": self.feature_extractor.scaler}
 
             with open(model_path, "wb") as f:
                 pickle.dump(model_data, f)
@@ -370,8 +340,7 @@ class NotificationTimingModel:
         except Exception as e:
             logger.error(f"Failed to save model: {e}")
 
-    async def _add_training_example(
-            self, features: Dict[str, Any], label: int) -> None:
+    async def _add_training_example(self, features: Dict[str, Any], label: int) -> None:
         """Add new training example to the model."""
         # In a real implementation, this would store the example in a database
         # and trigger retraining when enough examples are collected

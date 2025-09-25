@@ -84,10 +84,7 @@ class UserPreferences(Base):
     max_hourly_notifications = Column(Integer, default=10)
     relevance_thresholds = Column(JSON)
     created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(
-        DateTime,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     metadata = Column(JSON)
 
 
@@ -104,10 +101,7 @@ class UserProfile(Base):
     device_info = Column(JSON)
     timezone = Column(String, default="UTC")
     created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(
-        DateTime,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
 class NotificationAnalytics(Base):
@@ -149,9 +143,7 @@ async def get_async_engine() -> Dict[str, Any]:
     if _async_engine is None:
         settings = get_settings()
         _async_engine = create_async_engine(
-            settings.DATABASE_URL.replace(
-                "postgresql://",
-                "postgresql+asyncpg://"),
+            settings.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://"),
             echo=settings.DEBUG,
             pool_size=20,
             max_overflow=30,
@@ -164,9 +156,7 @@ async def get_async_session_factory() -> Dict[str, Any]:
     global _async_session_factory
     if _async_session_factory is None:
         engine = await get_async_engine()
-        _async_session_factory = async_sessionmaker(
-            engine, class_=AsyncSession, expire_on_commit=False
-        )
+        _async_session_factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
     return _async_session_factory
 
 
@@ -191,5 +181,5 @@ async def close_db() -> None:
     """Close database connections."""
     global _async_engine
     if _async_engine:
-    await _async_engine.dispose()
+        await _async_engine.dispose()
         _async_engine = None

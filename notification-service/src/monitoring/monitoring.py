@@ -224,7 +224,7 @@ class NotificationAnalytics:
             logger.error(f"Error updating system metrics: {e}")
 
     async def get_analytics_summary(self) -> Dict[str, Any]:
-    """Get analytics summary."""
+        """Get analytics summary."""
         try:
             summary = {
                 "timestamp": datetime.utcnow().isoformat(),
@@ -341,7 +341,7 @@ class PerformanceMonitor:
             logger.error(f"Error monitoring delivery performance: {e}")
 
     async def get_performance_summary(self) -> Dict[str, Any]:
-    """Get performance summary."""
+        """Get performance summary."""
         try:
             summary = {
                 "timestamp": datetime.utcnow().isoformat(),

@@ -216,7 +216,7 @@ async def _process_breaking_news_candidates(
                 delivery_tasks.append(task)
 
         if delivery_tasks:
-    await asyncio.gather(*delivery_tasks, return_exceptions=True)
+            await asyncio.gather(*delivery_tasks, return_exceptions=True)
 
         logger.info(
             "Breaking news candidates processed",
@@ -379,7 +379,7 @@ async def stop_experiment(
     """Stop A/B test experiment."""
 
     try:
-    await decision_engine.ab_tester.stop_experiment(experiment_name)
+        await decision_engine.ab_tester.stop_experiment(experiment_name)
 
         logger.info("Stopped A/B test experiment", experiment_name=experiment_name)
 

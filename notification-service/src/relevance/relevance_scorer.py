@@ -36,7 +36,7 @@ class PersonalizationEngine:
 
         # If no model exists, create and train a new one
         if not self.is_trained:
-    await self._create_and_train_engagement_model()
+            await self._create_and_train_engagement_model()
 
         logger.info("Personalization engine initialized successfully")
 
@@ -46,10 +46,7 @@ class PersonalizationEngine:
         # Model cleanup if needed
         pass
 
-    async def predict_engagement(
-            self,
-            user_profile: UserProfile,
-            content) -> float:
+    async def predict_engagement(self, user_profile: UserProfile, content) -> float:
         """Predict user engagement with content."""
 
         try:
@@ -60,12 +57,10 @@ class PersonalizationEngine:
             if self.engagement_model and self.is_trained:
                 feature_vector = np.array([list(features.values())])
                 feature_vector_scaled = self.scaler.transform(feature_vector)
-                engagement_score = self.engagement_model.predict(
-                    feature_vector_scaled)[0]
+                engagement_score = self.engagement_model.predict(feature_vector_scaled)[0]
             else:
                 # Fallback to heuristic-based prediction
-                engagement_score = self._heuristic_engagement_prediction(
-                    features)
+                engagement_score = self._heuristic_engagement_prediction(features)
 
             return max(0.0, min(1.0, engagement_score))
 
@@ -73,18 +68,14 @@ class PersonalizationEngine:
             logger.error(f"Error predicting engagement: {str(e)}")
             return 0.5  # Default neutral score
 
-    async def _extract_engagement_features(
-        self, user_profile: UserProfile, content
-    ) -> Dict[str, Any]:
-    """Extract features for engagement prediction."""
+    async def _extract_engagement_features(self, user_profile: UserProfile, content) -> Dict[str, Any]:
+        """Extract features for engagement prediction."""
         features = {}
 
         # User profile features
-        features["user_engagement_history"] = len(
-            user_profile.engagement_history)
+        features["user_engagement_history"] = len(user_profile.engagement_history)
         features["user_topic_diversity"] = len(user_profile.topic_preferences)
-        features["user_source_diversity"] = len(
-            user_profile.source_preferences)
+        features["user_source_diversity"] = len(user_profile.source_preferences)
 
         # Content features
         features["content_topics_count"] = len(content.topics)
@@ -93,33 +84,24 @@ class PersonalizationEngine:
         features["content_is_breaking"] = 1 if content.is_breaking else 0
 
         # Topic alignment
-        topic_alignment = self._calculate_topic_alignment(
-            content.topics, user_profile.topic_preferences
-        )
+        topic_alignment = self._calculate_topic_alignment(content.topics, user_profile.topic_preferences)
         features["topic_alignment"] = topic_alignment
 
         # Source alignment
-        source_alignment = self._calculate_source_alignment(
-            content.source, user_profile.source_preferences
-        )
+        source_alignment = self._calculate_source_alignment(content.source, user_profile.source_preferences)
         features["source_alignment"] = source_alignment
 
         # Location alignment
-        location_alignment = self._calculate_location_alignment(
-            content.locations, user_profile.location_preferences
-        )
+        location_alignment = self._calculate_location_alignment(content.locations, user_profile.location_preferences)
         features["location_alignment"] = location_alignment
 
         # Time-based features
-        features["content_age_hours"] = self._calculate_content_age(
-            content.published_at)
+        features["content_age_hours"] = self._calculate_content_age(content.published_at)
         features["is_recent_content"] = 1 if features["content_age_hours"] < 24 else 0
 
         return features
 
-    def _calculate_topic_alignment(
-        self, content_topics: List[str], user_topics: List[str]
-    ) -> float:
+    def _calculate_topic_alignment(self, content_topics: List[str], user_topics: List[str]) -> float:
         """Calculate topic alignment between content and user preferences."""
 
         if not content_topics or not user_topics:
@@ -134,10 +116,7 @@ class PersonalizationEngine:
 
         return intersection / union if union > 0 else 0.0
 
-    def _calculate_source_alignment(
-            self,
-            content_source: str,
-            user_sources: List[str]) -> float:
+    def _calculate_source_alignment(self, content_source: str, user_sources: List[str]) -> float:
         """Calculate source alignment between content and user preferences."""
 
         if not user_sources:
@@ -145,9 +124,7 @@ class PersonalizationEngine:
 
         return 1.0 if content_source in user_sources else 0.0
 
-    def _calculate_location_alignment(
-        self, content_locations: List[str], user_locations: List[str]
-    ) -> float:
+    def _calculate_location_alignment(self, content_locations: List[str], user_locations: List[str]) -> float:
         """Calculate location alignment between content and user preferences."""
 
         if not content_locations or not user_locations:
@@ -165,8 +142,7 @@ class PersonalizationEngine:
         now = datetime.utcnow()
         return (now - published_at).total_seconds() / 3600
 
-    def _heuristic_engagement_prediction(
-            self, features: Dict[str, Any]) -> float:
+    def _heuristic_engagement_prediction(self, features: Dict[str, Any]) -> float:
         """Heuristic-based engagement prediction when ML model is not available."""
 
         # Base engagement score
@@ -221,9 +197,7 @@ class PersonalizationEngine:
         X, y = self._generate_synthetic_engagement_data()
 
         # Train Random Forest model
-        self.engagement_model = RandomForestRegressor(
-            n_estimators=100, max_depth=10, random_state=42
-        )
+        self.engagement_model = RandomForestRegressor(n_estimators=100, max_depth=10, random_state=42)
 
         # Fit scaler and model
         X_scaled = self.scaler.fit_transform(X)
@@ -279,9 +253,7 @@ class PersonalizationEngine:
             model_path = settings.ENGAGEMENT_MODEL_PATH
             os.makedirs(os.path.dirname(model_path), exist_ok=True)
 
-            model_data = {
-                "model": self.engagement_model,
-                "scaler": self.scaler}
+            model_data = {"model": self.engagement_model, "scaler": self.scaler}
 
             with open(model_path, "wb") as f:
                 pickle.dump(model_data, f)
@@ -324,19 +296,13 @@ class TrendingDetector:
             title_words = set(content.title.lower().split())
             content_words = set(content.content.lower().split())
 
-            trending_keyword_matches = len(
-                title_words.intersection(
-                    self.trending_keywords))
-            trending_content_matches = len(
-                content_words.intersection(
-                    self.trending_keywords))
+            trending_keyword_matches = len(title_words.intersection(self.trending_keywords))
+            trending_content_matches = len(content_words.intersection(self.trending_keywords))
 
-            score += (trending_keyword_matches * 0.3) + \
-                (trending_content_matches * 0.1)
+            score += (trending_keyword_matches * 0.3) + (trending_content_matches * 0.1)
 
             # Check trending topics
-            topic_matches = len(
-                set(content.topics).intersection(self.trending_topics))
+            topic_matches = len(set(content.topics).intersection(self.trending_topics))
             score += topic_matches * 0.2
 
             # Check trending sources
@@ -367,13 +333,7 @@ class TrendingDetector:
             "developing",
         }
 
-        self.trending_sources = {
-            "reuters",
-            "ap",
-            "bbc",
-            "cnn",
-            "nytimes",
-            "washingtonpost"}
+        self.trending_sources = {"reuters", "ap", "bbc", "cnn", "nytimes", "washingtonpost"}
 
         self.trending_topics = {
             "politics",
@@ -483,10 +443,7 @@ class RelevanceScorer:
         await self.trending_detector.cleanup()
         await self.user_profiler.cleanup()
 
-    async def score_relevance(
-            self,
-            candidate: NotificationCandidate,
-            user_prefs: NotificationPreferences) -> float:
+    async def score_relevance(self, candidate: NotificationCandidate, user_prefs: NotificationPreferences) -> float:
         """Compute relevance score for notification candidate."""
 
         try:
@@ -500,9 +457,7 @@ class RelevanceScorer:
             user_profile = await self.user_profiler.get_profile(candidate.user_id)
 
             # Topic relevance
-            topic_score = await self._score_topic_relevance(
-                candidate.content.topics, user_profile.topic_preferences
-            )
+            topic_score = await self._score_topic_relevance(candidate.content.topics, user_profile.topic_preferences)
 
             # Source preference
             source_score = await self._score_source_preference(
@@ -518,13 +473,10 @@ class RelevanceScorer:
             )
 
             # Time sensitivity
-            time_score = self._score_time_sensitivity(
-                candidate.content.published_at)
+            time_score = self._score_time_sensitivity(candidate.content.published_at)
 
             # Engagement prediction
-            engagement_score = await self.personalization_engine.predict_engagement(
-                user_profile, candidate.content
-            )
+            engagement_score = await self.personalization_engine.predict_engagement(user_profile, candidate.content)
 
             # Weighted combination
             relevance_score = (
@@ -537,9 +489,7 @@ class RelevanceScorer:
             )
 
             # Apply user preference adjustments
-            relevance_score = self._apply_preference_adjustments(
-                relevance_score, candidate, user_prefs
-            )
+            relevance_score = self._apply_preference_adjustments(relevance_score, candidate, user_prefs)
 
             final_score = min(relevance_score, 1.0)
 
@@ -560,16 +510,10 @@ class RelevanceScorer:
             return final_score
 
         except Exception as e:
-            logger.error(
-                "Error scoring relevance",
-                user_id=candidate.user_id,
-                error=str(e),
-                exc_info=True)
+            logger.error("Error scoring relevance", user_id=candidate.user_id, error=str(e), exc_info=True)
             raise RelevanceScoringError(f"Failed to score relevance: {str(e)}")
 
-    async def _score_topic_relevance(
-        self, content_topics: List[str], user_topics: List[str]
-    ) -> float:
+    async def _score_topic_relevance(self, content_topics: List[str], user_topics: List[str]) -> float:
         """Score topic relevance between content and user preferences."""
 
         if not content_topics or not user_topics:
@@ -584,10 +528,7 @@ class RelevanceScorer:
 
         return intersection / union if union > 0 else 0.0
 
-    async def _score_source_preference(
-            self,
-            content_source: str,
-            user_sources: List[str]) -> float:
+    async def _score_source_preference(self, content_source: str, user_sources: List[str]) -> float:
         """Score source preference alignment."""
 
         if not user_sources:
@@ -595,9 +536,7 @@ class RelevanceScorer:
 
         return 1.0 if content_source in user_sources else 0.0
 
-    async def _score_geographic_relevance(
-        self, content_locations: List[str], user_locations: List[str]
-    ) -> float:
+    async def _score_geographic_relevance(self, content_locations: List[str], user_locations: List[str]) -> float:
         """Score geographic relevance."""
 
         if not content_locations or not user_locations:
@@ -665,7 +604,4 @@ class RelevanceScorer:
             return user_prefs.quiet_hours_start <= current_hour < user_prefs.quiet_hours_end
         else:
             # Overnight quiet hours
-            return (
-                current_hour >= user_prefs.quiet_hours_start
-                or current_hour < user_prefs.quiet_hours_end
-            )
+            return current_hour >= user_prefs.quiet_hours_start or current_hour < user_prefs.quiet_hours_end

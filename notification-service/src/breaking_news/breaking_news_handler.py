@@ -22,9 +22,11 @@ class BreakingNewsHandler:
     def __init__(self, redis_client: Redis):
         self.redis_client = redis_client
         self.breaking_news_criteria = {
-            "urgency_threshold": 0.8, "recency_hours": 1, "keyword_boost": [
-                "breaking", "urgent", "crisis", "emergency", "alert"], "source_priority": [
-                "reuters", "ap", "bbc", "cnn", "nytimes"], }
+            "urgency_threshold": 0.8,
+            "recency_hours": 1,
+            "keyword_boost": ["breaking", "urgent", "crisis", "emergency", "alert"],
+            "source_priority": ["reuters", "ap", "bbc", "cnn", "nytimes"],
+        }
 
         # Breaking news cache to prevent duplicates
         self.breaking_news_cache = {}
@@ -41,8 +43,7 @@ class BreakingNewsHandler:
         logger.info("Cleaning up breaking news handler")
         self.breaking_news_cache.clear()
 
-    async def handle_breaking_news(
-            self, news_item: NewsItem) -> List[NotificationCandidate]:
+    async def handle_breaking_news(self, news_item: NewsItem) -> List[NotificationCandidate]:
         """Process breaking news for immediate notification."""
 
         try:
@@ -55,16 +56,12 @@ class BreakingNewsHandler:
 
             # Verify breaking news criteria
             if not await self._verify_breaking_news(news_item):
-                logger.debug(
-                    "News item does not meet breaking news criteria",
-                    news_item_id=news_item.id)
+                logger.debug("News item does not meet breaking news criteria", news_item_id=news_item.id)
                 return []
 
             # Check for duplicate breaking news
             if await self._is_duplicate_breaking_news(news_item):
-                logger.debug(
-                    "Duplicate breaking news detected",
-                    news_item_id=news_item.id)
+                logger.debug("Duplicate breaking news detected", news_item_id=news_item.id)
                 return []
 
             # Get users who should receive breaking news
@@ -111,8 +108,7 @@ class BreakingNewsHandler:
                 error=str(e),
                 exc_info=True,
             )
-            raise NotificationError(
-                f"Failed to process breaking news: {str(e)}")
+            raise NotificationError(f"Failed to process breaking news: {str(e)}")
 
     async def _verify_breaking_news(self, news_item: NewsItem) -> bool:
         """Verify if news item meets breaking news criteria."""
@@ -127,8 +123,7 @@ class BreakingNewsHandler:
                 return True
 
             # Check recency
-            age_hours = (datetime.utcnow() -
-                         news_item.published_at).total_seconds() / 3600
+            age_hours = (datetime.utcnow() - news_item.published_at).total_seconds() / 3600
             if age_hours > self.breaking_news_criteria["recency_hours"]:
                 return False
 
@@ -146,8 +141,7 @@ class BreakingNewsHandler:
                 return True
 
             # Check source priority
-            if news_item.source.lower(
-            ) in self.breaking_news_criteria["source_priority"]:
+            if news_item.source.lower() in self.breaking_news_criteria["source_priority"]:
                 return True
 
             return False
@@ -207,8 +201,7 @@ class BreakingNewsHandler:
         except Exception as e:
             logger.error(f"Error caching breaking news: {e}")
 
-    async def _get_breaking_news_eligible_users(
-            self, news_item: NewsItem) -> List[str]:
+    async def _get_breaking_news_eligible_users(self, news_item: NewsItem) -> List[str]:
         """Get users who should receive breaking news."""
 
         try:
@@ -224,8 +217,7 @@ class BreakingNewsHandler:
             # Filter by geographic relevance if applicable
             if news_item.locations:
                 geo_relevant_users = await self._get_geo_relevant_users(news_item.locations)
-                eligible_users = list(
-                    set(breaking_news_users) & set(geo_relevant_users))
+                eligible_users = list(set(breaking_news_users) & set(geo_relevant_users))
             else:
                 eligible_users = breaking_news_users
 
@@ -233,9 +225,7 @@ class BreakingNewsHandler:
             max_breaking_news_users = 10000
             if len(eligible_users) > max_breaking_news_users:
                 # Prioritize users based on engagement history
-                eligible_users = await self._prioritize_users(
-                    eligible_users, max_breaking_news_users
-                )
+                eligible_users = await self._prioritize_users(eligible_users, max_breaking_news_users)
 
             logger.debug(
                 "Found eligible users for breaking news",
@@ -261,8 +251,7 @@ class BreakingNewsHandler:
             return [f"user_{i}" for i in range(1000)]
 
         except Exception as e:
-            logger.error(
-                f"Error getting users with breaking news enabled: {e}")
+            logger.error(f"Error getting users with breaking news enabled: {e}")
             return []
 
     async def _get_geo_relevant_users(self, locations: List[str]) -> List[str]:
@@ -277,10 +266,7 @@ class BreakingNewsHandler:
             logger.error(f"Error getting geo-relevant users: {e}")
             return []
 
-    async def _prioritize_users(
-            self,
-            users: List[str],
-            max_count: int) -> List[str]:
+    async def _prioritize_users(self, users: List[str], max_count: int) -> List[str]:
         """Prioritize users based on engagement history."""
 
         try:
@@ -297,16 +283,14 @@ class BreakingNewsHandler:
             return users[:max_count]
 
     async def get_breaking_news_analytics(self) -> Dict[str, Any]:
-    """Get breaking news analytics."""
+        """Get breaking news analytics."""
         try:
             analytics = {
                 "breaking_news_criteria": self.breaking_news_criteria,
                 "cached_breaking_news_count": len(self.breaking_news_cache),
                 "cache_ttl_seconds": self.cache_ttl,
-                "recent_breaking_news":
-    await self._get_recent_breaking_news(),
-                "user_coverage":
-    await self._get_breaking_news_user_coverage(),
+                "recent_breaking_news": await self._get_recent_breaking_news(),
+                "user_coverage": await self._get_breaking_news_user_coverage(),
             }
 
             return analytics
@@ -350,8 +334,7 @@ class BreakingNewsHandler:
             logger.error(f"Error getting breaking news user coverage: {e}")
             return {}
 
-    async def update_breaking_news_criteria(
-            self, criteria: Dict[str, Any]) -> None:
+    async def update_breaking_news_criteria(self, criteria: Dict[str, Any]) -> None:
         """Update breaking news criteria."""
 
         try:
@@ -361,8 +344,7 @@ class BreakingNewsHandler:
 
         except Exception as e:
             logger.error(f"Error updating breaking news criteria: {e}")
-            raise NotificationError(
-                f"Failed to update breaking news criteria: {str(e)}")
+            raise NotificationError(f"Failed to update breaking news criteria: {str(e)}")
 
     async def clear_breaking_news_cache(self) -> None:
         """Clear breaking news cache."""
@@ -374,11 +356,10 @@ class BreakingNewsHandler:
             pattern = "breaking_news:*"
             keys = await self.redis_client.keys(pattern)
             if keys:
-    await self.redis_client.delete(*keys)
+                await self.redis_client.delete(*keys)
 
             logger.info("Cleared breaking news cache")
 
         except Exception as e:
             logger.error(f"Error clearing breaking news cache: {e}")
-            raise NotificationError(
-                f"Failed to clear breaking news cache: {str(e)}")
+            raise NotificationError(f"Failed to clear breaking news cache: {str(e)}")

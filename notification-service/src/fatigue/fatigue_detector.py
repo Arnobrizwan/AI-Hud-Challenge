@@ -40,7 +40,7 @@ class FatigueDetector:
 
         # Test Redis connection
         try:
-    await self.redis_client.ping()
+            await self.redis_client.ping()
             logger.info("Fatigue detector initialized successfully")
         except Exception as e:
             logger.error(f"Failed to initialize fatigue detector: {e}")
@@ -148,8 +148,7 @@ class FatigueDetector:
         try:
             analytics = {
                 "user_id": user_id,
-                "overall_fatigue_score":
-    await self._get_user_fatigue_score(user_id),
+                "overall_fatigue_score": await self._get_user_fatigue_score(user_id),
                 "notification_counts": {},
                 "fatigue_patterns": {},
                 "recommendations": [],

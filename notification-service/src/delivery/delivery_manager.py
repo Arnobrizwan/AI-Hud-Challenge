@@ -501,7 +501,7 @@ class MultiChannelDelivery:
             logger.error(f"Error updating channel performance: {e}")
 
     async def get_delivery_analytics(self, user_id: str) -> Dict[str, Any]:
-    """Get delivery analytics for user."""
+        """Get delivery analytics for user."""
         try:
             analytics = {
                 "user_id": user_id,

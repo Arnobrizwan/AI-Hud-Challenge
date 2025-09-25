@@ -54,8 +54,7 @@ class ABTestingFramework:
 
             # Check if experiment exists
             if experiment not in self.experiments:
-                logger.warning(
-                    f"Experiment {experiment} not found, using default variant")
+                logger.warning(f"Experiment {experiment} not found, using default variant")
                 return "default"
 
             exp_config = self.experiments[experiment]
@@ -68,8 +67,7 @@ class ABTestingFramework:
             existing_variant = await self._get_existing_assignment(user_id, experiment)
             if existing_variant:
                 # Cache the assignment
-                self.variant_cache[cache_key] = (
-                    existing_variant, datetime.utcnow())
+                self.variant_cache[cache_key] = (existing_variant, datetime.utcnow())
                 return existing_variant
 
             # Assign new variant
@@ -78,11 +76,7 @@ class ABTestingFramework:
             # Cache the assignment
             self.variant_cache[cache_key] = (variant, datetime.utcnow())
 
-            logger.debug(
-                "Assigned A/B test variant",
-                user_id=user_id,
-                experiment=experiment,
-                variant=variant)
+            logger.debug("Assigned A/B test variant", user_id=user_id, experiment=experiment, variant=variant)
 
             return variant
 
@@ -103,21 +97,18 @@ class ABTestingFramework:
         traffic_split: Optional[Dict[str, float]] = None,
         default_variant: str = "control",
     ) -> Dict[str, Any]:
-    """Create new A/B test experiment."""
+        """Create new A/B test experiment."""
         try:
             # Validate experiment
             if not experiment_name or not variants:
-                raise ABTestingError(
-                    "Experiment name and variants are required")
+                raise ABTestingError("Experiment name and variants are required")
 
             if len(variants) < 2:
                 raise ABTestingError("At least 2 variants are required")
 
             # Set default traffic split if not provided
             if not traffic_split:
-                traffic_split = {
-                    variant: 1.0 /
-                    len(variants) for variant in variants}
+                traffic_split = {variant: 1.0 / len(variants) for variant in variants}
 
             # Validate traffic split
             total_split = sum(traffic_split.values())
@@ -136,9 +127,7 @@ class ABTestingFramework:
             }
 
             # Store experiment
-            await self.redis_client.hset(
-                f"ab_experiment:{experiment_name}", mapping=experiment_config
-            )
+            await self.redis_client.hset(f"ab_experiment:{experiment_name}", mapping=experiment_config)
 
             # Update local cache
             self.experiments[experiment_name] = experiment_config
@@ -161,10 +150,8 @@ class ABTestingFramework:
             )
             raise ABTestingError(f"Failed to create experiment: {str(e)}")
 
-    async def update_experiment(
-        self, experiment_name: str, updates: Dict[str, Any]
-    ) -> Dict[str, Any]:
-    """Update A/B test experiment."""
+    async def update_experiment(self, experiment_name: str, updates: Dict[str, Any]) -> Dict[str, Any]:
+        """Update A/B test experiment."""
         try:
             if experiment_name not in self.experiments:
                 raise ABTestingError(f"Experiment {experiment_name} not found")
@@ -175,17 +162,12 @@ class ABTestingFramework:
             experiment_config["updated_at"] = datetime.utcnow().isoformat()
 
             # Store updated experiment
-            await self.redis_client.hset(
-                f"ab_experiment:{experiment_name}", mapping=experiment_config
-            )
+            await self.redis_client.hset(f"ab_experiment:{experiment_name}", mapping=experiment_config)
 
             # Update local cache
             self.experiments[experiment_name] = experiment_config
 
-            logger.info(
-                "Updated A/B test experiment",
-                experiment_name=experiment_name,
-                updates=updates)
+            logger.info("Updated A/B test experiment", experiment_name=experiment_name, updates=updates)
 
             return experiment_config
 
@@ -202,22 +184,16 @@ class ABTestingFramework:
         """Stop A/B test experiment."""
 
         try:
-    await self.update_experiment(experiment_name, {"active": False})
+            await self.update_experiment(experiment_name, {"active": False})
 
-            logger.info(
-                "Stopped A/B test experiment",
-                experiment_name=experiment_name)
+            logger.info("Stopped A/B test experiment", experiment_name=experiment_name)
 
         except Exception as e:
-            logger.error(
-                "Error stopping A/B test experiment",
-                experiment_name=experiment_name,
-                error=str(e))
+            logger.error("Error stopping A/B test experiment", experiment_name=experiment_name, error=str(e))
             raise ABTestingError(f"Failed to stop experiment: {str(e)}")
 
-    async def get_experiment_results(
-            self, experiment_name: str) -> Dict[str, Any]:
-    """Get A/B test experiment results."""
+    async def get_experiment_results(self, experiment_name: str) -> Dict[str, Any]:
+        """Get A/B test experiment results."""
         try:
             if experiment_name not in self.experiments:
                 raise ABTestingError(f"Experiment {experiment_name} not found")
@@ -238,8 +214,7 @@ class ABTestingFramework:
             }
 
             for variant in exp_config["variants"]:
-                variant_users = [user for user,
-                                 v in assignments.items() if v == variant]
+                variant_users = [user for user, v in assignments.items() if v == variant]
                 results["variants"][variant] = {
                     "user_count": len(variant_users),
                     "percentage": len(variant_users) / len(assignments) * 100 if assignments else 0,
@@ -249,10 +224,7 @@ class ABTestingFramework:
             return results
 
         except Exception as e:
-            logger.error(
-                "Error getting experiment results",
-                experiment_name=experiment_name,
-                error=str(e))
+            logger.error("Error getting experiment results", experiment_name=experiment_name, error=str(e))
             raise ABTestingError(f"Failed to get experiment results: {str(e)}")
 
     async def _load_active_experiments(self) -> None:
@@ -291,10 +263,7 @@ class ABTestingFramework:
         except Exception as e:
             logger.error(f"Error loading active experiments: {e}")
 
-    async def _get_existing_assignment(
-            self,
-            user_id: str,
-            experiment: str) -> Optional[str]:
+    async def _get_existing_assignment(self, user_id: str, experiment: str) -> Optional[str]:
         """Get existing variant assignment for user."""
 
         try:
@@ -306,9 +275,7 @@ class ABTestingFramework:
             logger.error(f"Error getting existing assignment: {e}")
             return None
 
-    async def _assign_variant(
-        self, user_id: str, experiment: str, exp_config: Dict[str, Any]
-    ) -> str:
+    async def _assign_variant(self, user_id: str, experiment: str, exp_config: Dict[str, Any]) -> str:
         """Assign variant to user based on traffic split."""
 
         try:
@@ -324,9 +291,7 @@ class ABTestingFramework:
                 if hash_ratio <= cumulative_split:
                     # Store assignment
                     assignment_key = f"ab_assignment:{user_id}:{experiment}"
-                    await self.redis_client.setex(
-                        assignment_key, 86400 * 30, variant
-                    )  # 30 days TTL
+                    await self.redis_client.setex(assignment_key, 86400 * 30, variant)  # 30 days TTL
 
                     return variant
 
@@ -337,8 +302,7 @@ class ABTestingFramework:
             logger.error(f"Error assigning variant: {e}")
             return exp_config.get("default_variant", "control")
 
-    async def _get_variant_assignments(
-            self, experiment: str) -> Dict[str, str]:
+    async def _get_variant_assignments(self, experiment: str) -> Dict[str, str]:
         """Get all variant assignments for experiment."""
 
         try:
@@ -376,9 +340,8 @@ class ABTestingFramework:
             logger.error(f"Error getting user experiments: {e}")
             return {}
 
-    async def get_experiment_analytics(
-            self, experiment_name: str) -> Dict[str, Any]:
-    """Get detailed analytics for experiment."""
+    async def get_experiment_analytics(self, experiment_name: str) -> Dict[str, Any]:
+        """Get detailed analytics for experiment."""
         try:
             if experiment_name not in self.experiments:
                 raise ABTestingError(f"Experiment {experiment_name} not found")
@@ -391,10 +354,8 @@ class ABTestingFramework:
                 **results,
                 "traffic_distribution": self.experiments[experiment_name].get("traffic_split", {}),
                 "experiment_duration_days": self._calculate_experiment_duration(experiment_name),
-                "user_retention":
-    await self._calculate_user_retention(experiment_name),
-                "conversion_rates":
-    await self._calculate_conversion_rates(experiment_name),
+                "user_retention": await self._calculate_user_retention(experiment_name),
+                "conversion_rates": await self._calculate_conversion_rates(experiment_name),
             }
 
             return analytics
@@ -408,9 +369,7 @@ class ABTestingFramework:
 
         try:
             exp_config = self.experiments[experiment_name]
-            created_at = datetime.fromisoformat(
-                exp_config.get("created_at", datetime.utcnow().isoformat())
-            )
+            created_at = datetime.fromisoformat(exp_config.get("created_at", datetime.utcnow().isoformat()))
             duration = (datetime.utcnow() - created_at).days
             return max(0, duration)
 
@@ -418,8 +377,7 @@ class ABTestingFramework:
             logger.error(f"Error calculating experiment duration: {e}")
             return 0
 
-    async def _calculate_user_retention(
-            self, experiment_name: str) -> Dict[str, float]:
+    async def _calculate_user_retention(self, experiment_name: str) -> Dict[str, float]:
         """Calculate user retention by variant."""
 
         try:
@@ -436,8 +394,7 @@ class ABTestingFramework:
             logger.error(f"Error calculating user retention: {e}")
             return {}
 
-    async def _calculate_conversion_rates(
-            self, experiment_name: str) -> Dict[str, float]:
+    async def _calculate_conversion_rates(self, experiment_name: str) -> Dict[str, float]:
         """Calculate conversion rates by variant."""
 
         try:
