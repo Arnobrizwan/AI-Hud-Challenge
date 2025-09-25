@@ -38,7 +38,7 @@ class TestIngestionService:
 
     @pytest.mark.asyncio
     async def test_get_adapter(self, ingestion_service, source_config) -> Dict[str, Any]:
-    """Test getting adapter for source."""
+        """Test getting adapter for source."""
         adapter = await ingestion_service._get_adapter(source_config)
 
         assert adapter is not None
@@ -47,7 +47,7 @@ class TestIngestionService:
 
     @pytest.mark.asyncio
     async def test_get_existing_adapter(self, ingestion_service, source_config) -> Dict[str, Any]:
-    """Test getting existing adapter."""
+        """Test getting existing adapter."""
         # Create adapter first
         adapter1 = await ingestion_service._get_adapter(source_config)
 

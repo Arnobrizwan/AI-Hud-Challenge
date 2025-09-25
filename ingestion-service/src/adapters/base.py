@@ -277,7 +277,7 @@ class BaseAdapter(ABC):
         return True
 
     async def health_check(self) -> Dict[str, Any]:
-    """Perform health check on the adapter."""
+        """Perform health check on the adapter."""
         try:
             is_connected = await self.test_connection()
 

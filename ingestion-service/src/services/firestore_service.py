@@ -385,7 +385,7 @@ class FirestoreService:
             return None
 
     def _article_to_dict(self, article: NormalizedArticle) -> Dict[str, Any]:
-    """Convert article to Firestore-compatible dictionary."""
+        """Convert article to Firestore-compatible dictionary."""
         return {
             "id": article.id,
             "url": article.url,
