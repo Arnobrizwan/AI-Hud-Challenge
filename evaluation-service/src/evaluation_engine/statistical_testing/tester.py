@@ -136,7 +136,7 @@ class StatisticalTester:
         }
 
     async def _kolmogorov_smirnov_test(self, data1: np.ndarray, data2: np.ndarray, alternative: str) -> Dict[str, Any]:
-    """Kolmogorov-Smirnov test"""
+        """Kolmogorov-Smirnov test"""
         statistic, p_value = stats.ks_2samp(data1, data2)
 
         return {
@@ -148,7 +148,7 @@ class StatisticalTester:
         }
 
     async def _chi_square_test(self, data1: np.ndarray, data2: np.ndarray, alternative: str) -> Dict[str, Any]:
-    """Chi-square test of independence"""
+        """Chi-square test of independence"""
         # Create contingency table
         # This is a simplified implementation - in practice, you'd have
         # categorical data
@@ -171,7 +171,7 @@ class StatisticalTester:
         }
 
     async def _fisher_exact_test(self, data1: np.ndarray, data2: np.ndarray, alternative: str) -> Dict[str, Any]:
-    """Fisher's exact test"""
+        """Fisher's exact test"""
         # Create 2x2 contingency table
         # This is a simplified implementation
         table = np.array(
@@ -192,7 +192,7 @@ class StatisticalTester:
         }
 
     async def _wilcoxon_test(self, data1: np.ndarray, data2: np.ndarray, alternative: str) -> Dict[str, Any]:
-    """Wilcoxon signed-rank test (paired)"""
+        """Wilcoxon signed-rank test (paired)"""
         # For paired data, we need equal length arrays
         if len(data1) != len(data2):
             raise ValueError("Wilcoxon test requires paired data with equal length")
@@ -276,7 +276,7 @@ class StatisticalTester:
         }
 
     async def multiple_comparison_correction(self, p_values: List[float], method: str = "bonferroni") -> Dict[str, Any]:
-    """Apply multiple comparison correction"""
+        """Apply multiple comparison correction"""
         p_values = np.array(p_values)
         n_tests = len(p_values)
 
@@ -328,7 +328,7 @@ class StatisticalTester:
         alpha: float = 0.05,
         test_type: str = "two_sample",
     ) -> Dict[str, Any]:
-    """Calculate statistical power"""
+        """Calculate statistical power"""
         if test_type == "two_sample":
             # Two-sample t-test power
             # Non-centrality parameter
@@ -362,7 +362,7 @@ class StatisticalTester:
         n_bootstrap: int = 1000,
         confidence_level: float = 0.95,
     ) -> Dict[str, Any]:
-    """Bootstrap hypothesis test"""
+        """Bootstrap hypothesis test"""
         if len(data1) == 0 or len(data2) == 0:
             return {
                 "test_type": "bootstrap",

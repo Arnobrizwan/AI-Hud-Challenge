@@ -70,12 +70,9 @@ class OnlineEvaluator:
         except Exception as e:
             logger.error(f"Error during online evaluator cleanup: {str(e)}")
 
-    async def evaluate(
-        self, experiments: List[Dict[str, Any]], evaluation_period: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def evaluate(self, experiments: List[Dict[str, Any]], evaluation_period: Dict[str, Any]) -> Dict[str, Any]:
         """Comprehensive online evaluation of experiments"""
-        logger.info(
-            f"Starting online evaluation of {len(experiments)} experiments")
+        logger.info(f"Starting online evaluation of {len(experiments)} experiments")
 
         evaluation_results = {
             "evaluation_id": f"online_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}",
@@ -89,18 +86,14 @@ class OnlineEvaluator:
             # Process each experiment
             experiment_results = []
             for experiment_config in experiments:
-                experiment_result = await self._evaluate_experiment(
-                    experiment_config, evaluation_period
-                )
+                experiment_result = await self._evaluate_experiment(experiment_config, evaluation_period)
                 experiment_results.append(experiment_result)
 
             evaluation_results["experiments"] = experiment_results
             evaluation_results["completed_at"] = datetime.utcnow()
 
             # Generate overall summary
-            evaluation_results["overall_summary"] = await self._generate_overall_summary(
-                experiment_results
-            )
+            evaluation_results["overall_summary"] = await self._generate_overall_summary(experiment_results)
 
             logger.info("Online evaluation completed successfully")
 
@@ -119,8 +112,7 @@ class OnlineEvaluator:
         experiment_type = experiment_config.get("type", "ab_test")
         experiment_id = experiment_config.get("id")
 
-        logger.info(
-            f"Evaluating {experiment_type} experiment: {experiment_id}")
+        logger.info(f"Evaluating {experiment_type} experiment: {experiment_id}")
 
         try:
             if experiment_type == "ab_test":
@@ -132,12 +124,10 @@ class OnlineEvaluator:
             elif experiment_type == "bayesian":
                 return await self._evaluate_bayesian_test(experiment_config, evaluation_period)
             else:
-                raise ValueError(
-                    f"Unsupported experiment type: {experiment_type}")
+                raise ValueError(f"Unsupported experiment type: {experiment_type}")
 
         except Exception as e:
-            logger.error(
-                f"Error evaluating experiment {experiment_id}: {str(e)}")
+            logger.error(f"Error evaluating experiment {experiment_id}: {str(e)}")
             return {
                 "experiment_id": experiment_id,
                 "experiment_type": experiment_type,
@@ -171,14 +161,10 @@ class OnlineEvaluator:
 
         if isinstance(analysis.statistical_results, dict):
             # Find winning variant
-            for variant, result in analysis.statistical_results.get(
-                    "variant_results", {}).items():
-                if result.get(
-                        "primary_metric_result", {}).get(
-                        "is_significant", False):
+            for variant, result in analysis.statistical_results.get("variant_results", {}).items():
+                if result.get("primary_metric_result", {}).get("is_significant", False):
                     winner_variant = variant
-                    winner_confidence = 1.0 - \
-                        result.get("primary_metric_result", {}).get("p_value", 1.0)
+                    winner_confidence = 1.0 - result.get("primary_metric_result", {}).get("p_value", 1.0)
                     break
 
         return {
@@ -222,9 +208,7 @@ class OnlineEvaluator:
         return {
             "experiment_id": experiment_id,
             "experiment_type": "sequential",
-            "status": "running" if not analysis.get(
-                "early_stopping",
-                False) else "completed",
+            "status": "running" if not analysis.get("early_stopping", False) else "completed",
             "analysis": analysis,
             "evaluation_timestamp": datetime.utcnow(),
         }
@@ -246,9 +230,7 @@ class OnlineEvaluator:
             "evaluation_timestamp": datetime.utcnow(),
         }
 
-    async def _generate_overall_summary(
-        self, experiment_results: List[Dict[str, Any]]
-    ) -> Dict[str, Any]:
+    async def _generate_overall_summary(self, experiment_results: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Generate overall summary of online evaluation results"""
         if not experiment_results:
             return {}
@@ -262,39 +244,32 @@ class OnlineEvaluator:
             exp_status = result.get("status", "unknown")
 
             experiment_types[exp_type] = experiment_types.get(exp_type, 0) + 1
-            experiment_statuses[exp_status] = experiment_statuses.get(
-                exp_status, 0) + 1
+            experiment_statuses[exp_status] = experiment_statuses.get(exp_status, 0) + 1
 
         # Count experiments with winners
-        experiments_with_winners = len(
-            [r for r in experiment_results if r.get("winner_variant") is not None]
-        )
+        experiments_with_winners = len([r for r in experiment_results if r.get("winner_variant") is not None])
 
         # Calculate average confidence for winning experiments
-        winning_experiments = [
-            r for r in experiment_results if r.get("winner_variant") is not None]
+        winning_experiments = [r for r in experiment_results if r.get("winner_variant") is not None]
 
         avg_winner_confidence = 0.0
         if winning_experiments:
-            avg_winner_confidence = sum(
-                r.get("winner_confidence", 0) for r in winning_experiments
-            ) / len(winning_experiments)
+            avg_winner_confidence = sum(r.get("winner_confidence", 0) for r in winning_experiments) / len(
+                winning_experiments
+            )
 
         return {
             "total_experiments": len(experiment_results),
             "experiment_types": experiment_types,
             "experiment_statuses": experiment_statuses,
             "experiments_with_winners": experiments_with_winners,
-            "winning_rate": (
-                experiments_with_winners /
-                len(experiment_results) if experiment_results else 0),
+            "winning_rate": (experiments_with_winners / len(experiment_results) if experiment_results else 0),
             "average_winner_confidence": avg_winner_confidence,
             "evaluation_timestamp": datetime.utcnow(),
         }
 
-    async def create_experiment(
-            self, experiment_config: Dict[str, Any]) -> Dict[str, Any]:
-    """Create a new online experiment"""
+    async def create_experiment(self, experiment_config: Dict[str, Any]) -> Dict[str, Any]:
+        """Create a new online experiment"""
         experiment_type = experiment_config.get("type", "ab_test")
 
         if experiment_type == "ab_test":
@@ -309,32 +284,23 @@ class OnlineEvaluator:
                 "created_at": experiment.created_at,
             }
         else:
-            raise ValueError(
-                f"Unsupported experiment type for creation: {experiment_type}")
+            raise ValueError(f"Unsupported experiment type for creation: {experiment_type}")
 
-    async def start_experiment(
-            self,
-            experiment_id: str,
-            experiment_type: str = "ab_test") -> bool:
+    async def start_experiment(self, experiment_id: str, experiment_type: str = "ab_test") -> bool:
         """Start an online experiment"""
 
         if experiment_type == "ab_test":
             return await self.ab_tester.start_experiment(experiment_id)
         else:
-            raise ValueError(
-                f"Unsupported experiment type for starting: {experiment_type}")
+            raise ValueError(f"Unsupported experiment type for starting: {experiment_type}")
 
-    async def stop_experiment(
-            self,
-            experiment_id: str,
-            experiment_type: str = "ab_test") -> bool:
+    async def stop_experiment(self, experiment_id: str, experiment_type: str = "ab_test") -> bool:
         """Stop an online experiment"""
 
         if experiment_type == "ab_test":
             return await self.ab_tester.stop_experiment(experiment_id)
         else:
-            raise ValueError(
-                f"Unsupported experiment type for stopping: {experiment_type}")
+            raise ValueError(f"Unsupported experiment type for stopping: {experiment_type}")
 
     async def record_event(
         self,
@@ -348,9 +314,7 @@ class OnlineEvaluator:
         """Record an event for an online experiment"""
 
         # Try A/B testing first (most common)
-        success = await self.ab_tester.record_event(
-            experiment_id, user_id, variant, event_type, value, metadata
-        )
+        success = await self.ab_tester.record_event(experiment_id, user_id, variant, event_type, value, metadata)
 
         if success:
             return True

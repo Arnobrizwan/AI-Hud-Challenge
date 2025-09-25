@@ -396,7 +396,7 @@ class BayesianTestingFramework:
         return {"lower": lower, "upper": upper, "level": level}
 
     def _normal_normal_credible_interval(self, test: Dict[str, Any], level: float) -> Dict[str, Any]:
-    """Calculate credible interval for Normal-Normal test"""
+        """Calculate credible interval for Normal-Normal test"""
         control_posterior = test["control_posterior"]
         treatment_posterior = test["treatment_posterior"]
 
@@ -415,7 +415,7 @@ class BayesianTestingFramework:
         return {"lower": lower, "upper": upper, "level": level}
 
     def _gamma_poisson_credible_interval(self, test: Dict[str, Any], level: float) -> Dict[str, Any]:
-    """Calculate credible interval for Gamma-Poisson test"""
+        """Calculate credible interval for Gamma-Poisson test"""
         control_posterior = test["control_posterior"]
         treatment_posterior = test["treatment_posterior"]
 
@@ -439,7 +439,7 @@ class BayesianTestingFramework:
     async def _check_stopping_conditions(
         self, test: Dict[str, Any], prob_better: float, expected_loss: float
     ) -> Dict[str, Any]:
-    """Check if test should stop"""
+        """Check if test should stop"""
         # Stop if probability is very high or very low
         if prob_better >= 0.95:
             return {

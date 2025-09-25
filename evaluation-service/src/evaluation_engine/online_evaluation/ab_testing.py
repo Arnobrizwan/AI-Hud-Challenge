@@ -479,7 +479,7 @@ class ABTestingFramework:
         return recommendations
 
     async def _apply_multiple_testing_correction(self, results: Dict[str, VariantAnalysis]) -> Dict[str, Any]:
-    """Apply multiple testing correction (Bonferroni)"""
+        """Apply multiple testing correction (Bonferroni)"""
         n_tests = len(results)
         if n_tests <= 1:
             return {"method": "none", "corrected_alpha": 0.05}
@@ -506,7 +506,7 @@ class ABTestingFramework:
         }
 
     async def validate_experiment_design(self, config: ExperimentConfig) -> Dict[str, Any]:
-    """Validate experiment design"""
+        """Validate experiment design"""
         errors = []
 
         # Check variants
