@@ -320,7 +320,7 @@ class ConsensusBuilder:
             return []
 
     def _calculate_consensus(self, submissions: List[Any]) -> Dict[str, Any]:
-    """Calculate consensus from submissions"""
+        """Calculate consensus from submissions"""
         # Simple majority voting
         responses = [sub.submission_data.get("response") for sub in submissions]
 

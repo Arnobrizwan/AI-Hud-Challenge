@@ -45,8 +45,7 @@ class FeedbackCollectionEngine:
         self.websocket_manager = WebSocketManager()
         self.data_aggregator = DataAggregator(db_session)
 
-    async def process_user_feedback(
-            self, feedback: UserFeedback) -> ProcessingResult:
+    async def process_user_feedback(self, feedback: UserFeedback) -> ProcessingResult:
         """Main feedback processing pipeline"""
 
         try:
@@ -76,9 +75,7 @@ class FeedbackCollectionEngine:
             quality_score = await self.quality_analyzer.score_feedback(normalized_feedback)
 
             # Store processing result
-            processing_result = await self.store_processing_result(
-                feedback_id, quality_score, normalized_feedback
-            )
+            processing_result = await self.store_processing_result(feedback_id, quality_score, normalized_feedback)
 
             return ProcessingResult(
                 feedback_id=feedback_id,
@@ -89,11 +86,7 @@ class FeedbackCollectionEngine:
             )
 
         except Exception as e:
-            logger.error(
-                "Error processing feedback",
-                error=str(e),
-                feedback_id=str(
-                    feedback.id))
+            logger.error("Error processing feedback", error=str(e), feedback_id=str(feedback.id))
             raise
 
     async def normalize_feedback(self, feedback: UserFeedback) -> UserFeedback:
@@ -103,8 +96,7 @@ class FeedbackCollectionEngine:
         if not feedback.content_id:
             raise ValueError("Content ID is required")
 
-        if feedback.rating is not None and (
-                feedback.rating < 0 or feedback.rating > 5):
+        if feedback.rating is not None and (feedback.rating < 0 or feedback.rating > 5):
             raise ValueError("Rating must be between 0 and 5")
 
         # Normalize text content
@@ -119,9 +111,7 @@ class FeedbackCollectionEngine:
             feedback.metadata = {}
 
         # Add processing metadata
-        feedback.metadata.update(
-            {"normalized_at": datetime.utcnow().isoformat(), "processing_version": "1.0.0"}
-        )
+        feedback.metadata.update({"normalized_at": datetime.utcnow().isoformat(), "processing_version": "1.0.0"})
 
         return feedback
 
@@ -158,16 +148,11 @@ class FeedbackCollectionEngine:
             await self.update_personalization_signals(feedback)
 
             # Update content quality signals
-            if feedback.signal_type in [
-                    SignalType.CLICK,
-                    SignalType.DWELL_TIME,
-                    SignalType.SHARE]:
+            if feedback.signal_type in [SignalType.CLICK, SignalType.DWELL_TIME, SignalType.SHARE]:
                 await self.update_content_quality_signals(feedback)
 
             # Detect and flag potential issues
-            if feedback.signal_type == SignalType.COMPLAINT or (
-                feedback.rating is not None and feedback.rating < 2.0
-            ):
+            if feedback.signal_type == SignalType.COMPLAINT or (feedback.rating is not None and feedback.rating < 2.0):
                 await self.flag_for_review(feedback)
 
         except Exception as e:
@@ -182,7 +167,7 @@ class FeedbackCollectionEngine:
 
             # Route to appropriate workflow
             if feedback_analysis.get("requires_human_review", False):
-    await self.workflow_engine.create_review_task(
+                await self.workflow_engine.create_review_task(
                     content_id=feedback.content_id,
                     task_type="feedback_review",
                     priority="high" if feedback_analysis.get("severity") == "high" else "normal",
@@ -193,7 +178,7 @@ class FeedbackCollectionEngine:
 
             # Flag high-priority issues
             if feedback_analysis.get("severity") == "high":
-    await self.create_priority_alert(feedback, feedback_analysis)
+                await self.create_priority_alert(feedback, feedback_analysis)
 
         except Exception as e:
             logger.error("Error processing explicit feedback", error=str(e))
@@ -203,31 +188,20 @@ class FeedbackCollectionEngine:
 
         # This would update user engagement tracking
         # Implementation depends on your metrics system
-        logger.info(
-            "Updating engagement metrics",
-            user_id=str(
-                feedback.user_id))
+        logger.info("Updating engagement metrics", user_id=str(feedback.user_id))
 
-    async def update_personalization_signals(
-            self, feedback: UserFeedback) -> None:
+    async def update_personalization_signals(self, feedback: UserFeedback) -> None:
         """Update personalization model signals"""
 
         # This would update personalization models
         # Implementation depends on your ML pipeline
-        logger.info(
-            "Updating personalization signals",
-            user_id=str(
-                feedback.user_id))
+        logger.info("Updating personalization signals", user_id=str(feedback.user_id))
 
-    async def update_content_quality_signals(
-            self, feedback: UserFeedback) -> None:
+    async def update_content_quality_signals(self, feedback: UserFeedback) -> None:
         """Update content quality signals based on user behavior"""
 
         # This would update content quality metrics
-        logger.info(
-            "Updating content quality signals",
-            content_id=str(
-                feedback.content_id))
+        logger.info("Updating content quality signals", content_id=str(feedback.content_id))
 
     async def flag_for_review(self, feedback: UserFeedback) -> None:
         """Flag content for human review"""
@@ -236,14 +210,10 @@ class FeedbackCollectionEngine:
             content_id=feedback.content_id, task_type="quality_review", priority="high"
         )
 
-        logger.info(
-            "Content flagged for review",
-            content_id=str(
-                feedback.content_id))
+        logger.info("Content flagged for review", content_id=str(feedback.content_id))
 
-    async def analyze_feedback_content(
-            self, feedback: UserFeedback) -> Dict[str, Any]:
-    """Analyze feedback content for sentiment and intent"""
+    async def analyze_feedback_content(self, feedback: UserFeedback) -> Dict[str, Any]:
+        """Analyze feedback content for sentiment and intent"""
         if not feedback.comment:
             return {"requires_human_review": False, "severity": "low"}
 
@@ -274,8 +244,7 @@ class FeedbackCollectionEngine:
                 rating=feedback.rating,
             )
 
-    async def create_priority_alert(
-            self, feedback: UserFeedback, analysis: Dict[str, Any]) -> None:
+    async def create_priority_alert(self, feedback: UserFeedback, analysis: Dict[str, Any]) -> None:
         """Create priority alert for high-severity issues"""
 
         # This would create alerts for stakeholders
@@ -292,8 +261,7 @@ class FeedbackCollectionEngine:
             # This would update user preference models
             logger.info("Updating user profile", user_id=str(feedback.user_id))
 
-    async def should_trigger_model_update(
-            self, feedback: UserFeedback) -> bool:
+    async def should_trigger_model_update(self, feedback: UserFeedback) -> bool:
         """Determine if feedback should trigger model update"""
 
         # Simple heuristic - in production this would be more sophisticated
@@ -312,9 +280,7 @@ class FeedbackCollectionEngine:
         # Send other notifications as needed
         logger.info("Stakeholders notified", feedback_id=str(feedback.id))
 
-    async def store_processing_result(
-        self, feedback_id: UUID, quality_score: float, feedback: UserFeedback
-    ) -> None:
+    async def store_processing_result(self, feedback_id: UUID, quality_score: float, feedback: UserFeedback) -> None:
         """Store feedback processing results"""
 
         processing_result = FeedbackProcessingResult(
@@ -348,16 +314,13 @@ class FeedbackCollectionEngine:
 
         return actions
 
-    async def get_feedback_stats(
-            self, time_window: timedelta) -> Dict[str, Any]:
-    """Get feedback processing statistics"""
+    async def get_feedback_stats(self, time_window: timedelta) -> Dict[str, Any]:
+        """Get feedback processing statistics"""
         start_time = datetime.utcnow() - time_window
 
         # Get feedback counts by type
         result = await self.db.execute(
-            select(FeedbackDB.feedback_type, FeedbackDB.rating).where(
-                FeedbackDB.created_at >= start_time
-            )
+            select(FeedbackDB.feedback_type, FeedbackDB.rating).where(FeedbackDB.created_at >= start_time)
         )
 
         feedbacks = result.fetchall()
@@ -372,8 +335,7 @@ class FeedbackCollectionEngine:
         # Count by type
         for feedback in feedbacks:
             feedback_type = feedback.feedback_type.value
-            stats["by_type"][feedback_type] = stats["by_type"].get(
-                feedback_type, 0) + 1
+            stats["by_type"][feedback_type] = stats["by_type"].get(feedback_type, 0) + 1
 
         # Calculate average rating
         ratings = [f.rating for f in feedbacks if f.rating is not None]
