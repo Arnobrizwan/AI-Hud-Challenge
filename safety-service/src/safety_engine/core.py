@@ -32,7 +32,7 @@ class SafetyMonitoringEngine:
         self.audit_logger = None
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize the safety monitoring engine"""
+        """Initialize the safety monitoring engine"""
         try:
             # Initialize all components
             await self.initialize_components()
@@ -46,7 +46,7 @@ class SafetyMonitoringEngine:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-    """Cleanup resources"""
+        """Cleanup resources"""
         try:
             # Cleanup all components
             await self.cleanup_components()
@@ -88,7 +88,7 @@ class SafetyMonitoringEngine:
 
             # Trigger automated response if needed
             if requires_intervention:
-    await self.trigger_safety_response(safety_status)
+                await self.trigger_safety_response(safety_status)
 
             return safety_status
 
@@ -98,7 +98,7 @@ class SafetyMonitoringEngine:
 
     async def perform_safety_checks(
             self, request: SafetyMonitoringRequest) -> Dict[str, Any]:
-    """Perform all safety checks"""
+        """Perform all safety checks"""
         try:
             checks = {}
 
@@ -262,18 +262,29 @@ class SafetyMonitoringEngine:
             logger.error(f"Safety check logging failed: {str(e)}")
 
     async def initialize_components(self) -> Dict[str, Any]:
-    """Initialize all safety monitoring components"""
+        """Initialize all safety monitoring components"""
         try:
-            # Placeholder for component initialization
-            # In a real implementation, this would initialize:
-            # - Drift detection system
-            # - Abuse detection system
-            # - Content moderation system
-            # - Anomaly detection system
-            # - Rate limiting system
-            # - Incident response system
-            # - Compliance monitoring system
-            # - Audit logging system
+            # Initialize drift detection system
+            from drift_detection.detector import MultidimensionalDriftDetector
+            self.drift_detector = MultidimensionalDriftDetector()
+            await self.drift_detector.initialize()
+
+            # Initialize abuse detection system
+            from abuse_detection.system import AbuseDetectionSystem
+            self.abuse_detector = AbuseDetectionSystem()
+            await self.abuse_detector.initialize()
+
+            # Initialize content moderation system
+            from content_moderation.engine import ContentModerationEngine
+            self.content_moderator = ContentModerationEngine()
+            await self.content_moderator.initialize()
+
+            # Initialize other components as placeholders for now
+            self.anomaly_detector = None
+            self.rate_limiter = None
+            self.incident_manager = None
+            self.compliance_monitor = None
+            self.audit_logger = None
 
             logger.info("Safety monitoring components initialized")
 
@@ -282,7 +293,7 @@ class SafetyMonitoringEngine:
             raise
 
     async def cleanup_components(self) -> Dict[str, Any]:
-    """Cleanup all safety monitoring components"""
+        """Cleanup all safety monitoring components"""
         try:
             # Placeholder for component cleanup
             # In a real implementation, this would cleanup:
@@ -297,7 +308,7 @@ class SafetyMonitoringEngine:
             logger.error(f"Component cleanup failed: {str(e)}")
 
     async def get_system_health(self) -> Dict[str, Any]:
-    """Get system health status"""
+        """Get system health status"""
         try:
             return {
                 "is_initialized": self.is_initialized,

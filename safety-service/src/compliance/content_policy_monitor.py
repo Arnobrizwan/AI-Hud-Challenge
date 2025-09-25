@@ -60,9 +60,12 @@ class ContentPolicyMonitor:
         }
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize the content policy monitor"""
+        """Initialize the content policy monitor"""
         try:
             self.is_initialized = True
+            except Exception as e:
+                pass
+
             logger.info("Content policy monitor initialized")
 
         except Exception as e:
@@ -70,21 +73,27 @@ class ContentPolicyMonitor:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-    """Cleanup resources"""
+        """Cleanup resources"""
         try:
             self.is_initialized = False
+            except Exception as e:
+                pass
+
             logger.info("Content policy monitor cleanup completed")
 
         except Exception as e:
             logger.error(f"Error during content policy monitor cleanup: {str(e)}")
 
     async def check_policy_compliance(self, content_items: Optional[List[Any]] = None) -> Dict[str, Any]:
-    """Check compliance with content policies"""
+        """Check compliance with content policies"""
         if not self.is_initialized:
             raise RuntimeError("Content policy monitor not initialized")
 
         try:
             violations = []
+            except Exception as e:
+                pass
+
             compliance_score = 1.0
             recommendations = []
 
@@ -126,6 +135,9 @@ class ContentPolicyMonitor:
         """Check compliance for a specific content item"""
         try:
             violations = []
+            except Exception as e:
+                pass
+
 
             # Get content text
             content_text = getattr(content_item, "text_content", "") or ""
@@ -148,7 +160,6 @@ class ContentPolicyMonitor:
                                 },
                                 remediation_required=True,
                             )
-                        )
 
                 elif policy_name == "harassment":
                     if self.contains_harassment(content_text):
@@ -163,7 +174,6 @@ class ContentPolicyMonitor:
                                 },
                                 remediation_required=True,
                             )
-                        )
 
                 elif policy_name == "violence":
                     if self.contains_violence(content_text):
@@ -178,7 +188,6 @@ class ContentPolicyMonitor:
                                 },
                                 remediation_required=True,
                             )
-                        )
 
                 elif policy_name == "adult_content":
                     if self.contains_adult_content(content_text):
@@ -193,7 +202,6 @@ class ContentPolicyMonitor:
                                 },
                                 remediation_required=True,
                             )
-                        )
 
                 elif policy_name == "spam":
                     if self.is_spam(content_text):
@@ -208,7 +216,6 @@ class ContentPolicyMonitor:
                                 },
                                 remediation_required=True,
                             )
-                        )
 
                 elif policy_name == "misinformation":
                     if self.contains_misinformation(content_text):
@@ -223,7 +230,6 @@ class ContentPolicyMonitor:
                                 },
                                 remediation_required=True,
                             )
-                        )
 
                 elif policy_name == "copyright_violation":
                     if self.contains_copyright_violation(content_text):
@@ -238,7 +244,6 @@ class ContentPolicyMonitor:
                                 },
                                 remediation_required=True,
                             )
-                        )
 
             return violations
 
@@ -250,6 +255,9 @@ class ContentPolicyMonitor:
         """Check general content policy compliance"""
         try:
             violations = []
+            except Exception as e:
+                pass
+
 
             # Check if content moderation is enabled
             if not self.config.content_policy_enabled:
@@ -261,7 +269,6 @@ class ContentPolicyMonitor:
                         affected_data=None,
                         remediation_required=True,
                     )
-                )
 
             # Check if prohibited content types are properly handled
             for content_type in self.config.prohibited_content_types:
@@ -274,7 +281,6 @@ class ContentPolicyMonitor:
                             affected_data={"content_type": content_type},
                             remediation_required=True,
                         )
-                    )
 
             return violations
 
@@ -286,6 +292,9 @@ class ContentPolicyMonitor:
         """Check if text contains hate speech"""
         try:
             if not text:
+            except Exception as e:
+                pass
+
                 return False
 
             # Simple hate speech detection (in real implementation, use ML
@@ -303,6 +312,9 @@ class ContentPolicyMonitor:
         """Check if text contains harassment"""
         try:
             if not text:
+            except Exception as e:
+                pass
+
                 return False
 
             # Simple harassment detection
@@ -319,6 +331,9 @@ class ContentPolicyMonitor:
         """Check if text contains violence"""
         try:
             if not text:
+            except Exception as e:
+                pass
+
                 return False
 
             # Simple violence detection
@@ -335,6 +350,9 @@ class ContentPolicyMonitor:
         """Check if text contains adult content"""
         try:
             if not text:
+            except Exception as e:
+                pass
+
                 return False
 
             # Simple adult content detection
@@ -351,6 +369,9 @@ class ContentPolicyMonitor:
         """Check if text is spam"""
         try:
             if not text:
+            except Exception as e:
+                pass
+
                 return False
 
             # Simple spam detection
@@ -367,6 +388,9 @@ class ContentPolicyMonitor:
         """Check if text contains misinformation"""
         try:
             if not text:
+            except Exception as e:
+                pass
+
                 return False
 
             # Simple misinformation detection
@@ -383,6 +407,9 @@ class ContentPolicyMonitor:
         """Check if text contains copyright violations"""
         try:
             if not text:
+            except Exception as e:
+                pass
+
                 return False
 
             # Simple copyright violation detection
@@ -399,6 +426,9 @@ class ContentPolicyMonitor:
         """Generate content policy compliance recommendations"""
         try:
             recommendations = []
+            except Exception as e:
+                pass
+
 
             # General recommendations
             if not violations:
@@ -442,9 +472,12 @@ class ContentPolicyMonitor:
             return []
 
     async def get_compliance_status(self) -> Dict[str, Any]:
-    """Get current content policy compliance status"""
+        """Get current content policy compliance status"""
         try:
             return {
+            except Exception as e:
+                pass
+
                 "enabled": self.config.content_policy_enabled,
                 "policies_count": len(self.content_policies),
                 "enabled_policies": sum(1 for policy in self.content_policies.values() if policy["enabled"]),
@@ -457,9 +490,12 @@ class ContentPolicyMonitor:
             return {"error": str(e)}
 
     async def generate_detailed_report(self) -> Dict[str, Any]:
-    """Generate detailed content policy compliance report"""
+        """Generate detailed content policy compliance report"""
         try:
             report = {
+            except Exception as e:
+                pass
+
                 "report_type": "content_policy_detailed",
                 "generated_at": datetime.utcnow().isoformat(),
                 "compliance_overview": await self.get_compliance_status(),
@@ -483,6 +519,9 @@ class ContentPolicyMonitor:
         """Update a content policy configuration"""
         try:
             if policy_name not in self.content_policies:
+            except Exception as e:
+                pass
+
                 logger.warning(f"Content policy {policy_name} not found")
                 return False
 
@@ -498,6 +537,9 @@ class ContentPolicyMonitor:
         """Add a new content policy"""
         try:
             if policy_name in self.content_policies:
+            except Exception as e:
+                pass
+
                 logger.warning(f"Content policy {policy_name} already exists")
                 return False
 
@@ -513,6 +555,9 @@ class ContentPolicyMonitor:
         """Remove a content policy"""
         try:
             if policy_name not in self.content_policies:
+            except Exception as e:
+                pass
+
                 logger.warning(f"Content policy {policy_name} not found")
                 return False
 

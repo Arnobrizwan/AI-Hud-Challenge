@@ -49,9 +49,12 @@ class IncidentResponseManager:
         self.incident_counter = 0
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize the incident response manager"""
+        """Initialize the incident response manager"""
         try:
             # Initialize all components
+            except Exception as e:
+                pass
+
             await self.incident_classifier.initialize()
             await self.response_orchestrator.initialize()
             await self.escalation_manager.initialize()
@@ -70,9 +73,12 @@ class IncidentResponseManager:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-    """Cleanup resources"""
+        """Cleanup resources"""
         try:
-    await self.incident_classifier.cleanup()
+            await self.incident_classifier.cleanup()
+            except Exception as e:
+                pass
+
             await self.response_orchestrator.cleanup()
             await self.escalation_manager.cleanup()
             await self.communication_manager.cleanup()
@@ -96,6 +102,9 @@ class IncidentResponseManager:
 
         try:
             # Generate incident ID if not provided
+            except Exception as e:
+                pass
+
             if not incident.id:
                 incident.id = self.generate_incident_id()
 
@@ -113,7 +122,7 @@ class IncidentResponseManager:
 
             # Handle escalation if needed
             if classification.requires_escalation:
-    await self.escalation_manager.escalate_incident(incident, classification)
+                await self.escalation_manager.escalate_incident(incident, classification)
 
             # Communicate with stakeholders
             await self.communication_manager.notify_stakeholders(incident, response_plan)
@@ -145,6 +154,9 @@ class IncidentResponseManager:
         """Create incident for drift detection"""
         try:
             incident = SafetyIncident(
+            except Exception as e:
+                pass
+
                 id=self.generate_incident_id(),
                 incident_type="data_drift",
                 severity="high" if drift_status.overall_severity > 0.8 else "medium",
@@ -171,6 +183,9 @@ class IncidentResponseManager:
         """Create incident for abuse detection"""
         try:
             incident = SafetyIncident(
+            except Exception as e:
+                pass
+
                 id=self.generate_incident_id(),
                 incident_type="abuse_detection",
                 severity=abuse_status.threat_level,
@@ -200,6 +215,9 @@ class IncidentResponseManager:
         """Create incident for content safety"""
         try:
             incident = SafetyIncident(
+            except Exception as e:
+                pass
+
                 id=self.generate_incident_id(),
                 incident_type="content_safety",
                 severity="high" if content_status.overall_safety_score < 0.5 else "medium",
@@ -230,6 +248,9 @@ class IncidentResponseManager:
         """Generate response plan for incident"""
         try:
             plan_id = f"plan_{incident.id}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
+            except Exception as e:
+                pass
+
 
             # Generate actions based on incident type and severity
             actions = await self.generate_response_actions(incident, classification)
@@ -259,6 +280,9 @@ class IncidentResponseManager:
         """Generate response actions for incident"""
         try:
             actions = []
+            except Exception as e:
+                pass
+
 
             # Immediate actions based on incident type
             if incident.incident_type == "data_drift":
@@ -326,7 +350,6 @@ class IncidentResponseManager:
                         parameters={"severity": classification.severity},
                         priority=3,
                     )
-                )
 
             return actions
 
@@ -340,6 +363,9 @@ class IncidentResponseManager:
         """Generate response timeline for incident"""
         try:
             timeline = []
+            except Exception as e:
+                pass
+
 
             # Immediate response phase
             timeline.append(
@@ -397,6 +423,9 @@ class IncidentResponseManager:
         """Generate success criteria for incident resolution"""
         try:
             criteria = []
+            except Exception as e:
+                pass
+
 
             # General success criteria
             criteria.extend(
@@ -450,14 +479,22 @@ class IncidentResponseManager:
             executed_actions = []
 
             # Execute high-priority actions immediately
+
+            except Exception as e:
+
+                pass
+
             immediate_actions = [
                 action for action in response_plan.actions if action.priority <= 2]
 
             for action in immediate_actions:
                 try:
-    await self.response_orchestrator.execute_action(action)
+                    await self.response_orchestrator.execute_action(action)
                     executed_actions.append(action)
                     logger.info(
+                    except Exception as e:
+                        pass
+
                         f"Executed immediate action: {action.action_type}")
                 except Exception as e:
                     logger.error(
@@ -474,6 +511,9 @@ class IncidentResponseManager:
         """Set up monitoring for incident resolution"""
         try:
             monitoring_config = MonitoringConfig(
+            except Exception as e:
+                pass
+
                 metrics_to_monitor=[
                     "system_health",
                     "error_rate",
@@ -500,6 +540,9 @@ class IncidentResponseManager:
         """Resolve an incident"""
         try:
             if incident_id not in self.active_incidents:
+            except Exception as e:
+                pass
+
                 logger.warning(
                     f"Incident {incident_id} not found in active incidents")
                 return False
@@ -524,6 +567,9 @@ class IncidentResponseManager:
         """Get active incidents"""
         try:
             incidents = []
+            except Exception as e:
+                pass
+
             for incident in self.active_incidents.values():
                 incidents.append(
                     {
@@ -544,9 +590,12 @@ class IncidentResponseManager:
             return []
 
     async def cleanup_resolved_incidents(self) -> Dict[str, Any]:
-    """Cleanup old resolved incidents"""
+        """Cleanup old resolved incidents"""
         try:
             cutoff_date = datetime.utcnow() - timedelta(days=30)  # Keep for 30 days
+            except Exception as e:
+                pass
+
 
             old_incidents = [
                 incident_id
@@ -565,10 +614,13 @@ class IncidentResponseManager:
             logger.error(f"Incident cleanup failed: {str(e)}")
 
     async def incident_monitoring_task(self) -> Dict[str, Any]:
-    """Background task for incident monitoring"""
+        """Background task for incident monitoring"""
         while True:
             try:
-    await asyncio.sleep(300)  # Check every 5 minutes
+                await asyncio.sleep(300)  # Check every 5 minutes
+                except Exception as e:
+                    pass
+
 
                 if not self.is_initialized:
                     break
@@ -587,10 +639,13 @@ class IncidentResponseManager:
                 await asyncio.sleep(300)
 
     async def incident_cleanup_task(self) -> Dict[str, Any]:
-    """Background task for incident cleanup"""
+        """Background task for incident cleanup"""
         while True:
             try:
-    await asyncio.sleep(3600)  # Run every hour
+                await asyncio.sleep(3600)  # Run every hour
+                except Exception as e:
+                    pass
+
 
                 if not self.is_initialized:
                     break
@@ -607,9 +662,12 @@ class IncidentResponseManager:
         return f"incident_{self.incident_counter}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
 
     async def get_incident_statistics(self) -> Dict[str, Any]:
-    """Get incident statistics"""
+        """Get incident statistics"""
         try:
             return {
+            except Exception as e:
+                pass
+
                 "active_incidents": len(self.active_incidents),
                 "resolved_incidents": len(self.resolved_incidents),
                 "total_incidents": len(self.active_incidents) + len(self.resolved_incidents),
@@ -626,6 +684,9 @@ class IncidentResponseManager:
         """Get incident count by type"""
         try:
             type_counts = {}
+            except Exception as e:
+                pass
+
 
             # Count active incidents
             for incident in self.active_incidents.values():
@@ -647,6 +708,9 @@ class IncidentResponseManager:
         """Get incident count by severity"""
         try:
             severity_counts = {}
+            except Exception as e:
+                pass
+
 
             # Count active incidents
             for incident in self.active_incidents.values():
@@ -668,6 +732,9 @@ class IncidentResponseManager:
         """Calculate average incident resolution time in hours"""
         try:
             resolved_incidents = [
+            except Exception as e:
+                pass
+
                 incident
                 for incident in self.resolved_incidents.values()
                 if incident.resolved_at and incident.detected_at

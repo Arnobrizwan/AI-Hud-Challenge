@@ -52,9 +52,12 @@ class IncidentClassifier:
         self.escalation_rules = {"critical": True, "high": True, "medium": False, "low": False}
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize the incident classifier"""
+        """Initialize the incident classifier"""
         try:
             # Load any ML models or additional rules
+            except Exception as e:
+                pass
+
             await self.load_classification_models()
 
             self.is_initialized = True
@@ -65,9 +68,12 @@ class IncidentClassifier:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-    """Cleanup resources"""
+        """Cleanup resources"""
         try:
             self.is_initialized = False
+            except Exception as e:
+                pass
+
             logger.info("Incident classifier cleanup completed")
 
         except Exception as e:
@@ -81,6 +87,9 @@ class IncidentClassifier:
 
         try:
             # Classify incident type
+            except Exception as e:
+                pass
+
             incident_type = await self.classify_incident_type(incident)
 
             # Classify severity
@@ -117,6 +126,9 @@ class IncidentClassifier:
         """Classify the type of incident"""
         try:
             # Use incident type if already set
+            except Exception as e:
+                pass
+
             if incident.incident_type:
                 return incident.incident_type
 
@@ -160,6 +172,9 @@ class IncidentClassifier:
         """Classify incident severity"""
         try:
             # Check if severity is already set
+            except Exception as e:
+                pass
+
             if incident.severity and incident.severity in self.severity_rules:
                 return incident.severity
 
@@ -188,6 +203,9 @@ class IncidentClassifier:
         """Check if metadata values exceed severity thresholds"""
         try:
             for key, threshold in thresholds.items():
+            except Exception as e:
+                pass
+
                 if key in metadata:
                     value = metadata[key]
                     if isinstance(value, (int, float)) and value >= threshold:
@@ -203,6 +221,9 @@ class IncidentClassifier:
         """Assess the impact of the incident"""
         try:
             impact_assessment = {}
+            except Exception as e:
+                pass
+
             metadata = incident.metadata or {}
 
             # Assess system availability impact
@@ -231,6 +252,9 @@ class IncidentClassifier:
         """Assess system availability impact"""
         try:
             # Check affected systems
+            except Exception as e:
+                pass
+
             affected_systems = incident.affected_systems or []
 
             # Critical systems
@@ -259,6 +283,9 @@ class IncidentClassifier:
         """Assess data integrity impact"""
         try:
             # Check for data-related keywords in description
+            except Exception as e:
+                pass
+
             description = incident.description.lower()
 
             # Critical data integrity issues
@@ -287,6 +314,9 @@ class IncidentClassifier:
         """Assess user experience impact"""
         try:
             # Check for user experience keywords in description
+            except Exception as e:
+                pass
+
             description = incident.description.lower()
 
             # Critical user experience issues
@@ -315,6 +345,9 @@ class IncidentClassifier:
         """Determine if incident requires escalation"""
         try:
             # Check severity-based escalation rules
+            except Exception as e:
+                pass
+
             if severity in self.escalation_rules:
                 return self.escalation_rules[severity]
 
@@ -342,6 +375,9 @@ class IncidentClassifier:
         """Calculate confidence in classification"""
         try:
             confidence_factors = []
+            except Exception as e:
+                pass
+
 
             # Factor 1: Severity keyword match
             description = incident.description.lower()
@@ -381,9 +417,12 @@ class IncidentClassifier:
             return 0.5
 
     async def load_classification_models(self) -> Dict[str, Any]:
-    """Load any ML models for classification"""
+        """Load any ML models for classification"""
         try:
             # Placeholder for loading ML models
+            except Exception as e:
+                pass
+
             # In a real implementation, this would load trained models
             logger.info("Classification models loaded")
 
@@ -392,9 +431,12 @@ class IncidentClassifier:
             raise
 
     async def get_classification_statistics(self) -> Dict[str, Any]:
-    """Get classification statistics"""
+        """Get classification statistics"""
         try:
             return {
+            except Exception as e:
+                pass
+
                 "severity_rules": len(self.severity_rules),
                 "impact_rules": len(self.impact_rules),
                 "escalation_rules": len(self.escalation_rules),
@@ -410,6 +452,9 @@ class IncidentClassifier:
         """Update classification rules"""
         try:
             # Update severity rules
+            except Exception as e:
+                pass
+
             if "severity_rules" in new_rules:
                 self.severity_rules.update(new_rules["severity_rules"])
 

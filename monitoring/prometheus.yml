@@ -122,3 +122,4 @@ scrape_configs:
     static_configs:
       - targets: ['api-gateway:8000']
     metrics_path: '/metrics'
+

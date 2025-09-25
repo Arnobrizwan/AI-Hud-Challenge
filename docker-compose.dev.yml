@@ -300,3 +300,4 @@ volumes:
 networks:
   default:
     name: news-hub-network
+

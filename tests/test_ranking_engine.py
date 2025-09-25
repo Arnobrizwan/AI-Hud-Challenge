@@ -2,6 +2,7 @@
 
 import asyncio
 from datetime import datetime, timedelta
+from typing import Any, Dict
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -89,8 +90,8 @@ async def test_rank_content_success(ranking_engine, sample_ranking_request) -> D
 async def test_rank_content_with_articles(
         ranking_engine,
         sample_ranking_request,
-        sample_articles):
-     -> Dict[str, Any]:"""Test content ranking with articles."""
+        sample_articles) -> Dict[str, Any]:
+    """Test content ranking with articles."""
     with patch.object(ranking_engine, "_get_candidates") as mock_get_candidates:
         mock_get_candidates.return_value = sample_articles
 
@@ -106,8 +107,8 @@ async def test_rank_content_with_articles(
 async def test_compute_ranking_features(
         ranking_engine,
         sample_articles,
-        sample_ranking_request):
-     -> Dict[str, Any]:"""Test feature computation."""
+        sample_ranking_request) -> Dict[str, Any]:
+    """Test feature computation."""
     features = await ranking_engine.compute_ranking_features(
         sample_articles, sample_ranking_request
     )
@@ -121,8 +122,8 @@ async def test_compute_ranking_features(
 async def test_heuristic_ranking(
         ranking_engine,
         sample_articles,
-        sample_ranking_request):
-     -> Dict[str, Any]:"""Test heuristic ranking algorithm."""
+        sample_ranking_request) -> Dict[str, Any]:
+    """Test heuristic ranking algorithm."""
     features = [[0.5] * 20] * len(sample_articles)  # Dummy features
 
     result = await ranking_engine.heuristic_ranking(
@@ -139,8 +140,8 @@ async def test_heuristic_ranking(
 async def test_hybrid_ranking(
         ranking_engine,
         sample_articles,
-        sample_ranking_request):
-     -> Dict[str, Any]:"""Test hybrid ranking algorithm."""
+        sample_ranking_request) -> Dict[str, Any]:
+    """Test hybrid ranking algorithm."""
     features = [[0.5] * 20] * len(sample_articles)  # Dummy features
 
     result = await ranking_engine.hybrid_ranking(sample_articles, features, sample_ranking_request)
@@ -155,8 +156,8 @@ async def test_hybrid_ranking(
 async def test_apply_ranking_constraints(
         ranking_engine,
         sample_articles,
-        sample_ranking_request):
-     -> Dict[str, Any]:"""Test ranking constraints application."""
+        sample_ranking_request) -> Dict[str, Any]:
+    """Test ranking constraints application."""
     # Create ranked articles
     ranked_articles = []
     for i, article in enumerate(sample_articles):
@@ -182,8 +183,8 @@ async def test_apply_ranking_constraints(
 async def test_compute_heuristic_score(
         ranking_engine,
         sample_articles,
-        sample_ranking_request):
-     -> Dict[str, Any]:"""Test heuristic score computation."""
+        sample_ranking_request) -> Dict[str, Any]:
+    """Test heuristic score computation."""
     article = sample_articles[0]
     features = [0.5] * 20  # Dummy features
 
@@ -196,8 +197,8 @@ async def test_compute_heuristic_score(
 async def test_get_personalization_score(
         ranking_engine,
         sample_articles,
-        sample_ranking_request):
-     -> Dict[str, Any]:"""Test personalization score computation."""
+        sample_ranking_request) -> Dict[str, Any]:
+    """Test personalization score computation."""
     article = sample_articles[0]
 
     with patch.object(
@@ -217,15 +218,15 @@ async def test_ranking_error_handling(ranking_engine, sample_ranking_request) ->
         mock_get_candidates.side_effect = Exception("Test error")
 
         with pytest.raises(Exception):
-    await ranking_engine.rank_content(sample_ranking_request)
+            await ranking_engine.rank_content(sample_ranking_request)
 
 
 @pytest.mark.asyncio
 async def test_ml_ranking_fallback(
         ranking_engine,
         sample_articles,
-        sample_ranking_request):
-     -> Dict[str, Any]:"""Test ML ranking fallback to heuristic."""
+        sample_ranking_request) -> Dict[str, Any]:
+    """Test ML ranking fallback to heuristic."""
     features = [[0.5] * 20] * len(sample_articles)
 
     # Mock model not loaded
@@ -240,8 +241,8 @@ async def test_ml_ranking_fallback(
 @pytest.mark.asyncio
 async def test_ranking_with_different_algorithms(
     ranking_engine, sample_articles, sample_ranking_request
-):
-     -> Dict[str, Any]:"""Test ranking with different algorithm variants."""
+) -> Dict[str, Any]:
+    """Test ranking with different algorithm variants."""
     features = [[0.5] * 20] * len(sample_articles)
 
     # Test ML ranking

@@ -245,3 +245,4 @@ jobs:
         echo "Deployment failed, initiating rollback..."
         # Add rollback logic here
         gcloud run services update-traffic api-gateway --to-revisions=PREVIOUS=100 --region=$REGION
+

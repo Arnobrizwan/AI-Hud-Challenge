@@ -97,7 +97,7 @@ class ObservabilityEngine:
         )
 
     async def start_monitoring_loops(self) -> Dict[str, Any]:
-    """Start background monitoring tasks"""
+        """Start background monitoring tasks"""
         # Health monitoring loop
         self.monitoring_tasks.append(
             asyncio.create_task(
@@ -174,23 +174,23 @@ class ObservabilityEngine:
         )
 
     async def check_service_health(self) -> Dict[str, Any]:
-    """Check health of all microservices"""
+        """Check health of all microservices"""
         return await self.health_checker.check_all_services()
 
     async def check_infrastructure_health(self) -> Dict[str, Any]:
-    """Check infrastructure health (Kubernetes, databases, etc.)"""
+        """Check infrastructure health (Kubernetes, databases, etc.)"""
         return await self.health_checker.check_infrastructure()
 
     async def check_data_pipeline_health(self) -> Dict[str, Any]:
-    """Check data pipeline health"""
+        """Check data pipeline health"""
         return await self.health_checker.check_data_pipeline()
 
     async def check_ml_model_health(self) -> Dict[str, Any]:
-    """Check ML model health and performance"""
+        """Check ML model health and performance"""
         return await self.health_checker.check_ml_models()
 
     async def check_external_dependencies_health(self) -> Dict[str, Any]:
-    """Check external dependencies health"""
+        """Check external dependencies health"""
         return await self.health_checker.check_external_dependencies()
 
     def calculate_overall_health_score(
@@ -225,7 +225,7 @@ class ObservabilityEngine:
         return list(set(recommendations))  # Remove duplicates
 
     async def get_system_status(self) -> Dict[str, Any]:
-    """Get comprehensive system status"""
+        """Get comprehensive system status"""
         if not self.is_initialized:
             return {"status": "not_initialized"}
 

@@ -1,44 +1,47 @@
-FROM python:3.11-slim
-
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+# syntax=docker/dockerfile:1.7
+ARG PYTHON_VERSION=3.11
+FROM python:${PYTHON_VERSION}-slim-bookworm AS base
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_INPUT=1
 ENV SPACY_CACHE_DIR=/app/.spacy_cache
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    curl \
-    software-properties-common \
-    git \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install PostgreSQL client
-RUN apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/apt/lists/*
-
-# Set work directory
 WORKDIR /app
 
-# Install Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
+FROM base AS deps
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+# system deps for building wheels
+RUN --mount=type=cache,target=/var/cache/apt \
+    --mount=type=cache,target=/var/lib/apt/lists \
+    apt-get update && apt-get install -y --no-install-recommends \
+      build-essential gcc g++ make curl git libffi-dev libssl-dev \
+      software-properties-common postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+# uv (faster pip)
+RUN python -m pip install -U pip && pip install -U uv
+# copy only dependency manifests
+ARG REQ_FILE=requirements.txt
+COPY ${REQ_FILE} /app/requirements.txt
+# create venv and install deps with cache
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=cache,target=/root/.cache/pip \
+    uv pip install --upgrade pip wheel \
+    && uv pip install -r /app/requirements.txt
 # Download spaCy models
 RUN python -m spacy download en_core_web_lg
 RUN python -m spacy download en_core_web_sm
 
-# Copy project
-COPY . .
-
+FROM base AS runtime
+ENV PATH="/opt/venv/bin:$PATH"
+# copy resolved env and deps from deps stage
+COPY --from=deps /opt/venv /opt/venv
+# only now copy the rest of the app
+COPY . /app
 # Create cache directories
 RUN mkdir -p /app/.spacy_cache /app/models /app/logs
-
-# Expose port
+# default port
 EXPOSE 8000
-
-# Health check
+# healthcheck
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
-
-# Run the application
+# CMD
 CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]

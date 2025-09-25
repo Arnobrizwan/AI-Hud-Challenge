@@ -49,7 +49,7 @@ class ContentModerationEngine:
         self.external_apis = ExternalModerationAPIs()
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize the content moderation engine"""
+        """Initialize the content moderation engine"""
         try:
             # Initialize all detectors
             await self.toxicity_detector.initialize()
@@ -69,9 +69,9 @@ class ContentModerationEngine:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-    """Cleanup resources"""
+        """Cleanup resources"""
         try:
-    await self.toxicity_detector.cleanup()
+            await self.toxicity_detector.cleanup()
             await self.hate_speech_detector.cleanup()
             await self.spam_detector.cleanup()
             await self.misinformation_detector.cleanup()
@@ -206,7 +206,7 @@ class ContentModerationEngine:
 
     async def moderate_image_content(
             self, image_urls: List[str]) -> Dict[str, Any]:
-    """Moderate image content for safety issues"""
+        """Moderate image content for safety issues"""
         try:
             image_results = {}
 
@@ -246,7 +246,7 @@ class ContentModerationEngine:
 
     async def moderate_video_content(
             self, video_urls: List[str]) -> Dict[str, Any]:
-    """Moderate video content for safety issues"""
+        """Moderate video content for safety issues"""
         try:
             video_results = {}
 
@@ -285,7 +285,7 @@ class ContentModerationEngine:
             return {}
 
     async def check_url_safety(self, urls: List[str]) -> Dict[str, Any]:
-    """Check URL safety"""
+        """Check URL safety"""
         try:
             url_results = {}
 
@@ -452,7 +452,7 @@ class ContentModerationEngine:
                 return ModerationAction.FLAG
             elif safety_score >= 0.2:
                 return ModerationAction.BLOCK
-        else:
+            else:
                 return ModerationAction.REMOVE
 
         except Exception as e:

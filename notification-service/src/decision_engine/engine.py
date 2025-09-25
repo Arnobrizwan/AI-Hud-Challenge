@@ -10,6 +10,7 @@ import structlog
 from redis.asyncio import Redis
 
 from ..ab_testing.ab_tester import ABTestingFramework
+from ..breaking_news.breaking_news_detector import BreakingNewsDetector
 from ..delivery.delivery_manager import MultiChannelDelivery
 from ..exceptions import NotificationDeliveryError, NotificationError
 from ..fatigue.fatigue_detector import FatigueDetector
@@ -22,6 +23,7 @@ from ..models.schemas import (
     Priority,
 )
 from ..optimization.content_optimizer import NotificationContentOptimizer
+from ..policy.policy_engine import PolicyEngine
 from ..preferences.preference_manager import NotificationPreferenceManager
 from ..relevance.relevance_scorer import RelevanceScorer
 from ..timing.timing_predictor import NotificationTimingModel
@@ -41,6 +43,8 @@ class NotificationDecisionEngine:
         self.delivery_manager = MultiChannelDelivery()
         self.content_optimizer = NotificationContentOptimizer()
         self.ab_tester = ABTestingFramework(redis_client)
+        self.breaking_news_detector = BreakingNewsDetector(redis_client)
+        self.policy_engine = PolicyEngine(redis_client)
 
         # Performance tracking
         self._decision_count = 0
@@ -59,6 +63,8 @@ class NotificationDecisionEngine:
         await self.delivery_manager.initialize()
         await self.content_optimizer.initialize()
         await self.ab_tester.initialize()
+        await self.breaking_news_detector.initialize()
+        await self.policy_engine.initialize()
 
         logger.info("Notification decision engine initialized successfully")
 
@@ -74,6 +80,8 @@ class NotificationDecisionEngine:
         await self.delivery_manager.cleanup()
         await self.content_optimizer.cleanup()
         await self.ab_tester.cleanup()
+        await self.breaking_news_detector.cleanup()
+        await self.policy_engine.cleanup()
 
         logger.info("Notification decision engine cleanup completed")
 
@@ -125,9 +133,29 @@ class NotificationDecisionEngine:
 
                 urgency_score = await self._compute_urgency_score(candidate)
 
+                # Detect breaking news
+                cluster_velocity = await self.breaking_news_detector.get_cluster_velocity(
+                    candidate.content.cluster_id if hasattr(candidate.content, 'cluster_id') else "unknown"
+                )
+                source_weight = await self._get_source_weight(candidate.content.source)
+                user_interest = await self._get_user_interest(candidate.user_id, candidate.content.topics)
+                
+                is_breaking, breaking_score, breaking_event = await self.breaking_news_detector.detect_breaking_news(
+                    candidate, cluster_velocity, source_weight, user_interest
+                )
+
                 # Check if content meets notification threshold
                 notification_threshold = user_prefs.get_threshold(candidate.notification_type)
+                
+                # Adjust threshold for breaking news
+                if is_breaking:
+                    notification_threshold *= 0.7  # Lower threshold for breaking news
+                
                 combined_score = (relevance_score * 0.7) + (urgency_score * 0.3)
+                
+                # Boost score for breaking news
+                if is_breaking:
+                    combined_score = max(combined_score, breaking_score)
 
                 if combined_score < notification_threshold:
                     decision = NotificationDecision(
@@ -158,7 +186,8 @@ class NotificationDecisionEngine:
                     candidate, strategy_variant, user_prefs
                 )
 
-                decision = NotificationDecision(
+                # Create preliminary decision
+                preliminary_decision = NotificationDecision(
                     should_send=True,
                     delivery_time=optimal_timing.scheduled_time,
                     delivery_channel=delivery_channel,
@@ -167,13 +196,34 @@ class NotificationDecisionEngine:
                     strategy_variant=strategy_variant,
                     user_id=candidate.user_id,
                     score=combined_score,
+                    is_breaking=is_breaking,
+                    breaking_score=breaking_score,
                     metadata={
                         "relevance_score": relevance_score,
                         "urgency_score": urgency_score,
                         "predicted_engagement": optimal_timing.predicted_engagement,
                         "processing_time_ms": (datetime.utcnow() - start_time).total_seconds() * 1000,
+                        "breaking_event": breaking_event.dict() if breaking_event else None,
                     },
                 )
+
+                # Evaluate notification policies
+                policy_allowed, policy_reason, policy_metadata = await self.policy_engine.evaluate_notification_policy(
+                    preliminary_decision, candidate.user_id, candidate.notification_type.value
+                )
+
+                if not policy_allowed:
+                    decision = NotificationDecision(
+                        should_send=False,
+                        reason=f"policy_violation: {policy_reason}",
+                        user_id=candidate.user_id,
+                        metadata=policy_metadata,
+                    )
+                    await self._log_decision(decision, start_time)
+                    return decision
+
+                # Final decision
+                decision = preliminary_decision
 
                 await self._log_decision(decision, start_time)
                 return decision
@@ -362,3 +412,63 @@ class NotificationDecisionEngine:
     async def _log_delivery_failure(self, decision: NotificationDecision, error: str) -> None:
         """Log delivery failure."""
         logger.error("Notification delivery failed", user_id=decision.user_id, error=error)
+
+    async def _get_source_weight(self, source: str) -> float:
+        """Get source authority weight."""
+        try:
+            source_weight_key = f"source_weight:{source}"
+            weight = await self.redis_client.get(source_weight_key)
+            
+            if weight:
+                return float(weight)
+            else:
+                # Default weight based on source type
+                default_weights = {
+                    "reuters": 0.9,
+                    "ap": 0.9,
+                    "bbc": 0.8,
+                    "cnn": 0.8,
+                    "nytimes": 0.8,
+                    "washingtonpost": 0.8,
+                    "guardian": 0.7,
+                    "independent": 0.7,
+                }
+                return default_weights.get(source.lower(), 0.5)
+                
+        except Exception as e:
+            logger.error("Error getting source weight", source=source, error=str(e))
+            return 0.5
+
+    async def _get_user_interest(self, user_id: str, topics: List[str]) -> float:
+        """Get user interest score for topics."""
+        try:
+            if not topics:
+                return 0.5
+                
+            # Get user topic preferences
+            user_prefs_key = f"user_topic_prefs:{user_id}"
+            user_prefs = await self.redis_client.hgetall(user_prefs_key)
+            
+            if not user_prefs:
+                return 0.5  # Default interest
+            
+            # Calculate average interest across topics
+            total_interest = 0.0
+            topic_count = 0
+            
+            for topic in topics:
+                topic_key = topic.lower().replace(" ", "_")
+                interest = user_prefs.get(topic_key.encode())
+                
+                if interest:
+                    total_interest += float(interest)
+                    topic_count += 1
+            
+            if topic_count > 0:
+                return total_interest / topic_count
+            else:
+                return 0.5
+                
+        except Exception as e:
+            logger.error("Error getting user interest", user_id=user_id, topics=topics, error=str(e))
+            return 0.5

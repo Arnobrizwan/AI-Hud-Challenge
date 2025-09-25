@@ -1,9 +1,14 @@
 # Makefile for News Aggregation Pipeline
-.PHONY: dev-up dev-down dev-restart dev-logs dev-test dev-clean build deploy
+.PHONY: dev-up dev-down dev-restart dev-logs dev-test dev-clean build deploy build-fast run clean
 
 # Environment variables
 export COMPOSE_PROJECT_NAME=news-hub
 export DOCKER_BUILDKIT=1
+
+# Build variables for fast local builds
+IMAGE_NAME ?= $(shell basename $$PWD | tr '[:upper:]' '[:lower:]')
+PLATFORM   ?= linux/arm64
+CACHE_DIR  ?= .docker-cache
 
 # 🚀 SINGLE COMMAND TO RUN ALL 16 SERVICES LOCALLY
 dev-up: 
@@ -39,8 +44,26 @@ dev-clean:
 	@docker system prune -f
 	@docker volume prune -f
 
-# Production build
+# Fast local builds (Apple Silicon optimized)
 build:
+	@echo "🏗️ Building optimized Docker image with BuildKit caching..."
+	@DOCKER_BUILDKIT=1 docker build \
+		--platform $(PLATFORM) \
+		--progress=plain \
+		-t $(IMAGE_NAME):dev \
+		.
+
+run:
+	@echo "🚀 Running optimized container..."
+	@docker run --rm -it -p 8080:8080 $(IMAGE_NAME):dev
+
+clean:
+	@echo "🧹 Cleaning Docker cache and images..."
+	@rm -rf $(CACHE_DIR)
+	@docker image prune -f
+
+# Production build
+build-prod:
 	@echo "🏗️ Building production images..."
 	@./scripts/build-all-services.sh
 

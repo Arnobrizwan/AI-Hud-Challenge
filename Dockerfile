@@ -31,17 +31,20 @@ RUN apt-get update && apt-get install -y \
 # Copy Python packages from builder
 COPY --from=builder /root/.local /root/.local
 
+# Create non-root user
+RUN useradd --create-home --shell /bin/bash app
+
 # Copy application code
 COPY src/ ./src/
-COPY models/ ./models/
 
-# Create non-root user
-RUN useradd --create-home --shell /bin/bash app \
-    && chown -R app:app /app
+# Copy packages to app user's home
+RUN cp -r /root/.local /home/app/.local \
+    && chown -R app:app /home/app/.local /app
+
 USER app
 
 # Set Python path
-ENV PATH=/root/.local/bin:$PATH
+ENV PATH=/home/app/.local/bin:/root/.local/bin:$PATH
 ENV PYTHONPATH=/app
 
 # Expose ports

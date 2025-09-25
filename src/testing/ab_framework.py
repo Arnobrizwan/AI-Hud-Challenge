@@ -36,11 +36,11 @@ class ABTestingFramework:
         self.results: List[ExperimentResult] = []
         self.assignment_cache: Dict[str, str] = {}  # user_id -> variant_id
 
-        # Initialize with default experiments
-        asyncio.create_task(self._initialize_experiments())
+        # Initialize with default experiments lazily
+        self._initialized = False
 
     async def _initialize_experiments(self) -> Dict[str, Any]:
-    """Initialize default A/B test experiments."""
+        """Initialize default A/B test experiments."""
         try:
             # Create default ranking algorithm experiment
             ranking_experiment = ABTestExperiment(
@@ -139,6 +139,11 @@ class ABTestingFramework:
     async def get_variant(self, user_id: str, experiment: str) -> str:
         """Get variant assignment for user in experiment."""
         try:
+            # Ensure experiments are initialized
+            if not self._initialized:
+                await self._initialize_experiments()
+                self._initialized = True
+
             # Check if user is already assigned
             cache_key = f"ab_assignment:{experiment}:{user_id}"
             cached_variant = await self.cache_manager.get(cache_key)
@@ -204,8 +209,8 @@ class ABTestingFramework:
             self,
             user_id: str,
             experiment: str,
-            variant: str):
-         -> Dict[str, Any]:"""Log variant assignment for analysis."""
+            variant: str) -> Dict[str, Any]:
+        """Log variant assignment for analysis."""
         try:
             assignment = {
                 "user_id": user_id,
@@ -225,8 +230,8 @@ class ABTestingFramework:
                             experiment: str,
                             variant: str,
                             metrics: Dict[str,
-                                          float]):
-         -> Dict[str, Any]:"""Record experiment result for analysis."""
+                                          float]) -> Dict[str, Any]:
+        """Record experiment result for analysis."""
         try:
             result = ExperimentResult(
                 experiment_id=experiment,
@@ -250,8 +255,13 @@ class ABTestingFramework:
             logger.error("Failed to record experiment result", error=str(e))
 
     async def get_experiment_stats(self, experiment: str) -> Dict[str, Any]:
-    """Get statistics for an experiment."""
+        """Get statistics for an experiment."""
         try:
+            # Ensure experiments are initialized
+            if not self._initialized:
+                await self._initialize_experiments()
+                self._initialized = True
+
             exp = self.experiments.get(experiment)
             if not exp:
                 return {"error": "Experiment not found"}
@@ -425,7 +435,7 @@ class ABTestingFramework:
         return experiments
 
     async def analyze_experiment(self, experiment_id: str) -> Dict[str, Any]:
-    """Perform statistical analysis of experiment results."""
+        """Perform statistical analysis of experiment results."""
         try:
             exp = self.experiments.get(experiment_id)
             if not exp:

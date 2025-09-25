@@ -46,7 +46,7 @@ class AbuseDetectionSystem:
         self.captcha_challenger = CaptchaChallenger()
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize the abuse detection system"""
+        """Initialize the abuse detection system"""
         try:
             # Initialize all components
             await self.behavioral_analyzer.initialize()
@@ -65,9 +65,9 @@ class AbuseDetectionSystem:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-    """Cleanup resources"""
+        """Cleanup resources"""
         try:
-    await self.behavioral_analyzer.cleanup()
+            await self.behavioral_analyzer.cleanup()
             await self.graph_analyzer.cleanup()
             await self.ml_classifier.cleanup()
             await self.rule_engine.cleanup()
@@ -323,7 +323,8 @@ class AbuseDetectionSystem:
                             "duration_minutes": 60 if threat_level == "medium" else 1440,
                         },
                         priority=1,
-                    ))
+                    )
+                )
 
             # CAPTCHA challenge for high+ threat
             if threat_level in ["high", "critical"]:
@@ -335,7 +336,8 @@ class AbuseDetectionSystem:
                             "required_success_rate": 0.8,
                         },
                         priority=2,
-                    ))
+                    )
+                )
 
             # Content restrictions for high+ threat
             if threat_level in ["high", "critical"]:
@@ -359,7 +361,8 @@ class AbuseDetectionSystem:
                             "duration_hours": 24,
                             "reason": "Critical abuse detected"},
                         priority=4,
-                    ))
+                    )
+                )
 
             # Manual review for high+ threat
             if threat_level in ["high", "critical"]:
@@ -374,7 +377,8 @@ class AbuseDetectionSystem:
                                 "network"],
                         },
                         priority=5,
-                    ))
+                    )
+                )
 
             return response_actions
 
@@ -392,15 +396,15 @@ class AbuseDetectionSystem:
             for action in mitigation_actions:
                 try:
                     if action.action_type == "rate_limit":
-    await self.apply_rate_limiting(user_id, action.parameters)
+                        await self.apply_rate_limiting(user_id, action.parameters)
                     elif action.action_type == "captcha_challenge":
-    await self.captcha_challenger.challenge_user(user_id)
+                        await self.captcha_challenger.challenge_user(user_id)
                     elif action.action_type == "temporary_suspension":
-    await self.apply_temporary_suspension(user_id, action.parameters)
+                        await self.apply_temporary_suspension(user_id, action.parameters)
                     elif action.action_type == "content_restriction":
-    await self.apply_content_restrictions(user_id, action.parameters)
+                        await self.apply_content_restrictions(user_id, action.parameters)
                     elif action.action_type == "account_review":
-    await self.trigger_manual_review(user_id, action.parameters)
+                        await self.trigger_manual_review(user_id, action.parameters)
 
                     applied_actions.append(action)
 

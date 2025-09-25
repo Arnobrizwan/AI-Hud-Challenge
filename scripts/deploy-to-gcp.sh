@@ -77,3 +77,4 @@ for service in "${SERVICES[@]}"; do
   SERVICE_URL=$(gcloud run services describe $service --region=$REGION --format="value(status.url)")
   echo "   • $service: $SERVICE_URL"
 done
+

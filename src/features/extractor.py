@@ -599,7 +599,7 @@ class AuthorityScorer:
             scores = await self._compute_authority_scores(source_id)
 
             # Cache the results
-            await self.cache_manager.set(f"authority:{source_id}", scores.dict(), ttl=3600)
+            await self.cache_manager.set(f"authority:{source_id}", scores.model_dump(), ttl=3600)
 
             return scores
 

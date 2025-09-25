@@ -71,7 +71,7 @@ class MetricsCollector:
             self.histograms[name] = self.histograms[name][-1000:]
 
     def get_metrics_summary(self) -> Dict[str, Any]:
-    """Get summary of all metrics."""
+        """Get summary of all metrics."""
         return {
             "counters": dict(self.counters),
             "gauges": dict(self.gauges),
@@ -112,43 +112,65 @@ class RankingMetricsCollector(MetricsCollector):
 
     def _init_prometheus_metrics(self):
         """Initialize Prometheus metrics."""
-        self.request_counter = Counter(
-            "ranking_requests_total", "Total ranking requests", [
-                "algorithm_variant", "status"])
+        try:
+            self.request_counter = Counter(
+                "ranking_requests_total", "Total ranking requests", [
+                    "algorithm_variant", "status"])
+        except ValueError:
+            # Metric already exists, skip creation
+            pass
 
-        self.response_time_histogram = Histogram(
-            "ranking_response_time_seconds",
-            "Ranking response time",
-            ["algorithm_variant"],
-            buckets=[0.01, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0],
-        )
+        try:
+            self.response_time_histogram = Histogram(
+                "ranking_response_time_seconds",
+                "Ranking response time",
+                ["algorithm_variant"],
+                buckets=[0.01, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0],
+            )
+        except ValueError:
+            pass
 
-        self.feature_time_histogram = Histogram(
-            "ranking_feature_time_seconds",
-            "Feature computation time",
-            buckets=[0.001, 0.005, 0.01, 0.05, 0.1, 0.2, 0.5],
-        )
+        try:
+            self.feature_time_histogram = Histogram(
+                "ranking_feature_time_seconds",
+                "Feature computation time",
+                buckets=[0.001, 0.005, 0.01, 0.05, 0.1, 0.2, 0.5],
+            )
+        except ValueError:
+            pass
 
-        self.ranking_time_histogram = Histogram(
-            "ranking_algorithm_time_seconds",
-            "Ranking algorithm time",
-            ["algorithm_variant"],
-            buckets=[0.001, 0.005, 0.01, 0.05, 0.1, 0.2, 0.5],
-        )
+        try:
+            self.ranking_time_histogram = Histogram(
+                "ranking_algorithm_time_seconds",
+                "Ranking algorithm time",
+                ["algorithm_variant"],
+                buckets=[0.001, 0.005, 0.01, 0.05, 0.1, 0.2, 0.5],
+            )
+        except ValueError:
+            pass
 
-        self.cache_hit_rate_gauge = Gauge(
-            "ranking_cache_hit_rate", "Cache hit rate")
+        try:
+            self.cache_hit_rate_gauge = Gauge(
+                "ranking_cache_hit_rate", "Cache hit rate")
+        except ValueError:
+            pass
 
-        self.article_count_histogram = Histogram(
-            "ranking_article_count",
-            "Number of articles ranked",
-            buckets=[1, 5, 10, 20, 50, 100, 200, 500],
-        )
+        try:
+            self.article_count_histogram = Histogram(
+                "ranking_article_count",
+                "Number of articles ranked",
+                buckets=[1, 5, 10, 20, 50, 100, 200, 500],
+            )
+        except ValueError:
+            pass
 
-        self.error_counter = Counter(
-            "ranking_errors_total",
-            "Total ranking errors",
-            ["error_type"])
+        try:
+            self.error_counter = Counter(
+                "ranking_errors_total",
+                "Total ranking errors",
+                ["error_type"])
+        except ValueError:
+            pass
 
     async def record_ranking(
         self,
@@ -159,8 +181,8 @@ class RankingMetricsCollector(MetricsCollector):
         article_count: int,
         user_id: Optional[str] = None,
         algorithm_variant: Optional[str] = None,
-    ):
-         -> Dict[str, Any]:"""Record ranking performance metrics."""
+    ) -> Dict[str, Any]:
+        """Record ranking performance metrics."""
         try:
             # Record performance metrics
             metrics = PerformanceMetrics(
@@ -204,7 +226,7 @@ class RankingMetricsCollector(MetricsCollector):
             logger.error("Failed to record ranking metrics", error=str(e))
 
     async def record_error(self, error_type: str = "unknown") -> Dict[str, Any]:
-    """Record ranking error."""
+        """Record ranking error."""
         try:
             self.error_count += 1
             self.increment_counter("errors")
@@ -218,7 +240,7 @@ class RankingMetricsCollector(MetricsCollector):
 
     def get_performance_summary(
             self, time_window_minutes: int = 60) -> Dict[str, Any]:
-    """Get performance summary for time window."""
+        """Get performance summary for time window."""
         cutoff_time = datetime.utcnow() - timedelta(minutes=time_window_minutes)
 
         # Filter metrics by time window
@@ -258,7 +280,7 @@ class RankingMetricsCollector(MetricsCollector):
         }
 
     def get_algorithm_comparison(self) -> Dict[str, Any]:
-    """Compare performance across algorithms."""
+        """Compare performance across algorithms."""
         algorithm_metrics = defaultdict(list)
 
         for metrics in self.performance_metrics:
@@ -314,8 +336,8 @@ class SystemMetricsCollector(MetricsCollector):
         redis_connections: int,
         active_requests: int,
         queue_size: int,
-    ):
-         -> Dict[str, Any]:"""Record system metrics."""
+    ) -> Dict[str, Any]:
+        """Record system metrics."""
         try:
             metrics = SystemMetrics(
                 timestamp=datetime.utcnow(),
@@ -347,7 +369,7 @@ class SystemMetricsCollector(MetricsCollector):
 
     def get_system_summary(
             self, time_window_minutes: int = 60) -> Dict[str, Any]:
-    """Get system summary for time window."""
+        """Get system summary for time window."""
         cutoff_time = datetime.utcnow() - timedelta(minutes=time_window_minutes)
 
         # Filter metrics by time window
@@ -405,7 +427,7 @@ class HealthChecker:
         self.alerts: List[Dict[str, Any]] = []
 
     async def check_health(self) -> Dict[str, Any]:
-    """Perform health check."""
+        """Perform health check."""
         health_status = {
             "status": "healthy",
             "timestamp": datetime.utcnow().isoformat(),
@@ -497,17 +519,17 @@ class MetricsExporter:
         asyncio.create_task(self._export_loop())
 
     async def _export_loop(self) -> Dict[str, Any]:
-    """Export metrics periodically."""
+        """Export metrics periodically."""
         while self.export_enabled:
             try:
-    await self.export_metrics()
+                await self.export_metrics()
                 await asyncio.sleep(self.export_interval)
             except Exception as e:
                 logger.error("Metrics export failed", error=str(e))
                 await asyncio.sleep(self.export_interval)
 
     async def export_metrics(self) -> Dict[str, Any]:
-    """Export metrics to external systems."""
+        """Export metrics to external systems."""
         try:
             # Get metrics summaries
             ranking_summary = self.ranking_collector.get_performance_summary()

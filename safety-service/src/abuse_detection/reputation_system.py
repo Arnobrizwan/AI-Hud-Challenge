@@ -46,7 +46,7 @@ class ReputationSystem:
         }
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize the reputation system"""
+        """Initialize the reputation system"""
         try:
             # Load existing reputations from storage
             await self.load_reputations()
@@ -62,7 +62,7 @@ class ReputationSystem:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-    """Cleanup resources"""
+        """Cleanup resources"""
         try:
             # Save current reputations
             await self.save_reputations()
@@ -222,7 +222,7 @@ class ReputationSystem:
 
     async def get_reputation_trend(
             self, user_id: str, days: int = 30) -> Dict[str, Any]:
-    """Get reputation trend analysis for a user"""
+        """Get reputation trend analysis for a user"""
         try:
             history = self.reputation_history.get(user_id, deque())
 
@@ -343,10 +343,10 @@ class ReputationSystem:
             return {}
 
     async def reputation_decay_task(self) -> Dict[str, Any]:
-    """Background task to apply reputation decay"""
+        """Background task to apply reputation decay"""
         while True:
             try:
-    await asyncio.sleep(3600)  # Run every hour
+                await asyncio.sleep(3600)  # Run every hour
 
                 if not self.is_initialized:
                     break
@@ -380,7 +380,7 @@ class ReputationSystem:
                 await asyncio.sleep(3600)  # Wait before retrying
 
     async def load_reputations(self) -> Dict[str, Any]:
-    """Load reputations from persistent storage"""
+        """Load reputations from persistent storage"""
         try:
             # In a real implementation, this would load from a database
             # For now, we'll start with empty reputations
@@ -390,7 +390,7 @@ class ReputationSystem:
             logger.error(f"Failed to load reputations: {str(e)}")
 
     async def save_reputations(self) -> Dict[str, Any]:
-    """Save reputations to persistent storage"""
+        """Save reputations to persistent storage"""
         try:
             # In a real implementation, this would save to a database
             logger.info(
@@ -400,7 +400,7 @@ class ReputationSystem:
             logger.error(f"Failed to save reputations: {str(e)}")
 
     async def get_system_statistics(self) -> Dict[str, Any]:
-    """Get overall reputation system statistics"""
+        """Get overall reputation system statistics"""
         try:
             total_users = len(self.user_reputations)
 

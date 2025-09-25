@@ -43,7 +43,7 @@ class AbuseRuleEngine:
         self.rule_stats = {}
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize the rule engine"""
+        """Initialize the rule engine"""
         try:
             # Load predefined rules
             await self.load_predefined_rules()
@@ -59,7 +59,7 @@ class AbuseRuleEngine:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-    """Cleanup resources"""
+        """Cleanup resources"""
         try:
             self.rules.clear()
             self.rule_groups.clear()
@@ -144,7 +144,7 @@ class AbuseRuleEngine:
             return False, f"Rule execution error: {str(e)}"
 
     async def load_predefined_rules(self) -> Dict[str, Any]:
-    """Load predefined abuse detection rules"""
+        """Load predefined abuse detection rules"""
         try:
             # High frequency requests rule
             self.add_rule(
@@ -249,7 +249,7 @@ class AbuseRuleEngine:
             raise
 
     async def load_custom_rules(self) -> Dict[str, Any]:
-    """Load custom rules from configuration"""
+        """Load custom rules from configuration"""
         try:
             # This would load custom rules from a configuration file or database
             # For now, we'll add some example custom rules
@@ -554,7 +554,7 @@ class AbuseRuleEngine:
             return False, f"Check failed: {str(e)}"
 
     async def get_rule_statistics(self) -> Dict[str, Any]:
-    """Get rule execution statistics"""
+        """Get rule execution statistics"""
         try:
             return {
                 "total_rules": len(self.rules),

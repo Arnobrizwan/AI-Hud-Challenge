@@ -58,11 +58,11 @@ class MultidimensionalDriftDetector:
         self.is_initialized = False
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize the drift detector"""
+        """Initialize the drift detector"""
         try:
             # Initialize all detectors
             for detector in self.statistical_detectors.values():
-    await detector.initialize()
+                await detector.initialize()
 
             await self.concept_drift_detector.initialize()
             await self.prediction_drift_detector.initialize()
@@ -76,10 +76,10 @@ class MultidimensionalDriftDetector:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-    """Cleanup resources"""
+        """Cleanup resources"""
         try:
             for detector in self.statistical_detectors.values():
-    await detector.cleanup()
+                await detector.cleanup()
 
             await self.concept_drift_detector.cleanup()
             await self.prediction_drift_detector.cleanup()
@@ -345,7 +345,7 @@ class MultidimensionalDriftDetector:
 
     async def get_drift_summary(
             self, drift_result: DriftAnalysisResult) -> Dict[str, Any]:
-    """Get a summary of drift detection results"""
+        """Get a summary of drift detection results"""
         return {
             "overall_severity": drift_result.overall_severity,
             "requires_action": drift_result.requires_action,

@@ -76,7 +76,7 @@ class StructuredLogger:
         self.is_initialized = False
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize structured logging"""
+        """Initialize structured logging"""
         # Configure structlog
         structlog.configure(
             processors=[
@@ -98,10 +98,10 @@ class StructuredLogger:
 
         # Initialize outputs
         if self.config.elasticsearch_enabled:
-    await self._initialize_elasticsearch()
+            await self._initialize_elasticsearch()
 
         if self.config.redis_enabled:
-    await self._initialize_redis()
+            await self._initialize_redis()
 
         # Set up file logging
         self._setup_file_logging()
@@ -110,7 +110,7 @@ class StructuredLogger:
         logger.info("Structured logging initialized")
 
     async def _initialize_elasticsearch(self) -> Dict[str, Any]:
-    """Initialize Elasticsearch connection"""
+        """Initialize Elasticsearch connection"""
         try:
             self.elasticsearch = Elasticsearch(
                 [{"host": self.config.elasticsearch_host, "port": self.config.elasticsearch_port}]
@@ -128,7 +128,7 @@ class StructuredLogger:
             self.elasticsearch = None
 
     async def _initialize_redis(self) -> Dict[str, Any]:
-    """Initialize Redis connection"""
+        """Initialize Redis connection"""
         try:
             self.redis = redis.Redis(
                 host=self.config.redis_host,
@@ -175,7 +175,7 @@ class StructuredLogger:
         self.logger.addHandler(console_handler)
 
     async def log(self, log_entry: LogEntry) -> Dict[str, Any]:
-    """Log a structured entry"""
+        """Log a structured entry"""
         if not self.is_initialized:
             logger.warning("Logging not initialized, skipping log entry")
             return
@@ -197,17 +197,17 @@ class StructuredLogger:
 
             # Send to Elasticsearch
             if self.elasticsearch:
-    await self._send_to_elasticsearch(log_data)
+                await self._send_to_elasticsearch(log_data)
 
             # Send to Redis
             if self.redis:
-    await self._send_to_redis(log_data)
+                await self._send_to_redis(log_data)
 
         except Exception as e:
             logger.error(f"Failed to log entry: {str(e)}")
 
     async def _send_to_elasticsearch(self, log_data: Dict[str, Any]) -> Dict[str, Any]:
-    """Send log data to Elasticsearch"""
+        """Send log data to Elasticsearch"""
         try:
             index_name = (
                 f"{self.config.elasticsearch_index_prefix}-{datetime.utcnow().strftime('%Y.%m.%d')}"
@@ -221,7 +221,7 @@ class StructuredLogger:
             logger.error(f"Failed to send to Elasticsearch: {str(e)}")
 
     async def _send_to_redis(self, log_data: Dict[str, Any]) -> Dict[str, Any]:
-    """Send log data to Redis"""
+        """Send log data to Redis"""
         try:
             # Store in Redis list for real-time access
             key = f"logs:{log_data['service']}:{log_data['level']}"
@@ -279,7 +279,7 @@ class StructuredLogger:
 
     async def get_log_statistics(
             self, time_window: int = 3600) -> Dict[str, Any]:
-    """Get log statistics for a time window"""
+        """Get log statistics for a time window"""
         if not self.elasticsearch:
             return {}
 
@@ -341,8 +341,8 @@ class LogAggregator:
             service: str,
             component: str,
             message: str,
-            **kwargs):
-         -> Dict[str, Any]:"""Log info message"""
+            **kwargs) -> Dict[str, Any]:
+        """Log info message"""
         await self._log(LogLevel.INFO, service, component, message, **kwargs)
 
     async def log_warning(
@@ -350,8 +350,8 @@ class LogAggregator:
             service: str,
             component: str,
             message: str,
-            **kwargs):
-         -> Dict[str, Any]:"""Log warning message"""
+            **kwargs) -> Dict[str, Any]:
+        """Log warning message"""
         await self._log(LogLevel.WARNING, service, component, message, **kwargs)
 
     async def log_error(
@@ -359,8 +359,8 @@ class LogAggregator:
             service: str,
             component: str,
             message: str,
-            **kwargs):
-         -> Dict[str, Any]:"""Log error message"""
+            **kwargs) -> Dict[str, Any]:
+        """Log error message"""
         await self._log(LogLevel.ERROR, service, component, message, **kwargs)
 
     async def log_critical(

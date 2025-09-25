@@ -28,15 +28,15 @@ class BaseAnomalyDetector:
         self.scaler = StandardScaler()
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize the detector"""
+        """Initialize the detector"""
         self.is_initialized = True
 
     async def cleanup(self) -> Dict[str, Any]:
-    """Cleanup resources"""
+        """Cleanup resources"""
         self.is_initialized = False
 
     async def train(self, X: np.ndarray) -> Dict[str, Any]:
-    """Train the detector"""
+        """Train the detector"""
         pass
 
     async def detect(self, features: Dict[str, float]) -> Optional[Any]:
@@ -57,9 +57,12 @@ class IsolationForestDetector(BaseAnomalyDetector):
         self.feature_names = []
 
     async def train(self, X: np.ndarray) -> Dict[str, Any]:
-    """Train the Isolation Forest model"""
+        """Train the Isolation Forest model"""
         try:
             if len(X) < 10:
+            except Exception as e:
+                pass
+
                 logger.warning("Insufficient data for Isolation Forest training")
                 return
 
@@ -79,6 +82,9 @@ class IsolationForestDetector(BaseAnomalyDetector):
         """Detect anomalies using Isolation Forest"""
         try:
             if not self.is_trained:
+            except Exception as e:
+                pass
+
                 return None
 
             # Convert features to array
@@ -113,7 +119,6 @@ class IsolationForestDetector(BaseAnomalyDetector):
                                 expected_value=0.0,  # Would need historical data for this
                                 deviation=abs(contribution),
                             )
-                        )
 
             return type(
                 "AnomalyResult",
@@ -133,6 +138,9 @@ class IsolationForestDetector(BaseAnomalyDetector):
         """Convert features dictionary to numpy array"""
         try:
             if not features:
+            except Exception as e:
+                pass
+
                 return None
 
             # Use predefined feature order or create from features
@@ -152,6 +160,9 @@ class IsolationForestDetector(BaseAnomalyDetector):
         """Calculate feature contributions to anomaly score"""
         try:
             contributions = {}
+            except Exception as e:
+                pass
+
 
             # Simple contribution calculation based on feature values
             for i, feature_name in enumerate(self.feature_names):
@@ -186,9 +197,12 @@ class OneClassSVMDetector(BaseAnomalyDetector):
         self.feature_names = []
 
     async def train(self, X: np.ndarray) -> Dict[str, Any]:
-    """Train the One-Class SVM model"""
+        """Train the One-Class SVM model"""
         try:
             if len(X) < 10:
+            except Exception as e:
+                pass
+
                 logger.warning("Insufficient data for One-Class SVM training")
                 return
 
@@ -208,6 +222,9 @@ class OneClassSVMDetector(BaseAnomalyDetector):
         """Detect anomalies using One-Class SVM"""
         try:
             if not self.is_trained:
+            except Exception as e:
+                pass
+
                 return None
 
             # Convert features to array
@@ -243,7 +260,6 @@ class OneClassSVMDetector(BaseAnomalyDetector):
                                 expected_value=0.0,
                                 deviation=abs(contribution),
                             )
-                        )
 
             return type(
                 "AnomalyResult",
@@ -263,6 +279,9 @@ class OneClassSVMDetector(BaseAnomalyDetector):
         """Convert features dictionary to numpy array"""
         try:
             if not features:
+            except Exception as e:
+                pass
+
                 return None
 
             # Use predefined feature order or create from features
@@ -282,6 +301,9 @@ class OneClassSVMDetector(BaseAnomalyDetector):
         """Calculate feature contributions to anomaly score"""
         try:
             contributions = {}
+            except Exception as e:
+                pass
+
 
             # Simple contribution calculation based on feature values
             for i, feature_name in enumerate(self.feature_names):
@@ -318,9 +340,12 @@ class LSTMAutoencoderDetector(BaseAnomalyDetector):
         self.historical_sequences = []
 
     async def train(self, X: np.ndarray) -> Dict[str, Any]:
-    """Train the LSTM Autoencoder model"""
+        """Train the LSTM Autoencoder model"""
         try:
             if len(X) < self.sequence_length * 2:
+            except Exception as e:
+                pass
+
                 logger.warning("Insufficient data for LSTM Autoencoder training")
                 return
 
@@ -344,6 +369,9 @@ class LSTMAutoencoderDetector(BaseAnomalyDetector):
         """Detect anomalies using LSTM Autoencoder"""
         try:
             if not self.is_trained:
+            except Exception as e:
+                pass
+
                 return None
 
             # Convert features to array
@@ -387,7 +415,6 @@ class LSTMAutoencoderDetector(BaseAnomalyDetector):
                                     expected_value=0.0,
                                     deviation=abs(contribution),
                                 )
-                            )
 
                 return type(
                     "AnomalyResult",
@@ -409,6 +436,9 @@ class LSTMAutoencoderDetector(BaseAnomalyDetector):
         """Create sequences from time series data"""
         try:
             sequences = []
+            except Exception as e:
+                pass
+
             for i in range(len(X) - self.sequence_length + 1):
                 sequence = X[i : i + self.sequence_length]
                 sequences.append(sequence)
@@ -422,6 +452,9 @@ class LSTMAutoencoderDetector(BaseAnomalyDetector):
         """Simulate reconstruction error (in real implementation, use trained autoencoder)"""
         try:
             # Simple simulation based on sequence variance
+            except Exception as e:
+                pass
+
             sequence_variance = np.var(sequence)
             sequence_mean = np.mean(sequence)
 
@@ -439,6 +472,9 @@ class LSTMAutoencoderDetector(BaseAnomalyDetector):
         """Convert features dictionary to numpy array"""
         try:
             if not features:
+            except Exception as e:
+                pass
+
                 return None
 
             # Use predefined feature order or create from features
@@ -458,6 +494,9 @@ class LSTMAutoencoderDetector(BaseAnomalyDetector):
         """Calculate feature contributions to anomaly score"""
         try:
             contributions = {}
+            except Exception as e:
+                pass
+
 
             # Simple contribution calculation based on feature values
             for i, feature_name in enumerate(self.feature_names):
@@ -492,9 +531,12 @@ class StatisticalAnomalyDetector(BaseAnomalyDetector):
         self.feature_names = []
 
     async def train(self, X: np.ndarray) -> Dict[str, Any]:
-    """Train the statistical detector"""
+        """Train the statistical detector"""
         try:
             if len(X) < 10:
+            except Exception as e:
+                pass
+
                 logger.warning("Insufficient data for statistical detector training")
                 return
 
@@ -526,6 +568,9 @@ class StatisticalAnomalyDetector(BaseAnomalyDetector):
         """Detect anomalies using statistical methods"""
         try:
             if not self.is_trained:
+            except Exception as e:
+                pass
+
                 return None
 
             anomalies = []
@@ -569,7 +614,6 @@ class StatisticalAnomalyDetector(BaseAnomalyDetector):
                             expected_value=stats["mean"],
                             deviation=abs(value - stats["mean"]),
                         )
-                    )
 
             return type(
                 "AnomalyResult",

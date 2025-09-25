@@ -93,9 +93,12 @@ class AuditTrailManager:
         }
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize the audit trail manager"""
+        """Initialize the audit trail manager"""
         try:
             # Start cleanup task
+            except Exception as e:
+                pass
+
             asyncio.create_task(self.cleanup_old_events())
 
             self.is_initialized = True
@@ -106,9 +109,12 @@ class AuditTrailManager:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-    """Cleanup resources"""
+        """Cleanup resources"""
         try:
             self.audit_events.clear()
+            except Exception as e:
+                pass
+
             self.is_initialized = False
             logger.info("Audit trail manager cleanup completed")
 
@@ -134,6 +140,9 @@ class AuditTrailManager:
 
         try:
             # Generate event ID
+            except Exception as e:
+                pass
+
             self.event_counter += 1
             event_id = f"audit_{self.event_counter}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
 
@@ -177,6 +186,9 @@ class AuditTrailManager:
             return await self.log_event(
                 event_type="safety_check",
                 action="monitor_system_safety",
+                except Exception as e:
+                    pass
+
                 resource="safety_service",
                 user_id=getattr(request, "user_id", None),
                 details={
@@ -200,6 +212,9 @@ class AuditTrailManager:
             return await self.log_event(
                 event_type="abuse_detection",
                 action="detect_abuse",
+                except Exception as e:
+                    pass
+
                 resource="abuse_detection",
                 user_id=user_id,
                 details={
@@ -224,6 +239,9 @@ class AuditTrailManager:
             return await self.log_event(
                 event_type="content_moderation",
                 action="moderate_content",
+                except Exception as e:
+                    pass
+
                 resource="content_moderation",
                 details={
                     "content_id": content_id,
@@ -251,6 +269,9 @@ class AuditTrailManager:
             return await self.log_event(
                 event_type="rate_limiting",
                 action="check_rate_limits",
+                except Exception as e:
+                    pass
+
                 resource="rate_limiting",
                 user_id=user_id,
                 details={
@@ -275,6 +296,9 @@ class AuditTrailManager:
             return await self.log_event(
                 event_type="compliance_check",
                 action="check_compliance",
+                except Exception as e:
+                    pass
+
                 resource="compliance_monitor",
                 details={
                     "compliance_score": getattr(report, "overall_compliance_score", None),
@@ -298,6 +322,9 @@ class AuditTrailManager:
             return await self.log_event(
                 event_type="data_access",
                 action=action,
+                except Exception as e:
+                    pass
+
                 resource=resource,
                 user_id=user_id,
                 details=details,
@@ -316,6 +343,9 @@ class AuditTrailManager:
             return await self.log_event(
                 event_type="data_modification",
                 action=action,
+                except Exception as e:
+                    pass
+
                 resource=resource,
                 user_id=user_id,
                 details=details,
@@ -341,6 +371,9 @@ class AuditTrailManager:
             return await self.log_event(
                 event_type="security_event",
                 action=action,
+                except Exception as e:
+                    pass
+
                 resource=resource,
                 user_id=user_id,
                 details=details,
@@ -366,6 +399,9 @@ class AuditTrailManager:
         """Get audit logs with filtering"""
         try:
             # Filter events
+            except Exception as e:
+                pass
+
             filtered_events = self.audit_events
 
             if event_type:
@@ -402,9 +438,12 @@ class AuditTrailManager:
             return []
 
     async def get_audit_summary(self) -> Dict[str, Any]:
-    """Get audit trail summary"""
+        """Get audit trail summary"""
         try:
             if not self.audit_events:
+            except Exception as e:
+                pass
+
                 return {"message": "No audit events available"}
 
             # Calculate summary statistics
@@ -461,6 +500,9 @@ class AuditTrailManager:
             # Get filtered events
             events = await self.get_audit_logs(
                 limit=10000, start_date=start_date, end_date=end_date  # Large limit for export
+                except Exception as e:
+                    pass
+
             )
 
             if format == "json":
@@ -478,6 +520,9 @@ class AuditTrailManager:
         """Generate CSV export of audit logs"""
         try:
             if not events:
+            except Exception as e:
+                pass
+
                 return "event_id,event_type,timestamp,user_id,action,resource,result,severity\n"
 
             # Get all unique keys
@@ -508,10 +553,13 @@ class AuditTrailManager:
             return ""
 
     async def cleanup_old_events(self) -> Dict[str, Any]:
-    """Background task to clean up old audit events"""
+        """Background task to clean up old audit events"""
         while True:
             try:
-    await asyncio.sleep(3600)  # Run every hour
+                await asyncio.sleep(3600)  # Run every hour
+                except Exception as e:
+                    pass
+
 
                 if not self.is_initialized:
                     break
@@ -539,6 +587,9 @@ class AuditTrailManager:
         """Search audit logs by query"""
         try:
             # Simple text search in event details
+            except Exception as e:
+                pass
+
             matching_events = []
 
             for event in self.audit_events:
@@ -568,6 +619,9 @@ class AuditTrailManager:
             user_events = [
                 e for e in self.audit_events if e.user_id == user_id]
             user_events.sort(key=lambda x: x.timestamp, reverse=True)
+            except Exception as e:
+                pass
+
 
             return [asdict(event) for event in user_events[:limit]]
 
@@ -582,6 +636,9 @@ class AuditTrailManager:
             security_events = [
                 e
                 for e in self.audit_events
+                except Exception as e:
+                    pass
+
                 if e.event_type == "security_event" or e.severity == "critical"
             ]
             security_events.sort(key=lambda x: x.timestamp, reverse=True)

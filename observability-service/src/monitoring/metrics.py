@@ -318,12 +318,12 @@ class MetricsCollector:
 
         # Register custom metrics if enabled
         if config.custom_metrics_enabled:
-    await self._register_custom_metrics()
+            await self._register_custom_metrics()
 
         logger.info("Metrics collector initialized")
 
     async def _register_custom_metrics(self) -> Dict[str, Any]:
-    """Register custom metrics"""
+        """Register custom metrics"""
         # Custom business metrics
         self.custom_metrics.register_metric(
             "custom_user_satisfaction",
@@ -347,7 +347,7 @@ class MetricsCollector:
         )
 
     async def start_metrics_collection(self) -> Dict[str, Any]:
-    """Start background metrics collection"""
+        """Start background metrics collection"""
         if self.is_running:
             return
 
@@ -356,10 +356,10 @@ class MetricsCollector:
         logger.info("Started metrics collection")
 
     async def _collection_loop(self) -> Dict[str, Any]:
-    """Background metrics collection loop"""
+        """Background metrics collection loop"""
         while self.is_running:
             try:
-    await self.collect_real_time_metrics()
+                await self.collect_real_time_metrics()
                 await asyncio.sleep(self.collection_interval)
             except Exception as e:
                 logger.error(f"Metrics collection error: {str(e)}")

@@ -4,7 +4,7 @@ Various statistical tests for detecting data drift
 """
 
 import logging
-from typing import Tuple
+from typing import Any, Dict, Tuple
 
 import numpy as np
 import pandas as pd
@@ -24,11 +24,11 @@ class BaseStatisticalDetector:
         self.is_initialized = False
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize the detector"""
+        """Initialize the detector"""
         self.is_initialized = True
 
     async def cleanup(self) -> Dict[str, Any]:
-    """Cleanup resources"""
+        """Cleanup resources"""
         pass
 
     async def test(
@@ -58,6 +58,7 @@ class KolmogorovSmirnovDetector(BaseStatisticalDetector):
                     statistic=0.0,
                     is_significant=False,
                     drift_score=0.0,
+                    threshold=0.05,
                 )
 
             # Perform KS test
@@ -193,7 +194,7 @@ class PopulationStabilityIndexDetector(BaseStatisticalDetector):
                     include_lowest=True)
                 curr_bins = pd.cut(
                     current_data, bins=bins, include_lowest=True)
-        else:
+            else:
                 # For categorical data, use categories directly
                 ref_bins = reference_data
                 curr_bins = current_data

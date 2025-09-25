@@ -25,7 +25,7 @@ class PredictionDriftDetector:
         self.is_initialized = False
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize the prediction drift detector"""
+        """Initialize the prediction drift detector"""
         try:
             self.is_initialized = True
             logger.info("Prediction drift detector initialized")
@@ -36,7 +36,7 @@ class PredictionDriftDetector:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-    """Cleanup resources"""
+        """Cleanup resources"""
         try:
             self.is_initialized = False
             logger.info("Prediction drift detector cleanup completed")
@@ -232,7 +232,7 @@ class PredictionDriftDetector:
             if pd.api.types.is_numeric_dtype(predictions):
                 # Assume predictions are already probabilities
                 return predictions.values
-        else:
+            else:
                 # Convert categorical to probabilities
                 value_counts = predictions.value_counts(normalize=True)
                 return predictions.map(value_counts).values

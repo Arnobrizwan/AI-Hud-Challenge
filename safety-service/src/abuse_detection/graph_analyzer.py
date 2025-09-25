@@ -38,7 +38,7 @@ class GraphBasedAbuseDetector:
         self.known_abusers = set()
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize the graph analyzer"""
+        """Initialize the graph analyzer"""
         try:
             self.is_initialized = True
             logger.info("Graph-based abuse detector initialized")
@@ -48,7 +48,7 @@ class GraphBasedAbuseDetector:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-    """Cleanup resources"""
+        """Cleanup resources"""
         try:
             self.user_graph.clear()
             self.user_attributes.clear()
@@ -73,7 +73,7 @@ class GraphBasedAbuseDetector:
         try:
             # Update graph with new connection data
             if connection_data:
-    await self.update_user_connections(user_id, connection_data)
+                await self.update_user_connections(user_id, connection_data)
 
             # Calculate graph-based signals
             suspicious_connections = await self.count_suspicious_connections(user_id)
@@ -409,7 +409,7 @@ class GraphBasedAbuseDetector:
             return 0.0
 
     async def get_graph_statistics(self) -> Dict[str, Any]:
-    """Get overall graph statistics"""
+        """Get overall graph statistics"""
         try:
             if self.user_graph.number_of_nodes() == 0:
                 return {"message": "No graph data available"}

@@ -251,3 +251,4 @@ services:
       test-redis:
         condition: service_healthy
     command: ["python", "-m", "pytest", "tests/", "-v"]
+

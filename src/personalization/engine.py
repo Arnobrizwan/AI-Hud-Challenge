@@ -33,11 +33,17 @@ class PersonalizationEngine:
         )
         self.svd = TruncatedSVD(n_components=50, random_state=42)
 
-        # Initialize models
-        asyncio.create_task(self._initialize_models())
+        # Initialize models lazily
+        self._initialized = False
+
+    async def _ensure_initialized(self):
+        """Ensure models are initialized."""
+        if not self._initialized:
+            await self._initialize_models()
+            self._initialized = True
 
     async def _initialize_models(self) -> Dict[str, Any]:
-    """Initialize ML models for personalization."""
+        """Initialize ML models for personalization."""
         try:
             # Load pre-trained models or train on historical data
             await self._load_user_profiles()
@@ -49,12 +55,12 @@ class PersonalizationEngine:
                 error=str(e))
 
     async def _load_user_profiles(self) -> Dict[str, Any]:
-    """Load user profiles from cache or database."""
+        """Load user profiles from cache or database."""
         # In production, this would load from a database
         pass
 
     async def _train_collaborative_filter(self) -> Dict[str, Any]:
-    """Train collaborative filtering model."""
+        """Train collaborative filtering model."""
         # In production, this would train on historical interaction data
         pass
 
@@ -62,6 +68,8 @@ class PersonalizationEngine:
         self, articles: List[Article], user_id: str
     ) -> List[PersonalizedScore]:
         """Apply personalization to content ranking."""
+        await self._ensure_initialized()
+        
         try:
             user_profile = await self.user_profiles.get_profile(user_id)
             if not user_profile:
@@ -269,7 +277,7 @@ class UserProfileManager:
         # Cache the profile
         await self.cache_manager.set(
             # 1 hour
-            f"user_profile:{user_id}", default_profile.dict(), ttl=3600
+            f"user_profile:{user_id}", default_profile.model_dump(), ttl=3600
         )
 
         return default_profile
@@ -283,20 +291,20 @@ class UserProfileManager:
 
         # Update topic preferences based on article topics
         if "article_topics" in interaction_data:
-    await self._update_topic_preferences(profile, interaction_data["article_topics"])
+            await self._update_topic_preferences(profile, interaction_data["article_topics"])
 
         # Update source preferences
         if "source_id" in interaction_data:
-    await self._update_source_preferences(profile, interaction_data["source_id"])
+            await self._update_source_preferences(profile, interaction_data["source_id"])
 
         # Update reading patterns
         if "reading_time" in interaction_data:
-    await self._update_reading_patterns(profile, interaction_data)
+            await self._update_reading_patterns(profile, interaction_data)
 
         profile.updated_at = datetime.utcnow()
 
         # Cache updated profile
-        await self.cache_manager.set(f"user_profile:{user_id}", profile.dict(), ttl=3600)
+        await self.cache_manager.set(f"user_profile:{user_id}", profile.model_dump(), ttl=3600)
 
     async def _update_topic_preferences(
             self, profile: UserProfile, topics: List) -> None:

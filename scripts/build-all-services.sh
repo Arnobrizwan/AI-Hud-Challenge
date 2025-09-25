@@ -45,3 +45,4 @@ for service in "${SERVICES[@]}"; do
 done
 
 echo "🎉 All services built successfully!"
+

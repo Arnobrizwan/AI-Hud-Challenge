@@ -30,7 +30,7 @@ class ConceptDriftDetector:
         self.drift_detector_model = None
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize the concept drift detector"""
+        """Initialize the concept drift detector"""
         try:
             # Initialize models
             self.reference_model = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1)
@@ -45,7 +45,7 @@ class ConceptDriftDetector:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-    """Cleanup resources"""
+        """Cleanup resources"""
         try:
             self.reference_model = None
             self.drift_detector_model = None

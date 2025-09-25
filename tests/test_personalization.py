@@ -1,6 +1,7 @@
 """Tests for the personalization engine."""
 
 from datetime import datetime
+from typing import Any, Dict
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -19,8 +20,19 @@ from src.schemas import Article, Author, Source, Topic, UserProfile
 def mock_cache_manager():
     """Mock cache manager for testing."""
     cache = Mock(spec=CacheManager)
-    cache.get = AsyncMock(return_value=None)
-    cache.set = AsyncMock(return_value=True)
+    
+    # Store data in a simple dict to simulate cache behavior
+    cache_data = {}
+    
+    async def mock_get(key):
+        return cache_data.get(key)
+    
+    async def mock_set(key, value, ttl=None):
+        cache_data[key] = value
+        return True
+    
+    cache.get = mock_get
+    cache.set = mock_set
     return cache
 
 
@@ -89,12 +101,12 @@ def personalization_engine(mock_cache_manager):
 
 @pytest.mark.asyncio
 async def test_personalize_ranking_success(
-        personalization_engine, sample_article):
-     -> Dict[str, Any]:"""Test successful personalization."""
+        personalization_engine, sample_article, sample_user_profile) -> Dict[str, Any]:
+    """Test successful personalization."""
     user_id = "test_user"
 
     with patch.object(personalization_engine.user_profiles, "get_profile") as mock_get_profile:
-        mock_get_profile.return_value = sample_user_profile()
+        mock_get_profile.return_value = sample_user_profile
 
         result = await personalization_engine.personalize_ranking([sample_article], user_id)
 
@@ -106,8 +118,8 @@ async def test_personalize_ranking_success(
 
 @pytest.mark.asyncio
 async def test_personalize_ranking_no_profile(
-        personalization_engine, sample_article):
-     -> Dict[str, Any]:"""Test personalization with no user profile."""
+        personalization_engine, sample_article) -> Dict[str, Any]:
+    """Test personalization with no user profile."""
     user_id = "new_user"
 
     with patch.object(personalization_engine.user_profiles, "get_profile") as mock_get_profile:
@@ -189,10 +201,13 @@ async def test_user_profile_manager_update_profile(mock_cache_manager) -> Dict[s
 
     await profile_manager.update_profile("test_user", interaction_data)
 
+    # Get updated profile
+    updated_profile = await profile_manager.get_profile("test_user")
+
     # Verify profile was updated
-    assert "technology" in profile.topic_preferences
-    assert "AI" in profile.topic_preferences
-    assert "source_1" in profile.source_preferences
+    assert "technology" in updated_profile.topic_preferences
+    assert "ai" in updated_profile.topic_preferences  # Topic names are converted to lowercase
+    assert "source_1" in updated_profile.source_preferences
 
 
 @pytest.mark.asyncio
@@ -207,8 +222,8 @@ async def test_collaborative_filter_predict(mock_cache_manager) -> Dict[str, Any
 
 @pytest.mark.asyncio
 async def test_content_based_filter_similarity(
-        mock_cache_manager, sample_article):
-     -> Dict[str, Any]:"""Test content-based filtering similarity."""
+        mock_cache_manager, sample_article) -> Dict[str, Any]:
+    """Test content-based filtering similarity."""
     cb = ContentBasedFilter(mock_cache_manager)
 
     user_preferences = {"preferred_length": 500, "preferred_quality": 0.8}
@@ -220,8 +235,8 @@ async def test_content_based_filter_similarity(
 
 @pytest.mark.asyncio
 async def test_personalization_error_handling(
-        personalization_engine, sample_article):
-     -> Dict[str, Any]:"""Test personalization error handling."""
+        personalization_engine, sample_article) -> Dict[str, Any]:
+    """Test personalization error handling."""
     user_id = "test_user"
 
     with patch.object(personalization_engine.user_profiles, "get_profile") as mock_get_profile:
@@ -302,14 +317,14 @@ def test_personalization_weights():
 
 @pytest.mark.asyncio
 async def test_personalization_performance(
-        personalization_engine, sample_article):
-     -> Dict[str, Any]:"""Test personalization performance."""
+        personalization_engine, sample_article, sample_user_profile) -> Dict[str, Any]:
+    """Test personalization performance."""
     import time
 
     user_id = "test_user"
 
     with patch.object(personalization_engine.user_profiles, "get_profile") as mock_get_profile:
-        mock_get_profile.return_value = sample_user_profile()
+        mock_get_profile.return_value = sample_user_profile
 
         start_time = time.time()
         result = await personalization_engine.personalize_ranking([sample_article], user_id)

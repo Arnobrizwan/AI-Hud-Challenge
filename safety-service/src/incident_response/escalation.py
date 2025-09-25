@@ -93,9 +93,12 @@ class EscalationManager:
         }
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize the escalation manager"""
+        """Initialize the escalation manager"""
         try:
             # Initialize notification services
+            except Exception as e:
+                pass
+
             await self.initialize_notification_services()
 
             # Start background tasks
@@ -110,9 +113,12 @@ class EscalationManager:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-    """Cleanup resources"""
+        """Cleanup resources"""
         try:
             # Clear escalation tracking
+            except Exception as e:
+                pass
+
             self.active_escalations.clear()
             self.escalation_history.clear()
 
@@ -132,6 +138,9 @@ class EscalationManager:
 
         try:
             # Check if incident is already escalated
+            except Exception as e:
+                pass
+
             if incident.id in self.active_escalations:
                 logger.warning(f"Incident {incident.id} is already escalated")
                 return False
@@ -191,6 +200,9 @@ class EscalationManager:
         """Send immediate notification for escalation"""
         try:
             # Get escalation level configuration
+            except Exception as e:
+                pass
+
             level_config = self.escalation_levels.get(level)
             if not level_config:
                 logger.error(f"Unknown escalation level: {level}")
@@ -206,6 +218,9 @@ class EscalationManager:
                 if channel in self.notification_channels:
                     try:
                         result = await self.notification_channels[channel](
+                        except Exception as e:
+                            pass
+
                             level_config["contacts"], message, incident.id
                         )
                         notification_results.append(result)
@@ -237,6 +252,9 @@ class EscalationManager:
         """Schedule next escalation in the chain"""
         try:
             if incident_id not in self.active_escalations:
+            except Exception as e:
+                pass
+
                 return
 
             escalation_record = self.active_escalations[incident_id]
@@ -273,6 +291,9 @@ class EscalationManager:
         """Execute delayed escalation"""
         try:
             # Wait for the delay period
+            except Exception as e:
+                pass
+
             await asyncio.sleep(delay_minutes * 60)
 
             # Check if escalation is still active
@@ -303,7 +324,7 @@ class EscalationManager:
             escalation_config = self.escalation_rules.get(
                 escalation_record["severity"])
             if escalation_config:
-    await self.schedule_next_escalation(incident_id, escalation_config)
+                await self.schedule_next_escalation(incident_id, escalation_config)
 
             logger.info(f"Incident {incident_id} escalated to {next_level}")
 
@@ -316,6 +337,9 @@ class EscalationManager:
         """Send escalation notification"""
         try:
             level_config = self.escalation_levels.get(level)
+            except Exception as e:
+                pass
+
             if not level_config:
                 return False
 
@@ -325,6 +349,9 @@ class EscalationManager:
                 if channel in self.notification_channels:
                     try:
                         result = await self.notification_channels[channel](
+                        except Exception as e:
+                            pass
+
                             contacts, message, incident_id
                         )
                         notification_results.append(result)
@@ -348,6 +375,9 @@ class EscalationManager:
         """Create escalation message"""
         try:
             level_config = self.escalation_levels.get(level, {})
+            except Exception as e:
+                pass
+
             level_name = level_config.get("name", level)
 
             if incident and classification:
@@ -393,6 +423,9 @@ This incident has been escalated to your level and requires immediate attention.
         """Format impact assessment for message"""
         try:
             if not impact_assessment:
+            except Exception as e:
+                pass
+
                 return "Impact assessment not available"
 
             formatted = []
@@ -413,6 +446,9 @@ This incident has been escalated to your level and requires immediate attention.
         """Resolve an escalation"""
         try:
             if incident_id not in self.active_escalations:
+            except Exception as e:
+                pass
+
                 logger.warning(
                     f"Escalation for incident {incident_id} not found")
                 return False
@@ -440,12 +476,18 @@ This incident has been escalated to your level and requires immediate attention.
 
         except Exception as e:
             logger.error(f"Active escalations retrieval failed: {str(e)}")
+            except Exception as e:
+                pass
+
             return []
 
     async def get_escalation_statistics(self) -> Dict[str, Any]:
-    """Get escalation statistics"""
+        """Get escalation statistics"""
         try:
             return {
+            except Exception as e:
+                pass
+
                 "active_escalations": len(self.active_escalations),
                 "total_escalations": len(self.active_escalations) + len(self.escalation_history),
                 "escalations_by_level": self.get_escalations_by_level(),
@@ -461,6 +503,9 @@ This incident has been escalated to your level and requires immediate attention.
         """Get escalation count by level"""
         try:
             level_counts = {}
+            except Exception as e:
+                pass
+
 
             # Count active escalations
             for escalation in self.active_escalations.values():
@@ -482,6 +527,9 @@ This incident has been escalated to your level and requires immediate attention.
         """Get escalation count by severity"""
         try:
             severity_counts = {}
+            except Exception as e:
+                pass
+
 
             # Count active escalations
             for escalation in self.active_escalations.values():
@@ -507,6 +555,9 @@ This incident has been escalated to your level and requires immediate attention.
             resolved_escalations = [
                 escalation
                 for escalation in self.escalation_history
+                except Exception as e:
+                    pass
+
                 if escalation.get("resolved_at") and escalation.get("escalation_start")
             ]
 
@@ -527,10 +578,13 @@ This incident has been escalated to your level and requires immediate attention.
             return 0.0
 
     async def escalation_monitoring_task(self) -> Dict[str, Any]:
-    """Background task for monitoring escalations"""
+        """Background task for monitoring escalations"""
         while True:
             try:
-    await asyncio.sleep(300)  # Check every 5 minutes
+                await asyncio.sleep(300)  # Check every 5 minutes
+                except Exception as e:
+                    pass
+
 
                 if not self.is_initialized:
                     break
@@ -558,10 +612,13 @@ This incident has been escalated to your level and requires immediate attention.
                 await asyncio.sleep(300)
 
     async def escalation_cleanup_task(self) -> Dict[str, Any]:
-    """Background task for cleaning up old escalations"""
+        """Background task for cleaning up old escalations"""
         while True:
             try:
-    await asyncio.sleep(3600)  # Run every hour
+                await asyncio.sleep(3600)  # Run every hour
+                except Exception as e:
+                    pass
+
 
                 if not self.is_initialized:
                     break
@@ -586,9 +643,12 @@ This incident has been escalated to your level and requires immediate attention.
                 await asyncio.sleep(3600)
 
     async def initialize_notification_services(self) -> Dict[str, Any]:
-    """Initialize notification services"""
+        """Initialize notification services"""
         try:
             # Placeholder for notification service initialization
+            except Exception as e:
+                pass
+
             logger.info("Notification services initialized")
 
         except Exception as e:
@@ -602,6 +662,9 @@ This incident has been escalated to your level and requires immediate attention.
         """Send email notification"""
         try:
             # Simulate email sending
+            except Exception as e:
+                pass
+
             await asyncio.sleep(0.1)
             logger.info(
                 f"Email notification sent to {contacts} for incident {incident_id}")
@@ -617,6 +680,9 @@ This incident has been escalated to your level and requires immediate attention.
         """Send Slack notification"""
         try:
             # Simulate Slack notification
+            except Exception as e:
+                pass
+
             await asyncio.sleep(0.1)
             logger.info(
                 f"Slack notification sent to {contacts} for incident {incident_id}")
@@ -632,6 +698,9 @@ This incident has been escalated to your level and requires immediate attention.
         """Send phone notification"""
         try:
             # Simulate phone notification
+            except Exception as e:
+                pass
+
             await asyncio.sleep(0.1)
             logger.info(
                 f"Phone notification sent to {contacts} for incident {incident_id}")
@@ -647,6 +716,9 @@ This incident has been escalated to your level and requires immediate attention.
         """Send SMS notification"""
         try:
             # Simulate SMS notification
+            except Exception as e:
+                pass
+
             await asyncio.sleep(0.1)
             logger.info(
                 f"SMS notification sent to {contacts} for incident {incident_id}")

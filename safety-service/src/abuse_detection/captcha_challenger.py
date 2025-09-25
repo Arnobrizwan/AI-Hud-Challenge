@@ -91,7 +91,7 @@ class CaptchaChallenger:
         }
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize the CAPTCHA challenger"""
+        """Initialize the CAPTCHA challenger"""
         try:
             # Start cleanup task
             asyncio.create_task(self.cleanup_expired_challenges())
@@ -104,7 +104,7 @@ class CaptchaChallenger:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-    """Cleanup resources"""
+        """Cleanup resources"""
         try:
             self.active_challenges.clear()
             self.challenge_history.clear()
@@ -119,7 +119,7 @@ class CaptchaChallenger:
                              user_id: str,
                              challenge_type: str = "text_captcha",
                              difficulty: str = "medium") -> Dict[str, Any]:
-    """Create a CAPTCHA challenge for a user"""
+        """Create a CAPTCHA challenge for a user"""
         if not self.is_initialized:
             raise RuntimeError("CAPTCHA challenger not initialized")
 
@@ -184,7 +184,7 @@ class CaptchaChallenger:
     async def verify_challenge(
         self, user_id: str, challenge_id: str, user_response: str
     ) -> Dict[str, Any]:
-    """Verify a user's response to a CAPTCHA challenge"""
+        """Verify a user's response to a CAPTCHA challenge"""
         if not self.is_initialized:
             raise RuntimeError("CAPTCHA challenger not initialized")
 
@@ -278,7 +278,7 @@ class CaptchaChallenger:
     async def generate_challenge_content(
         self, challenge_type: str, difficulty: str
     ) -> Dict[str, Any]:
-    """Generate challenge content based on type and difficulty"""
+        """Generate challenge content based on type and difficulty"""
         try:
             config = self.difficulty_configs.get(
                 difficulty, self.difficulty_configs["medium"])
@@ -300,7 +300,7 @@ class CaptchaChallenger:
 
     async def generate_text_captcha(
             self, config: Dict[str, Any]) -> Dict[str, Any]:
-    """Generate text-based CAPTCHA"""
+        """Generate text-based CAPTCHA"""
         try:
             complexity = config["complexity"]
 
@@ -334,7 +334,7 @@ class CaptchaChallenger:
 
     async def generate_math_captcha(
             self, config: Dict[str, Any]) -> Dict[str, Any]:
-    """Generate math-based CAPTCHA"""
+        """Generate math-based CAPTCHA"""
         try:
             complexity = config["complexity"]
 
@@ -378,7 +378,7 @@ class CaptchaChallenger:
 
     async def generate_image_captcha(
             self, config: Dict[str, Any]) -> Dict[str, Any]:
-    """Generate image-based CAPTCHA"""
+        """Generate image-based CAPTCHA"""
         try:
             # In a real implementation, this would generate actual images
             # For now, we'll simulate with text descriptions
@@ -419,7 +419,7 @@ class CaptchaChallenger:
 
     async def generate_puzzle_captcha(
             self, config: Dict[str, Any]) -> Dict[str, Any]:
-    """Generate puzzle-based CAPTCHA"""
+        """Generate puzzle-based CAPTCHA"""
         try:
             complexity = config["complexity"]
 
@@ -530,10 +530,10 @@ class CaptchaChallenger:
         ).hexdigest()[:16]
 
     async def cleanup_expired_challenges(self) -> Dict[str, Any]:
-    """Background task to clean up expired challenges"""
+        """Background task to clean up expired challenges"""
         while True:
             try:
-    await asyncio.sleep(60)  # Run every minute
+                await asyncio.sleep(60)  # Run every minute
 
                 if not self.is_initialized:
                     break
@@ -558,7 +558,7 @@ class CaptchaChallenger:
                 await asyncio.sleep(60)
 
     async def get_challenge_statistics(self) -> Dict[str, Any]:
-    """Get CAPTCHA challenge statistics"""
+        """Get CAPTCHA challenge statistics"""
         try:
             total_challenges = sum(len(history)
                                    for history in self.challenge_history.values())

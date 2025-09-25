@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional
 
 import structlog
 import uvicorn
+from prometheus_client import start_http_server
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -106,7 +107,7 @@ async def lifespan(app: FastAPI) -> Dict[str, Any]:
 
     try:
         if cache_manager:
-    await cache_manager.close()
+            await cache_manager.close()
         logger.info("Ranking microservice shutdown complete")
     except Exception as e:
         logger.error("Error during shutdown", error=str(e))
@@ -214,8 +215,8 @@ async def rank_content(
         background_tasks.add_task(
             log_ranking_decision,
             request.user_id,
-            request.dict(),
-            results.dict())
+            request.model_dump(),
+            results.model_dump())
 
         logger.info(
             "Ranking completed",
@@ -280,8 +281,6 @@ async def get_user_profile(
         profile_data = await cache.get(f"user_profile:{user_id}")
         if not profile_data:
             # Create default profile
-            from .schemas import UserProfile
-
             profile = UserProfile(
                 user_id=user_id,
                 topic_preferences={},
@@ -314,7 +313,7 @@ async def update_user_profile(
     """Update user profile."""
     try:
         # Update profile in cache
-        await cache.set(f"user_profile:{user_id}", profile.dict(), ttl=3600)
+        await cache.set(f"user_profile:{user_id}", profile.model_dump(), ttl=3600)
 
         logger.info("User profile updated", user_id=user_id)
         return {"message": "Profile updated successfully"}
@@ -370,7 +369,7 @@ async def create_experiment(
         success = await ab_framework.create_experiment(experiment)
         if success:
             return {"message": "Experiment created successfully"}
-    else:
+        else:
             raise HTTPException(
                 status_code=400,
                 detail="Failed to create experiment")
@@ -477,8 +476,8 @@ async def clear_cache(cache: CacheManager = Depends(get_cache_manager)):
 
 
 async def log_ranking_decision(
-        user_id: str, request: Dict[str, Any], results: Dict[str, Any]):
-     -> Dict[str, Any]:"""Log ranking decision for analysis."""
+        user_id: str, request: Dict[str, Any], results: Dict[str, Any]) -> Dict[str, Any]:
+    """Log ranking decision for analysis."""
     try:
         # In production, this would log to a data warehouse
         logger.info(

@@ -35,7 +35,7 @@ class ContentRankingEngine:
         self.cache_manager = cache_manager
         self.feature_extractor = RankingFeatureExtractor(cache_manager)
         self.personalization_engine = PersonalizationEngine(cache_manager)
-        self.ab_tester = ABTestingFramework()
+        self.ab_tester = ABTestingFramework(cache_manager)
         self.metrics_collector = RankingMetricsCollector()
 
         # ML Models
@@ -52,11 +52,17 @@ class ContentRankingEngine:
             "diversity": 0.1,
         }
 
-        # Load models asynchronously
-        asyncio.create_task(self._load_models())
+        # Load models lazily
+        self._initialized = False
+
+    async def _ensure_initialized(self):
+        """Ensure models are initialized."""
+        if not self._initialized:
+            await self._load_models()
+            self._initialized = True
 
     async def _load_models(self) -> Dict[str, Any]:
-    """Load ML models asynchronously."""
+        """Load ML models asynchronously."""
         try:
             # In production, load from model registry
             # For now, create a dummy model for demonstration
@@ -85,6 +91,8 @@ class ContentRankingEngine:
 
     async def rank_content(self, request: RankingRequest) -> RankedResults:
         """Main ranking pipeline with personalization."""
+        await self._ensure_initialized()
+        
         start_time = time.time()
 
         try:
@@ -419,8 +427,8 @@ class ContentRankingEngine:
             self,
             request: RankingRequest,
             results: List[RankedArticle],
-            algorithm_variant: str):
-         -> Dict[str, Any]:"""Log ranking decision for model updates and analysis."""
+            algorithm_variant: str) -> Dict[str, Any]:
+        """Log ranking decision for model updates and analysis."""
         try:
             # In production, this would log to a data warehouse
             logger.info(

@@ -33,3 +33,4 @@ for service in "${services[@]}"; do
 done
 
 echo "🎉 All services are healthy and ready!"
+

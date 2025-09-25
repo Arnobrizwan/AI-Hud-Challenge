@@ -38,9 +38,12 @@ class ComplianceMonitor:
         self.audit_trail_manager = AuditTrailManager()
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize the compliance monitor"""
+        """Initialize the compliance monitor"""
         try:
             # Initialize all monitors
+            except Exception as e:
+                pass
+
             await self.gdpr_monitor.initialize()
             await self.content_policy_monitor.initialize()
             await self.privacy_monitor.initialize()
@@ -54,9 +57,12 @@ class ComplianceMonitor:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-    """Cleanup resources"""
+        """Cleanup resources"""
         try:
-    await self.gdpr_monitor.cleanup()
+            await self.gdpr_monitor.cleanup()
+            except Exception as e:
+                pass
+
             await self.content_policy_monitor.cleanup()
             await self.privacy_monitor.cleanup()
             await self.audit_trail_manager.cleanup()
@@ -77,6 +83,9 @@ class ComplianceMonitor:
 
         try:
             compliance_results = {}
+            except Exception as e:
+                pass
+
 
             # GDPR compliance
             if request.check_gdpr:
@@ -132,6 +141,9 @@ class ComplianceMonitor:
         """Calculate overall compliance score from individual results"""
         try:
             if not compliance_results:
+            except Exception as e:
+                pass
+
                 return 1.0  # No checks performed, assume compliant
 
             scores = []
@@ -160,6 +172,9 @@ class ComplianceMonitor:
         """Extract compliance violations from results"""
         try:
             violations = []
+            except Exception as e:
+                pass
+
 
             for compliance_type, result in compliance_results.items():
                 if hasattr(result, "violations"):
@@ -181,6 +196,9 @@ class ComplianceMonitor:
         """Generate compliance recommendations based on results"""
         try:
             recommendations = []
+            except Exception as e:
+                pass
+
 
             # GDPR recommendations
             if "gdpr" in compliance_results:
@@ -227,9 +245,12 @@ class ComplianceMonitor:
             return []
 
     async def get_compliance_dashboard(self) -> Dict[str, Any]:
-    """Get compliance dashboard data"""
+        """Get compliance dashboard data"""
         try:
             dashboard_data = {
+            except Exception as e:
+                pass
+
                 "timestamp": datetime.utcnow().isoformat(),
                 "compliance_status": {
                     "gdpr":
@@ -258,6 +279,9 @@ class ComplianceMonitor:
         """Get recent compliance violations"""
         try:
             # This would typically query a database
+            except Exception as e:
+                pass
+
             # For now, return empty list
             return []
 
@@ -266,9 +290,12 @@ class ComplianceMonitor:
             return []
 
     async def get_compliance_trends(self, days: int = 30) -> Dict[str, Any]:
-    """Get compliance trends over time"""
+        """Get compliance trends over time"""
         try:
             # This would typically query historical data
+            except Exception as e:
+                pass
+
             # For now, return mock data
             return {
                 "time_period_days": days,
@@ -284,9 +311,12 @@ class ComplianceMonitor:
 
     async def generate_compliance_report(
             self, report_type: str = "summary") -> Dict[str, Any]:
-    """Generate comprehensive compliance report"""
+        """Generate comprehensive compliance report"""
         try:
             report = {
+            except Exception as e:
+                pass
+
                 "report_type": report_type,
                 "generated_at": datetime.utcnow().isoformat(),
                 "compliance_overview":
@@ -320,6 +350,9 @@ class ComplianceMonitor:
         """Export compliance data in specified format"""
         try:
             if format == "json":
+            except Exception as e:
+                pass
+
                 data = await self.get_compliance_dashboard()
                 return json.dumps(data, indent=2)
             elif format == "csv":
@@ -336,6 +369,9 @@ class ComplianceMonitor:
         """Generate CSV export of compliance data"""
         try:
             # This would generate actual CSV data
+            except Exception as e:
+                pass
+
             # For now, return empty CSV
             return "timestamp,compliance_type,score,violations\n"
 
@@ -344,9 +380,12 @@ class ComplianceMonitor:
             return ""
 
     async def schedule_compliance_checks(self) -> Dict[str, Any]:
-    """Schedule periodic compliance checks"""
+        """Schedule periodic compliance checks"""
         try:
             # This would set up scheduled compliance checks
+            except Exception as e:
+                pass
+
             # For now, just log the action
             logger.info("Compliance checks scheduled")
 
@@ -354,9 +393,12 @@ class ComplianceMonitor:
             logger.error(f"Compliance check scheduling failed: {str(e)}")
 
     async def get_compliance_metrics(self) -> Dict[str, Any]:
-    """Get compliance metrics and statistics"""
+        """Get compliance metrics and statistics"""
         try:
             metrics = {
+            except Exception as e:
+                pass
+
                 "timestamp": datetime.utcnow().isoformat(),
                 "total_checks": 0,  # Would be calculated from audit logs
                 "compliance_score": 0.0,  # Would be calculated from recent checks

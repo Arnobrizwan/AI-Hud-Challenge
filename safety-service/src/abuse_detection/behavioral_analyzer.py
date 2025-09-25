@@ -35,7 +35,7 @@ class BehavioralAnomalyDetector:
         self.user_histories = {}
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize the behavioral analyzer"""
+        """Initialize the behavioral analyzer"""
         try:
             # Initialize models
             self.isolation_forest = IsolationForest(contamination=0.1, random_state=42, n_estimators=100)
@@ -50,7 +50,7 @@ class BehavioralAnomalyDetector:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-    """Cleanup resources"""
+        """Cleanup resources"""
         try:
             self.isolation_forest = None
             self.scaler = None
@@ -396,7 +396,7 @@ class BehavioralAnomalyDetector:
             logger.error(f"User history update failed: {str(e)}")
 
     async def get_behavioral_summary(self, user_id: str) -> Dict[str, Any]:
-    """Get behavioral summary for a user"""
+        """Get behavioral summary for a user"""
         try:
             user_history = self.user_histories.get(user_id, [])
 

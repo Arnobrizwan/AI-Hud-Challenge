@@ -231,3 +231,12 @@ class AuthorityScore(BaseModel):
     popularity_score: float
     recency_score: float
     computed_at: datetime
+
+
+class HealthStatus(BaseModel):
+    """Health status response."""
+
+    status: str
+    timestamp: datetime
+    version: str = "1.0.0"
+    checks: Dict[str, Any] = Field(default_factory=dict)

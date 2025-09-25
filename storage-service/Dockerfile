@@ -1,67 +1,51 @@
-# Multi-stage build for Storage Service
-FROM python:3.11-slim as builder
-
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    libpq-dev \
-    gcc \
-    g++ \
-    && rm -rf /var/lib/apt/lists/*
-
-# Create and activate virtual environment
-RUN python -m venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
-
-# Copy requirements and install Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Production stage
-FROM python:3.11-slim
-
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PATH="/opt/venv/bin:$PATH"
-
-# Install runtime dependencies
-RUN apt-get update && apt-get install -y \
-    libpq5 \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy virtual environment from builder stage
-COPY --from=builder /opt/venv /opt/venv
-
-# Create non-root user
-RUN groupadd -r appuser && useradd -r -g appuser appuser
-
-# Create app directory
+# syntax=docker/dockerfile:1.7
+ARG PYTHON_VERSION=3.11
+FROM python:${PYTHON_VERSION}-slim-bookworm AS base
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_INPUT=1
 WORKDIR /app
 
-# Copy application code
+FROM base AS deps
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+# system deps for building wheels
+RUN --mount=type=cache,target=/var/cache/apt \
+    --mount=type=cache,target=/var/lib/apt/lists \
+    apt-get update && apt-get install -y --no-install-recommends \
+      build-essential gcc g++ make curl git libffi-dev libssl-dev libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+# uv (faster pip)
+RUN python -m pip install -U pip && pip install -U uv
+# copy only dependency manifests
+ARG REQ_FILE=requirements.txt
+COPY ${REQ_FILE} /app/requirements.txt
+# create venv and install deps with cache
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=cache,target=/root/.cache/pip \
+    uv pip install --upgrade pip wheel \
+    && uv pip install -r /app/requirements.txt
+
+FROM base AS runtime
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      libpq5 curl \
+    && rm -rf /var/lib/apt/lists/*
+# Create non-root user
+RUN groupadd -r appuser && useradd -r -g appuser appuser
+ENV PATH="/opt/venv/bin:$PATH"
+# copy resolved env and deps from deps stage
+COPY --from=deps /opt/venv /opt/venv
+# only now copy the rest of the app
 COPY src/ ./src/
 COPY config.env.example .env
-
 # Set ownership
 RUN chown -R appuser:appuser /app
-
 # Switch to non-root user
 USER appuser
-
-# Expose port
+# default port
 EXPOSE 8000
-
-# Health check
+# healthcheck
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
-
-# Run the application
+# CMD
 CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]

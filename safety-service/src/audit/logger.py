@@ -36,9 +36,12 @@ class AuditLogger:
         self.encryption_enabled = True
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize the audit logger"""
+        """Initialize the audit logger"""
         try:
             # Initialize storage and services
+            except Exception as e:
+                pass
+
             await self.initialize_storage()
 
             # Start background tasks
@@ -53,9 +56,12 @@ class AuditLogger:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-    """Cleanup resources"""
+        """Cleanup resources"""
         try:
             self.audit_events.clear()
+            except Exception as e:
+                pass
+
             self.audit_logs.clear()
             self.audit_reports.clear()
 
@@ -74,6 +80,9 @@ class AuditLogger:
                 event_id=f"audit_{uuid.uuid4().hex[:8]}",
                 event_type="safety_check",
                 severity="high" if status.requires_intervention else "medium",
+                except Exception as e:
+                    pass
+
                 status="success" if not status.requires_intervention else "warning",
                 timestamp=datetime.utcnow(),
                 user_id=getattr(request, "user_id", None),
@@ -109,6 +118,9 @@ class AuditLogger:
                 event_id=f"audit_{uuid.uuid4().hex[:8]}",
                 event_type="drift_detection",
                 severity="high" if drift_result.overall_severity > 0.7 else "medium",
+                except Exception as e:
+                    pass
+
                 status="warning" if drift_result.requires_action else "success",
                 timestamp=datetime.utcnow(),
                 action="drift_detection",
@@ -142,6 +154,9 @@ class AuditLogger:
                 event_id=f"audit_{uuid.uuid4().hex[:8]}",
                 event_type="abuse_detection",
                 severity="critical" if abuse_result.threat_level == "high" else "high",
+                except Exception as e:
+                    pass
+
                 status="warning" if abuse_result.abuse_score > 0.5 else "success",
                 timestamp=datetime.utcnow(),
                 user_id=getattr(abuse_request, "user_id", None),
@@ -175,6 +190,9 @@ class AuditLogger:
                 event_id=f"audit_{uuid.uuid4().hex[:8]}",
                 event_type="content_moderation",
                 severity="high" if moderation_result.overall_safety_score < 0.5 else "medium",
+                except Exception as e:
+                    pass
+
                 status="warning" if moderation_result.violations else "success",
                 timestamp=datetime.utcnow(),
                 action="content_moderation",
@@ -207,6 +225,9 @@ class AuditLogger:
                 event_id=f"audit_{uuid.uuid4().hex[:8]}",
                 event_type="rate_limiting",
                 severity="medium" if rate_limit_result.is_rate_limited else "low",
+                except Exception as e:
+                    pass
+
                 status="warning" if rate_limit_result.is_rate_limited else "success",
                 timestamp=datetime.utcnow(),
                 user_id=getattr(rate_limit_request, "user_id", None),
@@ -239,6 +260,9 @@ class AuditLogger:
                 event_id=f"audit_{uuid.uuid4().hex[:8]}",
                 event_type="compliance_check",
                 severity="high" if compliance_result.overall_compliance_score < 0.8 else "medium",
+                except Exception as e:
+                    pass
+
                 status="warning" if compliance_result.violations else "success",
                 timestamp=datetime.utcnow(),
                 action="compliance_check",
@@ -267,6 +291,9 @@ class AuditLogger:
                 event_id=f"audit_{uuid.uuid4().hex[:8]}",
                 event_type="incident_response",
                 severity="critical" if incident.severity == "critical" else "high",
+                except Exception as e:
+                    pass
+
                 status="success" if response else "failure",
                 timestamp=datetime.utcnow(),
                 action="incident_response",
@@ -294,10 +321,13 @@ class AuditLogger:
         """Store audit event"""
         try:
             self.audit_events.append(event)
+            except Exception as e:
+                pass
+
 
             # Check if we need to create a new audit log
             if len(self.audit_events) >= self.max_events_per_log:
-    await self.create_audit_log()
+                await self.create_audit_log()
 
         except Exception as e:
             logger.error(f"Audit event storage failed: {str(e)}")
@@ -306,6 +336,9 @@ class AuditLogger:
         """Create audit log from current events"""
         try:
             if not self.audit_events:
+            except Exception as e:
+                pass
+
                 return ""
 
             # Create audit log
@@ -364,6 +397,11 @@ class AuditLogger:
             events = self.audit_events.copy()
 
             # Apply filters
+
+            except Exception as e:
+
+                pass
+
             if query.start_time:
                 events = [e for e in events if e.timestamp >= query.start_time]
 
@@ -433,6 +471,11 @@ class AuditLogger:
                       e.timestamp <= end_time]
 
             # Calculate statistics
+
+            except Exception as e:
+
+                pass
+
             total_events = len(events)
             events_by_type = {}
             events_by_severity = {}
@@ -458,7 +501,6 @@ class AuditLogger:
                 for user, count in sorted(user_counts.items(), key=lambda x: x[1], reverse=True)[
                     :10
                 ]
-            ]
 
             # Get top resources
             resource_counts = {}
@@ -530,6 +572,9 @@ class AuditLogger:
         """Get audit metrics and statistics"""
         try:
             total_events = len(self.audit_events)
+            except Exception as e:
+                pass
+
 
             # Calculate time-based metrics
             now = datetime.utcnow()
@@ -584,7 +629,6 @@ class AuditLogger:
                 for user, count in sorted(user_counts.items(), key=lambda x: x[1], reverse=True)[
                     :10
                 ]
-            ]
 
             # Count security and compliance events
             security_events_count = len(
@@ -623,10 +667,13 @@ class AuditLogger:
             raise
 
     async def audit_cleanup_task(self) -> Dict[str, Any]:
-    """Background task for cleaning up old audit data"""
+        """Background task for cleaning up old audit data"""
         while True:
             try:
-    await asyncio.sleep(3600)  # Run every hour
+                await asyncio.sleep(3600)  # Run every hour
+                except Exception as e:
+                    pass
+
 
                 if not self.is_initialized:
                     break
@@ -656,10 +703,13 @@ class AuditLogger:
                 await asyncio.sleep(3600)
 
     async def audit_compression_task(self) -> Dict[str, Any]:
-    """Background task for compressing audit data"""
+        """Background task for compressing audit data"""
         while True:
             try:
-    await asyncio.sleep(3600)  # Run every hour
+                await asyncio.sleep(3600)  # Run every hour
+                except Exception as e:
+                    pass
+
 
                 if not self.is_initialized:
                     break
@@ -673,9 +723,12 @@ class AuditLogger:
                 await asyncio.sleep(3600)
 
     async def initialize_storage(self) -> Dict[str, Any]:
-    """Initialize audit storage"""
+        """Initialize audit storage"""
         try:
             # Placeholder for storage initialization
+            except Exception as e:
+                pass
+
             logger.info("Audit storage initialized")
 
         except Exception as e:

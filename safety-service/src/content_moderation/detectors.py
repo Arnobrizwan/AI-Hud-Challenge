@@ -31,11 +31,11 @@ class BaseContentDetector:
         self.is_initialized = False
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize the detector"""
+        """Initialize the detector"""
         self.is_initialized = True
 
     async def cleanup(self) -> Dict[str, Any]:
-    """Cleanup resources"""
+        """Cleanup resources"""
         self.is_initialized = False
 
 
@@ -619,11 +619,11 @@ class ExternalModerationAPIs:
         self.enabled = self.config.external_apis
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize external APIs"""
+        """Initialize external APIs"""
         self.is_initialized = True
 
     async def cleanup(self) -> Dict[str, Any]:
-    """Cleanup resources"""
+        """Cleanup resources"""
         self.is_initialized = False
 
     async def moderate_text(self, text: str) -> Optional[Dict[str, Any]]:

@@ -41,9 +41,12 @@ class AnomalyDetectionSystem:
         self.user_behavior_history = {}
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize the anomaly detection system"""
+        """Initialize the anomaly detection system"""
         try:
             # Initialize all detectors
+            except Exception as e:
+                pass
+
             await self.isolation_forest.initialize()
             await self.one_class_svm.initialize()
             await self.lstm_autoencoder.initialize()
@@ -58,9 +61,12 @@ class AnomalyDetectionSystem:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-    """Cleanup resources"""
+        """Cleanup resources"""
         try:
-    await self.isolation_forest.cleanup()
+            await self.isolation_forest.cleanup()
+            except Exception as e:
+                pass
+
             await self.one_class_svm.cleanup()
             await self.lstm_autoencoder.cleanup()
             await self.statistical_detector.cleanup()
@@ -82,6 +88,9 @@ class AnomalyDetectionSystem:
 
         try:
             # Extract features from request
+            except Exception as e:
+                pass
+
             features = self.extract_features(request)
 
             if not features:
@@ -147,6 +156,9 @@ class AnomalyDetectionSystem:
         """Extract features from anomaly detection request"""
         try:
             features = {}
+            except Exception as e:
+                pass
+
 
             # System metrics
             system_metrics = request.system_metrics
@@ -180,6 +192,9 @@ class AnomalyDetectionSystem:
         """Calculate derived features from base features"""
         try:
             derived_features = {}
+            except Exception as e:
+                pass
+
 
             # System load features
             if "system_cpu_usage" in features and "system_memory_usage" in features:
@@ -235,6 +250,9 @@ class AnomalyDetectionSystem:
         """Determine overall system health based on anomaly score and detected anomalies"""
         try:
             # Count anomalies by severity
+            except Exception as e:
+                pass
+
             critical_anomalies = sum(
                 1 for a in anomalies if a.severity == "critical")
             high_anomalies = sum(1 for a in anomalies if a.severity == "high")
@@ -264,6 +282,9 @@ class AnomalyDetectionSystem:
         """Generate recommendations based on detected anomalies"""
         try:
             recommendations = []
+            except Exception as e:
+                pass
+
 
             # Health-based recommendations
             if system_health == "critical":
@@ -319,9 +340,13 @@ class AnomalyDetectionSystem:
             self,
             request: AnomalyDetectionRequest,
             anomaly_score: float):
-         -> Dict[str, Any]:"""Update historical data for training and analysis"""
+         -> Dict[str, Any]:
+        """Update historical data for training and analysis"""
         try:
             # Add current metrics to historical data
+            except Exception as e:
+                pass
+
             current_data = {
                 "timestamp": datetime.utcnow(),
                 "anomaly_score": anomaly_score,
@@ -363,9 +388,12 @@ class AnomalyDetectionSystem:
             logger.error(f"Historical data update failed: {str(e)}")
 
     async def train_models(self) -> Dict[str, Any]:
-    """Train anomaly detection models with historical data"""
+        """Train anomaly detection models with historical data"""
         try:
             if len(self.historical_metrics) < 100:
+            except Exception as e:
+                pass
+
                 logger.warning("Insufficient historical data for training")
                 return
 
@@ -399,6 +427,9 @@ class AnomalyDetectionSystem:
         """Extract features from historical data"""
         try:
             features = []
+            except Exception as e:
+                pass
+
 
             # System metrics
             system_metrics = data.get("system_metrics", {})
@@ -430,9 +461,12 @@ class AnomalyDetectionSystem:
             return []
 
     async def get_anomaly_statistics(self) -> Dict[str, Any]:
-    """Get anomaly detection statistics"""
+        """Get anomaly detection statistics"""
         try:
             if not self.historical_metrics:
+            except Exception as e:
+                pass
+
                 return {"message": "No historical data available"}
 
             # Calculate statistics
@@ -465,9 +499,12 @@ class AnomalyDetectionSystem:
             return {"error": str(e)}
 
     async def get_system_health_trend(self, hours: int = 24) -> Dict[str, Any]:
-    """Get system health trend over time"""
+        """Get system health trend over time"""
         try:
             if not self.historical_metrics:
+            except Exception as e:
+                pass
+
                 return {"message": "No historical data available"}
 
             # Filter data by time window

@@ -107,16 +107,15 @@ class ChaosEngine:
         self.is_initialized = False
 
     async def initialize(self, config: Dict[str, Any] = None) -> Dict[str, Any]:
-    """Initialize chaos engineering"""
+        """Initialize chaos engineering"""
         # Load experiment definitions
         await self.load_experiment_definitions(config.get("experiments", []) if config else [])
 
         self.is_initialized = True
         logger.info("Chaos engine initialized")
 
-    async def load_experiment_definitions(
-            self, experiments: List[Dict[str, Any]]):
-         -> Dict[str, Any]:"""Load chaos experiment definitions"""
+    async def load_experiment_definitions(self, experiments: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Load chaos experiment definitions"""
 
         for exp_data in experiments:
             experiment = ChaosExperiment(
@@ -134,7 +133,7 @@ class ChaosEngine:
             self.experiments[experiment.id] = experiment
 
     async def run_chaos_experiments(self) -> Dict[str, Any]:
-    """Run scheduled chaos experiments"""
+        """Run scheduled chaos experiments"""
         for experiment in self.experiments.values():
             if not experiment.enabled:
                 continue
@@ -142,13 +141,11 @@ class ChaosEngine:
             # Check if experiment should run based on schedule
             if await self._should_run_experiment(experiment):
                 try:
-    await self.execute_experiment(experiment)
+                    await self.execute_experiment(experiment)
                 except Exception as e:
-                    logger.error(
-                        f"Failed to execute experiment {experiment.id}: {str(e)}")
+                    logger.error(f"Failed to execute experiment {experiment.id}: {str(e)}")
 
-    async def _should_run_experiment(
-            self, experiment: ChaosExperiment) -> bool:
+    async def _should_run_experiment(self, experiment: ChaosExperiment) -> bool:
         """Check if experiment should run based on schedule"""
 
         if not experiment.schedule:
@@ -158,8 +155,7 @@ class ChaosEngine:
         # For now, run experiments randomly with low probability
         return random.random() < 0.1  # 10% chance per check
 
-    async def execute_experiment(
-            self, experiment: ChaosExperiment) -> ExperimentExecution:
+    async def execute_experiment(self, experiment: ChaosExperiment) -> ExperimentExecution:
         """Execute a chaos experiment"""
 
         execution = ExperimentExecution(
@@ -181,20 +177,19 @@ class ChaosEngine:
 
             # Execute experiment based on type
             if experiment.experiment_type == ChaosExperimentType.NETWORK_LATENCY:
-    await self._execute_network_latency_experiment(experiment, execution)
+                await self._execute_network_latency_experiment(experiment, execution)
             elif experiment.experiment_type == ChaosExperimentType.CPU_STRESS:
-    await self._execute_cpu_stress_experiment(experiment, execution)
+                await self._execute_cpu_stress_experiment(experiment, execution)
             elif experiment.experiment_type == ChaosExperimentType.MEMORY_STRESS:
-    await self._execute_memory_stress_experiment(experiment, execution)
+                await self._execute_memory_stress_experiment(experiment, execution)
             elif experiment.experiment_type == ChaosExperimentType.SERVICE_FAILURE:
-    await self._execute_service_failure_experiment(experiment, execution)
+                await self._execute_service_failure_experiment(experiment, execution)
             elif experiment.experiment_type == ChaosExperimentType.DATABASE_FAILURE:
-    await self._execute_database_failure_experiment(experiment, execution)
+                await self._execute_database_failure_experiment(experiment, execution)
             elif experiment.experiment_type == ChaosExperimentType.RANDOM_KILL:
-    await self._execute_random_kill_experiment(experiment, execution)
+                await self._execute_random_kill_experiment(experiment, execution)
             else:
-                raise ValueError(
-                    f"Unknown experiment type: {experiment.experiment_type}")
+                raise ValueError(f"Unknown experiment type: {experiment.experiment_type}")
 
             # Collect metrics during experiment
             execution.metrics_during = await self._collect_system_metrics()
@@ -219,8 +214,7 @@ class ChaosEngine:
             execution.status = ExperimentStatus.FAILED
             execution.error_message = str(e)
             execution.completed_at = datetime.utcnow()
-            logger.error(
-                f"Chaos experiment failed: {experiment.name} - {str(e)}")
+            logger.error(f"Chaos experiment failed: {experiment.name} - {str(e)}")
 
         finally:
             self.active_experiments.discard(experiment.id)
@@ -229,14 +223,13 @@ class ChaosEngine:
 
     async def _execute_network_latency_experiment(
         self, experiment: ChaosExperiment, execution: ExperimentExecution
-    ):
-         -> Dict[str, Any]:"""Execute network latency experiment"""
+    ) -> Dict[str, Any]:
+        """Execute network latency experiment"""
 
         latency_ms = experiment.parameters.get("latency_ms", 1000)
         target_services = experiment.target_services
 
-        logger.info(
-            f"Simulating network latency of {latency_ms}ms for services: {target_services}")
+        logger.info(f"Simulating network latency of {latency_ms}ms for services: {target_services}")
 
         # This would integrate with network simulation tools
         # For now, just log the action
@@ -245,14 +238,13 @@ class ChaosEngine:
 
     async def _execute_cpu_stress_experiment(
         self, experiment: ChaosExperiment, execution: ExperimentExecution
-    ):
-         -> Dict[str, Any]:"""Execute CPU stress experiment"""
+    ) -> Dict[str, Any]:
+        """Execute CPU stress experiment"""
 
         cpu_percentage = experiment.parameters.get("cpu_percentage", 80)
         duration_minutes = experiment.parameters.get("duration_minutes", 5)
 
-        logger.info(
-            f"Simulating CPU stress of {cpu_percentage}% for {duration_minutes} minutes")
+        logger.info(f"Simulating CPU stress of {cpu_percentage}% for {duration_minutes} minutes")
 
         # This would integrate with CPU stress tools
         # For now, just log the action
@@ -261,15 +253,13 @@ class ChaosEngine:
 
     async def _execute_memory_stress_experiment(
         self, experiment: ChaosExperiment, execution: ExperimentExecution
-    ):
-         -> Dict[str, Any]:"""Execute memory stress experiment"""
+    ) -> Dict[str, Any]:
+        """Execute memory stress experiment"""
 
         memory_percentage = experiment.parameters.get("memory_percentage", 80)
         duration_minutes = experiment.parameters.get("duration_minutes", 5)
 
-        logger.info(
-            f"Simulating memory stress of {memory_percentage}% for {duration_minutes} minutes"
-        )
+        logger.info(f"Simulating memory stress of {memory_percentage}% for {duration_minutes} minutes")
 
         # This would integrate with memory stress tools
         # For now, just log the action
@@ -278,16 +268,13 @@ class ChaosEngine:
 
     async def _execute_service_failure_experiment(
         self, experiment: ChaosExperiment, execution: ExperimentExecution
-    ):
-         -> Dict[str, Any]:"""Execute service failure experiment"""
+    ) -> Dict[str, Any]:
+        """Execute service failure experiment"""
 
         target_services = experiment.target_services
-        failure_duration_minutes = experiment.parameters.get(
-            "failure_duration_minutes", 2)
+        failure_duration_minutes = experiment.parameters.get("failure_duration_minutes", 2)
 
-        logger.info(
-            f"Simulating failure of services: {target_services} for {failure_duration_minutes} minutes"
-        )
+        logger.info(f"Simulating failure of services: {target_services} for {failure_duration_minutes} minutes")
 
         # This would integrate with service orchestration tools
         # For now, just log the action
@@ -296,16 +283,13 @@ class ChaosEngine:
 
     async def _execute_database_failure_experiment(
         self, experiment: ChaosExperiment, execution: ExperimentExecution
-    ):
-         -> Dict[str, Any]:"""Execute database failure experiment"""
+    ) -> Dict[str, Any]:
+        """Execute database failure experiment"""
 
         database_type = experiment.parameters.get("database_type", "primary")
-        failure_duration_minutes = experiment.parameters.get(
-            "failure_duration_minutes", 1)
+        failure_duration_minutes = experiment.parameters.get("failure_duration_minutes", 1)
 
-        logger.info(
-            f"Simulating {database_type} database failure for {failure_duration_minutes} minutes"
-        )
+        logger.info(f"Simulating {database_type} database failure for {failure_duration_minutes} minutes")
 
         # This would integrate with database management tools
         # For now, just log the action
@@ -314,17 +298,15 @@ class ChaosEngine:
 
     async def _execute_random_kill_experiment(
         self, experiment: ChaosExperiment, execution: ExperimentExecution
-    ):
-         -> Dict[str, Any]:"""Execute random kill experiment"""
+    ) -> Dict[str, Any]:
+        """Execute random kill experiment"""
 
         target_services = experiment.target_services
         kill_percentage = experiment.parameters.get("kill_percentage", 50)
 
         # Randomly select services to kill
         num_to_kill = max(1, int(len(target_services) * kill_percentage / 100))
-        services_to_kill = random.sample(
-            target_services, min(
-                num_to_kill, len(target_services)))
+        services_to_kill = random.sample(target_services, min(num_to_kill, len(target_services)))
 
         logger.info(f"Randomly killing services: {services_to_kill}")
 
@@ -334,7 +316,7 @@ class ChaosEngine:
         execution.results["kill_percentage"] = kill_percentage
 
     async def _collect_system_metrics(self) -> Dict[str, Any]:
-    """Collect system metrics for experiment analysis"""
+        """Collect system metrics for experiment analysis"""
         try:
             # This would collect actual system metrics
             # For now, return mock data
@@ -360,7 +342,8 @@ class ChaosEngine:
 
         # Calculate reliability score based on metrics
         reliability_score = self._calculate_reliability_score(
-            execution.metrics_before, execution.metrics_during, execution.metrics_after)
+            execution.metrics_before, execution.metrics_during, execution.metrics_after
+        )
 
         # Calculate service impact
         service_impact = self._calculate_service_impact(execution)
@@ -369,9 +352,7 @@ class ChaosEngine:
         recovery_time = self._calculate_recovery_time(execution)
 
         # Generate recommendations
-        recommendations = self._generate_reliability_recommendations(
-            experiment, execution, reliability_score
-        )
+        recommendations = self._generate_reliability_recommendations(experiment, execution, reliability_score)
 
         report = ReliabilityReport(
             id=f"report_{execution.id}",
@@ -400,111 +381,72 @@ class ChaosEngine:
             return 0.0
 
         # Calculate degradation during experiment
-        cpu_degradation = abs(
-            metrics_during.get(
-                "cpu_usage",
-                0) -
-            metrics_before.get(
-                "cpu_usage",
-                0))
-        memory_degradation = abs(
-            metrics_during.get(
-                "memory_usage",
-                0) -
-            metrics_before.get(
-                "memory_usage",
-                0))
+        cpu_degradation = abs(metrics_during.get("cpu_usage", 0) - metrics_before.get("cpu_usage", 0))
+        memory_degradation = abs(metrics_during.get("memory_usage", 0) - metrics_before.get("memory_usage", 0))
 
         # Calculate recovery
-        cpu_recovery = abs(
-            metrics_after.get(
-                "cpu_usage",
-                0) -
-            metrics_before.get(
-                "cpu_usage",
-                0))
-        memory_recovery = abs(
-            metrics_after.get(
-                "memory_usage",
-                0) -
-            metrics_before.get(
-                "memory_usage",
-                0))
+        cpu_recovery = abs(metrics_after.get("cpu_usage", 0) - metrics_before.get("cpu_usage", 0))
+        memory_recovery = abs(metrics_after.get("memory_usage", 0) - metrics_before.get("memory_usage", 0))
 
         # Simple scoring (0-1, higher is better)
-        degradation_score = max(
-            0, 1 - (cpu_degradation + memory_degradation) / 200)
+        degradation_score = max(0, 1 - (cpu_degradation + memory_degradation) / 200)
         recovery_score = max(0, 1 - (cpu_recovery + memory_recovery) / 100)
 
         return (degradation_score + recovery_score) / 2
 
-    def _calculate_service_impact(
-            self, execution: ExperimentExecution) -> Dict[str, Any]:
-    """Calculate service impact during experiment"""
+    def _calculate_service_impact(self, execution: ExperimentExecution) -> Dict[str, Any]:
+        """Calculate service impact during experiment"""
         # This would analyze actual service impact
         # For now, return mock data
 
         return {
-            "services_affected": len(
-                execution.results.get(
-                    "affected_services", [])), "availability_drop": random.uniform(
-                0, 0.3), "response_time_increase": random.uniform(
-                    0, 2.0), "error_rate_increase": random.uniform(
-                        0, 0.1), }
+            "services_affected": len(execution.results.get("affected_services", [])),
+            "availability_drop": random.uniform(0, 0.3),
+            "response_time_increase": random.uniform(0, 2.0),
+            "error_rate_increase": random.uniform(0, 0.1),
+        }
 
-    def _calculate_recovery_time(
-            self, execution: ExperimentExecution) -> float:
+    def _calculate_recovery_time(self, execution: ExperimentExecution) -> float:
         """Calculate recovery time in minutes"""
 
         if not execution.completed_at or not execution.started_at:
             return 0.0
 
-        total_duration = (execution.completed_at -
-                          execution.started_at).total_seconds() / 60
+        total_duration = (execution.completed_at - execution.started_at).total_seconds() / 60
 
         # Assume recovery takes 20% of total experiment time
         return total_duration * 0.2
 
     def _generate_reliability_recommendations(
-            self,
-            experiment: ChaosExperiment,
-            execution: ExperimentExecution,
-            reliability_score: float) -> List[str]:
+        self, experiment: ChaosExperiment, execution: ExperimentExecution, reliability_score: float
+    ) -> List[str]:
         """Generate reliability improvement recommendations"""
 
         recommendations = []
 
         if reliability_score < 0.5:
-            recommendations.append(
-                "System showed poor resilience during chaos experiment")
-            recommendations.append(
-                "Implement better error handling and circuit breakers")
+            recommendations.append("System showed poor resilience during chaos experiment")
+            recommendations.append("Implement better error handling and circuit breakers")
             recommendations.append("Add redundancy and failover mechanisms")
         elif reliability_score < 0.8:
             recommendations.append("System showed moderate resilience")
-            recommendations.append(
-                "Consider improving monitoring and alerting")
-            recommendations.append(
-                "Review resource allocation and scaling policies")
+            recommendations.append("Consider improving monitoring and alerting")
+            recommendations.append("Review resource allocation and scaling policies")
         else:
-            recommendations.append(
-                "System showed good resilience during chaos experiment")
-            recommendations.append(
-                "Continue regular chaos testing to maintain reliability")
+            recommendations.append("System showed good resilience during chaos experiment")
+            recommendations.append("Continue regular chaos testing to maintain reliability")
 
         # Add experiment-specific recommendations
         if experiment.experiment_type == ChaosExperimentType.NETWORK_LATENCY:
             recommendations.append("Review network timeout configurations")
             recommendations.append("Implement network retry policies")
         elif experiment.experiment_type == ChaosExperimentType.SERVICE_FAILURE:
-            recommendations.append(
-                "Implement service discovery and health checks")
+            recommendations.append("Implement service discovery and health checks")
             recommendations.append("Add automatic failover mechanisms")
 
         return recommendations
 
-    async def create_experiment(
-            self, experiment_data: Dict[str, Any]) -> ChaosExperiment:
+    async def create_experiment(self, experiment_data: Dict[str, Any]) -> ChaosExperiment:
         """Create new chaos experiment"""
 
         experiment = ChaosExperiment(
@@ -526,20 +468,14 @@ class ChaosEngine:
 
         return experiment
 
-    async def get_experiment_results(
-            self, experiment_id: str) -> List[ExperimentExecution]:
+    async def get_experiment_results(self, experiment_id: str) -> List[ExperimentExecution]:
         """Get results for a specific experiment"""
 
-        return [
-            execution
-            for execution in self.executions.values()
-            if execution.experiment_id == experiment_id
-        ]
+        return [execution for execution in self.executions.values() if execution.experiment_id == experiment_id]
 
     async def get_reliability_summary(self) -> Dict[str, Any]:
-    """Get overall reliability summary"""
-        completed_executions = [
-            e for e in self.executions.values() if e.status == ExperimentStatus.COMPLETED]
+        """Get overall reliability summary"""
+        completed_executions = [e for e in self.executions.values() if e.status == ExperimentStatus.COMPLETED]
 
         if not completed_executions:
             return {
@@ -552,16 +488,12 @@ class ChaosEngine:
         reliability_scores = []
         for execution in completed_executions:
             if "overall_reliability_score" in execution.results:
-                reliability_scores.append(
-                    execution.results["overall_reliability_score"])
+                reliability_scores.append(execution.results["overall_reliability_score"])
 
-        avg_reliability = (
-            sum(reliability_scores) /
-            len(reliability_scores) if reliability_scores else 0.0)
+        avg_reliability = sum(reliability_scores) / len(reliability_scores) if reliability_scores else 0.0
 
         # Calculate trend (simplified)
-        recent_executions = sorted(
-            completed_executions, key=lambda x: x.started_at)[-5:]
+        recent_executions = sorted(completed_executions, key=lambda x: x.started_at)[-5:]
         recent_scores = [
             e.results.get("overall_reliability_score", 0)
             for e in recent_executions
@@ -577,12 +509,10 @@ class ChaosEngine:
             "total_experiments": len(completed_executions),
             "average_reliability_score": avg_reliability,
             "reliability_trend": trend,
-            "last_experiment": (
-                completed_executions[-1].started_at.isoformat() if completed_executions else None
-            ),
+            "last_experiment": (completed_executions[-1].started_at.isoformat() if completed_executions else None),
         }
 
     async def cleanup(self) -> Dict[str, Any]:
-    """Cleanup chaos engine"""
+        """Cleanup chaos engine"""
         self.is_initialized = False
         logger.info("Chaos engine cleaned up")

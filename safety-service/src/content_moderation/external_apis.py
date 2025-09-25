@@ -55,7 +55,7 @@ class ExternalModerationAPIs:
         self.session = None
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize external APIs"""
+        """Initialize external APIs"""
         try:
             if not self.enabled:
                 self.is_initialized = True
@@ -81,10 +81,10 @@ class ExternalModerationAPIs:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-    """Cleanup resources"""
+        """Cleanup resources"""
         try:
             if self.session:
-    await self.session.close()
+                await self.session.close()
                 self.session = None
 
             self.is_initialized = False
@@ -94,7 +94,7 @@ class ExternalModerationAPIs:
             logger.error(f"Error during external APIs cleanup: {str(e)}")
 
     async def load_api_configurations(self) -> Dict[str, Any]:
-    """Load API configurations from environment variables"""
+        """Load API configurations from environment variables"""
         try:
             # In a real implementation, this would load from environment variables
             # For now, we'll use default configurations
@@ -104,13 +104,13 @@ class ExternalModerationAPIs:
             logger.error(f"Failed to load API configurations: {str(e)}")
 
     async def test_api_connections(self) -> Dict[str, Any]:
-    """Test connections to external APIs"""
+        """Test connections to external APIs"""
         try:
             # Test each enabled API
             for api_name, config in self.api_configs.items():
                 if config["enabled"]:
                     try:
-    await self.test_api_connection(api_name, config)
+                        await self.test_api_connection(api_name, config)
                         logger.info(
                             f"API {api_name} connection test successful")
                     except Exception as e:
@@ -122,23 +122,23 @@ class ExternalModerationAPIs:
             logger.error(f"API connection testing failed: {str(e)}")
 
     async def test_api_connection(self, api_name: str, config: Dict[str, Any]) -> Dict[str, Any]:
-    """Test connection to a specific API"""
+        """Test connection to a specific API"""
         try:
             if api_name == "google_perspective":
-    await self.test_google_perspective(config)
+                await self.test_google_perspective(config)
             elif api_name == "microsoft_content_moderator":
-    await self.test_microsoft_content_moderator(config)
+                await self.test_microsoft_content_moderator(config)
             elif api_name == "aws_comprehend":
-    await self.test_aws_comprehend(config)
+                await self.test_aws_comprehend(config)
             elif api_name == "azure_content_safety":
-    await self.test_azure_content_safety(config)
+                await self.test_azure_content_safety(config)
 
         except Exception as e:
             logger.error(f"API {api_name} connection test failed: {str(e)}")
             raise
 
     async def test_google_perspective(self, config: Dict[str, Any]) -> Dict[str, Any]:
-    """Test Google Perspective API connection"""
+        """Test Google Perspective API connection"""
         try:
             # Test with a simple request
             test_data = {
@@ -156,7 +156,7 @@ class ExternalModerationAPIs:
             raise
 
     async def test_microsoft_content_moderator(self, config: Dict[str, Any]) -> Dict[str, Any]:
-    """Test Microsoft Content Moderator API connection"""
+        """Test Microsoft Content Moderator API connection"""
         try:
             # Test with a simple request
             test_data = {"text": "test"}
@@ -171,7 +171,7 @@ class ExternalModerationAPIs:
             raise
 
     async def test_aws_comprehend(self, config: Dict[str, Any]) -> Dict[str, Any]:
-    """Test AWS Comprehend API connection"""
+        """Test AWS Comprehend API connection"""
         try:
             # Test with a simple request
             test_data = {"text": "test"}
@@ -185,7 +185,7 @@ class ExternalModerationAPIs:
             raise
 
     async def test_azure_content_safety(self, config: Dict[str, Any]) -> Dict[str, Any]:
-    """Test Azure Content Safety API connection"""
+        """Test Azure Content Safety API connection"""
         try:
             # Test with a simple request
             test_data = {"text": "test"}
@@ -427,7 +427,7 @@ class ExternalModerationAPIs:
 
     def parse_google_perspective_result(
             self, result: Dict[str, Any]) -> Dict[str, Any]:
-    """Parse Google Perspective API result"""
+        """Parse Google Perspective API result"""
         try:
             parsed_result = {
                 "api": "google_perspective",
@@ -450,7 +450,7 @@ class ExternalModerationAPIs:
 
     def parse_microsoft_content_moderator_result(
             self, result: Dict[str, Any]) -> Dict[str, Any]:
-    """Parse Microsoft Content Moderator API result"""
+        """Parse Microsoft Content Moderator API result"""
         try:
             parsed_result = {
                 "api": "microsoft_content_moderator",
@@ -476,7 +476,7 @@ class ExternalModerationAPIs:
 
     def parse_azure_content_safety_result(
             self, result: Dict[str, Any]) -> Dict[str, Any]:
-    """Parse Azure Content Safety API result"""
+        """Parse Azure Content Safety API result"""
         try:
             parsed_result = {
                 "api": "azure_content_safety",
@@ -499,7 +499,7 @@ class ExternalModerationAPIs:
             return {}
 
     async def get_api_status(self) -> Dict[str, Any]:
-    """Get status of all external APIs"""
+        """Get status of all external APIs"""
         try:
             status = {
                 "enabled": self.enabled,

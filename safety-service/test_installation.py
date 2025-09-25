@@ -7,18 +7,18 @@ import asyncio
 import os
 import sys
 from datetime import datetime
+from typing import Any, Dict
 
 # Add the src directory to the Python path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
 
 async def test_imports() -> Dict[str, Any]:
-    """Test that all modules can be imported"""
+        """Test that all modules can be imported"""
     print("Testing imports...")
 
     try:
         from safety_engine.core import SafetyMonitoringEngine
-
         print("✓ SafetyMonitoringEngine imported successfully")
     except ImportError as e:
         print(f"✗ Failed to import SafetyMonitoringEngine: {e}")
@@ -26,7 +26,6 @@ async def test_imports() -> Dict[str, Any]:
 
     try:
         from safety_engine.models import SafetyMonitoringRequest, SafetyStatus
-
         print("✓ Safety models imported successfully")
     except ImportError as e:
         print(f"✗ Failed to import safety models: {e}")
@@ -34,7 +33,6 @@ async def test_imports() -> Dict[str, Any]:
 
     try:
         from drift_detection.detector import MultidimensionalDriftDetector
-
         print("✓ MultidimensionalDriftDetector imported successfully")
     except ImportError as e:
         print(f"✗ Failed to import MultidimensionalDriftDetector: {e}")
@@ -42,7 +40,6 @@ async def test_imports() -> Dict[str, Any]:
 
     try:
         from abuse_detection.system import AbuseDetectionSystem
-
         print("✓ AbuseDetectionSystem imported successfully")
     except ImportError as e:
         print(f"✗ Failed to import AbuseDetectionSystem: {e}")
@@ -50,7 +47,6 @@ async def test_imports() -> Dict[str, Any]:
 
     try:
         from content_moderation.engine import ContentModerationEngine
-
         print("✓ ContentModerationEngine imported successfully")
     except ImportError as e:
         print(f"✗ Failed to import ContentModerationEngine: {e}")
@@ -58,7 +54,6 @@ async def test_imports() -> Dict[str, Any]:
 
     try:
         from rate_limiting.limiter import AdvancedRateLimiter
-
         print("✓ AdvancedRateLimiter imported successfully")
     except ImportError as e:
         print(f"✗ Failed to import AdvancedRateLimiter: {e}")
@@ -66,7 +61,6 @@ async def test_imports() -> Dict[str, Any]:
 
     try:
         from compliance.monitor import ComplianceMonitor
-
         print("✓ ComplianceMonitor imported successfully")
     except ImportError as e:
         print(f"✗ Failed to import ComplianceMonitor: {e}")
@@ -74,7 +68,6 @@ async def test_imports() -> Dict[str, Any]:
 
     try:
         from incident_response.manager import IncidentResponseManager
-
         print("✓ IncidentResponseManager imported successfully")
     except ImportError as e:
         print(f"✗ Failed to import IncidentResponseManager: {e}")
@@ -82,7 +75,6 @@ async def test_imports() -> Dict[str, Any]:
 
     try:
         from audit.logger import AuditLogger
-
         print("✓ AuditLogger imported successfully")
     except ImportError as e:
         print(f"✗ Failed to import AuditLogger: {e}")
@@ -92,7 +84,7 @@ async def test_imports() -> Dict[str, Any]:
 
 
 async def test_basic_functionality() -> Dict[str, Any]:
-    """Test basic functionality of the safety service"""
+        """Test basic functionality of the safety service"""
     print("\nTesting basic functionality...")
 
     try:
@@ -137,12 +129,11 @@ async def test_basic_functionality() -> Dict[str, Any]:
 
 
 async def test_configuration() -> Dict[str, Any]:
-    """Test configuration loading"""
+        """Test configuration loading"""
     print("\nTesting configuration...")
 
     try:
         from safety_engine.config import get_settings
-
         settings = get_settings()
         print("✓ Configuration loaded successfully")
         print(f"  - Environment: {settings.environment}")
@@ -158,7 +149,7 @@ async def test_configuration() -> Dict[str, Any]:
 
 
 async def test_models() -> Dict[str, Any]:
-    """Test data models"""
+        """Test data models"""
     print("\nTesting data models...")
 
     try:
@@ -205,7 +196,7 @@ async def test_models() -> Dict[str, Any]:
 
 
 async def main() -> Dict[str, Any]:
-    """Main test function"""
+        """Main test function"""
     print("Safety Service Installation Test")
     print("=" * 40)
 
