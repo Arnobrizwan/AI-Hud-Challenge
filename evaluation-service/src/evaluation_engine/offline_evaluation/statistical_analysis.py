@@ -19,11 +19,11 @@ class StatisticalAnalyzer:
         self.confidence_levels = [0.90, 0.95, 0.99]
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize the statistical analyzer"""
+        """Initialize the statistical analyzer"""
         pass
 
     async def cleanup(self) -> Dict[str, Any]:
-    """Cleanup statistical analyzer resources"""
+        """Cleanup statistical analyzer resources"""
         pass
 
     async def bootstrap_confidence_interval(
@@ -31,8 +31,7 @@ class StatisticalAnalyzer:
     ) -> Dict[str, float]:
         """Calculate bootstrap confidence interval for a metric"""
 
-        logger.info(
-            f"Calculating bootstrap CI for metric value: {metric_value}")
+        logger.info(f"Calculating bootstrap CI for metric value: {metric_value}")
 
         # For a single metric value, we need to simulate bootstrap samples
         # This is a simplified implementation - in practice, you'd have actual
@@ -41,8 +40,7 @@ class StatisticalAnalyzer:
         # Simulate bootstrap samples around the metric value
         # Add some noise to simulate sampling variability
         noise_std = metric_value * 0.1  # 10% of the metric value as noise
-        bootstrap_samples_data = np.random.normal(
-            metric_value, noise_std, bootstrap_samples)
+        bootstrap_samples_data = np.random.normal(metric_value, noise_std, bootstrap_samples)
 
         # Calculate confidence interval
         alpha = 1 - confidence_level
@@ -101,7 +99,7 @@ class StatisticalAnalyzer:
         test_type: str = "t_test",
         alternative: str = "two-sided",
     ) -> Dict[str, Any]:
-    """Perform hypothesis test between two datasets"""
+        """Perform hypothesis test between two datasets"""
         logger.info(f"Performing {test_type} hypothesis test")
 
         if test_type == "t_test":
@@ -118,21 +116,20 @@ class StatisticalAnalyzer:
             test_name = "Welch's t-test"
         elif test_type == "mann_whitney_u":
             # Mann-Whitney U test (non-parametric)
-            statistic, p_value = stats.mannwhitneyu(
-                data1, data2, alternative=alternative)
+            statistic, p_value = stats.mannwhitneyu(data1, data2, alternative=alternative)
             test_name = "Mann-Whitney U test"
         elif test_type == "wilcoxon":
             # Wilcoxon signed-rank test
-            statistic, p_value = stats.wilcoxon(
-                data1, data2, alternative=alternative)
+            statistic, p_value = stats.wilcoxon(data1, data2, alternative=alternative)
             test_name = "Wilcoxon signed-rank test"
         else:
             raise ValueError(f"Unsupported test type: {test_type}")
 
         # Calculate effect size (Cohen's d)
-        pooled_std = np.sqrt(((len(data1) - 1) * np.var(data1,
-                                                        ddof=1) + (len(data2) - 1) * np.var(data2,
-                                                                                            ddof=1)) / (len(data1) + len(data2) - 2))
+        pooled_std = np.sqrt(
+            ((len(data1) - 1) * np.var(data1, ddof=1) + (len(data2) - 1) * np.var(data2, ddof=1))
+            / (len(data1) + len(data2) - 2)
+        )
         cohens_d = (np.mean(data1) - np.mean(data2)) / pooled_std
 
         return {
@@ -156,10 +153,7 @@ class StatisticalAnalyzer:
         if effect_type == "cohens_d":
             # Cohen's d
             pooled_std = np.sqrt(
-                (
-                    (len(data1) - 1) * np.var(data1, ddof=1)
-                    + (len(data2) - 1) * np.var(data2, ddof=1)
-                )
+                ((len(data1) - 1) * np.var(data1, ddof=1) + (len(data2) - 1) * np.var(data2, ddof=1))
                 / (len(data1) + len(data2) - 2)
             )
             cohens_d = (np.mean(data1) - np.mean(data2)) / pooled_std
@@ -183,10 +177,7 @@ class StatisticalAnalyzer:
         elif effect_type == "hedges_g":
             # Hedges' g (bias-corrected Cohen's d)
             pooled_std = np.sqrt(
-                (
-                    (len(data1) - 1) * np.var(data1, ddof=1)
-                    + (len(data2) - 1) * np.var(data2, ddof=1)
-                )
+                ((len(data1) - 1) * np.var(data1, ddof=1) + (len(data2) - 1) * np.var(data2, ddof=1))
                 / (len(data1) + len(data2) - 2)
             )
             cohens_d = (np.mean(data1) - np.mean(data2)) / pooled_std
@@ -205,10 +196,8 @@ class StatisticalAnalyzer:
         else:
             raise ValueError(f"Unsupported effect size type: {effect_type}")
 
-    async def perform_anova(
-        self, groups: List[np.ndarray], group_names: Optional[List[str]] = None
-    ) -> Dict[str, Any]:
-    """Perform one-way ANOVA"""
+    async def perform_anova(self, groups: List[np.ndarray], group_names: Optional[List[str]] = None) -> Dict[str, Any]:
+        """Perform one-way ANOVA"""
         logger.info(f"Performing ANOVA with {len(groups)} groups")
 
         if group_names is None:
@@ -222,8 +211,7 @@ class StatisticalAnalyzer:
         grand_mean = np.mean(all_data)
 
         # Sum of squares between groups
-        ss_between = sum(len(group) * (np.mean(group) -
-                         grand_mean) ** 2 for group in groups)
+        ss_between = sum(len(group) * (np.mean(group) - grand_mean) ** 2 for group in groups)
 
         # Sum of squares total
         ss_total = np.sum((all_data - grand_mean) ** 2)
@@ -262,7 +250,7 @@ class StatisticalAnalyzer:
     async def perform_chi_square_test(
         self, observed: np.ndarray, expected: Optional[np.ndarray] = None
     ) -> Dict[str, Any]:
-    """Perform chi-square test of independence or goodness of fit"""
+        """Perform chi-square test of independence or goodness of fit"""
         logger.info("Performing chi-square test")
 
         if expected is None:
@@ -277,8 +265,7 @@ class StatisticalAnalyzer:
 
         # Calculate Cramér's V (effect size for chi-square)
         n = np.sum(observed)
-        cramers_v = np.sqrt(chi2_statistic / (n * df)
-                            ) if n > 0 and df > 0 else 0
+        cramers_v = np.sqrt(chi2_statistic / (n * df)) if n > 0 and df > 0 else 0
 
         return {
             "chi2_statistic": chi2_statistic,
@@ -290,10 +277,8 @@ class StatisticalAnalyzer:
             "expected": expected.tolist(),
         }
 
-    async def calculate_correlation(
-        self, x: np.ndarray, y: np.ndarray, method: str = "pearson"
-    ) -> Dict[str, Any]:
-    """Calculate correlation between two variables"""
+    async def calculate_correlation(self, x: np.ndarray, y: np.ndarray, method: str = "pearson") -> Dict[str, Any]:
+        """Calculate correlation between two variables"""
         logger.info(f"Calculating {method} correlation")
 
         if method == "pearson":
@@ -328,7 +313,7 @@ class StatisticalAnalyzer:
         }
 
     async def perform_normality_test(self, data: np.ndarray) -> Dict[str, Any]:
-    """Perform normality test (Shapiro-Wilk)"""
+        """Perform normality test (Shapiro-Wilk)"""
         logger.info("Performing normality test")
 
         # Shapiro-Wilk test (good for small samples)
@@ -337,8 +322,7 @@ class StatisticalAnalyzer:
             test_name = "Shapiro-Wilk"
         else:
             # Kolmogorov-Smirnov test (for large samples)
-            statistic, p_value = stats.kstest(
-                data, "norm", args=(np.mean(data), np.std(data)))
+            statistic, p_value = stats.kstest(data, "norm", args=(np.mean(data), np.std(data)))
             test_name = "Kolmogorov-Smirnov"
 
         # Additional normality indicators
@@ -362,25 +346,21 @@ class StatisticalAnalyzer:
         power: float = 0.8,
         test_type: str = "two_sample",
     ) -> Dict[str, Any]:
-    """Calculate required sample size for statistical test"""
+        """Calculate required sample size for statistical test"""
         logger.info(f"Calculating sample size for effect size {effect_size}")
 
         if test_type == "two_sample":
             # Two-sample t-test
             from statsmodels.stats.power import ttest_power
 
-            n_per_group = ttest_power(
-                effect_size, alpha=alpha, power=power, alternative="two-sided"
-            )
+            n_per_group = ttest_power(effect_size, alpha=alpha, power=power, alternative="two-sided")
             total_n = n_per_group * 2
 
         elif test_type == "one_sample":
             # One-sample t-test
             from statsmodels.stats.power import ttest_power
 
-            n_per_group = ttest_power(
-                effect_size, alpha=alpha, power=power, alternative="two-sided"
-            )
+            n_per_group = ttest_power(effect_size, alpha=alpha, power=power, alternative="two-sided")
             total_n = n_per_group
 
         else:

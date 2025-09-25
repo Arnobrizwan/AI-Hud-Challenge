@@ -29,7 +29,7 @@ class OnlineEvaluator:
         self.active_evaluations: Dict[str, Dict[str, Any]] = {}
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize the online evaluator"""
+        """Initialize the online evaluator"""
         try:
             logger.info("Initializing online evaluator...")
 
@@ -52,7 +52,7 @@ class OnlineEvaluator:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-    """Cleanup online evaluator resources"""
+        """Cleanup online evaluator resources"""
         try:
             logger.info("Cleaning up online evaluator...")
 
@@ -73,7 +73,7 @@ class OnlineEvaluator:
     async def evaluate(
         self, experiments: List[Dict[str, Any]], evaluation_period: Dict[str, Any]
     ) -> Dict[str, Any]:
-    """Comprehensive online evaluation of experiments"""
+        """Comprehensive online evaluation of experiments"""
         logger.info(
             f"Starting online evaluation of {len(experiments)} experiments")
 
@@ -115,7 +115,7 @@ class OnlineEvaluator:
     async def _evaluate_experiment(
         self, experiment_config: Dict[str, Any], evaluation_period: Dict[str, Any]
     ) -> Dict[str, Any]:
-    """Evaluate a single experiment"""
+        """Evaluate a single experiment"""
         experiment_type = experiment_config.get("type", "ab_test")
         experiment_id = experiment_config.get("id")
 
@@ -131,7 +131,7 @@ class OnlineEvaluator:
                 return await self._evaluate_sequential_test(experiment_config, evaluation_period)
             elif experiment_type == "bayesian":
                 return await self._evaluate_bayesian_test(experiment_config, evaluation_period)
-        else:
+            else:
                 raise ValueError(
                     f"Unsupported experiment type: {experiment_type}")
 
@@ -148,7 +148,7 @@ class OnlineEvaluator:
     async def _evaluate_ab_test(
         self, experiment_config: Dict[str, Any], evaluation_period: Dict[str, Any]
     ) -> Dict[str, Any]:
-    """Evaluate A/B test experiment"""
+        """Evaluate A/B test experiment"""
         experiment_id = experiment_config.get("id")
 
         # Get experiment from A/B tester
@@ -196,7 +196,7 @@ class OnlineEvaluator:
     async def _evaluate_bandit_test(
         self, experiment_config: Dict[str, Any], evaluation_period: Dict[str, Any]
     ) -> Dict[str, Any]:
-    """Evaluate multi-armed bandit experiment"""
+        """Evaluate multi-armed bandit experiment"""
         experiment_id = experiment_config.get("id")
 
         # Analyze bandit experiment
@@ -213,7 +213,7 @@ class OnlineEvaluator:
     async def _evaluate_sequential_test(
         self, experiment_config: Dict[str, Any], evaluation_period: Dict[str, Any]
     ) -> Dict[str, Any]:
-    """Evaluate sequential test experiment"""
+        """Evaluate sequential test experiment"""
         experiment_id = experiment_config.get("id")
 
         # Analyze sequential experiment
@@ -232,7 +232,7 @@ class OnlineEvaluator:
     async def _evaluate_bayesian_test(
         self, experiment_config: Dict[str, Any], evaluation_period: Dict[str, Any]
     ) -> Dict[str, Any]:
-    """Evaluate Bayesian test experiment"""
+        """Evaluate Bayesian test experiment"""
         experiment_id = experiment_config.get("id")
 
         # Analyze Bayesian experiment

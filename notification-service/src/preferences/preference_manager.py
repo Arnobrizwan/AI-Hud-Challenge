@@ -288,7 +288,7 @@ class NotificationPreferenceManager:
         """Fetch preferences from database."""
 
         try:
-    async with get_async_session() as session:
+            async with get_async_session() as session:
                 # Query user preferences
                 result = await session.execute(
                     "SELECT * FROM user_preferences WHERE user_id = :user_id", {"user_id": user_id}
@@ -329,7 +329,7 @@ class NotificationPreferenceManager:
         """Update preferences in database."""
 
         try:
-    async with get_async_session() as session:
+            async with get_async_session() as session:
                 # Check if preferences exist
                 result = await session.execute(
                     "SELECT user_id FROM user_preferences WHERE user_id = :user_id",

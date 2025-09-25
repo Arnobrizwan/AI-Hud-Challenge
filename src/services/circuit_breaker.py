@@ -139,14 +139,14 @@ class CircuitBreaker:
 
             @functools.wraps(func)
             async def async_wrapper(*args, **kwargs) -> Dict[str, Any]:
-                return await self.call(func, *args, **kwargs)
+    return await self.call(func, *args, **kwargs)
 
             return async_wrapper
         else:
 
             @functools.wraps(func)
             async def sync_wrapper(*args, **kwargs) -> Dict[str, Any]:
-                return await self.call(func, *args, **kwargs)
+    return await self.call(func, *args, **kwargs)
 
             return sync_wrapper
 

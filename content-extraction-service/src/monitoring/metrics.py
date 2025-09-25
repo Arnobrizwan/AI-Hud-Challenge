@@ -199,7 +199,7 @@ class MetricsCollector:
             return total_sum / max(total_count, 1)
 
     def get_metrics_summary(self) -> Dict[str, Any]:
-    """Get comprehensive metrics summary."""
+        """Get comprehensive metrics summary."""
         return {
             "requests_total": sum(metric._value.get() for metric in self.requests_total._metrics.values()),
             "extractions_total": sum(metric._value.get() for metric in self.extractions_total._metrics.values()),

@@ -42,7 +42,7 @@ class TestRSSAdapter:
 
     @pytest.mark.asyncio
     async def test_test_connection(self, rss_adapter) -> Dict[str, Any]:
-        """Test connection testing."""
+    """Test connection testing."""
         with patch.object(rss_adapter.http_client, "head") as mock_head:
             mock_response = Mock()
             mock_response.status_code = 200
@@ -53,7 +53,7 @@ class TestRSSAdapter:
 
     @pytest.mark.asyncio
     async def test_test_connection_failure(self, rss_adapter) -> Dict[str, Any]:
-        """Test connection testing failure."""
+    """Test connection testing failure."""
         with patch.object(rss_adapter.http_client, "head") as mock_head:
             mock_head.side_effect = Exception("Connection failed")
 
@@ -152,7 +152,7 @@ class TestAPIAdapter:
 
     @pytest.mark.asyncio
     async def test_has_more_pages(self, api_adapter) -> Dict[str, Any]:
-        """Test pagination logic."""
+    """Test pagination logic."""
         # Test page-based pagination
         articles = [{"title": f"Article {i}"} for i in range(20)]
         api_adapter.pagination_config = {"type": "page_based", "page_size": 20}

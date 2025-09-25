@@ -262,7 +262,7 @@ class QualityAnalyzer:
                             freshness_score += 60
                         elif year >= current_year - 5:
                             freshness_score += 40
-                else:
+                        else:
                             freshness_score += 20
                 except (ValueError, AttributeError):
                     continue

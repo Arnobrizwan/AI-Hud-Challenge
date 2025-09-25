@@ -252,7 +252,7 @@ class FactChecker:
         ]
 
     async def check_facts(self, text: str) -> Dict[str, Any]:
-    """Check factual claims in text"""
+        """Check factual claims in text"""
         try:
             facts_found = []
 

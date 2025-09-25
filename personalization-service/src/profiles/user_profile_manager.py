@@ -18,8 +18,7 @@ logger = structlog.get_logger()
 class UserProfileManager:
     """Dynamic user profiling with real-time updates."""
 
-    def __init__(self, redis_client: RedisClient,
-                 postgres_client: PostgreSQLClient):
+    def __init__(self, redis_client: RedisClient, postgres_client: PostgreSQLClient):
         self.redis = redis_client
         self.postgres = postgres_client
         self.cache_ttl = settings.profile_cache_ttl
@@ -32,9 +31,7 @@ class UserProfileManager:
             return UserProfile.parse_raw(cached_profile)
 
         # Try database
-        profile_data = await self.postgres.fetch_one(
-            "SELECT * FROM user_profiles WHERE user_id = $1", user_id
-        )
+        profile_data = await self.postgres.fetch_one("SELECT * FROM user_profiles WHERE user_id = $1", user_id)
 
         if profile_data:
             profile = UserProfile(**profile_data)
@@ -107,9 +104,7 @@ class UserProfileManager:
             },
         }
 
-    async def update_profile_from_interaction(
-        self, user_id: str, interaction: UserInteraction
-    ) -> None:
+    async def update_profile_from_interaction(self, user_id: str, interaction: UserInteraction) -> None:
         """Update user profile based on interaction."""
         profile = await self.get_or_create_profile(user_id)
 
@@ -130,9 +125,7 @@ class UserProfileManager:
             )
 
         # Update reading patterns
-        profile.reading_patterns = await self.update_reading_patterns(
-            profile.reading_patterns, interaction
-        )
+        profile.reading_patterns = await self.update_reading_patterns(profile.reading_patterns, interaction)
 
         # Update collaborative filtering factors
         if interaction.interaction_type in [
@@ -166,15 +159,12 @@ class UserProfileManager:
 
         # Update preferences
         for topic in topics:
-            current_preferences[topic] = current_preferences.get(
-                topic, 0.0) + weight
+            current_preferences[topic] = current_preferences.get(topic, 0.0) + weight
 
         # Normalize preferences
         total_weight = sum(current_preferences.values())
         if total_weight > 0:
-            current_preferences = {
-                topic: weight / total_weight for topic,
-                weight in current_preferences.items()}
+            current_preferences = {topic: weight / total_weight for topic, weight in current_preferences.items()}
 
         return current_preferences
 
@@ -186,15 +176,12 @@ class UserProfileManager:
         weight = self._get_interaction_weight(interaction_type)
 
         # Update preferences
-        current_preferences[source] = current_preferences.get(
-            source, 0.0) + weight
+        current_preferences[source] = current_preferences.get(source, 0.0) + weight
 
         # Normalize preferences
         total_weight = sum(current_preferences.values())
         if total_weight > 0:
-            current_preferences = {
-                source: weight / total_weight for source,
-                weight in current_preferences.items()}
+            current_preferences = {source: weight / total_weight for source, weight in current_preferences.items()}
 
         return current_preferences
 
@@ -207,15 +194,11 @@ class UserProfileManager:
         # Update device preference
         if interaction.device_type:
             device_counts = patterns.get("device_counts", {})
-            device_counts[interaction.device_type] = (
-                device_counts.get(interaction.device_type, 0) + 1
-            )
+            device_counts[interaction.device_type] = device_counts.get(interaction.device_type, 0) + 1
             patterns["device_counts"] = device_counts
 
             # Update preferred device
-            preferred_device = max(
-                device_counts.items(),
-                key=lambda x: x[1])[0]
+            preferred_device = max(device_counts.items(), key=lambda x: x[1])[0]
             patterns["preferred_device"] = preferred_device
 
         # Update time patterns
@@ -237,20 +220,16 @@ class UserProfileManager:
             length_category = self._get_length_category(length)
 
             length_counts = patterns.get("length_counts", {})
-            length_counts[length_category] = length_counts.get(
-                length_category, 0) + 1
+            length_counts[length_category] = length_counts.get(length_category, 0) + 1
             patterns["length_counts"] = length_counts
 
             # Update preferred length
-            preferred_length = max(
-                length_counts.items(),
-                key=lambda x: x[1])[0]
+            preferred_length = max(length_counts.items(), key=lambda x: x[1])[0]
             patterns["preferred_length"] = preferred_length
 
         return patterns
 
-    def _get_interaction_weight(
-            self, interaction_type: InteractionType) -> float:
+    def _get_interaction_weight(self, interaction_type: InteractionType) -> float:
         """Get weight for interaction based on type."""
         weights = {
             InteractionType.CLICK: 1.0,
@@ -381,9 +360,7 @@ class UserProfileManager:
         )
 
         # Get average interactions per user
-        avg_interactions = await self.postgres.fetch_one(
-            "SELECT AVG(total_interactions) as avg FROM user_profiles"
-        )
+        avg_interactions = await self.postgres.fetch_one("SELECT AVG(total_interactions) as avg FROM user_profiles")
 
         return {
             "total_users": total_users["count"],

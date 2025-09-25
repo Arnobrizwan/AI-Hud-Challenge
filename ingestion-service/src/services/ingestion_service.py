@@ -211,7 +211,7 @@ class IngestionService:
         return processed_articles
 
     async def _update_metrics(self, source_id: str, batch: ProcessingBatch) -> Dict[str, Any]:
-        """Update processing metrics for source."""
+    """Update processing metrics for source."""
         if source_id not in self.processing_metrics:
             self.processing_metrics[source_id] = ContentMetrics(source_id=source_id, date=datetime.utcnow().date())
 
@@ -250,7 +250,7 @@ class IngestionService:
                 metrics.content_type_distribution[content_type] = 1
 
     async def get_source_health(self, source_id: str) -> Dict[str, Any]:
-        """Get health status for a source."""
+    """Get health status for a source."""
         if source_id not in self.source_adapters:
             return {"status": "not_found", "message": "Source not found"}
 
@@ -270,7 +270,7 @@ class IngestionService:
         return health_status
 
     async def get_processing_metrics(self, source_id: str = None) -> Dict[str, Any]:
-        """Get processing metrics."""
+    """Get processing metrics."""
         if source_id:
             return self.processing_metrics.get(source_id, {})
 
@@ -285,7 +285,7 @@ class IngestionService:
         return list(self.active_batches.values())
 
     async def cleanup_completed_batches(self, max_age_hours: int = 24) -> Dict[str, Any]:
-        """Clean up completed batches older than specified age."""
+    """Clean up completed batches older than specified age."""
         cutoff_time = datetime.utcnow() - timedelta(hours=max_age_hours)
 
         to_remove = []
@@ -316,7 +316,7 @@ class IngestionService:
         return adapter.get_source_info()
 
     async def shutdown(self) -> Dict[str, Any]:
-        """Shutdown the ingestion service."""
+    """Shutdown the ingestion service."""
         # Close HTTP client
         await self.http_client.close()
 

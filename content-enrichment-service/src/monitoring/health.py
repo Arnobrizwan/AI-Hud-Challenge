@@ -33,12 +33,10 @@ class HealthChecker:
         self.check_interval = 30  # seconds
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize health checker components."""
+        """Initialize health checker components."""
         try:
             # Initialize Redis connection
-            self.redis_client = redis.from_url(
-                settings.redis_url, max_connections=5, decode_responses=True
-            )
+            self.redis_client = redis.from_url(settings.redis_url, max_connections=5, decode_responses=True)
 
             # Initialize database connection
             self.db_engine = create_async_engine(settings.database_url)
@@ -49,14 +47,13 @@ class HealthChecker:
             logger.error("Failed to initialize health checker", error=str(e))
 
     async def check_health(self) -> Dict[str, Any]:
-    """Check overall service health."""
+        """Check overall service health."""
         try:
             current_time = datetime.utcnow()
 
             # Check if we need to refresh health status
-            if (self.last_check is None or (current_time -
-                                            self.last_check).total_seconds() > self.check_interval):
-    await self._perform_health_checks()
+            if self.last_check is None or (current_time - self.last_check).total_seconds() > self.check_interval:
+                await self._perform_health_checks()
                 self.last_check = current_time
 
             return self.health_status
@@ -71,7 +68,7 @@ class HealthChecker:
             }
 
     async def _perform_health_checks(self) -> Dict[str, Any]:
-    """Perform comprehensive health checks."""
+        """Perform comprehensive health checks."""
         try:
             components = {}
 
@@ -91,8 +88,7 @@ class HealthChecker:
             components["external_services"] = await self._check_external_services_health()
 
             # Determine overall health
-            overall_health = all(component.get("healthy", False)
-                                 for component in components.values())
+            overall_health = all(component.get("healthy", False) for component in components.values())
 
             self.health_status = {
                 "status": "healthy" if overall_health else "unhealthy",
@@ -111,7 +107,7 @@ class HealthChecker:
             }
 
     async def _check_system_health(self) -> Dict[str, Any]:
-    """Check system resource health."""
+        """Check system resource health."""
         try:
             # CPU usage
             cpu_percent = psutil.cpu_percent(interval=1)
@@ -134,9 +130,7 @@ class HealthChecker:
             disk_healthy = disk_percent < 90
             process_memory_healthy = process_memory < 4000  # 4GB limit
 
-            overall_healthy = all(
-                [cpu_healthy, memory_healthy, disk_healthy, process_memory_healthy]
-            )
+            overall_healthy = all([cpu_healthy, memory_healthy, disk_healthy, process_memory_healthy])
 
             return {
                 "healthy": overall_healthy,
@@ -157,12 +151,10 @@ class HealthChecker:
             return {"healthy": False, "error": str(e)}
 
     async def _check_redis_health(self) -> Dict[str, Any]:
-    """Check Redis health."""
+        """Check Redis health."""
         try:
             if not self.redis_client:
-                return {
-                    "healthy": False,
-                    "error": "Redis client not initialized"}
+                return {"healthy": False, "error": "Redis client not initialized"}
 
             # Test connection
             start_time = time.time()
@@ -175,10 +167,7 @@ class HealthChecker:
             # Check memory usage
             used_memory = info.get("used_memory", 0)
             max_memory = info.get("maxmemory", 0)
-            memory_usage = (
-                used_memory /
-                max_memory *
-                100) if max_memory > 0 else 0
+            memory_usage = (used_memory / max_memory * 100) if max_memory > 0 else 0
 
             # Check connected clients
             connected_clients = info.get("connected_clients", 0)
@@ -188,8 +177,7 @@ class HealthChecker:
             memory_healthy = memory_usage < 90
             clients_healthy = connected_clients < 1000
 
-            overall_healthy = all(
-                [response_time_healthy, memory_healthy, clients_healthy])
+            overall_healthy = all([response_time_healthy, memory_healthy, clients_healthy])
 
             return {
                 "healthy": overall_healthy,
@@ -204,17 +192,15 @@ class HealthChecker:
             return {"healthy": False, "error": str(e)}
 
     async def _check_database_health(self) -> Dict[str, Any]:
-    """Check database health."""
+        """Check database health."""
         try:
             if not self.db_engine:
-                return {
-                    "healthy": False,
-                    "error": "Database engine not initialized"}
+                return {"healthy": False, "error": "Database engine not initialized"}
 
             # Test connection
             start_time = time.time()
             async with self.db_engine.begin() as conn:
-    await conn.execute(text("SELECT 1"))
+                await conn.execute(text("SELECT 1"))
             response_time = time.time() - start_time
 
             # Check connection pool
@@ -244,22 +230,18 @@ class HealthChecker:
             return {"healthy": False, "error": str(e)}
 
     async def _check_models_health(self) -> Dict[str, Any]:
-    """Check AI/ML models health."""
+        """Check AI/ML models health."""
         try:
             # This is a simplified check
             # In practice, you'd check if models are loaded and responding
 
             model_checks = {
-                "spacy_model":
-    await self._check_spacy_model(),
-                "transformer_models":
-    await self._check_transformer_models(),
-                "custom_models":
-    await self._check_custom_models(),
+                "spacy_model": await self._check_spacy_model(),
+                "transformer_models": await self._check_transformer_models(),
+                "custom_models": await self._check_custom_models(),
             }
 
-            overall_healthy = all(check.get("healthy", False)
-                                  for check in model_checks.values())
+            overall_healthy = all(check.get("healthy", False) for check in model_checks.values())
 
             return {"healthy": overall_healthy, "models": model_checks}
 
@@ -268,7 +250,7 @@ class HealthChecker:
             return {"healthy": False, "error": str(e)}
 
     async def _check_spacy_model(self) -> Dict[str, Any]:
-    """Check spaCy model health."""
+        """Check spaCy model health."""
         try:
             import spacy
 
@@ -288,7 +270,7 @@ class HealthChecker:
             return {"healthy": False, "error": str(e)}
 
     async def _check_transformer_models(self) -> Dict[str, Any]:
-    """Check transformer models health."""
+        """Check transformer models health."""
         try:
             # This is a simplified check
             # In practice, you'd test actual model inference
@@ -304,7 +286,7 @@ class HealthChecker:
             return {"healthy": False, "error": str(e)}
 
     async def _check_custom_models(self) -> Dict[str, Any]:
-    """Check custom models health."""
+        """Check custom models health."""
         try:
             # Check if model files exist
             import os
@@ -328,7 +310,7 @@ class HealthChecker:
             return {"healthy": False, "error": str(e)}
 
     async def _check_external_services_health(self) -> Dict[str, Any]:
-    """Check external services health."""
+        """Check external services health."""
         try:
             # Check Google Cloud services
             google_cloud_healthy = await self._check_google_cloud_health()
@@ -373,7 +355,7 @@ class HealthChecker:
             return False
 
     async def get_detailed_health(self) -> Dict[str, Any]:
-    """Get detailed health information."""
+        """Get detailed health information."""
         try:
             # Force a fresh health check
             await self._perform_health_checks()
@@ -394,13 +376,13 @@ class HealthChecker:
             return {"status": "unhealthy", "error": str(e), "detailed": True}
 
     async def cleanup(self) -> Dict[str, Any]:
-    """Cleanup health checker resources."""
+        """Cleanup health checker resources."""
         try:
             if self.redis_client:
-    await self.redis_client.close()
+                await self.redis_client.close()
 
             if self.db_engine:
-    await self.db_engine.dispose()
+                await self.db_engine.dispose()
 
             logger.info("Health checker cleanup completed")
 

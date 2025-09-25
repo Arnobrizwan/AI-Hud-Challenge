@@ -420,7 +420,7 @@ class HTMLCleaner:
             raise ContentProcessingError(f"Boilerplate removal failed: {str(e)}")
 
     async def validate_html(self, html_content: str) -> Dict[str, Any]:
-    """
+        """
         Validate HTML content and return validation results.
 
         Args:

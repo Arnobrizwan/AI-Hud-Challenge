@@ -33,7 +33,7 @@ class TestEntityExtractor:
 
     @pytest.mark.asyncio
     async def test_extract_entities_basic(self, extractor, sample_content) -> Dict[str, Any]:
-    """Test basic entity extraction."""
+        """Test basic entity extraction."""
         entities = await extractor.extract_entities(sample_content.content)
 
         assert isinstance(entities, list)
@@ -46,9 +46,8 @@ class TestEntityExtractor:
         assert "iPhone 15" in entity_texts
 
     @pytest.mark.asyncio
-    async def test_extract_entities_with_confidence(
-            self, extractor, sample_content):
-         -> Dict[str, Any]:"""Test entity extraction with confidence scores."""
+    async def test_extract_entities_with_confidence(self, extractor, sample_content) -> Dict[str, Any]:
+        """Test entity extraction with confidence scores."""
         entities = await extractor.extract_entities(sample_content.content)
 
         for entity in entities:
@@ -60,7 +59,7 @@ class TestEntityExtractor:
 
     @pytest.mark.asyncio
     async def test_extract_custom_entities(self, extractor) -> Dict[str, Any]:
-    """Test custom entity extraction."""
+        """Test custom entity extraction."""
         text = "Contact us at support@example.com or call +1-555-123-4567. Visit https://example.com for more info."
 
         entities = await extractor._extract_custom_entities(text)
@@ -68,8 +67,7 @@ class TestEntityExtractor:
         assert len(entities) > 0
 
         # Check for email
-        email_entities = [
-            e for e in entities if e.text == "support@example.com"]
+        email_entities = [e for e in entities if e.text == "support@example.com"]
         assert len(email_entities) == 1
 
         # Check for phone
@@ -82,27 +80,12 @@ class TestEntityExtractor:
 
     @pytest.mark.asyncio
     async def test_entity_resolution(self, extractor) -> Dict[str, Any]:
-    """Test entity resolution and deduplication."""
+        """Test entity resolution and deduplication."""
         # Create mock entities with overlap
         entities = [
-            Mock(
-                text="Apple Inc.",
-                start=0,
-                end=10,
-                confidence=0.9,
-                label=EntityType.ORGANIZATION),
-            Mock(
-                text="Apple",
-                start=0,
-                end=5,
-                confidence=0.8,
-                label=EntityType.ORGANIZATION),
-            Mock(
-                text="iPhone",
-                start=20,
-                end=26,
-                confidence=0.9,
-                label=EntityType.PRODUCT),
+            Mock(text="Apple Inc.", start=0, end=10, confidence=0.9, label=EntityType.ORGANIZATION),
+            Mock(text="Apple", start=0, end=5, confidence=0.8, label=EntityType.ORGANIZATION),
+            Mock(text="iPhone", start=20, end=26, confidence=0.9, label=EntityType.PRODUCT),
         ]
 
         resolved = extractor._resolve_entities(entities)
@@ -112,9 +95,8 @@ class TestEntityExtractor:
         assert all(entity.confidence >= 0.8 for entity in resolved)
 
     @pytest.mark.asyncio
-    async def test_extract_entities_from_content(
-            self, extractor, sample_content):
-         -> Dict[str, Any]:"""Test entity extraction from ExtractedContent object."""
+    async def test_extract_entities_from_content(self, extractor, sample_content) -> Dict[str, Any]:
+        """Test entity extraction from ExtractedContent object."""
         entities = await extractor.extract_entities_from_content(sample_content)
 
         assert isinstance(entities, list)
@@ -133,8 +115,7 @@ class TestEntityExtractor:
         entity.sent = Mock()
         entity.sent.text = "Apple Inc. is a technology company."
 
-        confidence = extractor._calculate_confidence(
-            entity, EntityType.ORGANIZATION)
+        confidence = extractor._calculate_confidence(entity, EntityType.ORGANIZATION)
 
         assert 0.0 <= confidence <= 1.0
         assert confidence > 0.5  # Should be reasonably confident
@@ -149,21 +130,9 @@ class TestEntityExtractor:
     def test_get_entity_statistics(self, extractor):
         """Test entity statistics calculation."""
         entities = [
-            Mock(
-                text="Apple",
-                label=EntityType.ORGANIZATION,
-                confidence=0.9,
-                wikidata_id="Q95"),
-            Mock(
-                text="Tim Cook",
-                label=EntityType.PERSON,
-                confidence=0.8,
-                wikidata_id=None),
-            Mock(
-                text="iPhone",
-                label=EntityType.PRODUCT,
-                confidence=0.7,
-                wikidata_id="Q78"),
+            Mock(text="Apple", label=EntityType.ORGANIZATION, confidence=0.9, wikidata_id="Q95"),
+            Mock(text="Tim Cook", label=EntityType.PERSON, confidence=0.8, wikidata_id=None),
+            Mock(text="iPhone", label=EntityType.PRODUCT, confidence=0.7, wikidata_id="Q78"),
         ]
 
         stats = extractor.get_entity_statistics(entities)
@@ -177,19 +146,19 @@ class TestEntityExtractor:
 
     @pytest.mark.asyncio
     async def test_extract_entities_empty_text(self, extractor) -> Dict[str, Any]:
-    """Test entity extraction with empty text."""
+        """Test entity extraction with empty text."""
         entities = await extractor.extract_entities("")
         assert entities == []
 
     @pytest.mark.asyncio
     async def test_extract_entities_short_text(self, extractor) -> Dict[str, Any]:
-    """Test entity extraction with very short text."""
+        """Test entity extraction with very short text."""
         entities = await extractor.extract_entities("Hi")
         assert isinstance(entities, list)  # Should not crash
 
     @pytest.mark.asyncio
     async def test_extract_entities_error_handling(self, extractor) -> Dict[str, Any]:
-    """Test error handling in entity extraction."""
+        """Test error handling in entity extraction."""
         with patch.object(extractor, "nlp") as mock_nlp:
             mock_nlp.side_effect = Exception("spaCy error")
 

@@ -32,9 +32,8 @@ class TestContentEnrichmentPipeline:
         )
 
     @pytest.mark.asyncio
-    async def test_enrich_content_full_pipeline(
-            self, pipeline, sample_content) -> Dict[str, Any]:
-    """Test full content enrichment pipeline."""
+    async def test_enrich_content_full_pipeline(self, pipeline, sample_content) -> Dict[str, Any]:
+        """Test full content enrichment pipeline."""
         enriched = await pipeline.enrich_content(
             content=sample_content,
             processing_mode=ProcessingMode.REALTIME,
@@ -60,8 +59,7 @@ class TestContentEnrichmentPipeline:
         entity_texts = [entity.text for entity in enriched.entities]
         assert any("Apple" in text for text in entity_texts)
         assert any("Tim Cook" in text for text in entity_texts)
-        assert any("artificial intelligence" in text.lower()
-                   for text in entity_texts)
+        assert any("artificial intelligence" in text.lower() for text in entity_texts)
 
         # Verify topics
         assert isinstance(enriched.topics, list)
@@ -87,9 +85,8 @@ class TestContentEnrichmentPipeline:
         assert len(enriched.model_versions) > 0
 
     @pytest.mark.asyncio
-    async def test_enrich_content_selective_components(
-            self, pipeline, sample_content) -> Dict[str, Any]:
-    """Test enrichment with selective components."""
+    async def test_enrich_content_selective_components(self, pipeline, sample_content) -> Dict[str, Any]:
+        """Test enrichment with selective components."""
         enriched = await pipeline.enrich_content(
             content=sample_content,
             include_entities=True,
@@ -110,7 +107,7 @@ class TestContentEnrichmentPipeline:
 
     @pytest.mark.asyncio
     async def test_enrich_content_batch_processing(self, pipeline) -> Dict[str, Any]:
-    """Test batch content enrichment."""
+        """Test batch content enrichment."""
         contents = [
             ExtractedContent(
                 title="Tech News 1",
@@ -132,22 +129,15 @@ class TestContentEnrichmentPipeline:
             ),
         ]
 
-        enriched_contents = await pipeline.enrich_batch(
-            contents=contents, processing_mode=ProcessingMode.BATCH
-        )
+        enriched_contents = await pipeline.enrich_batch(contents=contents, processing_mode=ProcessingMode.BATCH)
 
         assert len(enriched_contents) == len(contents)
-        assert all(
-            enriched.id == content.id for enriched,
-            content in zip(
-                enriched_contents,
-                contents))
-        assert all(enriched.processing_mode ==
-                   ProcessingMode.BATCH for enriched in enriched_contents)
+        assert all(enriched.id == content.id for enriched, content in zip(enriched_contents, contents))
+        assert all(enriched.processing_mode == ProcessingMode.BATCH for enriched in enriched_contents)
 
     @pytest.mark.asyncio
     async def test_enrich_content_error_handling(self, pipeline) -> Dict[str, Any]:
-    """Test error handling in content enrichment."""
+        """Test error handling in content enrichment."""
         # Test with invalid content
         invalid_content = ExtractedContent(
             title="", content="", content_type=ContentType.ARTICLE, language="en"  # Empty content
@@ -164,7 +154,7 @@ class TestContentEnrichmentPipeline:
 
     @pytest.mark.asyncio
     async def test_enrich_content_different_languages(self, pipeline) -> Dict[str, Any]:
-    """Test enrichment with different languages."""
+        """Test enrichment with different languages."""
         spanish_content = ExtractedContent(
             title="Noticias de Tecnología",
             content="Apple Inc. anunció hoy su nueva tecnología de inteligencia artificial. La empresa con sede en Cupertino, dirigida por el CEO Tim Cook, presentó una plataforma revolucionaria que promete transformar la industria tecnológica.",
@@ -179,18 +169,16 @@ class TestContentEnrichmentPipeline:
         assert enriched.sentiment is not None
 
     @pytest.mark.asyncio
-    async def test_enrich_content_processing_time(
-            self, pipeline, sample_content):
-         -> Dict[str, Any]:"""Test that processing time is recorded correctly."""
+    async def test_enrich_content_processing_time(self, pipeline, sample_content) -> Dict[str, Any]:
+        """Test that processing time is recorded correctly."""
         enriched = await pipeline.enrich_content(sample_content)
 
         assert enriched.processing_time_ms > 0
         assert enriched.processing_time_ms < 30000  # Should be less than 30 seconds
 
     @pytest.mark.asyncio
-    async def test_enrich_content_model_versions(
-            self, pipeline, sample_content):
-         -> Dict[str, Any]:"""Test that model versions are recorded."""
+    async def test_enrich_content_model_versions(self, pipeline, sample_content) -> Dict[str, Any]:
+        """Test that model versions are recorded."""
         enriched = await pipeline.enrich_content(sample_content)
 
         assert isinstance(enriched.model_versions, dict)
@@ -207,9 +195,8 @@ class TestContentEnrichmentPipeline:
             assert hasattr(version, "performance_metrics")
 
     @pytest.mark.asyncio
-    async def test_enrich_content_parallel_processing(
-            self, pipeline, sample_content):
-         -> Dict[str, Any]:"""Test that components are processed in parallel."""
+    async def test_enrich_content_parallel_processing(self, pipeline, sample_content) -> Dict[str, Any]:
+        """Test that components are processed in parallel."""
         import time
 
         start_time = time.time()
@@ -221,9 +208,8 @@ class TestContentEnrichmentPipeline:
         assert processing_time < 10.0  # Should be much faster than sequential
 
     @pytest.mark.asyncio
-    async def test_enrich_content_with_mock_components(
-            self, pipeline, sample_content):
-         -> Dict[str, Any]:"""Test enrichment with mocked components to verify integration."""
+    async def test_enrich_content_with_mock_components(self, pipeline, sample_content) -> Dict[str, Any]:
+        """Test enrichment with mocked components to verify integration."""
         # Mock the individual components
         with (
             patch.object(pipeline.entity_extractor, "extract_entities") as mock_entities,
@@ -237,13 +223,9 @@ class TestContentEnrichmentPipeline:
             mock_entities.return_value = []
             mock_topics.return_value = []
             mock_sentiment.return_value = Mock(
-                sentiment="positive",
-                confidence=0.8,
-                subjectivity=0.6,
-                polarity=0.7,
-                emotions={})
-            mock_signals.return_value = Mock(
-                readability_score=0.8, authority_score=0.7)
+                sentiment="positive", confidence=0.8, subjectivity=0.6, polarity=0.7, emotions={}
+            )
+            mock_signals.return_value = Mock(readability_score=0.8, authority_score=0.7)
             mock_trust.return_value = Mock(overall_score=0.8)
 
             enriched = await pipeline.enrich_content(sample_content)
@@ -265,7 +247,7 @@ class TestContentEnrichmentPipeline:
 
     @pytest.mark.asyncio
     async def test_enrich_content_large_content(self, pipeline) -> Dict[str, Any]:
-    """Test enrichment with large content."""
+        """Test enrichment with large content."""
         large_content = ExtractedContent(
             title="Large Article",
             content="This is a very long article. " * 1000,  # Large content
@@ -281,7 +263,7 @@ class TestContentEnrichmentPipeline:
 
     @pytest.mark.asyncio
     async def test_enrich_content_special_characters(self, pipeline) -> Dict[str, Any]:
-    """Test enrichment with special characters and unicode."""
+        """Test enrichment with special characters and unicode."""
         special_content = ExtractedContent(
             title="Special Characters & Unicode: 中文, العربية, हिन्दी",
             content="This article contains special characters: émojis 🚀, symbols ©®, and unicode text in multiple languages: 中文, العربية, हिन्दी, and more!",

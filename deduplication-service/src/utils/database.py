@@ -25,7 +25,7 @@ class DatabaseManager:
         self.pool = None
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize database connections."""
+        """Initialize database connections."""
         # Create async engine
         self.engine = create_async_engine(
             self.database_url,
@@ -35,14 +35,10 @@ class DatabaseManager:
         )
 
         # Create session factory
-        self.session_factory = async_sessionmaker(
-            self.engine, class_=AsyncSession, expire_on_commit=False
-        )
+        self.session_factory = async_sessionmaker(self.engine, class_=AsyncSession, expire_on_commit=False)
 
         # Create connection pool
-        self.pool = await asyncpg.create_pool(
-            self.database_url, min_size=5, max_size=settings.database_pool_size
-        )
+        self.pool = await asyncpg.create_pool(self.database_url, min_size=5, max_size=settings.database_pool_size)
 
     async def get_session(self) -> AsyncSession:
         """Get database session.
@@ -56,7 +52,7 @@ class DatabaseManager:
         return self.session_factory()
 
     async def get_connection(self) -> Dict[str, Any]:
-    """Get database connection.
+        """Get database connection.
 
         Returns:
             Database connection
@@ -67,9 +63,9 @@ class DatabaseManager:
         return await self.pool.acquire()
 
     async def close(self) -> Dict[str, Any]:
-    """Close database connections."""
+        """Close database connections."""
         if self.pool:
-    await self.pool.close()
+            await self.pool.close()
 
         if self.engine:
-    await self.engine.dispose()
+            await self.engine.dispose()

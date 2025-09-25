@@ -232,7 +232,7 @@ class SourceConfigLoader:
             logger.error(f"Error saving sources to file: {e}")
 
     def get_global_config(self) -> Dict[str, Any]:
-        """Get global configuration."""
+    """Get global configuration."""
         return self.global_config
 
     def update_global_config(self, updates: Dict[str, Any]) -> bool:
@@ -290,7 +290,7 @@ class SourceConfigLoader:
         return validation_results
 
     def get_source_statistics(self) -> Dict[str, Any]:
-        """Get statistics about loaded sources."""
+    """Get statistics about loaded sources."""
         total_sources = len(self.sources)
         enabled_sources = len([s for s in self.sources if s.enabled])
         disabled_sources = total_sources - enabled_sources

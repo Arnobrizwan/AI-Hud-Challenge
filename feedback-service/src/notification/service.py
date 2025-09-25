@@ -39,11 +39,11 @@ class NotificationService:
         try:
             for channel in channels:
                 if channel == "email":
-    await self.email_service.send_alert(alert_data, recipients)
+                    await self.email_service.send_alert(alert_data, recipients)
                 elif channel == "websocket":
-    await self.websocket_service.send_alert(alert_data, recipients)
+                    await self.websocket_service.send_alert(alert_data, recipients)
                 elif channel == "sms":
-    await self.sms_service.send_alert(alert_data, recipients)
+                    await self.sms_service.send_alert(alert_data, recipients)
 
             logger.info("Alert sent", channels=channels, recipient_count=len(recipients))
             return True

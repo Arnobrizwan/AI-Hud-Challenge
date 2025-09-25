@@ -58,16 +58,16 @@ class FeedbackCollectionEngine:
 
             # Process based on feedback type
             if normalized_feedback.feedback_type == FeedbackType.IMPLICIT:
-    await self.process_implicit_feedback(normalized_feedback)
+                await self.process_implicit_feedback(normalized_feedback)
             elif normalized_feedback.feedback_type == FeedbackType.EXPLICIT:
-    await self.process_explicit_feedback(normalized_feedback)
+                await self.process_explicit_feedback(normalized_feedback)
 
             # Update user profile based on feedback
             await self.update_user_profile(normalized_feedback)
 
             # Trigger model updates if needed
             if await self.should_trigger_model_update(normalized_feedback):
-    await self.model_updater.queue_model_update(normalized_feedback)
+                await self.model_updater.queue_model_update(normalized_feedback)
 
             # Send real-time notifications to relevant stakeholders
             await self.notify_stakeholders(normalized_feedback)
@@ -162,13 +162,13 @@ class FeedbackCollectionEngine:
                     SignalType.CLICK,
                     SignalType.DWELL_TIME,
                     SignalType.SHARE]:
-    await self.update_content_quality_signals(feedback)
+                await self.update_content_quality_signals(feedback)
 
             # Detect and flag potential issues
             if feedback.signal_type == SignalType.COMPLAINT or (
                 feedback.rating is not None and feedback.rating < 2.0
             ):
-    await self.flag_for_review(feedback)
+                await self.flag_for_review(feedback)
 
         except Exception as e:
             logger.error("Error processing implicit feedback", error=str(e))

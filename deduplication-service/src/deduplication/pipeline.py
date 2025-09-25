@@ -306,7 +306,7 @@ class DeduplicationPipeline:
         pattern = "fingerprint:*"
         keys = await self.redis.keys(pattern)
         if keys:
-    await self.redis.delete(*keys)
+            await self.redis.delete(*keys)
 
         # Clear metrics
         await self.redis.delete("metrics")

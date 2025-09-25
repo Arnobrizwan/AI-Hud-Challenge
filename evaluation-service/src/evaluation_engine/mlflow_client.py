@@ -27,7 +27,7 @@ class MLflowClient:
         self.active_run = None
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize MLflow client"""
+        """Initialize MLflow client"""
         logger.info("Initializing MLflow client...")
 
         try:
@@ -54,7 +54,7 @@ class MLflowClient:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-    """Cleanup MLflow client resources"""
+        """Cleanup MLflow client resources"""
         logger.info("Cleaning up MLflow client...")
 
         if self.active_run:
@@ -86,14 +86,14 @@ class MLflowClient:
             raise
 
     async def end_run(self, status: str = "FINISHED") -> Dict[str, Any]:
-    """End the current MLflow run"""
+        """End the current MLflow run"""
         if self.active_run:
             mlflow.end_run(status=status)
             self.active_run = None
             logger.info("Ended MLflow run")
 
     async def log_evaluation_results(self, results: Dict[str, Any]) -> Dict[str, Any]:
-    """Log evaluation results to MLflow"""
+        """Log evaluation results to MLflow"""
         try:
             if not self.active_run:
                 await self.start_run("evaluation_run")
@@ -135,7 +135,7 @@ class MLflowClient:
             raise
 
     async def _log_offline_results(self, offline_results: Dict[str, Any]) -> Dict[str, Any]:
-    """Log offline evaluation results"""
+        """Log offline evaluation results"""
         if "models" in offline_results:
             for model_result in offline_results["models"]:
                 if "metrics" in model_result:
@@ -149,7 +149,7 @@ class MLflowClient:
                             mlflow.log_metric(f"offline_{metric_type}", metrics)
 
     async def _log_online_results(self, online_results: Dict[str, Any]) -> Dict[str, Any]:
-    """Log online evaluation results"""
+        """Log online evaluation results"""
         if "experiments" in online_results:
             for experiment in online_results["experiments"]:
                 if "analysis" in experiment:
@@ -169,7 +169,7 @@ class MLflowClient:
                                         )
 
     async def _log_business_impact(self, business_impact: Dict[str, Any]) -> Dict[str, Any]:
-    """Log business impact results"""
+        """Log business impact results"""
         if "overall_roi" in business_impact:
             mlflow.log_metric("business_roi", business_impact["overall_roi"])
 
@@ -181,7 +181,7 @@ class MLflowClient:
                     mlflow.log_metric(f"business_{metric}_engagement_change", impact["engagement_change"])
 
     async def _log_drift_analysis(self, drift_analysis: Dict[str, Any]) -> Dict[str, Any]:
-    """Log drift analysis results"""
+        """Log drift analysis results"""
         if "drift_severity" in drift_analysis:
             mlflow.log_metric("drift_severity", drift_analysis["drift_severity"])
 
@@ -191,7 +191,7 @@ class MLflowClient:
                     mlflow.log_metric(f"drift_{result_name}_score", result["overall_drift_score"])
 
     async def log_model(self, model, model_name: str, model_version: str = "1.0.0") -> Dict[str, Any]:
-    """Log model to MLflow"""
+        """Log model to MLflow"""
         try:
             if not self.active_run:
                 await self.start_run(f"model_logging_{model_name}")
@@ -243,7 +243,7 @@ class MLflowClient:
             return []
 
     async def get_run_metrics(self, run_id: str) -> Dict[str, Any]:
-    """Get metrics for a specific run"""
+        """Get metrics for a specific run"""
         try:
             run = mlflow.get_run(run_id)
             return run.data.metrics
@@ -253,7 +253,7 @@ class MLflowClient:
             return {}
 
     async def get_run_params(self, run_id: str) -> Dict[str, Any]:
-    """Get parameters for a specific run"""
+        """Get parameters for a specific run"""
         try:
             run = mlflow.get_run(run_id)
             return run.data.params
@@ -263,7 +263,7 @@ class MLflowClient:
             return {}
 
     async def get_run_tags(self, run_id: str) -> Dict[str, Any]:
-    """Get tags for a specific run"""
+        """Get tags for a specific run"""
         try:
             run = mlflow.get_run(run_id)
             return run.data.tags

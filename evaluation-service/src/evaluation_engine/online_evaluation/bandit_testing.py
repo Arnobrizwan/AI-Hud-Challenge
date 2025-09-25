@@ -27,13 +27,13 @@ class BanditTestingFramework:
         }
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize the bandit testing framework"""
+        """Initialize the bandit testing framework"""
         logger.info("Initializing bandit testing framework...")
         # No specific initialization needed
         logger.info("Bandit testing framework initialized successfully")
 
     async def cleanup(self) -> Dict[str, Any]:
-    """Cleanup bandit testing framework resources"""
+        """Cleanup bandit testing framework resources"""
         logger.info("Cleaning up bandit testing framework...")
         self.active_bandits.clear()
         logger.info("Bandit testing framework cleanup completed")
@@ -103,7 +103,7 @@ class BanditTestingFramework:
         return True
 
     async def analyze_bandit(self, bandit_id: str) -> Dict[str, Any]:
-    """Analyze bandit performance"""
+        """Analyze bandit performance"""
         if bandit_id not in self.active_bandits:
             raise ValueError(f"Bandit {bandit_id} not found")
 

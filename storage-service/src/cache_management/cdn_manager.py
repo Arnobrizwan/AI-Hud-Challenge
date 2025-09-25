@@ -131,7 +131,7 @@ class CDNManager:
     async def _test_cloudflare_connection(self) -> Dict[str, Any]:
     """Test Cloudflare API connection"""
         try:
-    async with self._cdn_client.get(
+            async with self._cdn_client.get(
                 f"https://api.cloudflare.com/client/v4/zones/{self._zone_id}"
             ) as response:
                 if response.status == 200:

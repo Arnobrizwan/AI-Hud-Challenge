@@ -190,12 +190,11 @@ class MetricsCollector:
         )
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize the metrics collector."""
+        """Initialize the metrics collector."""
         try:
             if settings.enable_metrics:
                 # Initialize Redis connection for distributed metrics
-                self.redis_client = redis.from_url(
-                    settings.redis_url, max_connections=10, decode_responses=True)
+                self.redis_client = redis.from_url(settings.redis_url, max_connections=10, decode_responses=True)
 
                 # Test connection
                 await self.redis_client.ping()
@@ -204,9 +203,7 @@ class MetricsCollector:
                 logger.info("Metrics collection disabled")
 
         except Exception as e:
-            logger.warning(
-                "Failed to initialize Redis for metrics",
-                error=str(e))
+            logger.warning("Failed to initialize Redis for metrics", error=str(e))
             self.redis_client = None
 
     def middleware_class(self):
@@ -222,7 +219,7 @@ class MetricsCollector:
                 self.metrics = metrics_collector
 
             async def __call__(self, request: Request, call_next) -> Dict[str, Any]:
-    start_time = time.time()
+                start_time = time.time()
 
                 # Increment active requests
                 self.metrics.active_requests.inc()
@@ -238,17 +235,15 @@ class MetricsCollector:
                         status=response.status_code,
                     ).inc()
 
-                    self.metrics.request_duration.labels(
-                        method=request.method, endpoint=request.url.path
-                    ).observe(duration)
+                    self.metrics.request_duration.labels(method=request.method, endpoint=request.url.path).observe(
+                        duration
+                    )
 
                     return response
 
                 except Exception as e:
                     # Record error metrics
-                    self.metrics.errors_total.labels(
-                        error_type=type(e).__name__, component="middleware"
-                    ).inc()
+                    self.metrics.errors_total.labels(error_type=type(e).__name__, component="middleware").inc()
                     raise
 
                 finally:
@@ -264,32 +259,29 @@ class MetricsCollector:
         entities_count: int = 0,
         topics_count: int = 0,
         processing_mode: str = "realtime",
-    ):
-         -> Dict[str, Any]:"""Record enrichment metrics."""
+    ) -> Dict[str, Any]:
+        """Record enrichment metrics."""
         try:
             # Record enrichment metrics
             status = "success" if success else "error"
-            self.enrichment_total.labels(
-                status=status, processing_mode=processing_mode).inc()
+            self.enrichment_total.labels(status=status, processing_mode=processing_mode).inc()
 
             if success:
-                self.enrichment_duration.labels(
-                    processing_mode=processing_mode).observe(
-                    processing_time / 1000.0)  # Convert to seconds
+                self.enrichment_duration.labels(processing_mode=processing_mode).observe(
+                    processing_time / 1000.0
+                )  # Convert to seconds
 
                 # Record entity metrics
                 if entities_count > 0:
-                    self.entities_extracted.labels(
-                        entity_type="total").inc(entities_count)
+                    self.entities_extracted.labels(entity_type="total").inc(entities_count)
 
                 # Record topic metrics
                 if topics_count > 0:
-                    self.topics_classified.labels(
-                        topic_category="total").inc(topics_count)
+                    self.topics_classified.labels(topic_category="total").inc(topics_count)
 
             # Store in Redis for distributed metrics
             if self.redis_client:
-    await self._store_metrics_in_redis(
+                await self._store_metrics_in_redis(
                     {
                         "enrichment": {
                             "processing_time": processing_time,
@@ -307,26 +299,20 @@ class MetricsCollector:
 
     async def record_batch_enrichment(
         self, batch_size: int, processing_time: int, success_count: int
-    ):
-         -> Dict[str, Any]:"""Record batch enrichment metrics."""
+    ) -> Dict[str, Any]:
+        """Record batch enrichment metrics."""
         try:
             # Record batch metrics
-            self.enrichment_total.labels(
-                status="success",
-                processing_mode="batch").inc(success_count)
+            self.enrichment_total.labels(status="success", processing_mode="batch").inc(success_count)
 
             if success_count < batch_size:
-                self.enrichment_total.labels(
-                    status="error", processing_mode="batch").inc(
-                    batch_size - success_count)
+                self.enrichment_total.labels(status="error", processing_mode="batch").inc(batch_size - success_count)
 
-            self.enrichment_duration.labels(processing_mode="batch").observe(
-                processing_time / 1000.0
-            )
+            self.enrichment_duration.labels(processing_mode="batch").observe(processing_time / 1000.0)
 
             # Store in Redis
             if self.redis_client:
-    await self._store_metrics_in_redis(
+                await self._store_metrics_in_redis(
                     {
                         "batch_enrichment": {
                             "batch_size": batch_size,
@@ -338,161 +324,109 @@ class MetricsCollector:
                 )
 
         except Exception as e:
-            logger.error(
-                "Failed to record batch enrichment metrics",
-                error=str(e))
+            logger.error("Failed to record batch enrichment metrics", error=str(e))
 
-    async def record_entity_extraction(
-            self,
-            entity_type: str,
-            duration: float,
-            success: bool):
-         -> Dict[str, Any]:"""Record entity extraction metrics."""
+    async def record_entity_extraction(self, entity_type: str, duration: float, success: bool) -> Dict[str, Any]:
+        """Record entity extraction metrics."""
         try:
             if success:
                 self.entities_extracted.labels(entity_type=entity_type).inc()
 
                 self.entity_extraction_duration.observe(duration)
             else:
-                self.errors_total.labels(
-                    error_type="entity_extraction_failed",
-                    component="entity_extractor").inc()
+                self.errors_total.labels(error_type="entity_extraction_failed", component="entity_extractor").inc()
 
         except Exception as e:
-            logger.error(
-                "Failed to record entity extraction metrics",
-                error=str(e))
+            logger.error("Failed to record entity extraction metrics", error=str(e))
 
-    async def record_topic_classification(
-        self, topic_category: str, duration: float, success: bool
-    ):
-         -> Dict[str, Any]:"""Record topic classification metrics."""
+    async def record_topic_classification(self, topic_category: str, duration: float, success: bool) -> Dict[str, Any]:
+        """Record topic classification metrics."""
         try:
             if success:
-                self.topics_classified.labels(
-                    topic_category=topic_category).inc()
+                self.topics_classified.labels(topic_category=topic_category).inc()
 
                 self.topic_classification_duration.observe(duration)
             else:
-                self.errors_total.labels(
-                    error_type="topic_classification_failed",
-                    component="topic_classifier").inc()
+                self.errors_total.labels(error_type="topic_classification_failed", component="topic_classifier").inc()
 
         except Exception as e:
-            logger.error(
-                "Failed to record topic classification metrics",
-                error=str(e))
+            logger.error("Failed to record topic classification metrics", error=str(e))
 
-    async def record_sentiment_analysis(
-            self,
-            sentiment_label: str,
-            duration: float,
-            success: bool):
-         -> Dict[str, Any]:"""Record sentiment analysis metrics."""
+    async def record_sentiment_analysis(self, sentiment_label: str, duration: float, success: bool) -> Dict[str, Any]:
+        """Record sentiment analysis metrics."""
         try:
             if success:
-                self.sentiment_analyzed.labels(
-                    sentiment_label=sentiment_label).inc()
+                self.sentiment_analyzed.labels(sentiment_label=sentiment_label).inc()
 
                 self.sentiment_analysis_duration.observe(duration)
             else:
-                self.errors_total.labels(
-                    error_type="sentiment_analysis_failed",
-                    component="sentiment_analyzer").inc()
+                self.errors_total.labels(error_type="sentiment_analysis_failed", component="sentiment_analyzer").inc()
 
         except Exception as e:
-            logger.error(
-                "Failed to record sentiment analysis metrics",
-                error=str(e))
+            logger.error("Failed to record sentiment analysis metrics", error=str(e))
 
-    async def record_signal_extraction(
-            self,
-            signal_type: str,
-            duration: float,
-            success: bool):
-         -> Dict[str, Any]:"""Record signal extraction metrics."""
+    async def record_signal_extraction(self, signal_type: str, duration: float, success: bool):
+        """Record signal extraction metrics."""
         try:
             if success:
                 self.signals_extracted.labels(signal_type=signal_type).inc()
 
                 self.signal_extraction_duration.observe(duration)
             else:
-                self.errors_total.labels(
-                    error_type="signal_extraction_failed",
-                    component="signal_extractor").inc()
+                self.errors_total.labels(error_type="signal_extraction_failed", component="signal_extractor").inc()
 
         except Exception as e:
-            logger.error(
-                "Failed to record signal extraction metrics",
-                error=str(e))
+            logger.error("Failed to record signal extraction metrics", error=str(e))
 
-    async def record_trust_score(
-            self,
-            trust_level: str,
-            duration: float,
-            success: bool):
-         -> Dict[str, Any]:"""Record trustworthiness score metrics."""
+    async def record_trust_score(self, trust_level: str, duration: float, success: bool):
+        """Record trustworthiness score metrics."""
         try:
             if success:
-                self.trust_scores_computed.labels(
-                    trust_level=trust_level).inc()
+                self.trust_scores_computed.labels(trust_level=trust_level).inc()
 
                 self.trust_score_duration.observe(duration)
             else:
-                self.errors_total.labels(
-                    error_type="trust_score_failed",
-                    component="signal_extractor").inc()
+                self.errors_total.labels(error_type="trust_score_failed", component="signal_extractor").inc()
 
         except Exception as e:
             logger.error("Failed to record trust score metrics", error=str(e))
 
-    async def record_model_inference(
-            self,
-            model_name: str,
-            model_version: str,
-            duration: float,
-            success: bool):
-         -> Dict[str, Any]:"""Record model inference metrics."""
+    async def record_model_inference(self, model_name: str, model_version: str, duration: float, success: bool):
+        """Record model inference metrics."""
         try:
             if success:
-                self.model_inference_duration.labels(
-                    model_name=model_name, model_version=model_version
-                ).observe(duration)
-        else:
-                self.errors_total.labels(
-                    error_type="model_inference_failed", component=model_name
-                ).inc()
+                self.model_inference_duration.labels(model_name=model_name, model_version=model_version).observe(
+                    duration
+                )
+            else:
+                self.errors_total.labels(error_type="model_inference_failed", component=model_name).inc()
 
         except Exception as e:
-            logger.error(
-                "Failed to record model inference metrics",
-                error=str(e))
+            logger.error("Failed to record model inference metrics", error=str(e))
 
     async def record_cache_hit(self, cache_type: str) -> Dict[str, Any]:
-    """Record cache hit."""
+        """Record cache hit."""
         try:
             self.cache_hits.labels(cache_type=cache_type).inc()
         except Exception as e:
             logger.error("Failed to record cache hit", error=str(e))
 
     async def record_cache_miss(self, cache_type: str) -> Dict[str, Any]:
-    """Record cache miss."""
+        """Record cache miss."""
         try:
             self.cache_misses.labels(cache_type=cache_type).inc()
         except Exception as e:
             logger.error("Failed to record cache miss", error=str(e))
 
     async def record_error(self, error_type: str, component: str) -> Dict[str, Any]:
-    """Record error metrics."""
+        """Record error metrics."""
         try:
-            self.errors_total.labels(
-                error_type=error_type,
-                component=component).inc()
+            self.errors_total.labels(error_type=error_type, component=component).inc()
         except Exception as e:
             logger.error("Failed to record error metrics", error=str(e))
 
     async def _store_metrics_in_redis(self, metrics: Dict[str, Any]) -> Dict[str, Any]:
-    """Store metrics in Redis for distributed collection."""
+        """Store metrics in Redis for distributed collection."""
         try:
             if not self.redis_client:
                 return
@@ -507,7 +441,7 @@ class MetricsCollector:
             logger.error("Failed to store metrics in Redis", error=str(e))
 
     async def get_metrics(self) -> Dict[str, Any]:
-    """Get current metrics."""
+        """Get current metrics."""
         try:
             # Get Prometheus metrics
             prometheus_metrics = generate_latest(self.registry).decode("utf-8")
@@ -526,7 +460,7 @@ class MetricsCollector:
             return {"error": str(e)}
 
     async def _get_custom_metrics(self) -> Dict[str, Any]:
-    """Get custom metrics from Redis."""
+        """Get custom metrics from Redis."""
         try:
             if not self.redis_client:
                 return {}
@@ -548,19 +482,17 @@ class MetricsCollector:
                     metrics = await self.redis_client.hgetall(key)
                     recent_metrics.append(metrics)
 
-            return {
-                "recent_metrics": recent_metrics,
-                "metrics_count": len(recent_metrics)}
+            return {"recent_metrics": recent_metrics, "metrics_count": len(recent_metrics)}
 
         except Exception as e:
             logger.error("Failed to get custom metrics", error=str(e))
             return {}
 
     async def cleanup(self) -> Dict[str, Any]:
-    """Cleanup metrics collector resources."""
+        """Cleanup metrics collector resources."""
         try:
             if self.redis_client:
-    await self.redis_client.close()
+                await self.redis_client.close()
                 logger.info("Metrics collector cleanup completed")
         except Exception as e:
             logger.error("Metrics collector cleanup failed", error=str(e))

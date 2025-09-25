@@ -135,7 +135,7 @@ class SSEManager:
         stream_id = str(uuid.uuid4())
 
         async def event_generator() -> Dict[str, Any]:
-            stream = SSEStream(
+    stream = SSEStream(
                 id=stream_id,
                 user_id=user_id,
                 created_at=datetime.utcnow())

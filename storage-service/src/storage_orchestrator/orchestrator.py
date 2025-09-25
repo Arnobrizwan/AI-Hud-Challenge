@@ -356,7 +356,7 @@ class StorageOrchestrator:
         """Execute storage tasks in parallel"""
 
         async def execute_task(task: StorageTask) -> Dict[str, Any]:
-            try:
+    try:
                 if task.store_type == StorageType.POSTGRESQL:
                     return await self.postgres_manager.store_article_metadata(task.data)
                 elif task.store_type == StorageType.ELASTICSEARCH:

@@ -31,13 +31,13 @@ class StatisticalTester:
         }
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize the statistical tester"""
+        """Initialize the statistical tester"""
         logger.info("Initializing statistical tester...")
         # No specific initialization needed
         logger.info("Statistical tester initialized successfully")
 
     async def cleanup(self) -> Dict[str, Any]:
-    """Cleanup statistical tester resources"""
+        """Cleanup statistical tester resources"""
         logger.info("Cleaning up statistical tester...")
         # No specific cleanup needed
         logger.info("Statistical tester cleanup completed")
@@ -49,7 +49,7 @@ class StatisticalTester:
         test_type: StatisticalTestType = StatisticalTestType.WELCH_T_TEST,
         alternative: str = "two-sided",
     ) -> Dict[str, Any]:
-    """Perform two-sample statistical test"""
+        """Perform two-sample statistical test"""
         logger.info(f"Performing {test_type.value} test")
 
         if test_type not in self.test_methods:
@@ -99,10 +99,8 @@ class StatisticalTester:
 
         return result
 
-    async def _t_test(
-        self, data1: np.ndarray, data2: np.ndarray, alternative: str
-    ) -> Dict[str, Any]:
-    """Independent t-test"""
+    async def _t_test(self, data1: np.ndarray, data2: np.ndarray, alternative: str) -> Dict[str, Any]:
+        """Independent t-test"""
         statistic, p_value = ttest_ind(data1, data2)
 
         return {
@@ -113,10 +111,8 @@ class StatisticalTester:
             "alternative": alternative,
         }
 
-    async def _welch_t_test(
-        self, data1: np.ndarray, data2: np.ndarray, alternative: str
-    ) -> Dict[str, Any]:
-    """Welch's t-test (unequal variances)"""
+    async def _welch_t_test(self, data1: np.ndarray, data2: np.ndarray, alternative: str) -> Dict[str, Any]:
+        """Welch's t-test (unequal variances)"""
         statistic, p_value = ttest_ind(data1, data2, equal_var=False)
 
         return {
@@ -127,12 +123,9 @@ class StatisticalTester:
             "alternative": alternative,
         }
 
-    async def _mann_whitney_u_test(
-        self, data1: np.ndarray, data2: np.ndarray, alternative: str
-    ) -> Dict[str, Any]:
+    async def _mann_whitney_u_test(self, data1: np.ndarray, data2: np.ndarray, alternative: str) -> Dict[str, Any]:
     """Mann-Whitney U test (non-parametric)"""
-        statistic, p_value = mannwhitneyu(
-            data1, data2, alternative=alternative)
+        statistic, p_value = mannwhitneyu(data1, data2, alternative=alternative)
 
         return {
             "test_type": "mann_whitney_u",
@@ -142,9 +135,7 @@ class StatisticalTester:
             "alternative": alternative,
         }
 
-    async def _kolmogorov_smirnov_test(
-        self, data1: np.ndarray, data2: np.ndarray, alternative: str
-    ) -> Dict[str, Any]:
+    async def _kolmogorov_smirnov_test(self, data1: np.ndarray, data2: np.ndarray, alternative: str) -> Dict[str, Any]:
     """Kolmogorov-Smirnov test"""
         statistic, p_value = stats.ks_2samp(data1, data2)
 
@@ -156,9 +147,7 @@ class StatisticalTester:
             "alternative": alternative,
         }
 
-    async def _chi_square_test(
-        self, data1: np.ndarray, data2: np.ndarray, alternative: str
-    ) -> Dict[str, Any]:
+    async def _chi_square_test(self, data1: np.ndarray, data2: np.ndarray, alternative: str) -> Dict[str, Any]:
     """Chi-square test of independence"""
         # Create contingency table
         # This is a simplified implementation - in practice, you'd have
@@ -181,9 +170,7 @@ class StatisticalTester:
             "alternative": alternative,
         }
 
-    async def _fisher_exact_test(
-        self, data1: np.ndarray, data2: np.ndarray, alternative: str
-    ) -> Dict[str, Any]:
+    async def _fisher_exact_test(self, data1: np.ndarray, data2: np.ndarray, alternative: str) -> Dict[str, Any]:
     """Fisher's exact test"""
         # Create 2x2 contingency table
         # This is a simplified implementation
@@ -194,8 +181,7 @@ class StatisticalTester:
             ]
         )
 
-        odds_ratio, p_value = stats.fisher_exact(
-            table, alternative=alternative)
+        odds_ratio, p_value = stats.fisher_exact(table, alternative=alternative)
 
         return {
             "test_type": "fisher_exact",
@@ -205,14 +191,11 @@ class StatisticalTester:
             "alternative": alternative,
         }
 
-    async def _wilcoxon_test(
-        self, data1: np.ndarray, data2: np.ndarray, alternative: str
-    ) -> Dict[str, Any]:
+    async def _wilcoxon_test(self, data1: np.ndarray, data2: np.ndarray, alternative: str) -> Dict[str, Any]:
     """Wilcoxon signed-rank test (paired)"""
         # For paired data, we need equal length arrays
         if len(data1) != len(data2):
-            raise ValueError(
-                "Wilcoxon test requires paired data with equal length")
+            raise ValueError("Wilcoxon test requires paired data with equal length")
 
         statistic, p_value = wilcoxon(data1, data2, alternative=alternative)
 
@@ -224,10 +207,7 @@ class StatisticalTester:
             "alternative": alternative,
         }
 
-    async def calculate_effect_size(
-            self,
-            data1: np.ndarray,
-            data2: np.ndarray) -> float:
+    async def calculate_effect_size(self, data1: np.ndarray, data2: np.ndarray) -> float:
         """Calculate Cohen's d effect size"""
 
         if len(data1) == 0 or len(data2) == 0:
@@ -295,9 +275,7 @@ class StatisticalTester:
             "standard_error": se_diff,
         }
 
-    async def multiple_comparison_correction(
-        self, p_values: List[float], method: str = "bonferroni"
-    ) -> Dict[str, Any]:
+    async def multiple_comparison_correction(self, p_values: List[float], method: str = "bonferroni") -> Dict[str, Any]:
     """Apply multiple comparison correction"""
         p_values = np.array(p_values)
         n_tests = len(p_values)
@@ -314,8 +292,7 @@ class StatisticalTester:
             for i, idx in enumerate(sorted_indices):
                 corrected_p[idx] = p_values[idx] * (n_tests - i)
                 if i > 0:
-                    corrected_p[idx] = max(
-                        corrected_p[idx], corrected_p[sorted_indices[i - 1]])
+                    corrected_p[idx] = max(corrected_p[idx], corrected_p[sorted_indices[i - 1]])
 
             corrected_p = np.minimum(corrected_p, 1.0)
 
@@ -358,16 +335,14 @@ class StatisticalTester:
             ncp = effect_size * math.sqrt(sample_size / 2)
             critical_value = stats.norm.ppf(1 - alpha / 2)
 
-            power = 1 - stats.norm.cdf(critical_value - ncp) + \
-                stats.norm.cdf(-critical_value - ncp)
+            power = 1 - stats.norm.cdf(critical_value - ncp) + stats.norm.cdf(-critical_value - ncp)
 
         elif test_type == "one_sample":
             # One-sample t-test power
             ncp = effect_size * math.sqrt(sample_size)
             critical_value = stats.norm.ppf(1 - alpha / 2)
 
-            power = 1 - stats.norm.cdf(critical_value - ncp) + \
-                stats.norm.cdf(-critical_value - ncp)
+            power = 1 - stats.norm.cdf(critical_value - ncp) + stats.norm.cdf(-critical_value - ncp)
 
         else:
             raise ValueError(f"Unsupported test type: {test_type}")
@@ -407,21 +382,17 @@ class StatisticalTester:
 
         for _ in range(n_bootstrap):
             # Resample with replacement
-            bootstrap_sample = np.random.choice(
-                combined_data, size=len(combined_data), replace=True
-            )
+            bootstrap_sample = np.random.choice(combined_data, size=len(combined_data), replace=True)
             bootstrap_data1 = bootstrap_sample[:n1]
             bootstrap_data2 = bootstrap_sample[n1:]
 
-            bootstrap_diff = np.mean(bootstrap_data1) - \
-                np.mean(bootstrap_data2)
+            bootstrap_diff = np.mean(bootstrap_data1) - np.mean(bootstrap_data2)
             bootstrap_diffs.append(bootstrap_diff)
 
         bootstrap_diffs = np.array(bootstrap_diffs)
 
         # Calculate p-value (two-tailed)
-        p_value = 2 * min(np.mean(bootstrap_diffs >= observed_diff),
-                          np.mean(bootstrap_diffs <= observed_diff))
+        p_value = 2 * min(np.mean(bootstrap_diffs >= observed_diff), np.mean(bootstrap_diffs <= observed_diff))
 
         # Calculate confidence interval
         alpha = 1 - confidence_level

@@ -38,7 +38,7 @@ class EvaluationEngine:
         self.evaluation_history: List[EvaluationResults] = []
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize the evaluation engine"""
+        """Initialize the evaluation engine"""
         try:
             logger.info("Initializing evaluation engine...")
 
@@ -61,13 +61,13 @@ class EvaluationEngine:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-    """Cleanup evaluation engine resources"""
+        """Cleanup evaluation engine resources"""
         try:
             logger.info("Cleaning up evaluation engine...")
 
             # Cancel active evaluations
             for evaluation_id in list(self.active_evaluations.keys()):
-    await self.cancel_evaluation(evaluation_id)
+                await self.cancel_evaluation(evaluation_id)
 
             # Cleanup components
             await self.offline_evaluator.cleanup()
@@ -83,9 +83,7 @@ class EvaluationEngine:
         except Exception as e:
             logger.error(f"Error during evaluation engine cleanup: {str(e)}")
 
-    async def run_comprehensive_evaluation(
-        self, evaluation_config: EvaluationConfig
-    ) -> EvaluationResults:
+    async def run_comprehensive_evaluation(self, evaluation_config: EvaluationConfig) -> EvaluationResults:
         """Run complete evaluation suite"""
 
         evaluation_id = str(uuid4())
@@ -143,9 +141,7 @@ class EvaluationEngine:
             # Causal impact analysis
             if evaluation_config.include_causal_analysis:
                 logger.info("Running causal analysis...")
-                causal_results = await self.causal_analyzer.analyze_causal_impact(
-                    evaluation_config.causal_config
-                )
+                causal_results = await self.causal_analyzer.analyze_causal_impact(evaluation_config.causal_config)
                 results.causal_analysis = causal_results
                 logger.info("Causal analysis completed")
 
@@ -159,9 +155,7 @@ class EvaluationEngine:
 
             # Calculate duration
             if results.started_at and results.completed_at:
-                results.duration_seconds = (
-                    results.completed_at - results.started_at
-                ).total_seconds()
+                results.duration_seconds = (results.completed_at - results.started_at).total_seconds()
 
             # Store results in MLflow
             await self.log_evaluation_results(results)
@@ -171,12 +165,10 @@ class EvaluationEngine:
             if evaluation_id in self.active_evaluations:
                 del self.active_evaluations[evaluation_id]
 
-            logger.info(
-                f"Comprehensive evaluation {evaluation_id} completed successfully")
+            logger.info(f"Comprehensive evaluation {evaluation_id} completed successfully")
 
         except Exception as e:
-            logger.error(
-                f"Error in comprehensive evaluation {evaluation_id}: {str(e)}")
+            logger.error(f"Error in comprehensive evaluation {evaluation_id}: {str(e)}")
             results.status = EvaluationStatus.FAILED
             results.error_message = str(e)
             results.completed_at = datetime.utcnow()
@@ -223,18 +215,14 @@ class EvaluationEngine:
             results.completed_at = datetime.utcnow()
 
             if results.started_at and results.completed_at:
-                results.duration_seconds = (
-                    results.completed_at - results.started_at
-                ).total_seconds()
+                results.duration_seconds = (results.completed_at - results.started_at).total_seconds()
 
             await self.log_evaluation_results(results)
 
-            logger.info(
-                f"Offline evaluation {evaluation_id} completed successfully")
+            logger.info(f"Offline evaluation {evaluation_id} completed successfully")
 
         except Exception as e:
-            logger.error(
-                f"Error in offline evaluation {evaluation_id}: {str(e)}")
+            logger.error(f"Error in offline evaluation {evaluation_id}: {str(e)}")
             results.status = EvaluationStatus.FAILED
             results.error_message = str(e)
             results.completed_at = datetime.utcnow()
@@ -274,18 +262,14 @@ class EvaluationEngine:
             results.completed_at = datetime.utcnow()
 
             if results.started_at and results.completed_at:
-                results.duration_seconds = (
-                    results.completed_at - results.started_at
-                ).total_seconds()
+                results.duration_seconds = (results.completed_at - results.started_at).total_seconds()
 
             await self.log_evaluation_results(results)
 
-            logger.info(
-                f"Online evaluation {evaluation_id} completed successfully")
+            logger.info(f"Online evaluation {evaluation_id} completed successfully")
 
         except Exception as e:
-            logger.error(
-                f"Error in online evaluation {evaluation_id}: {str(e)}")
+            logger.error(f"Error in online evaluation {evaluation_id}: {str(e)}")
             results.status = EvaluationStatus.FAILED
             results.error_message = str(e)
             results.completed_at = datetime.utcnow()
@@ -310,8 +294,7 @@ class EvaluationEngine:
         logger.info(f"Evaluation {evaluation_id} cancelled")
         return True
 
-    async def get_evaluation_status(
-            self, evaluation_id: str) -> Optional[EvaluationResults]:
+    async def get_evaluation_status(self, evaluation_id: str) -> Optional[EvaluationResults]:
         """Get evaluation status"""
 
         # Check active evaluations
@@ -326,28 +309,21 @@ class EvaluationEngine:
         return None
 
     async def list_evaluations(
-            self,
-            status: Optional[EvaluationStatus] = None,
-            limit: int = 100,
-            offset: int = 0) -> List[EvaluationResults]:
+        self, status: Optional[EvaluationStatus] = None, limit: int = 100, offset: int = 0
+    ) -> List[EvaluationResults]:
         """List evaluations with optional filtering"""
 
-        all_evaluations = list(
-            self.active_evaluations.values()) + self.evaluation_history
+        all_evaluations = list(self.active_evaluations.values()) + self.evaluation_history
 
         if status:
-            all_evaluations = [
-                e for e in all_evaluations if e.status == status]
+            all_evaluations = [e for e in all_evaluations if e.status == status]
 
         # Sort by started_at descending
-        all_evaluations.sort(
-            key=lambda x: x.started_at or datetime.min,
-            reverse=True)
+        all_evaluations.sort(key=lambda x: x.started_at or datetime.min, reverse=True)
 
-        return all_evaluations[offset: offset + limit]
+        return all_evaluations[offset : offset + limit]
 
-    async def generate_recommendations(
-            self, results: EvaluationResults) -> List[Dict[str, Any]]:
+    async def generate_recommendations(self, results: EvaluationResults) -> List[Dict[str, Any]]:
         """Generate recommendations based on evaluation results"""
 
         recommendations = []
@@ -374,8 +350,7 @@ class EvaluationEngine:
 
         return recommendations
 
-    async def _generate_offline_recommendations(
-            self, offline_results) -> List[Dict[str, Any]]:
+    async def _generate_offline_recommendations(self, offline_results) -> List[Dict[str, Any]]:
         """Generate recommendations from offline evaluation results"""
         recommendations = []
 
@@ -389,12 +364,12 @@ class EvaluationEngine:
                         "title": f"Low performance for {model_result.model_name}",
                         "description": f"Model {model_result.model_name} has overall score {model_result.overall_score:.3f}",
                         "action": "Consider retraining or hyperparameter tuning",
-                    })
+                    }
+                )
 
         return recommendations
 
-    async def _generate_online_recommendations(
-            self, online_results) -> List[Dict[str, Any]]:
+    async def _generate_online_recommendations(self, online_results) -> List[Dict[str, Any]]:
         """Generate recommendations from online evaluation results"""
         recommendations = []
 
@@ -409,12 +384,12 @@ class EvaluationEngine:
                             "title": f"Winner found for experiment {experiment.experiment_id}",
                             "description": f"Variant {experiment.winner_variant} won with {experiment.winner_confidence:.3f} confidence",
                             "action": "Consider deploying winning variant",
-                        })
+                        }
+                    )
 
         return recommendations
 
-    async def _generate_business_recommendations(
-            self, business_impact) -> List[Dict[str, Any]]:
+    async def _generate_business_recommendations(self, business_impact) -> List[Dict[str, Any]]:
         """Generate recommendations from business impact analysis"""
         recommendations = []
 
@@ -427,12 +402,12 @@ class EvaluationEngine:
                     "title": "Low ROI detected",
                     "description": f"Overall ROI is {business_impact.overall_roi:.3f}",
                     "action": "Review model performance and business metrics",
-                })
+                }
+            )
 
         return recommendations
 
-    async def _generate_drift_recommendations(
-            self, drift_analysis) -> List[Dict[str, Any]]:
+    async def _generate_drift_recommendations(self, drift_analysis) -> List[Dict[str, Any]]:
         """Generate recommendations from drift analysis"""
         recommendations = []
 
@@ -445,17 +420,16 @@ class EvaluationEngine:
                     "title": "Significant model drift detected",
                     "description": f"Drift severity: {drift_analysis.drift_severity:.3f}",
                     "action": "Retrain model or investigate data changes",
-                })
+                }
+            )
 
         return recommendations
 
     async def log_evaluation_results(self, results: EvaluationResults) -> Dict[str, Any]:
-    """Log evaluation results to MLflow"""
+        """Log evaluation results to MLflow"""
         try:
-    await self.mlflow_client.log_evaluation_results(results)
-            logger.info(
-                f"Logged evaluation results {results.evaluation_id} to MLflow")
+            await self.mlflow_client.log_evaluation_results(results)
+            logger.info(f"Logged evaluation results {results.evaluation_id} to MLflow")
         except Exception as e:
-            logger.error(
-                f"Failed to log evaluation results to MLflow: {str(e)}")
+            logger.error(f"Failed to log evaluation results to MLflow: {str(e)}")
             # Don't raise - logging failure shouldn't break evaluation

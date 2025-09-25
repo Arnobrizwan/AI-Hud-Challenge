@@ -69,7 +69,7 @@ class PostgreSQLManager:
     async def _initialize_schema(self) -> Dict[str, Any]:
     """Initialize database schema"""
         try:
-    async with self.pool.acquire() as conn:
+            async with self.pool.acquire() as conn:
                 # Create articles table
                 await conn.execute(
                     """
@@ -150,7 +150,7 @@ class PostgreSQLManager:
             raise RuntimeError("PostgreSQL Manager not initialized")
 
         try:
-    async with self.pool.acquire() as conn:
+            async with self.pool.acquire() as conn:
                 # Insert or update article
                 await conn.execute(
                     """
@@ -206,7 +206,7 @@ class PostgreSQLManager:
             raise RuntimeError("PostgreSQL Manager not initialized")
 
         try:
-    async with self.pool.acquire() as conn:
+            async with self.pool.acquire() as conn:
                 row = await conn.fetchrow(
                     """
                     SELECT id, title, content, summary, author, source, published_at,
@@ -249,7 +249,7 @@ class PostgreSQLManager:
             raise RuntimeError("PostgreSQL Manager not initialized")
 
         try:
-    async with self.pool.acquire() as conn:
+            async with self.pool.acquire() as conn:
                 rows = await conn.fetch(
                     """
                     SELECT id, title, content, summary, author, source, published_at,
@@ -301,7 +301,7 @@ class PostgreSQLManager:
             raise RuntimeError("PostgreSQL Manager not initialized")
 
         try:
-    async with self.pool.acquire() as conn:
+            async with self.pool.acquire() as conn:
                 rows = await conn.fetch(
                     """
                     SELECT id, title, content, summary, author, source, published_at,
@@ -347,7 +347,7 @@ class PostgreSQLManager:
             raise RuntimeError("PostgreSQL Manager not initialized")
 
         try:
-    async with self.pool.acquire() as conn:
+            async with self.pool.acquire() as conn:
                 rows = await conn.fetch(
                     """
                     SELECT id, title, content, summary, author, source, published_at,
@@ -392,7 +392,7 @@ class PostgreSQLManager:
             raise RuntimeError("PostgreSQL Manager not initialized")
 
         try:
-    async with self.pool.acquire() as conn:
+            async with self.pool.acquire() as conn:
     await conn.execute(
                     """
                     DELETE FROM articles WHERE id = $1
@@ -412,7 +412,7 @@ class PostgreSQLManager:
             raise RuntimeError("PostgreSQL Manager not initialized")
 
         try:
-    async with self.pool.acquire() as conn:
+            async with self.pool.acquire() as conn:
                 # Total articles
                 total_articles = await conn.fetchval("SELECT COUNT(*) FROM articles")
 

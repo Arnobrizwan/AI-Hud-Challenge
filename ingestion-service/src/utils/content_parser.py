@@ -332,7 +332,7 @@ class ContentParser:
             return "en"  # Default to English
 
     def calculate_reading_metrics(self, text: str) -> Dict[str, Any]:
-        """Calculate reading metrics for text content."""
+    """Calculate reading metrics for text content."""
         if not text:
             return {
                 "word_count": 0,

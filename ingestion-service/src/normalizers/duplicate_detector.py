@@ -337,7 +337,7 @@ class DuplicateDetector:
         return score
 
     async def get_duplicate_statistics(self, articles: List[NormalizedArticle]) -> Dict[str, Any]:
-        """Get duplicate detection statistics."""
+    """Get duplicate detection statistics."""
         total_articles = len(articles)
 
         # Find exact duplicates

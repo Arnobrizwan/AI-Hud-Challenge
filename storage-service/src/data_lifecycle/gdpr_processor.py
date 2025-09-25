@@ -47,8 +47,7 @@ class GDPRProcessor:
             deletion_timestamp=datetime.utcnow(),
         )
 
-    async def rectify_user_data(
-            self, user_id: str, corrections: Dict[str, Any]) -> Dict[str, Any]:
+    async def rectify_user_data(self, user_id: str, corrections: Dict[str, Any]) -> Dict[str, Any]:
     """Rectify user data for GDPR compliance"""
         # Placeholder implementation
         return {

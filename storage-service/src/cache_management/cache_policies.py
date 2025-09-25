@@ -170,9 +170,7 @@ class CachePolicies:
             },
         }
 
-    async def get_cache_config(
-        self, content_type: ContentType, context: Dict[str, Any] = None
-    ) -> Dict[str, Any]:
+    async def get_cache_config(self, content_type: ContentType, context: Dict[str, Any] = None) -> Dict[str, Any]:
     """Get cache configuration for content type and context"""
         if not self._initialized:
             return self._get_default_config()
@@ -197,9 +195,7 @@ class CachePolicies:
             logger.error(f"Failed to get cache config: {e}")
             return self._get_default_config()
 
-    async def _determine_strategy(
-        self, content_type: ContentType, context: Dict[str, Any]
-    ) -> CacheStrategy:
+    async def _determine_strategy(self, content_type: ContentType, context: Dict[str, Any]) -> CacheStrategy:
         """Determine optimal cache strategy based on context"""
         try:
             # Check for specific policy matches
@@ -235,9 +231,7 @@ class CachePolicies:
             logger.error(f"Failed to determine strategy: {e}")
             return CacheStrategy.BALANCED
 
-    async def _matches_policy(
-        self, policy: Dict[str, Any], content_type: ContentType, context: Dict[str, Any]
-    ) -> bool:
+    async def _matches_policy(self, policy: Dict[str, Any], content_type: ContentType, context: Dict[str, Any]) -> bool:
         """Check if context matches a policy"""
         try:
             # Check content type
@@ -247,8 +241,7 @@ class CachePolicies:
             # Check conditions
             conditions = policy.get("conditions", {})
             for condition_key, condition_value in conditions.items():
-                if not self._evaluate_condition(
-                        condition_key, condition_value, context):
+                if not self._evaluate_condition(condition_key, condition_value, context):
                     return False
 
             return True
@@ -257,9 +250,7 @@ class CachePolicies:
             logger.error(f"Failed to evaluate policy match: {e}")
             return False
 
-    def _evaluate_condition(
-        self, condition_key: str, condition_value: Any, context: Dict[str, Any]
-    ) -> bool:
+    def _evaluate_condition(self, condition_key: str, condition_value: Any, context: Dict[str, Any]) -> bool:
         """Evaluate a single condition"""
         try:
             if condition_key == "min_views":
@@ -270,15 +261,13 @@ class CachePolicies:
 
             elif condition_key == "age_hours":
                 if "published_at" in context:
-                    age_hours = (
-                        datetime.utcnow() - context["published_at"]).total_seconds() / 3600
+                    age_hours = (datetime.utcnow() - context["published_at"]).total_seconds() / 3600
                     return age_hours <= condition_value
                 return False
 
             elif condition_key == "categories":
                 article_categories = context.get("categories", [])
-                return any(
-                    cat in article_categories for cat in condition_value)
+                return any(cat in article_categories for cat in condition_value)
 
             elif condition_key == "user_specific":
                 return context.get("user_id") is not None
@@ -289,9 +278,7 @@ class CachePolicies:
             logger.error(f"Failed to evaluate condition {condition_key}: {e}")
             return False
 
-    def _merge_configs(
-        self, base_config: Dict[str, Any], strategy_config: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _merge_configs(self, base_config: Dict[str, Any], strategy_config: Dict[str, Any]) -> Dict[str, Any]:
     """Merge base and strategy configurations"""
         config = base_config.copy()
 
@@ -306,15 +293,12 @@ class CachePolicies:
 
         return config
 
-    async def _apply_context_adjustments(
-        self, config: Dict[str, Any], context: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def _apply_context_adjustments(self, config: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
     """Apply context-specific adjustments to config"""
         try:
             # Adjust TTL based on content age
             if "published_at" in context:
-                age_hours = (
-                    datetime.utcnow() - context["published_at"]).total_seconds() / 3600
+                age_hours = (datetime.utcnow() - context["published_at"]).total_seconds() / 3600
 
                 # Older content gets longer cache
                 if age_hours > 24:
@@ -356,8 +340,7 @@ class CachePolicies:
             "warm_cache": False,
         }
 
-    async def get_invalidation_strategy(
-            self, content_type: ContentType) -> str:
+    async def get_invalidation_strategy(self, content_type: ContentType) -> str:
         """Get invalidation strategy for content type"""
         if not self._initialized:
             return "immediate"
@@ -365,9 +348,7 @@ class CachePolicies:
         config = self._content_type_configs.get(content_type, {})
         return config.get("invalidation_strategy", "immediate")
 
-    async def get_cache_tags(
-        self, content_type: ContentType, context: Dict[str, Any] = None
-    ) -> List[str]:
+    async def get_cache_tags(self, content_type: ContentType, context: Dict[str, Any] = None) -> List[str]:
         """Get cache tags for content type and context"""
         if not self._initialized:
             return []
@@ -400,9 +381,7 @@ class CachePolicies:
             logger.error(f"Failed to get cache tags: {e}")
             return []
 
-    async def should_preload(
-        self, content_type: ContentType, context: Dict[str, Any] = None
-    ) -> bool:
+    async def should_preload(self, content_type: ContentType, context: Dict[str, Any] = None) -> bool:
         """Determine if content should be preloaded"""
         if not self._initialized:
             return False
@@ -415,9 +394,7 @@ class CachePolicies:
             logger.error(f"Failed to determine preload decision: {e}")
             return False
 
-    async def should_warm_cache(
-        self, content_type: ContentType, context: Dict[str, Any] = None
-    ) -> bool:
+    async def should_warm_cache(self, content_type: ContentType, context: Dict[str, Any] = None) -> bool:
         """Determine if cache should be warmed"""
         if not self._initialized:
             return False

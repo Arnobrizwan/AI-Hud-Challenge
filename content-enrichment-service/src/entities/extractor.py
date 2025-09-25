@@ -249,7 +249,7 @@ class EntityExtractor:
         return await self.extract_entities(full_text, content.language)
 
     def get_entity_statistics(self, entities: List[Entity]) -> Dict[str, Any]:
-    """Get statistics about extracted entities."""
+        """Get statistics about extracted entities."""
         if not entities:
             return {}
 

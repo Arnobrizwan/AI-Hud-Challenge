@@ -53,9 +53,7 @@ class PrivacyComplianceMonitor:
         except Exception as e:
             logger.error(f"Error during privacy monitor cleanup: {str(e)}")
 
-    async def check_privacy_compliance(
-        self, user_data: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+    async def check_privacy_compliance(self, user_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """Check privacy compliance for user data"""
         if not self.is_initialized:
             raise RuntimeError("Privacy monitor not initialized")
@@ -98,9 +96,7 @@ class PrivacyComplianceMonitor:
                 "timestamp": datetime.utcnow().isoformat(),
             }
 
-    async def check_data_privacy_compliance(
-        self, user_data: Dict[str, Any]
-    ) -> List[ComplianceViolation]:
+    async def check_data_privacy_compliance(self, user_data: Dict[str, Any]) -> List[ComplianceViolation]:
         """Check privacy compliance for specific user data"""
         try:
             violations = []
@@ -114,7 +110,8 @@ class PrivacyComplianceMonitor:
                         description="Data collection may not be minimized to what is necessary",
                         affected_data=user_data,
                         remediation_required=True,
-                    ))
+                    )
+                )
 
             # Check purpose limitation
             if not self.has_clear_purpose(user_data):
@@ -125,7 +122,8 @@ class PrivacyComplianceMonitor:
                         description="Data processing purpose not clearly defined",
                         affected_data=user_data,
                         remediation_required=True,
-                    ))
+                    )
+                )
 
             # Check storage limitation
             if not self.has_appropriate_retention(user_data):
@@ -136,7 +134,8 @@ class PrivacyComplianceMonitor:
                         description="Data retention period not appropriate or defined",
                         affected_data=user_data,
                         remediation_required=True,
-                    ))
+                    )
+                )
 
             # Check data accuracy
             if not self.is_data_accurate(user_data):
@@ -159,7 +158,8 @@ class PrivacyComplianceMonitor:
                         description="Appropriate security measures not implemented",
                         affected_data=user_data,
                         remediation_required=True,
-                    ))
+                    )
+                )
 
             # Check transparency
             if not self.is_transparent(user_data):
@@ -170,7 +170,8 @@ class PrivacyComplianceMonitor:
                         description="Data processing not transparent to data subjects",
                         affected_data=user_data,
                         remediation_required=True,
-                    ))
+                    )
+                )
 
             # Check consent
             if not self.has_valid_consent(user_data):
@@ -181,7 +182,8 @@ class PrivacyComplianceMonitor:
                         description="Valid consent not obtained for data processing",
                         affected_data=user_data,
                         remediation_required=True,
-                    ))
+                    )
+                )
 
             return violations
 
@@ -189,8 +191,7 @@ class PrivacyComplianceMonitor:
             logger.error(f"Data privacy compliance check failed: {str(e)}")
             return []
 
-    async def check_general_privacy_requirements(
-            self) -> List[ComplianceViolation]:
+    async def check_general_privacy_requirements(self) -> List[ComplianceViolation]:
         """Check general privacy requirements"""
         try:
             violations = []
@@ -204,7 +205,8 @@ class PrivacyComplianceMonitor:
                         description="Privacy by design principles not implemented",
                         affected_data=None,
                         remediation_required=True,
-                    ))
+                    )
+                )
 
             # Check data protection impact assessment
             if not self.has_dpia():
@@ -215,7 +217,8 @@ class PrivacyComplianceMonitor:
                         description="Data Protection Impact Assessment not conducted",
                         affected_data=None,
                         remediation_required=True,
-                    ))
+                    )
+                )
 
             # Check data subject rights procedures
             if not self.has_data_subject_rights_procedures():
@@ -226,7 +229,8 @@ class PrivacyComplianceMonitor:
                         description="Data subject rights procedures not implemented",
                         affected_data=None,
                         remediation_required=True,
-                    ))
+                    )
+                )
 
             # Check privacy policy
             if not self.has_privacy_policy():
@@ -237,13 +241,13 @@ class PrivacyComplianceMonitor:
                         description="Privacy policy not available or up-to-date",
                         affected_data=None,
                         remediation_required=True,
-                    ))
+                    )
+                )
 
             return violations
 
         except Exception as e:
-            logger.error(
-                f"General privacy requirements check failed: {str(e)}")
+            logger.error(f"General privacy requirements check failed: {str(e)}")
             return []
 
     def is_data_minimized(self, user_data: Dict[str, Any]) -> bool:
@@ -255,8 +259,7 @@ class PrivacyComplianceMonitor:
 
             # Simple check: if we have more fields than necessary, it might not
             # be minimized
-            return len(collected_fields) <= len(
-                necessary_fields) + 2  # Allow some extra fields
+            return len(collected_fields) <= len(necessary_fields) + 2  # Allow some extra fields
 
         except Exception as e:
             logger.error(f"Data minimization check failed: {str(e)}")
@@ -317,9 +320,7 @@ class PrivacyComplianceMonitor:
         """Check if valid consent is obtained"""
         try:
             # Check if consent is obtained and valid
-            return user_data.get("consent_obtained", False) and user_data.get(
-                "consent_valid", False
-            )
+            return user_data.get("consent_obtained", False) and user_data.get("consent_valid", False)
 
         except Exception as e:
             logger.error(f"Consent check failed: {str(e)}")
@@ -352,8 +353,7 @@ class PrivacyComplianceMonitor:
             return True
 
         except Exception as e:
-            logger.error(
-                f"Data subject rights procedures check failed: {str(e)}")
+            logger.error(f"Data subject rights procedures check failed: {str(e)}")
             return False
 
     def has_privacy_policy(self) -> bool:
@@ -366,80 +366,57 @@ class PrivacyComplianceMonitor:
             logger.error(f"Privacy policy check failed: {str(e)}")
             return False
 
-    def generate_privacy_recommendations(
-            self, violations: List[ComplianceViolation]) -> List[str]:
+    def generate_privacy_recommendations(self, violations: List[ComplianceViolation]) -> List[str]:
         """Generate privacy compliance recommendations"""
         try:
             recommendations = []
 
             # General recommendations
             if not violations:
-                recommendations.append(
-                    "Privacy compliance is good - maintain current practices")
+                recommendations.append("Privacy compliance is good - maintain current practices")
                 return recommendations
 
             # Violation-specific recommendations
             for violation in violations:
                 if "minimization" in violation.description.lower():
-                    recommendations.append(
-                        "Implement data minimization principles - collect only necessary data"
-                    )
+                    recommendations.append("Implement data minimization principles - collect only necessary data")
 
                 elif "purpose" in violation.description.lower():
-                    recommendations.append(
-                        "Define clear and specific purposes for all data processing activities"
-                    )
+                    recommendations.append("Define clear and specific purposes for all data processing activities")
 
                 elif "retention" in violation.description.lower():
-                    recommendations.append(
-                        "Establish appropriate data retention periods and deletion procedures"
-                    )
+                    recommendations.append("Establish appropriate data retention periods and deletion procedures")
 
                 elif "accuracy" in violation.description.lower():
-                    recommendations.append(
-                        "Implement data accuracy verification and update procedures"
-                    )
+                    recommendations.append("Implement data accuracy verification and update procedures")
 
                 elif "security" in violation.description.lower():
-                    recommendations.append(
-                        "Implement appropriate technical and organizational security measures"
-                    )
+                    recommendations.append("Implement appropriate technical and organizational security measures")
 
                 elif "transparency" in violation.description.lower():
-                    recommendations.append(
-                        "Ensure transparency in data processing activities")
+                    recommendations.append("Ensure transparency in data processing activities")
 
                 elif "consent" in violation.description.lower():
-                    recommendations.append(
-                        "Implement proper consent management and verification")
+                    recommendations.append("Implement proper consent management and verification")
 
                 elif "privacy by design" in violation.description.lower():
-                    recommendations.append(
-                        "Implement privacy by design and default principles")
+                    recommendations.append("Implement privacy by design and default principles")
 
                 elif "dpia" in violation.description.lower():
-                    recommendations.append(
-                        "Conduct Data Protection Impact Assessments for high-risk processing"
-                    )
+                    recommendations.append("Conduct Data Protection Impact Assessments for high-risk processing")
 
                 elif "data subject rights" in violation.description.lower():
-                    recommendations.append(
-                        "Implement procedures for handling data subject rights requests"
-                    )
+                    recommendations.append("Implement procedures for handling data subject rights requests")
 
                 elif "privacy policy" in violation.description.lower():
-                    recommendations.append(
-                        "Maintain up-to-date and comprehensive privacy policy")
+                    recommendations.append("Maintain up-to-date and comprehensive privacy policy")
 
             # Add general recommendations
-            recommendations.append(
-                "Regularly review and update privacy compliance procedures")
-            recommendations.append(
-                "Conduct regular privacy impact assessments")
+            recommendations.append("Regularly review and update privacy compliance procedures")
+            recommendations.append("Conduct regular privacy impact assessments")
             recommendations.append("Provide privacy training to staff")
             recommendations.append("Implement privacy-preserving technologies")
-            recommendations.append(
-                "Establish privacy governance and oversight")
+            recommendations.append("Establish privacy governance and oversight")
 
             return recommendations
 
@@ -452,8 +429,7 @@ class PrivacyComplianceMonitor:
         try:
             return {
                 "enabled": self.config.privacy_enabled,
-                "requirements_checked": len(
-                    self.privacy_requirements),
+                "requirements_checked": len(self.privacy_requirements),
                 "data_retention_period_days": self.config.data_retention_period,
                 "pii_detection_enabled": self.config.pii_detection_enabled,
                 "encryption_required": self.config.encryption_required,
@@ -462,8 +438,7 @@ class PrivacyComplianceMonitor:
             }
 
         except Exception as e:
-            logger.error(
-                f"Privacy compliance status retrieval failed: {str(e)}")
+            logger.error(f"Privacy compliance status retrieval failed: {str(e)}")
             return {"error": str(e)}
 
     async def generate_detailed_report(self) -> Dict[str, Any]:
@@ -472,8 +447,7 @@ class PrivacyComplianceMonitor:
             report = {
                 "report_type": "privacy_detailed",
                 "generated_at": datetime.utcnow().isoformat(),
-                "compliance_overview":
-    await self.get_compliance_status(),
+                "compliance_overview": await self.get_compliance_status(),
                 "requirements_status": self.privacy_requirements,
                 "recommendations": [
                     "Implement comprehensive privacy management system",
@@ -487,6 +461,5 @@ class PrivacyComplianceMonitor:
             return report
 
         except Exception as e:
-            logger.error(
-                f"Privacy detailed report generation failed: {str(e)}")
+            logger.error(f"Privacy detailed report generation failed: {str(e)}")
             return {"error": str(e)}

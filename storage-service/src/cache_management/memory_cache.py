@@ -125,7 +125,7 @@ class MemoryCache:
             return False
 
         try:
-    async with self._lock:
+            async with self._lock:
                 # Remove existing entry if present
                 if key in self._cache:
                     old_entry = self._cache[key]

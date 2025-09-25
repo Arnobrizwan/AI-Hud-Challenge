@@ -42,9 +42,7 @@ class ContentExtractionService:
         self.monitoring_service = monitoring_service
         self.start_time = time.time()
 
-    async def extract_content(
-            self,
-            request: ExtractionRequest) -> ExtractionResponse:
+    async def extract_content(self, request: ExtractionRequest) -> ExtractionResponse:
         """
         Extract content from a single URL.
 
@@ -79,13 +77,9 @@ class ContentExtractionService:
 
             # Log result
             if response.success:
-                logger.info(
-                    f"Content extraction completed for {request.url} in {processing_time:.2f}s"
-                )
+                logger.info(f"Content extraction completed for {request.url} in {processing_time:.2f}s")
             else:
-                logger.error(
-                    f"Content extraction failed for {request.url}: {response.error_message}"
-                )
+                logger.error(f"Content extraction failed for {request.url}: {response.error_message}")
 
             return response
 
@@ -106,9 +100,7 @@ class ContentExtractionService:
                 extraction_id="",
             )
 
-    async def batch_extract_content(
-        self, request: BatchExtractionRequest
-    ) -> BatchExtractionResponse:
+    async def batch_extract_content(self, request: BatchExtractionRequest) -> BatchExtractionResponse:
         """
         Extract content from multiple URLs.
 
@@ -119,8 +111,7 @@ class ContentExtractionService:
             BatchExtractionResponse with results
         """
         try:
-            logger.info(
-                f"Processing batch extraction for {len(request.urls)} URLs")
+            logger.info(f"Processing batch extraction for {len(request.urls)} URLs")
 
             # Generate batch ID
             batch_id = self._generate_batch_id()
@@ -128,11 +119,8 @@ class ContentExtractionService:
             # Create individual extraction requests
             extraction_requests = []
             for i, url in enumerate(request.urls):
-                content_type = request.content_types[i] if i < len(
-                    request.content_types) else None
-                extraction_method = (
-                    request.extraction_methods[i] if i < len(
-                        request.extraction_methods) else None)
+                content_type = request.content_types[i] if i < len(request.content_types) else None
+                extraction_method = request.extraction_methods[i] if i < len(request.extraction_methods) else None
 
                 extraction_request = ExtractionRequest(
                     url=url,
@@ -166,9 +154,7 @@ class ContentExtractionService:
                 processing_time_ms=int(processing_time * 1000),
             )
 
-            logger.info(
-                f"Batch extraction completed: {successful_extractions}/{len(request.urls)} successful"
-            )
+            logger.info(f"Batch extraction completed: {successful_extractions}/{len(request.urls)} successful")
 
             return BatchExtractionResponse(
                 batch_id=batch_id,
@@ -194,9 +180,8 @@ class ContentExtractionService:
                 errors=[str(e)],
             )
 
-    async def get_extraction_status(
-            self, extraction_id: str) -> Dict[str, Any]:
-    """
+    async def get_extraction_status(self, extraction_id: str) -> Dict[str, Any]:
+        """
         Get status of an extraction.
 
         Args:
@@ -236,7 +221,7 @@ class ContentExtractionService:
         limit: int = 20,
         offset: int = 0,
     ) -> Dict[str, Any]:
-    """
+        """
         Search extracted content.
 
         Args:
@@ -278,12 +263,9 @@ class ContentExtractionService:
 
             # Check dependencies
             dependencies = {
-                "cache_service":
-    await self._check_cache_service(),
-                "queue_service":
-    await self._check_queue_service(),
-                "monitoring_service":
-    await self._check_monitoring_service(),
+                "cache_service": await self._check_cache_service(),
+                "queue_service": await self._check_queue_service(),
+                "monitoring_service": await self._check_monitoring_service(),
             }
 
             # Determine overall status
@@ -309,7 +291,7 @@ class ContentExtractionService:
             )
 
     async def get_metrics(self) -> Dict[str, Any]:
-    """Get service metrics."""
+        """Get service metrics."""
         try:
             return await self.monitoring_service.get_metrics()
         except Exception as e:
@@ -325,8 +307,7 @@ class ContentExtractionService:
             raise ValidationError("URL must start with http:// or https://")
 
         if request.quality_threshold < 0.0 or request.quality_threshold > 1.0:
-            raise ValidationError(
-                "Quality threshold must be between 0.0 and 1.0")
+            raise ValidationError("Quality threshold must be between 0.0 and 1.0")
 
         if request.timeout and (request.timeout < 1 or request.timeout > 300):
             raise ValidationError("Timeout must be between 1 and 300 seconds")

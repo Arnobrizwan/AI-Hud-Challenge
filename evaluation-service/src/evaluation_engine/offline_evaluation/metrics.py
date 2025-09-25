@@ -39,7 +39,7 @@ class RankingMetricsCalculator:
     """Specialized metrics for ranking models"""
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize the calculator"""
+                        """Initialize the calculator"""
         pass
 
     async def calculate_metrics(
@@ -232,7 +232,7 @@ class ClassificationMetricsCalculator:
     """Specialized metrics for classification models"""
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize the calculator"""
+                        """Initialize the calculator"""
         pass
 
     async def calculate_metrics(
@@ -286,7 +286,7 @@ class RegressionMetricsCalculator:
     """Specialized metrics for regression models"""
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize the calculator"""
+                        """Initialize the calculator"""
         pass
 
     async def calculate_metrics(
@@ -331,7 +331,7 @@ class RecommendationMetricsCalculator:
     """Specialized metrics for recommendation models"""
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize the calculator"""
+                        """Initialize the calculator"""
         pass
 
     async def calculate_metrics(
@@ -471,7 +471,7 @@ class ClusteringMetricsCalculator:
     """Specialized metrics for clustering models"""
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize the calculator"""
+                    """Initialize the calculator"""
         pass
 
     async def calculate_metrics(

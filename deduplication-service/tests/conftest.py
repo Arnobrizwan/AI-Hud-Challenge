@@ -62,9 +62,7 @@ def content_fingerprinter(minhash_generator):
 @pytest.fixture
 def semantic_calculator():
     """Create semantic similarity calculator."""
-    return SemanticSimilarityCalculator(
-        model_name="all-MiniLM-L6-v2",
-        embedding_dimension=384)
+    return SemanticSimilarityCalculator(model_name="all-MiniLM-L6-v2", embedding_dimension=384)
 
 
 @pytest.fixture
@@ -89,10 +87,8 @@ def combined_calculator(semantic_calculator, content_calculator):
 def threshold_manager():
     """Create similarity threshold manager."""
     return SimilarityThresholdManager(
-        default_threshold=0.85,
-        lsh_threshold=0.7,
-        content_threshold=0.8,
-        title_threshold=0.9)
+        default_threshold=0.85, lsh_threshold=0.7, content_threshold=0.8, title_threshold=0.9
+    )
 
 
 @pytest.fixture
@@ -102,12 +98,8 @@ async def lsh_manager(redis_client) -> Dict[str, Any]:
 
 
 @pytest.fixture
-async def deduplication_pipeline(
-        redis_client,
-        lsh_manager,
-        combined_calculator,
-        threshold_manager):
-     -> Dict[str, Any]:"""Create deduplication pipeline."""
+async def deduplication_pipeline(redis_client, lsh_manager, combined_calculator, threshold_manager) -> Dict[str, Any]:
+    """Create deduplication pipeline."""
     pipeline = DeduplicationPipeline(
         redis_client=redis_client,
         lsh_index_manager=lsh_manager,
@@ -168,38 +160,17 @@ def sample_article():
         summary="Major earthquake hits California, causing widespread damage",
         url="https://example.com/earthquake-california",
         source="reuters",
-        published_at=datetime.now(
-            timezone.utc),
+        published_at=datetime.now(timezone.utc),
         quality_score=0.9,
         entities=[
-            Entity(
-                text="California",
-                label="GPE",
-                confidence=0.95,
-                start=0,
-                end=10),
-            Entity(
-                text="earthquake",
-                label="EVENT",
-                confidence=0.9,
-                start=0,
-                end=10),
+            Entity(text="California", label="GPE", confidence=0.95, start=0, end=10),
+            Entity(text="earthquake", label="EVENT", confidence=0.9, start=0, end=10),
         ],
         topics=[
-            Topic(
-                name="Natural Disasters",
-                confidence=0.9,
-                category="Environment"),
-            Topic(
-                name="California",
-                confidence=0.8,
-                category="Geography"),
+            Topic(name="Natural Disasters", confidence=0.9, category="Environment"),
+            Topic(name="California", confidence=0.8, category="Geography"),
         ],
-        locations=[
-            Location(
-                name="California",
-                country="USA",
-                confidence=0.95)],
+        locations=[Location(name="California", country="USA", confidence=0.95)],
         language="en",
         word_count=45,
         reading_time=1,
@@ -220,38 +191,17 @@ def sample_articles():
             summary=f"California earthquake update {i+1}",
             url=f"https://example.com/earthquake-update-{i+1}",
             source=f"source_{i+1}",
-            published_at=datetime.now(
-                timezone.utc),
+            published_at=datetime.now(timezone.utc),
             quality_score=0.8 + i * 0.02,
             entities=[
-                Entity(
-                    text="California",
-                    label="GPE",
-                    confidence=0.9,
-                    start=0,
-                    end=10),
-                Entity(
-                    text="earthquake",
-                    label="EVENT",
-                    confidence=0.85,
-                    start=0,
-                    end=10),
+                Entity(text="California", label="GPE", confidence=0.9, start=0, end=10),
+                Entity(text="earthquake", label="EVENT", confidence=0.85, start=0, end=10),
             ],
             topics=[
-                Topic(
-                    name="Natural Disasters",
-                    confidence=0.85,
-                    category="Environment"),
-                Topic(
-                    name="California",
-                    confidence=0.8,
-                    category="Geography"),
+                Topic(name="Natural Disasters", confidence=0.85, category="Environment"),
+                Topic(name="California", confidence=0.8, category="Geography"),
             ],
-            locations=[
-                Location(
-                    name="California",
-                    country="USA",
-                    confidence=0.9)],
+            locations=[Location(name="California", country="USA", confidence=0.9)],
             language="en",
             word_count=30 + i * 5,
             reading_time=1,
@@ -298,8 +248,7 @@ def duplicate_articles():
         summary="Original article summary",
         url="https://example.com/original",
         source="original_source",
-        published_at=datetime.now(
-            timezone.utc),
+        published_at=datetime.now(timezone.utc),
         quality_score=0.9,
         entities=[],
         topics=[],
@@ -317,8 +266,7 @@ def duplicate_articles():
         summary="Original article summary",
         url="https://example.com/duplicate",
         source="duplicate_source",
-        published_at=datetime.now(
-            timezone.utc),
+        published_at=datetime.now(timezone.utc),
         quality_score=0.8,
         entities=[],
         topics=[],
@@ -336,8 +284,7 @@ def duplicate_articles():
         summary="Original article summary with updates",
         url="https://example.com/near-duplicate",
         source="near_duplicate_source",
-        published_at=datetime.now(
-            timezone.utc),
+        published_at=datetime.now(timezone.utc),
         quality_score=0.85,
         entities=[],
         topics=[],

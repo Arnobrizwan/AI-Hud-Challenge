@@ -34,7 +34,7 @@ class TopicClassifier:
         asyncio.create_task(self._initialize_model())
 
     def _load_topic_taxonomy(self) -> Dict[str, Any]:
-    """Load hierarchical topic taxonomy."""
+        """Load hierarchical topic taxonomy."""
         return {
             "technology": {
                 "artificial_intelligence": {
@@ -124,7 +124,7 @@ class TopicClassifier:
         }
 
     async def _initialize_model(self) -> Dict[str, Any]:
-    """Initialize or load the topic classification model."""
+        """Initialize or load the topic classification model."""
         try:
             model_path = os.path.join(settings.model_cache_dir, "topic_classifier.joblib")
 
@@ -146,7 +146,7 @@ class TopicClassifier:
             self.model_loaded = False
 
     async def _train_model(self) -> Dict[str, Any]:
-    """Train the topic classification model."""
+        """Train the topic classification model."""
         try:
             # This is a simplified training process
             # In practice, you'd use a large dataset of labeled content
@@ -445,7 +445,7 @@ class TopicClassifier:
             return []
 
     def _get_topic_info(self, topic_name: str) -> Dict[str, Any]:
-    """Get detailed information about a topic."""
+        """Get detailed information about a topic."""
         # Parse hierarchy from topic name
         hierarchy_parts = topic_name.split("_")
 
@@ -462,7 +462,7 @@ class TopicClassifier:
         }
 
     async def get_topic_statistics(self) -> Dict[str, Any]:
-    """Get topic classification statistics."""
+        """Get topic classification statistics."""
         return {
             "model_loaded": self.model_loaded,
             "total_topics": len(self._flatten_taxonomy()),

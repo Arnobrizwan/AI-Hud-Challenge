@@ -32,24 +32,17 @@ class AuthMiddleware:
             expire = datetime.utcnow() + timedelta(minutes=self.token_expire_minutes)
             to_encode.update({"exp": expire})
 
-            encoded_jwt = jwt.encode(
-                to_encode,
-                self.secret_key,
-                algorithm=self.algorithm)
+            encoded_jwt = jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)
             return encoded_jwt
 
         except Exception as e:
             logger.error("Token creation failed", error=str(e))
-            raise HTTPException(
-                status_code=500,
-                detail="Token creation failed")
+            raise HTTPException(status_code=500, detail="Token creation failed")
 
     def verify_token(self, token: str) -> Optional[Dict[str, Any]]:
         """Verify and decode a JWT token."""
         try:
-            payload = jwt.decode(
-                token, self.secret_key, algorithms=[
-                    self.algorithm])
+            payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
             return payload
 
         except jwt.ExpiredSignatureError:
@@ -86,7 +79,7 @@ class AuthMiddleware:
     async def require_auth(
         self, credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)
     ) -> Dict[str, Any]:
-    """Require authentication for protected endpoints."""
+        """Require authentication for protected endpoints."""
         if not credentials:
             raise HTTPException(
                 status_code=401,
@@ -105,40 +98,34 @@ class AuthMiddleware:
         return user
 
     async def require_permission(self, permission: str) -> Dict[str, Any]:
-    """Require specific permission for endpoint access."""
+        """Require specific permission for endpoint access."""
+
         async def permission_checker(
             user: Dict[str, Any] = Depends(self.require_auth),
         ) -> Dict[str, Any]:
             user_permissions = user.get("permissions", [])
 
             if permission not in user_permissions:
-                raise HTTPException(
-                    status_code=403,
-                    detail=f"Permission '{permission}' required")
+                raise HTTPException(status_code=403, detail=f"Permission '{permission}' required")
 
             return user
 
         return permission_checker
 
     async def require_role(self, role: str) -> Dict[str, Any]:
-    """Require specific role for endpoint access."""
-        async def role_checker(user: Dict[str, Any] = Depends(
-                self.require_auth)) -> Dict[str, Any]:
+        """Require specific role for endpoint access."""
+
+        async def role_checker(user: Dict[str, Any] = Depends(self.require_auth)) -> Dict[str, Any]:
             user_roles = user.get("roles", [])
 
             if role not in user_roles:
-                raise HTTPException(
-                    status_code=403,
-                    detail=f"Role '{role}' required")
+                raise HTTPException(status_code=403, detail=f"Role '{role}' required")
 
             return user
 
         return role_checker
 
-    def create_api_key_token(
-            self,
-            api_key: str,
-            permissions: list = None) -> str:
+    def create_api_key_token(self, api_key: str, permissions: list = None) -> str:
         """Create a token for API key authentication."""
         data = {
             "sub": api_key,
@@ -169,8 +156,7 @@ class AuthMiddleware:
 
         return valid_api_keys.get(api_key, [])
 
-    async def authenticate_request(
-            self, request: Request) -> Optional[Dict[str, Any]]:
+    async def authenticate_request(self, request: Request) -> Optional[Dict[str, Any]]:
         """Authenticate a request and return user info."""
         try:
             # Check for API key in headers
@@ -178,11 +164,8 @@ class AuthMiddleware:
             if api_key:
                 if await self.validate_api_key(api_key):
                     permissions = await self.get_api_key_permissions(api_key)
-                    return {
-                        "user_id": api_key,
-                        "type": "api_key",
-                        "permissions": permissions}
-        else:
+                    return {"user_id": api_key, "type": "api_key", "permissions": permissions}
+                else:
                     return None
 
             # Check for Bearer token

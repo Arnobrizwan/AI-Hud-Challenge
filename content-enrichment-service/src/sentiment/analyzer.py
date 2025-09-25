@@ -38,7 +38,7 @@ class SentimentAnalyzer:
         asyncio.create_task(self._initialize_models())
 
     async def _initialize_models(self) -> Dict[str, Any]:
-    """Initialize sentiment and emotion analysis models."""
+        """Initialize sentiment and emotion analysis models."""
         try:
             # Load sentiment analysis model
             self.sentiment_pipeline = pipeline(
@@ -57,14 +57,12 @@ class SentimentAnalyzer:
             self.model_loaded = True
             logger.info("Sentiment analysis models loaded successfully")
 
-except Exception as e:
+        except Exception as e:
             logger.error("Failed to load sentiment models", error=str(e))
             # Fallback to TextBlob and VADER
             self.model_loaded = False
 
-    async def analyze_sentiment(
-        self, content: ExtractedContent, language: str = "en"
-    ) -> SentimentAnalysis:
+    async def analyze_sentiment(self, content: ExtractedContent, language: str = "en") -> SentimentAnalysis:
         """Analyze sentiment and emotions in content."""
         try:
             # Prepare text for analysis
@@ -74,7 +72,7 @@ except Exception as e:
                 # Use transformer models
                 sentiment_result = await self._analyze_with_transformers(text)
                 emotion_result = await self._analyze_emotions_with_transformers(text)
-else:
+            else:
                 # Use fallback methods
                 sentiment_result = await self._analyze_with_fallback(text)
                 emotion_result = await self._analyze_emotions_with_fallback(text)
@@ -98,21 +96,14 @@ else:
 
             return sentiment_analysis
 
-except Exception as e:
-            logger.error(
-                "Sentiment analysis failed",
-                content_id=content.id,
-                error=str(e))
+        except Exception as e:
+            logger.error("Sentiment analysis failed", content_id=content.id, error=str(e))
 
             # Return neutral sentiment as fallback
-            return SentimentAnalysis(
-                sentiment=SentimentLabel.NEUTRAL,
-                confidence=0.5,
-                subjectivity=0.5,
-                polarity=0.0)
+            return SentimentAnalysis(sentiment=SentimentLabel.NEUTRAL, confidence=0.5, subjectivity=0.5, polarity=0.0)
 
     async def _analyze_with_transformers(self, text: str) -> Dict[str, Any]:
-    """Analyze sentiment using transformer models."""
+        """Analyze sentiment using transformer models."""
         try:
             # Get sentiment scores
             sentiment_scores = self.sentiment_pipeline(text)
@@ -127,8 +118,7 @@ except Exception as e:
                 "LABEL_2": SentimentLabel.POSITIVE,
             }
 
-            sentiment = sentiment_mapping.get(
-                best_sentiment["label"], SentimentLabel.NEUTRAL)
+            sentiment = sentiment_mapping.get(best_sentiment["label"], SentimentLabel.NEUTRAL)
             confidence = best_sentiment["score"]
 
             # Calculate subjectivity and polarity using TextBlob as additional
@@ -144,12 +134,12 @@ except Exception as e:
                 "polarity": polarity,
             }
 
-except Exception as e:
+        except Exception as e:
             logger.error("Transformer sentiment analysis failed", error=str(e))
             return await self._analyze_with_fallback(text)
 
     async def _analyze_with_fallback(self, text: str) -> Dict[str, Any]:
-    """Analyze sentiment using fallback methods."""
+        """Analyze sentiment using fallback methods."""
         try:
             # Use VADER sentiment analyzer
             vader_scores = self.vader_analyzer.polarity_scores(text)
@@ -160,7 +150,7 @@ except Exception as e:
                 sentiment = SentimentLabel.POSITIVE
             elif compound <= -0.05:
                 sentiment = SentimentLabel.NEGATIVE
-else:
+            else:
                 sentiment = SentimentLabel.NEUTRAL
 
             # Use TextBlob for additional analysis
@@ -178,7 +168,7 @@ else:
                 "polarity": polarity,
             }
 
-except Exception as e:
+        except Exception as e:
             logger.error("Fallback sentiment analysis failed", error=str(e))
             return {
                 "sentiment": SentimentLabel.NEUTRAL,
@@ -187,8 +177,7 @@ except Exception as e:
                 "polarity": 0.0,
             }
 
-    async def _analyze_emotions_with_transformers(
-            self, text: str) -> Dict[EmotionLabel, float]:
+    async def _analyze_emotions_with_transformers(self, text: str) -> Dict[EmotionLabel, float]:
         """Analyze emotions using transformer models."""
         try:
             emotion_scores = self.emotion_pipeline(text)
@@ -208,17 +197,15 @@ except Exception as e:
             for emotion_data in emotion_scores[0]:
                 emotion_name = emotion_data["label"].lower()
                 if emotion_name in emotion_mapping:
-                    emotions[emotion_mapping[emotion_name]
-                             ] = emotion_data["score"]
+                    emotions[emotion_mapping[emotion_name]] = emotion_data["score"]
 
             return emotions
 
-except Exception as e:
+        except Exception as e:
             logger.error("Transformer emotion analysis failed", error=str(e))
             return await self._analyze_emotions_with_fallback(text)
 
-    async def _analyze_emotions_with_fallback(
-            self, text: str) -> Dict[EmotionLabel, float]:
+    async def _analyze_emotions_with_fallback(self, text: str) -> Dict[EmotionLabel, float]:
         """Analyze emotions using fallback methods."""
         try:
             emotions = {}
@@ -288,8 +275,7 @@ except Exception as e:
             text_lower = text.lower()
 
             for emotion, keywords in emotion_keywords.items():
-                keyword_count = sum(
-                    1 for keyword in keywords if keyword in text_lower)
+                keyword_count = sum(1 for keyword in keywords if keyword in text_lower)
                 if keyword_count > 0:
                     # Calculate emotion intensity based on keyword frequency
                     intensity = min(keyword_count / len(keywords), 1.0)
@@ -301,13 +287,11 @@ except Exception as e:
 
             return emotions
 
-except Exception as e:
+        except Exception as e:
             logger.error("Fallback emotion analysis failed", error=str(e))
             return {EmotionLabel.NEUTRAL: 1.0}
 
-    async def analyze_sentiment_batch(
-        self, contents: List[ExtractedContent]
-    ) -> List[SentimentAnalysis]:
+    async def analyze_sentiment_batch(self, contents: List[ExtractedContent]) -> List[SentimentAnalysis]:
         """Analyze sentiment for multiple contents."""
         try:
             tasks = [self.analyze_sentiment(content) for content in contents]
@@ -332,28 +316,23 @@ except Exception as e:
                             polarity=0.0,
                         )
                     )
-else:
+                else:
                     sentiment_analyses.append(result)
 
             return sentiment_analyses
 
-except Exception as e:
+        except Exception as e:
             logger.error("Batch sentiment analysis failed", error=str(e))
             return []
 
-    def get_sentiment_statistics(
-            self, analyses: List[SentimentAnalysis]) -> Dict[str, Any]:
-    """Get statistics about sentiment analyses."""
+    def get_sentiment_statistics(self, analyses: List[SentimentAnalysis]) -> Dict[str, Any]:
+        """Get statistics about sentiment analyses."""
         if not analyses:
             return {}
 
         stats = {
             "total_analyses": len(analyses),
-            "sentiment_distribution": {
-                "positive": 0,
-                "negative": 0,
-                "neutral": 0,
-                "mixed": 0},
+            "sentiment_distribution": {"positive": 0, "negative": 0, "neutral": 0, "mixed": 0},
             "average_confidence": 0.0,
             "average_subjectivity": 0.0,
             "average_polarity": 0.0,
@@ -388,18 +367,15 @@ except Exception as e:
     async def detect_sentiment_shift(
         self, old_analysis: SentimentAnalysis, new_analysis: SentimentAnalysis
     ) -> Dict[str, Any]:
-    """Detect sentiment shift between two analyses."""
+        """Detect sentiment shift between two analyses."""
         try:
             # Calculate sentiment change
             sentiment_change = {
                 "old_sentiment": old_analysis.sentiment.value,
                 "new_sentiment": new_analysis.sentiment.value,
-                "confidence_change": new_analysis.confidence -
-                old_analysis.confidence,
-                "polarity_change": new_analysis.polarity -
-                old_analysis.polarity,
-                "subjectivity_change": new_analysis.subjectivity -
-                old_analysis.subjectivity,
+                "confidence_change": new_analysis.confidence - old_analysis.confidence,
+                "polarity_change": new_analysis.polarity - old_analysis.polarity,
+                "subjectivity_change": new_analysis.subjectivity - old_analysis.subjectivity,
             }
 
             # Detect significant changes
@@ -415,11 +391,10 @@ except Exception as e:
                 significant_changes.append("sentiment_label")
 
             sentiment_change["significant_changes"] = significant_changes
-            sentiment_change["has_significant_change"] = len(
-                significant_changes) > 0
+            sentiment_change["has_significant_change"] = len(significant_changes) > 0
 
             return sentiment_change
 
-except Exception as e:
+        except Exception as e:
             logger.error("Sentiment shift detection failed", error=str(e))
             return {}

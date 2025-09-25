@@ -296,7 +296,7 @@ class ExperimentData(BaseModel):
     collected_at: datetime = Field(default_factory=datetime.utcnow)
 
     def get_variant_data(self, variant_name: str) -> Dict[str, Any]:
-    """Get data for specific variant"""
+        """Get data for specific variant"""
         return self.variant_data.get(variant_name, {})
 
     def get_metric_values(self, metric_name: str) -> List[float]:

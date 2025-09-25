@@ -197,7 +197,7 @@ def create_custom_counter(name: str, description: str, labels: list = None) -> C
 
 
 def create_custom_histogram(name: str, description: str, labels: list = None) -> Histogram:
-        """Create a custom histogram metric."""
+    """Create a custom histogram metric."""
     if labels is None:
         labels = []
 

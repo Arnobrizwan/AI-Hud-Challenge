@@ -202,7 +202,7 @@ class HealthChecker:
         start_time = time.time()
 
         try:
-    async with httpx.AsyncClient(timeout=timeout) as client:
+            async with httpx.AsyncClient(timeout=timeout) as client:
                 response = await client.get(url)
                 response_time = time.time() - start_time
 

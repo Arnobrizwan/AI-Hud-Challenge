@@ -67,7 +67,7 @@ class PostgreSQLVectorStore:
     async def _initialize_schema(self) -> Dict[str, Any]:
     """Initialize database schema for vector operations"""
         try:
-    async with self.pool.acquire() as conn:
+            async with self.pool.acquire() as conn:
                 # Enable pgvector extension
                 await conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
 
@@ -136,7 +136,7 @@ class PostgreSQLVectorStore:
             raise RuntimeError("PostgreSQL Vector Store not initialized")
 
         try:
-    async with self.pool.acquire() as conn:
+            async with self.pool.acquire() as conn:
                 # Insert or update vector
                 await conn.execute(
                     """
@@ -172,7 +172,7 @@ class PostgreSQLVectorStore:
             raise RuntimeError("PostgreSQL Vector Store not initialized")
 
         try:
-    async with self.pool.acquire() as conn:
+            async with self.pool.acquire() as conn:
                 rows = await conn.fetch(
                     """
                     SELECT embedding_type, vector, metadata
@@ -198,7 +198,7 @@ class PostgreSQLVectorStore:
             raise RuntimeError("PostgreSQL Vector Store not initialized")
 
         try:
-    async with self.pool.acquire() as conn:
+            async with self.pool.acquire() as conn:
                 rows = await conn.fetch(query, *args)
                 return [dict(row) for row in rows]
 
@@ -212,7 +212,7 @@ class PostgreSQLVectorStore:
             raise RuntimeError("PostgreSQL Vector Store not initialized")
 
         try:
-    async with self.pool.acquire() as conn:
+            async with self.pool.acquire() as conn:
     await conn.execute(ddl)
 
         except Exception as e:
@@ -225,7 +225,7 @@ class PostgreSQLVectorStore:
             return
 
         try:
-    async with self.pool.acquire() as conn:
+            async with self.pool.acquire() as conn:
                 # Update the updated_at timestamp to trigger index refresh
                 await conn.execute(
                     """
@@ -248,7 +248,7 @@ class PostgreSQLVectorStore:
             raise RuntimeError("PostgreSQL Vector Store not initialized")
 
         try:
-    async with self.pool.acquire() as conn:
+            async with self.pool.acquire() as conn:
                 if embedding_type:
     await conn.execute(
                         """
@@ -277,7 +277,7 @@ class PostgreSQLVectorStore:
             raise RuntimeError("PostgreSQL Vector Store not initialized")
 
         try:
-    async with self.pool.acquire() as conn:
+            async with self.pool.acquire() as conn:
                 # Get total vectors count
                 total_count = await conn.fetchval(
                     """

@@ -76,9 +76,7 @@ async def lifespan(app: FastAPI) -> Dict[str, Any]:
         yield
 
     except Exception as e:
-        logger.error(
-            "Failed to start Content Enrichment Service",
-            error=str(e))
+        logger.error("Failed to start Content Enrichment Service", error=str(e))
         raise
 
     finally:
@@ -86,7 +84,7 @@ async def lifespan(app: FastAPI) -> Dict[str, Any]:
         logger.info("Shutting down Content Enrichment Service")
 
         if health_checker:
-    await health_checker.cleanup()
+            await health_checker.cleanup()
 
         logger.info("Content Enrichment Service shutdown complete")
 
@@ -127,9 +125,7 @@ async def health_check() -> Dict[str, Any]:
     """Health check endpoint."""
     try:
         if not health_checker:
-            raise HTTPException(
-                status_code=503,
-                detail="Health checker not initialized")
+            raise HTTPException(status_code=503, detail="Health checker not initialized")
 
         health_status = await health_checker.check_health()
 
@@ -140,11 +136,7 @@ async def health_check() -> Dict[str, Any]:
 
     except Exception as e:
         logger.error("Health check failed", error=str(e))
-        return JSONResponse(
-            status_code=503,
-            content={
-                "status": "unhealthy",
-                "error": str(e)})
+        return JSONResponse(status_code=503, content={"status": "unhealthy", "error": str(e)})
 
 
 # Metrics endpoint
@@ -153,8 +145,7 @@ async def get_metrics() -> Dict[str, Any]:
     """Get service metrics."""
     try:
         if not metrics_collector:
-            raise HTTPException(status_code=503,
-                                detail="Metrics collector not initialized")
+            raise HTTPException(status_code=503, detail="Metrics collector not initialized")
 
         metrics = await metrics_collector.get_metrics()
         return JSONResponse(content=metrics)
@@ -197,9 +188,7 @@ async def enrich_content(
 
         # Validate content
         if not request.content.content.strip():
-            raise HTTPException(
-                status_code=400,
-                detail="Content cannot be empty")
+            raise HTTPException(status_code=400, detail="Content cannot be empty")
 
         # Enrich content
         start_time = asyncio.get_event_loop().time()
@@ -215,8 +204,7 @@ async def enrich_content(
             language_hint=request.language_hint,
         )
 
-        processing_time = int(
-            (asyncio.get_event_loop().time() - start_time) * 1000)
+        processing_time = int((asyncio.get_event_loop().time() - start_time) * 1000)
 
         # Record metrics
         if metrics_collector:
@@ -232,19 +220,13 @@ async def enrich_content(
             success=True,
             enriched_content=enriched_content,
             processing_time_ms=processing_time,
-            model_versions_used={
-                name: version.version for name,
-                version in enriched_content.model_versions.items()},
+            model_versions_used={name: version.version for name, version in enriched_content.model_versions.items()},
         )
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(
-            "Content enrichment failed",
-            content_id=request.content.id,
-            error=str(e),
-            exc_info=True)
+        logger.error("Content enrichment failed", content_id=request.content.id, error=str(e), exc_info=True)
 
         # Record error metrics
         if metrics_collector:
@@ -256,8 +238,7 @@ async def enrich_content(
                 topics_count=0,
             )
 
-        raise HTTPException(status_code=500,
-                            detail=f"Content enrichment failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Content enrichment failed: {str(e)}")
 
 
 # Batch content enrichment endpoint
@@ -272,19 +253,14 @@ async def enrich_content_batch(
         # Rate limiting for batch requests
         batch_id = f"batch_{len(request.contents)}"
         if not await rate_limiter.check_rate_limit(batch_id):
-            raise HTTPException(status_code=429,
-                                detail="Rate limit exceeded for batch request")
+            raise HTTPException(status_code=429, detail="Rate limit exceeded for batch request")
 
         # Validate contents
         if not request.contents:
-            raise HTTPException(
-                status_code=400,
-                detail="No content provided for batch processing")
+            raise HTTPException(status_code=400, detail="No content provided for batch processing")
 
         if len(request.contents) > 100:  # Limit batch size
-            raise HTTPException(
-                status_code=400,
-                detail="Batch size too large. Maximum 100 items per batch.")
+            raise HTTPException(status_code=400, detail="Batch size too large. Maximum 100 items per batch.")
 
         # Enrich contents
         start_time = asyncio.get_event_loop().time()
@@ -299,8 +275,7 @@ async def enrich_content_batch(
             include_trust_score=request.include_trust_score,
         )
 
-        total_processing_time = int(
-            (asyncio.get_event_loop().time() - start_time) * 1000)
+        total_processing_time = int((asyncio.get_event_loop().time() - start_time) * 1000)
 
         # Record metrics
         if metrics_collector:
@@ -316,10 +291,7 @@ async def enrich_content_batch(
             enriched_contents=enriched_contents,
             total_processing_time_ms=total_processing_time,
             model_versions_used=(
-                {
-                    name: version.version
-                    for name, version in enriched_contents[0].model_versions.items()
-                }
+                {name: version.version for name, version in enriched_contents[0].model_versions.items()}
                 if enriched_contents
                 else {}
             ),
@@ -344,9 +316,7 @@ async def enrich_content_batch(
                 success_count=0,
             )
 
-        raise HTTPException(
-            status_code=500,
-            detail=f"Batch content enrichment failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Batch content enrichment failed: {str(e)}")
 
 
 # Service information endpoint
@@ -368,24 +338,10 @@ async def get_service_info() -> Dict[str, Any]:
             "readability_scoring": True,
             "fact_checking": True,
         },
-        "supported_languages": [
-            "en",
-            "es",
-            "fr",
-            "de",
-            "it",
-            "pt",
-            "ru",
-            "zh",
-            "ja",
-            "ko"],
-        "processing_modes": [
-            "realtime",
-            "batch"],
+        "supported_languages": ["en", "es", "fr", "de", "it", "pt", "ru", "zh", "ja", "ko"],
+        "processing_modes": ["realtime", "batch"],
         "max_content_length": settings.max_text_length,
-        "rate_limits": {
-            "requests_per_hour": settings.rate_limit_requests,
-            "max_batch_size": 100},
+        "rate_limits": {"requests_per_hour": settings.rate_limit_requests, "max_batch_size": 100},
     }
 
 
@@ -395,8 +351,7 @@ async def get_model_info() -> Dict[str, Any]:
     """Get information about loaded models."""
     try:
         if not enrichment_pipeline:
-            raise HTTPException(status_code=503,
-                                detail="Enrichment pipeline not initialized")
+            raise HTTPException(status_code=503, detail="Enrichment pipeline not initialized")
 
         model_info = {}
         for name, version in enrichment_pipeline.model_versions.items():

@@ -175,7 +175,7 @@ class ContentExtractionPipeline:
                 return await self._fetch_pdf_content(request)
             elif request.content_type in [ContentType.DOC, ContentType.DOCX]:
                 return await self._fetch_document_content(request)
-        else:
+            else:
                 return await self._fetch_web_content(request)
         except Exception as e:
             logger.error(f"HTML fetch failed for {request.url}: {str(e)}")

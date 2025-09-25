@@ -18,15 +18,12 @@ logger = structlog.get_logger()
 class ColdStartHandler:
     """Handle cold start scenarios for new users and content."""
 
-    def __init__(self, redis_client: RedisClient,
-                 postgres_client: PostgreSQLClient):
+    def __init__(self, redis_client: RedisClient, postgres_client: PostgreSQLClient):
         self.redis = redis_client
         self.postgres = postgres_client
         self.cache_ttl = 3600  # 1 hour
 
-    async def handle_user_cold_start(
-        self, user_id: str, context: Optional[UserContext] = None
-    ) -> List[Recommendation]:
+    async def handle_user_cold_start(self, user_id: str, context: Optional[UserContext] = None) -> List[Recommendation]:
         """Handle cold start for new users."""
         logger.info(f"Handling cold start for user: {user_id}")
 
@@ -40,14 +37,11 @@ class ColdStartHandler:
         onboarding_recs = await self._get_onboarding_recommendations()
 
         # Combine strategies
-        combined_recs = await self._combine_cold_start_strategies(
-            demographic_recs, popularity_recs, onboarding_recs
-        )
+        combined_recs = await self._combine_cold_start_strategies(demographic_recs, popularity_recs, onboarding_recs)
 
         return combined_recs[:10]  # Return top 10
 
-    async def handle_content_cold_start(
-            self, content_item: ContentItem) -> Dict[str, Any]:
+    async def handle_content_cold_start(self, content_item: ContentItem) -> Dict[str, Any]:
     """Handle cold start for new content items."""
         logger.info(f"Handling cold start for content: {content_item.id}")
 
@@ -222,9 +216,7 @@ class ColdStartHandler:
         # Sort by combined score
         return sorted(combined.values(), key=lambda x: x.score, reverse=True)
 
-    async def _get_demographic_template(
-        self, user_id: str, context: Optional[UserContext]
-    ) -> Dict[str, Any]:
+    async def _get_demographic_template(self, user_id: str, context: Optional[UserContext]) -> Dict[str, Any]:
     """Get demographic-based profile template."""
         # This would typically use demographic data or similar user patterns
         # For now, return a default template with some variation
@@ -256,9 +248,7 @@ class ColdStartHandler:
 
         return base_template
 
-    async def _compute_demographic_score(
-        self, content_row: Dict[str, Any], template: Dict[str, Any]
-    ) -> float:
+    async def _compute_demographic_score(self, content_row: Dict[str, Any], template: Dict[str, Any]) -> float:
         """Compute demographic-based score for content."""
         score = 0.0
 
@@ -283,8 +273,7 @@ class ColdStartHandler:
 
         return score
 
-    async def _extract_content_features(
-            self, content_item: ContentItem) -> Dict[str, Any]:
+    async def _extract_content_features(self, content_item: ContentItem) -> Dict[str, Any]:
     """Extract features for new content item."""
         features = {}
 
@@ -305,8 +294,7 @@ class ColdStartHandler:
 
         return features
 
-    async def _find_similar_content(
-            self, content_item: ContentItem) -> List[Dict[str, Any]]:
+    async def _find_similar_content(self, content_item: ContentItem) -> List[Dict[str, Any]]:
         """Find similar content for new content item."""
         # Get content with similar topics
         query = """
@@ -323,10 +311,8 @@ class ColdStartHandler:
         similar_content = []
         for row in rows:
             # Compute similarity score
-            common_topics = len(
-                set(content_item.topics).intersection(set(row["topics"] or [])))
-            total_topics = len(set(content_item.topics).union(
-                set(row["topics"] or [])))
+            common_topics = len(set(content_item.topics).intersection(set(row["topics"] or [])))
+            total_topics = len(set(content_item.topics).union(set(row["topics"] or [])))
 
             similarity_score = common_topics / total_topics if total_topics > 0 else 0.0
 
@@ -341,8 +327,7 @@ class ColdStartHandler:
 
         return similar_content
 
-    async def _estimate_content_popularity(
-            self, content_item: ContentItem) -> float:
+    async def _estimate_content_popularity(self, content_item: ContentItem) -> float:
         """Estimate popularity for new content item."""
         # Use content features to estimate popularity
         popularity_score = 0.0
@@ -433,8 +418,5 @@ class ColdStartHandler:
         return {
             "new_users_30_days": new_users_result["count"],
             "new_content_30_days": new_content_result["count"],
-            "cold_start_strategies": [
-                "demographic",
-                "popularity",
-                "onboarding"],
+            "cold_start_strategies": ["demographic", "popularity", "onboarding"],
         }

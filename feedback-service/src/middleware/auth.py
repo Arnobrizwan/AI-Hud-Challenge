@@ -20,24 +20,18 @@ class AuthMiddleware:
         self.app = app
 
     async def __call__(self, scope, receive, send) -> Dict[str, Any]:
-    if scope["type"] == "http":
+        if scope["type"] == "http":
             request = Request(scope, receive)
 
             # Skip auth for health check and docs
-            if request.url.path in [
-                "/health",
-                "/docs",
-                "/redoc",
-                    "/openapi.json"]:
-    await self.app(scope, receive, send)
+            if request.url.path in ["/health", "/docs", "/redoc", "/openapi.json"]:
+                await self.app(scope, receive, send)
                 return
 
             # Extract token from header
             authorization = request.headers.get("Authorization")
             if not authorization:
-                raise HTTPException(
-                    status_code=401,
-                    detail="Authorization header required")
+                raise HTTPException(status_code=401, detail="Authorization header required")
 
             # Validate token (simplified)
             if not self.validate_token(authorization):

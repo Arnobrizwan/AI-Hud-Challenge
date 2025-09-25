@@ -20,10 +20,7 @@ class DifferentialPrivacy:
         self.delta = delta or settings.privacy_delta
         self.sensitivity = 1.0  # L1 sensitivity
 
-    def add_laplace_noise(
-            self,
-            data: np.ndarray,
-            sensitivity: float = None) -> np.ndarray:
+    def add_laplace_noise(self, data: np.ndarray, sensitivity: float = None) -> np.ndarray:
         """Add Laplace noise to data for differential privacy."""
         if sensitivity is None:
             sensitivity = self.sensitivity
@@ -37,17 +34,13 @@ class DifferentialPrivacy:
 
         return noisy_data
 
-    def add_gaussian_noise(
-            self,
-            data: np.ndarray,
-            sensitivity: float = None) -> np.ndarray:
+    def add_gaussian_noise(self, data: np.ndarray, sensitivity: float = None) -> np.ndarray:
         """Add Gaussian noise to data for differential privacy."""
         if sensitivity is None:
             sensitivity = self.sensitivity
 
         # Calculate noise scale for Gaussian mechanism
-        sigma = np.sqrt(2 * np.log(1.25 / self.delta)) * \
-            sensitivity / self.epsilon
+        sigma = np.sqrt(2 * np.log(1.25 / self.delta)) * sensitivity / self.epsilon
 
         # Add Gaussian noise
         noise = np.random.normal(0, sigma, data.shape)
@@ -55,8 +48,7 @@ class DifferentialPrivacy:
 
         return noisy_data
 
-    def privatize_user_preferences(
-            self, preferences: Dict[str, float]) -> Dict[str, float]:
+    def privatize_user_preferences(self, preferences: Dict[str, float]) -> Dict[str, float]:
         """Privatize user preferences using differential privacy."""
         if not preferences:
             return {}
@@ -80,8 +72,7 @@ class DifferentialPrivacy:
 
         return privatized
 
-    def privatize_interaction_counts(
-            self, counts: Dict[str, int]) -> Dict[str, int]:
+    def privatize_interaction_counts(self, counts: Dict[str, int]) -> Dict[str, int]:
         """Privatize interaction counts using differential privacy."""
         if not counts:
             return {}
@@ -157,11 +148,9 @@ class DataAnonymization:
             if char.isalpha():
                 # Replace with random character of same case
                 if char.isupper():
-                    anonymized += chr(ord("A") +
-                                      (ord(char) - ord("A") + 7) % 26)
+                    anonymized += chr(ord("A") + (ord(char) - ord("A") + 7) % 26)
                 else:
-                    anonymized += chr(ord("a") +
-                                      (ord(char) - ord("a") + 7) % 26)
+                    anonymized += chr(ord("a") + (ord(char) - ord("a") + 7) % 26)
             elif char.isdigit():
                 # Replace with random digit
                 anonymized += str((int(char) + 3) % 10)
@@ -171,8 +160,7 @@ class DataAnonymization:
 
         return anonymized
 
-    def anonymize_user_profile(
-            self, profile: Dict[str, Any]) -> Dict[str, Any]:
+    def anonymize_user_profile(self, profile: Dict[str, Any]) -> Dict[str, Any]:
     """Anonymize user profile data."""
         anonymized = {}
 
@@ -181,9 +169,7 @@ class DataAnonymization:
                 anonymized[key] = self.anonymize_user_id(str(value))
             elif key in ["topic_preferences", "source_preferences"]:
                 # Anonymize preference keys
-                anonymized[key] = {
-                    self.anonymize_text(k): v for k,
-                    v in value.items()}
+                anonymized[key] = {self.anonymize_text(k): v for k, v in value.items()}
             elif key == "demographic_data":
                 # Anonymize demographic data
                 anonymized[key] = self._anonymize_demographic_data(value)
@@ -192,8 +178,7 @@ class DataAnonymization:
 
         return anonymized
 
-    def _anonymize_demographic_data(
-            self, demographic_data: Dict[str, Any]) -> Dict[str, Any]:
+    def _anonymize_demographic_data(self, demographic_data: Dict[str, Any]) -> Dict[str, Any]:
     """Anonymize demographic data."""
         anonymized = {}
 
@@ -217,9 +202,7 @@ class PrivacyPreservingPersonalization:
         self.dp = DifferentialPrivacy(epsilon, delta)
         self.anonymizer = DataAnonymization()
 
-    def privatize_recommendations(
-        self, recommendations: List[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
+    def privatize_recommendations(self, recommendations: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Privatize recommendations to protect user privacy."""
         privatized = []
 
@@ -228,19 +211,16 @@ class PrivacyPreservingPersonalization:
 
             # Add noise to scores
             if "score" in rec:
-                noisy_score = self.dp.add_laplace_noise(
-                    np.array([rec["score"]]), sensitivity=1.0)[0]
+                noisy_score = self.dp.add_laplace_noise(np.array([rec["score"]]), sensitivity=1.0)[0]
                 privatized_rec["score"] = max(0.0, min(1.0, noisy_score))
 
             # Anonymize item IDs
             if "item_id" in rec:
-                privatized_rec["item_id"] = self.anonymizer.anonymize_content_id(
-                    rec["item_id"])
+                privatized_rec["item_id"] = self.anonymizer.anonymize_content_id(rec["item_id"])
 
             # Anonymize features
             if "features" in rec and isinstance(rec["features"], dict):
-                privatized_rec["features"] = self._privatize_features(
-                    rec["features"])
+                privatized_rec["features"] = self._privatize_features(rec["features"])
 
             privatized.append(privatized_rec)
 
@@ -253,8 +233,7 @@ class PrivacyPreservingPersonalization:
         for key, value in features.items():
             if isinstance(value, (int, float)):
                 # Add noise to numerical features
-                noisy_value = self.dp.add_laplace_noise(
-                    np.array([value]), sensitivity=1.0)[0]
+                noisy_value = self.dp.add_laplace_noise(np.array([value]), sensitivity=1.0)[0]
                 privatized_features[key] = noisy_value
             else:
                 privatized_features[key] = value
@@ -274,24 +253,21 @@ class PrivacyPreservingPersonalization:
         for key in global_model.keys():
             if key in local_updates[0]:
                 # Collect values from all local updates
-                values = [update[key]
-                          for update in local_updates if key in update]
+                values = [update[key] for update in local_updates if key in update]
 
                 if values:
                     # Compute average
                     avg_value = np.mean(values)
 
                     # Add noise for privacy
-                    noisy_value = self.dp.add_laplace_noise(
-                        np.array([avg_value]), sensitivity=1.0)[0]
+                    noisy_value = self.dp.add_laplace_noise(np.array([avg_value]), sensitivity=1.0)[0]
 
                     # Update global model
                     aggregated_update[key] = global_model[key] + noisy_value
 
         return aggregated_update
 
-    def secure_aggregation(
-            self, user_data: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def secure_aggregation(self, user_data: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Perform secure aggregation of user data."""
         if not user_data:
             return {}
@@ -305,8 +281,7 @@ class PrivacyPreservingPersonalization:
                 total = sum(item[key] for item in user_data if key in item)
 
                 # Add noise
-                noisy_total = self.dp.add_laplace_noise(
-                    np.array([total]), sensitivity=1.0)[0]
+                noisy_total = self.dp.add_laplace_noise(np.array([total]), sensitivity=1.0)[0]
 
                 aggregated[key] = noisy_total
             else:

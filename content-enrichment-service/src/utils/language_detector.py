@@ -114,7 +114,7 @@ class LanguageDetector:
         return language_code in self.supported_languages
 
     async def get_language_statistics(self, texts: list) -> Dict[str, Any]:
-    """Get language detection statistics."""
+        """Get language detection statistics."""
         try:
             results = await self.detect_multiple(texts)
 

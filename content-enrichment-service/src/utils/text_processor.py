@@ -216,7 +216,7 @@ class TextProcessor:
             return []
 
     def calculate_text_metrics(self, text: str) -> Dict[str, Any]:
-    """Calculate various text metrics."""
+        """Calculate various text metrics."""
         try:
             cleaned_text = self.clean_text(text)
 

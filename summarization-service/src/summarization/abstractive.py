@@ -138,7 +138,7 @@ ARTICLE CONTENT:
 {content.text[:4000]}  # Limit input to avoid token limits
 
 SUMMARY:
-"""
+    """
 
         return prompt.strip()
 

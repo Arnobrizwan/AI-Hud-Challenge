@@ -26,8 +26,7 @@ class BackupManager:
         self._initialized = False
         logger.info("Backup Manager cleanup complete")
 
-    async def create_backup(self, backup_name: str,
-                            data_types: List[str] = None) -> Dict[str, Any]:
+    async def create_backup(self, backup_name: str, data_types: List[str] = None) -> Dict[str, Any]:
     """Create comprehensive backup"""
         # Placeholder implementation
         return {

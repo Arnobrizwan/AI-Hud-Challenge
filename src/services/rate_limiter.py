@@ -47,7 +47,7 @@ class SlidingWindowRateLimiter:
     async def _get_redis(self) -> aioredis.Redis:
         """Get Redis connection with connection pooling."""
         if self.redis_pool is None:
-    async with self._lock:
+            async with self._lock:
                 if self.redis_pool is None:
                     self.redis_pool = aioredis.from_url(
                         self.redis_url,

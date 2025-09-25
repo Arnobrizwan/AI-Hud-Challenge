@@ -26,9 +26,8 @@ class DataAggregator:
         self.trend_analyzer = TrendAnalyzer()
         self.insight_generator = InsightGenerator()
 
-    async def aggregate_feedback(
-            self, start_time: datetime, end_time: datetime) -> Dict[str, Any]:
-    """Aggregate feedback data for time period"""
+    async def aggregate_feedback(self, start_time: datetime, end_time: datetime) -> Dict[str, Any]:
+        """Aggregate feedback data for time period"""
         try:
             # Get feedback counts by type
             result = await self.db.execute(
@@ -63,8 +62,7 @@ class DataAggregator:
             logger.error("Error aggregating feedback", error=str(e))
             return {}
 
-    async def generate_insights(
-            self, summary: Dict[str, Any]) -> List[Dict[str, Any]]:
+    async def generate_insights(self, summary: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Generate insights from feedback summary"""
 
         try:
@@ -79,7 +77,8 @@ class DataAggregator:
                         "title": "High Feedback Volume",
                         "description": f"Received {total_feedback} feedback items in the time period",
                         "severity": "info",
-                    })
+                    }
+                )
             elif total_feedback < 10:
                 insights.append(
                     {
@@ -87,7 +86,8 @@ class DataAggregator:
                         "title": "Low Feedback Volume",
                         "description": f"Only {total_feedback} feedback items received",
                         "severity": "warning",
-                    })
+                    }
+                )
 
             # Insight 2: Rating distribution
             by_type = summary.get("by_type", {})
@@ -101,7 +101,8 @@ class DataAggregator:
                                 "title": f"Low {feedback_type} Ratings",
                                 "description": f"Average rating is {avg_rating:.2f}",
                                 "severity": "warning",
-                            })
+                            }
+                        )
                     elif avg_rating > 4.0:
                         insights.append(
                             {
@@ -109,7 +110,8 @@ class DataAggregator:
                                 "title": f"High {feedback_type} Ratings",
                                 "description": f"Average rating is {avg_rating:.2f}",
                                 "severity": "info",
-                            })
+                            }
+                        )
 
             return insights
 
@@ -128,12 +130,10 @@ class DataAggregator:
         try:
             start_time = datetime.utcnow() - time_window
 
-            query = select(PerformanceMetric).where(
-                PerformanceMetric.timestamp >= start_time)
+            query = select(PerformanceMetric).where(PerformanceMetric.timestamp >= start_time)
 
             if metric_name:
-                query = query.where(
-                    PerformanceMetric.metric_name == metric_name)
+                query = query.where(PerformanceMetric.metric_name == metric_name)
 
             if model_name:
                 query = query.where(PerformanceMetric.model_name == model_name)
@@ -161,7 +161,7 @@ class TrendAnalyzer:
     """Analyze trends in feedback data"""
 
     def analyze_trends(self, data: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """Analyze trends in time series data"""
+        """Analyze trends in time series data"""
         # This would implement trend analysis
         # For now, return empty trends
         return {}

@@ -31,9 +31,7 @@ class VectorIndexOptimizer:
         self._initialized = False
         logger.info("Vector Index Optimizer cleanup complete")
 
-    async def optimize_index_parameters(
-        self, index_name: str, current_performance: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def optimize_index_parameters(self, index_name: str, current_performance: Dict[str, Any]) -> Dict[str, Any]:
     """Optimize index parameters based on current performance"""
         if not self._initialized:
             return {}
@@ -57,8 +55,7 @@ class VectorIndexOptimizer:
                 optimization = self._optimize_balanced()
 
             # Record optimization
-            self._record_optimization(
-                index_name, current_performance, optimization)
+            self._record_optimization(index_name, current_performance, optimization)
 
             return optimization
 
@@ -106,12 +103,7 @@ class VectorIndexOptimizer:
             "description": "Balanced optimization for speed and size",
         }
 
-    def _record_optimization(self,
-                             index_name: str,
-                             current_performance: Dict[str,
-                                                       Any],
-                             optimization: Dict[str,
-                                                Any]):
+    def _record_optimization(self, index_name: str, current_performance: Dict[str, Any], optimization: Dict[str, Any]):
         """Record optimization history"""
         self._optimization_history.append(
             {
@@ -126,19 +118,14 @@ class VectorIndexOptimizer:
         if len(self._optimization_history) > 100:
             self._optimization_history = self._optimization_history[-100:]
 
-    async def analyze_index_performance(
-        self, index_name: str, query_times: List[float]
-    ) -> Dict[str, Any]:
+    async def analyze_index_performance(self, index_name: str, query_times: List[float]) -> Dict[str, Any]:
     """Analyze index performance metrics"""
         if not self._initialized:
             return {}
 
         try:
             if not query_times:
-                return {
-                    "avg_query_time": 0.0,
-                    "p95_query_time": 0.0,
-                    "p99_query_time": 0.0}
+                return {"avg_query_time": 0.0, "p95_query_time": 0.0, "p99_query_time": 0.0}
 
             # Calculate performance metrics
             avg_query_time = statistics.mean(query_times)
@@ -192,20 +179,16 @@ class VectorIndexOptimizer:
             upper = sorted_data[int(index) + 1]
             return lower + (upper - lower) * (index - int(index))
 
-    async def recommend_index_strategy(
-        self, data_characteristics: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def recommend_index_strategy(self, data_characteristics: Dict[str, Any]) -> Dict[str, Any]:
     """Recommend index strategy based on data characteristics"""
         if not self._initialized:
             return {}
 
         try:
             vector_count = data_characteristics.get("vector_count", 0)
-            vector_dimension = data_characteristics.get(
-                "vector_dimension", 768)
+            vector_dimension = data_characteristics.get("vector_dimension", 768)
             query_pattern = data_characteristics.get("query_pattern", "mixed")
-            update_frequency = data_characteristics.get(
-                "update_frequency", "low")
+            update_frequency = data_characteristics.get("update_frequency", "low")
 
             # Determine optimal strategy
             if vector_count < 10000:
@@ -217,53 +200,36 @@ class VectorIndexOptimizer:
                 }
             elif vector_count < 100000:
                 strategy = "small_hnsw"
-                config = {
-                    "use_hnsw": True,
-                    "hnsw_m": 8,
-                    "ef_construction": 100,
-                    "ef_search": 50}
+                config = {"use_hnsw": True, "hnsw_m": 8, "ef_construction": 100, "ef_search": 50}
             elif vector_count < 1000000:
                 strategy = "medium_hnsw"
-                config = {
-                    "use_hnsw": True,
-                    "hnsw_m": 16,
-                    "ef_construction": 200,
-                    "ef_search": 100}
+                config = {"use_hnsw": True, "hnsw_m": 16, "ef_construction": 200, "ef_search": 100}
             else:
                 strategy = "large_hnsw"
-                config = {
-                    "use_hnsw": True,
-                    "hnsw_m": 32,
-                    "ef_construction": 400,
-                    "ef_search": 200}
+                config = {"use_hnsw": True, "hnsw_m": 32, "ef_construction": 400, "ef_search": 200}
 
             # Adjust for query pattern
             if query_pattern == "exact":
                 config["ef_search"] = config.get("ef_search", 100) * 2
             elif query_pattern == "approximate":
-                config["ef_search"] = max(
-                    50, config.get("ef_search", 100) // 2)
+                config["ef_search"] = max(50, config.get("ef_search", 100) // 2)
 
             # Adjust for update frequency
             if update_frequency == "high":
-                config["ef_construction"] = max(
-                    100, config.get("ef_construction", 200) // 2)
+                config["ef_construction"] = max(100, config.get("ef_construction", 200) // 2)
 
             return {
                 "strategy": strategy,
                 "config": config,
                 "description": f"Recommended {strategy} for {vector_count} vectors",
-                "estimated_performance": self._estimate_performance(
-                    strategy,
-                    vector_count),
+                "estimated_performance": self._estimate_performance(strategy, vector_count),
             }
 
         except Exception as e:
             logger.error(f"Failed to recommend index strategy: {e}")
             return {}
 
-    def _estimate_performance(
-            self, strategy: str, vector_count: int) -> Dict[str, float]:
+    def _estimate_performance(self, strategy: str, vector_count: int) -> Dict[str, float]:
         """Estimate performance for a strategy"""
         base_times = {
             "exact_search": 0.1,
@@ -285,16 +251,13 @@ class VectorIndexOptimizer:
             "estimated_build_time_minutes": vector_count * 0.0001,
         }
 
-    async def get_optimization_history(
-        self, index_name: Optional[str] = None
-    ) -> List[Dict[str, Any]]:
+    async def get_optimization_history(self, index_name: Optional[str] = None) -> List[Dict[str, Any]]:
         """Get optimization history"""
         if not self._initialized:
             return []
 
         if index_name:
-            return [
-                opt for opt in self._optimization_history if opt["index_name"] == index_name]
+            return [opt for opt in self._optimization_history if opt["index_name"] == index_name]
         else:
             return self._optimization_history
 
@@ -308,10 +271,8 @@ class VectorIndexOptimizer:
             performance_levels = {}
 
             for index_name, metrics in self._index_performance.items():
-                all_query_times.extend(
-                    [metrics["avg_query_time"]] * metrics.get("query_count", 1))
-                performance_levels[index_name] = metrics.get(
-                    "performance_level", "unknown")
+                all_query_times.extend([metrics["avg_query_time"]] * metrics.get("query_count", 1))
+                performance_levels[index_name] = metrics.get("performance_level", "unknown")
 
             if not all_query_times:
                 return {}
@@ -321,13 +282,9 @@ class VectorIndexOptimizer:
                 "overall_avg_query_time": statistics.mean(all_query_times),
                 "overall_p95_query_time": self._percentile(all_query_times, 95),
                 "performance_distribution": {
-                    "excellent": sum(
-                        1 for level in performance_levels.values() if level == "excellent"
-                    ),
+                    "excellent": sum(1 for level in performance_levels.values() if level == "excellent"),
                     "good": sum(1 for level in performance_levels.values() if level == "good"),
-                    "acceptable": sum(
-                        1 for level in performance_levels.values() if level == "acceptable"
-                    ),
+                    "acceptable": sum(1 for level in performance_levels.values() if level == "acceptable"),
                     "poor": sum(1 for level in performance_levels.values() if level == "poor"),
                 },
                 "timestamp": datetime.utcnow().isoformat(),

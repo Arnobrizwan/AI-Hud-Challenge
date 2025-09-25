@@ -54,7 +54,7 @@ class OfflineEvaluator:
         self.executor = ThreadPoolExecutor(max_workers=4)
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize the offline evaluator"""
+        """Initialize the offline evaluator"""
         try:
             logger.info("Initializing offline evaluator...")
 
@@ -66,7 +66,7 @@ class OfflineEvaluator:
             # Initialize metric calculators
             for calculator in self.metric_calculators.values():
                 if hasattr(calculator, "initialize"):
-    await calculator.initialize()
+                    await calculator.initialize()
 
             logger.info("Offline evaluator initialized successfully")
 
@@ -75,7 +75,7 @@ class OfflineEvaluator:
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-    """Cleanup offline evaluator resources"""
+        """Cleanup offline evaluator resources"""
         try:
             logger.info("Cleaning up offline evaluator...")
 
@@ -84,11 +84,11 @@ class OfflineEvaluator:
 
             # Cleanup components
             if hasattr(self.cross_validator, "cleanup"):
-    await self.cross_validator.cleanup()
+                await self.cross_validator.cleanup()
             if hasattr(self.feature_evaluator, "cleanup"):
-    await self.feature_evaluator.cleanup()
+                await self.feature_evaluator.cleanup()
             if hasattr(self.statistical_analyzer, "cleanup"):
-    await self.statistical_analyzer.cleanup()
+                await self.statistical_analyzer.cleanup()
 
             logger.info("Offline evaluator cleanup completed")
 
@@ -98,10 +98,8 @@ class OfflineEvaluator:
     async def evaluate(
         self, models: List[Dict[str, Any]], datasets: List[Dict[str, Any]], metrics: Dict[str, Any]
     ) -> Dict[str, Any]:
-    """Comprehensive offline evaluation of multiple models"""
-        logger.info(
-            f"Starting offline evaluation of {len(models)} models on {len(datasets)} datasets"
-        )
+        """Comprehensive offline evaluation of multiple models"""
+        logger.info(f"Starting offline evaluation of {len(models)} models on {len(datasets)} datasets")
 
         evaluation_results = {
             "evaluation_id": f"offline_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}",
@@ -123,9 +121,7 @@ class OfflineEvaluator:
             evaluation_results["completed_at"] = datetime.utcnow()
 
             # Generate overall summary
-            evaluation_results["overall_summary"] = await self._generate_overall_summary(
-                model_results
-            )
+            evaluation_results["overall_summary"] = await self._generate_overall_summary(model_results)
 
             logger.info("Offline evaluation completed successfully")
 
@@ -167,9 +163,7 @@ class OfflineEvaluator:
             # Evaluate on each dataset
             dataset_results = []
             for dataset_config in datasets:
-                dataset_result = await self._evaluate_on_dataset(
-                    model, model_config, dataset_config, metrics_config
-                )
+                dataset_result = await self._evaluate_on_dataset(model, model_config, dataset_config, metrics_config)
                 dataset_results.append(dataset_result)
 
             # Aggregate results across datasets
@@ -177,15 +171,9 @@ class OfflineEvaluator:
             result.metrics = aggregated_metrics
 
             # Calculate feature importance
-            if hasattr(
-                    model,
-                    "feature_importances_") or hasattr(
-                    model,
-                    "coef_"):
-                result.feature_importance = (
-                    await self.feature_evaluator.evaluate_feature_importance(
-                        model, datasets[0] if datasets else None
-                    )
+            if hasattr(model, "feature_importances_") or hasattr(model, "coef_"):
+                result.feature_importance = await self.feature_evaluator.evaluate_feature_importance(
+                    model, datasets[0] if datasets else None
                 )
 
             # Calculate confidence intervals
@@ -200,13 +188,9 @@ class OfflineEvaluator:
                 )
 
             # Calculate overall score
-            result.overall_score = await self._calculate_overall_score(
-                aggregated_metrics, model_type
-            )
+            result.overall_score = await self._calculate_overall_score(aggregated_metrics, model_type)
 
-            logger.info(
-                f"Model {model_name} evaluation completed with overall score {result.overall_score:.3f}"
-            )
+            logger.info(f"Model {model_name} evaluation completed with overall score {result.overall_score:.3f}")
 
         except Exception as e:
             logger.error(f"Error evaluating model {model_name}: {str(e)}")
@@ -216,7 +200,7 @@ class OfflineEvaluator:
         return result
 
     async def _load_model(self, model_config: Dict[str, Any]) -> Dict[str, Any]:
-    """Load model from configuration"""
+        """Load model from configuration"""
         # This would typically load from MLflow, local file, or other model registry
         # For now, return a mock model
         model_type = model_config.get("type", "classification")
@@ -241,7 +225,7 @@ class OfflineEvaluator:
         dataset_config: Dict[str, Any],
         metrics_config: Dict[str, Any],
     ) -> Dict[str, Any]:
-    """Evaluate model on specific dataset"""
+        """Evaluate model on specific dataset"""
         dataset_name = dataset_config.get("name", "unknown_dataset")
         model_type = model_config.get("type", "classification")
 
@@ -273,9 +257,8 @@ class OfflineEvaluator:
             "ground_truth": dataset.get("labels"),
         }
 
-    async def _load_dataset(
-            self, dataset_config: Dict[str, Any]) -> Dict[str, Any]:
-    """Load dataset from configuration"""
+    async def _load_dataset(self, dataset_config: Dict[str, Any]) -> Dict[str, Any]:
+        """Load dataset from configuration"""
         # This would typically load from BigQuery, local file, or other data source
         # For now, return mock data
 
@@ -310,9 +293,7 @@ class OfflineEvaluator:
             },
         }
 
-    async def _generate_predictions(
-        self, model, dataset: Dict[str, Any], model_type: str
-    ) -> np.ndarray:
+    async def _generate_predictions(self, model, dataset: Dict[str, Any], model_type: str) -> np.ndarray:
         """Generate predictions from model"""
 
         X = dataset["features"]
@@ -336,10 +317,8 @@ class OfflineEvaluator:
         else:
             return np.random.rand(len(X))
 
-    async def _aggregate_dataset_results(
-        self, dataset_results: List[Dict[str, Any]]
-    ) -> Dict[str, Any]:
-    """Aggregate results across multiple datasets"""
+    async def _aggregate_dataset_results(self, dataset_results: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Aggregate results across multiple datasets"""
         aggregated_metrics = {}
 
         # Collect all metric types
@@ -373,7 +352,7 @@ class OfflineEvaluator:
     async def _calculate_confidence_intervals(
         self, metrics: Dict[str, Any], datasets: List[Dict[str, Any]], bootstrap_samples: int = 1000
     ) -> Dict[str, Any]:
-    """Calculate confidence intervals for metrics using bootstrap"""
+        """Calculate confidence intervals for metrics using bootstrap"""
         confidence_intervals = {}
 
         for metric_name, metric_value in metrics.items():
@@ -399,7 +378,7 @@ class OfflineEvaluator:
     async def _analyze_segment_performance(
         self, model, datasets: List[Dict[str, Any]], segments: List[str]
     ) -> Dict[str, Any]:
-    """Analyze performance by user/content segments"""
+        """Analyze performance by user/content segments"""
         segment_performance = {}
 
         for segment in segments:
@@ -414,17 +393,12 @@ class OfflineEvaluator:
 
         return segment_performance
 
-    async def _calculate_overall_score(
-            self, metrics: Dict[str, Any], model_type: str) -> float:
+    async def _calculate_overall_score(self, metrics: Dict[str, Any], model_type: str) -> float:
         """Calculate overall performance score"""
 
         if model_type == "classification":
             # Weighted average of classification metrics
-            weights = {
-                "accuracy": 0.3,
-                "precision": 0.25,
-                "recall": 0.25,
-                "f1_score": 0.2}
+            weights = {"accuracy": 0.3, "precision": 0.25, "recall": 0.25, "f1_score": 0.2}
             score = 0.0
             total_weight = 0.0
 
@@ -458,10 +432,8 @@ class OfflineEvaluator:
                     return metric_value
             return 0.0
 
-    async def _generate_overall_summary(
-        self, model_results: List[OfflineEvaluationResult]
-    ) -> Dict[str, Any]:
-    """Generate overall summary of evaluation results"""
+    async def _generate_overall_summary(self, model_results: List[OfflineEvaluationResult]) -> Dict[str, Any]:
+        """Generate overall summary of evaluation results"""
         if not model_results:
             return {}
 

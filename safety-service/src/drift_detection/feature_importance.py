@@ -31,8 +31,7 @@ class FeatureImportanceMonitor:
             logger.info("Feature importance monitor initialized")
 
         except Exception as e:
-            logger.error(
-                f"Failed to initialize feature importance monitor: {str(e)}")
+            logger.error(f"Failed to initialize feature importance monitor: {str(e)}")
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
@@ -42,12 +41,9 @@ class FeatureImportanceMonitor:
             logger.info("Feature importance monitor cleanup completed")
 
         except Exception as e:
-            logger.error(
-                f"Error during feature importance monitor cleanup: {str(e)}")
+            logger.error(f"Error during feature importance monitor cleanup: {str(e)}")
 
-    async def detect_importance_drift(
-        self, reference_model: Any, current_model: Any
-    ) -> ImportanceDriftResult:
+    async def detect_importance_drift(self, reference_model: Any, current_model: Any) -> ImportanceDriftResult:
         """Detect drift in feature importance between models"""
 
         if not self.is_initialized:
@@ -67,19 +63,16 @@ class FeatureImportanceMonitor:
                 )
 
             # Calculate importance drift
-            drift_score = self.calculate_importance_drift(
-                ref_importance, curr_importance)
+            drift_score = self.calculate_importance_drift(ref_importance, curr_importance)
 
             # Determine if drift is detected
             drift_detected = drift_score > self.config.importance_drift_threshold
 
             # Calculate feature importance changes
-            importance_changes = self.calculate_feature_changes(
-                ref_importance, curr_importance)
+            importance_changes = self.calculate_feature_changes(ref_importance, curr_importance)
 
             # Calculate confidence
-            confidence = self.calculate_confidence(
-                ref_importance, curr_importance)
+            confidence = self.calculate_confidence(ref_importance, curr_importance)
 
             return ImportanceDriftResult(
                 drift_detected=drift_detected,
@@ -89,16 +82,12 @@ class FeatureImportanceMonitor:
             )
 
         except Exception as e:
-            logger.error(
-                f"Feature importance drift detection failed: {str(e)}")
+            logger.error(f"Feature importance drift detection failed: {str(e)}")
             return ImportanceDriftResult(
-                drift_detected=False,
-                drift_score=0.0,
-                feature_importance_changes={},
-                confidence=0.0)
+                drift_detected=False, drift_score=0.0, feature_importance_changes={}, confidence=0.0
+            )
 
-    def extract_feature_importance(
-            self, model: Any) -> Optional[Dict[str, float]]:
+    def extract_feature_importance(self, model: Any) -> Optional[Dict[str, float]]:
         """Extract feature importance from a model"""
         try:
             if hasattr(model, "feature_importances_"):
@@ -109,9 +98,7 @@ class FeatureImportanceMonitor:
                 if feature_names is not None:
                     return dict(zip(feature_names, importances))
                 else:
-                    return {
-                        f"feature_{i}": imp for i,
-                        imp in enumerate(importances)}
+                    return {f"feature_{i}": imp for i, imp in enumerate(importances)}
 
             elif hasattr(model, "coef_"):
                 # Linear models (LogisticRegression, LinearRegression, etc.)
@@ -128,24 +115,18 @@ class FeatureImportanceMonitor:
                     return {f"feature_{i}": imp for i, imp in enumerate(coef)}
 
             else:
-                logger.warning(
-                    f"Model type {type(model)} does not support feature importance extraction"
-                )
+                logger.warning(f"Model type {type(model)} does not support feature importance extraction")
                 return None
 
         except Exception as e:
             logger.error(f"Feature importance extraction failed: {str(e)}")
             return None
 
-    def calculate_importance_drift(
-        self, ref_importance: Dict[str, float], curr_importance: Dict[str, float]
-    ) -> float:
+    def calculate_importance_drift(self, ref_importance: Dict[str, float], curr_importance: Dict[str, float]) -> float:
         """Calculate drift in feature importance"""
         try:
             # Get common features
-            common_features = set(
-                ref_importance.keys()) & set(
-                curr_importance.keys())
+            common_features = set(ref_importance.keys()) & set(curr_importance.keys())
 
             if not common_features:
                 return 0.0
@@ -189,9 +170,7 @@ class FeatureImportanceMonitor:
             changes = {}
 
             # Get all features
-            all_features = set(
-                ref_importance.keys()) | set(
-                curr_importance.keys())
+            all_features = set(ref_importance.keys()) | set(curr_importance.keys())
 
             for feature in all_features:
                 ref_imp = ref_importance.get(feature, 0.0)
@@ -219,15 +198,11 @@ class FeatureImportanceMonitor:
             logger.error(f"Feature changes calculation failed: {str(e)}")
             return {}
 
-    def calculate_confidence(
-        self, ref_importance: Dict[str, float], curr_importance: Dict[str, float]
-    ) -> float:
+    def calculate_confidence(self, ref_importance: Dict[str, float], curr_importance: Dict[str, float]) -> float:
         """Calculate confidence in importance drift detection"""
         try:
             # Get common features
-            common_features = set(
-                ref_importance.keys()) & set(
-                curr_importance.keys())
+            common_features = set(ref_importance.keys()) & set(curr_importance.keys())
 
             if not common_features:
                 return 0.0
@@ -237,8 +212,7 @@ class FeatureImportanceMonitor:
             curr_ranking = self.calculate_feature_ranking(curr_importance)
 
             # Calculate ranking correlation
-            ranking_correlation = self.calculate_ranking_correlation(
-                ref_ranking, curr_ranking)
+            ranking_correlation = self.calculate_ranking_correlation(ref_ranking, curr_ranking)
 
             # Calculate importance magnitude consistency
             ref_magnitude = np.mean(list(ref_importance.values()))
@@ -256,23 +230,17 @@ class FeatureImportanceMonitor:
             logger.error(f"Confidence calculation failed: {str(e)}")
             return 0.0
 
-    def calculate_feature_ranking(
-            self, importance: Dict[str, float]) -> List[str]:
+    def calculate_feature_ranking(self, importance: Dict[str, float]) -> List[str]:
         """Calculate feature ranking by importance"""
         try:
-            sorted_features = sorted(
-                importance.items(),
-                key=lambda x: x[1],
-                reverse=True)
+            sorted_features = sorted(importance.items(), key=lambda x: x[1], reverse=True)
             return [feature for feature, _ in sorted_features]
 
         except Exception as e:
             logger.error(f"Feature ranking calculation failed: {str(e)}")
             return []
 
-    def calculate_ranking_correlation(
-        self, ref_ranking: List[str], curr_ranking: List[str]
-    ) -> float:
+    def calculate_ranking_correlation(self, ref_ranking: List[str], curr_ranking: List[str]) -> float:
         """Calculate correlation between feature rankings"""
         try:
             # Get common features
@@ -282,16 +250,12 @@ class FeatureImportanceMonitor:
                 return 0.0
 
             # Create ranking dictionaries
-            ref_ranks = {feature: i for i, feature in enumerate(
-                ref_ranking) if feature in common_features}
-            curr_ranks = {feature: i for i, feature in enumerate(
-                curr_ranking) if feature in common_features}
+            ref_ranks = {feature: i for i, feature in enumerate(ref_ranking) if feature in common_features}
+            curr_ranks = {feature: i for i, feature in enumerate(curr_ranking) if feature in common_features}
 
             # Calculate Spearman correlation
-            ref_rank_values = [ref_ranks[feature]
-                               for feature in common_features]
-            curr_rank_values = [curr_ranks[feature]
-                                for feature in common_features]
+            ref_rank_values = [ref_ranks[feature] for feature in common_features]
+            curr_rank_values = [curr_ranks[feature] for feature in common_features]
 
             correlation = np.corrcoef(ref_rank_values, curr_rank_values)[0, 1]
 
@@ -301,16 +265,11 @@ class FeatureImportanceMonitor:
             logger.error(f"Ranking correlation calculation failed: {str(e)}")
             return 0.0
 
-    async def get_importance_summary(
-        self, importance: Dict[str, float], top_n: int = 10
-    ) -> Dict[str, Any]:
+    async def get_importance_summary(self, importance: Dict[str, float], top_n: int = 10) -> Dict[str, Any]:
     """Get a summary of feature importance"""
         try:
             # Sort features by importance
-            sorted_features = sorted(
-                importance.items(),
-                key=lambda x: x[1],
-                reverse=True)
+            sorted_features = sorted(importance.items(), key=lambda x: x[1], reverse=True)
 
             # Get top features
             top_features = sorted_features[:top_n]
@@ -325,8 +284,7 @@ class FeatureImportanceMonitor:
                 "std_importance": np.std(importance_values),
                 "max_importance": np.max(importance_values),
                 "min_importance": np.min(importance_values),
-                "importance_range": np.max(importance_values) -
-                np.min(importance_values),
+                "importance_range": np.max(importance_values) - np.min(importance_values),
             }
 
             return summary

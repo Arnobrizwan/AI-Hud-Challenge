@@ -58,7 +58,7 @@ firestore_service: Optional[FirestoreService] = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> Dict[str, Any]:
-        """Application lifespan manager."""
+    """Application lifespan manager."""
     global ingestion_service, pubsub_service, firestore_service
 
     # Startup
@@ -158,7 +158,7 @@ def get_firestore_service() -> FirestoreService:
 # Health check endpoint
 @app.get("/health", response_model=HealthCheckResponse, tags=["Monitoring"])
 async def health_check() -> Dict[str, Any]:
-        """Health check endpoint."""
+    """Health check endpoint."""
     try:
         # Check service dependencies
         dependencies = {
@@ -194,7 +194,7 @@ async def health_check() -> Dict[str, Any]:
 # Metrics endpoint
 @app.get("/metrics", tags=["Monitoring"])
 async def metrics() -> Dict[str, Any]:
-        """Prometheus metrics endpoint."""
+    """Prometheus metrics endpoint."""
     try:
         return JSONResponse(
             content=generate_latest(),
@@ -207,7 +207,7 @@ async def metrics() -> Dict[str, Any]:
 # Source management endpoints
 @app.get("/sources", response_model=SourceListResponse, tags=["Sources"])
 async def list_sources() -> Dict[str, Any]:
-        """List all configured sources."""
+    """List all configured sources."""
     try:
         sources = source_config_loader.load_sources()
         enabled_sources = [s for s in sources if s.enabled]
@@ -246,7 +246,7 @@ async def list_sources() -> Dict[str, Any]:
 
 @app.get("/sources/{source_id}", tags=["Sources"])
 async def get_source(source_id: str) -> Dict[str, Any]:
-        """Get source configuration by ID."""
+    """Get source configuration by ID."""
     try:
         source = source_config_loader.get_source_by_id(source_id)
         if not source:
@@ -282,7 +282,7 @@ async def get_source(source_id: str) -> Dict[str, Any]:
 
 @app.put("/sources/{source_id}", tags=["Sources"])
 async def update_source(source_id: str, request: SourceConfigRequest) -> Dict[str, Any]:
-        """Update source configuration."""
+    """Update source configuration."""
     try:
         success = source_config_loader.update_source_config(
             source_id, request.model_dump(exclude_unset=True)
@@ -525,7 +525,7 @@ async def get_source_metrics(
 # Root endpoint
 @app.get("/", tags=["Root"])
 async def root() -> Dict[str, Any]:
-        """Root endpoint."""
+    """Root endpoint."""
     return {
         "message": f"Welcome to {settings.APP_NAME}",
         "version": settings.APP_VERSION,

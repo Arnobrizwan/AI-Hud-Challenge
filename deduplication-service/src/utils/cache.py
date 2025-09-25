@@ -22,7 +22,7 @@ class CacheManager:
         self.default_ttl = settings.cache_ttl
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize cache manager."""
+        """Initialize cache manager."""
         # Test connection
         await self.redis.ping()
 
@@ -55,12 +55,7 @@ class CacheManager:
         except Exception:
             return None
 
-    async def set(
-            self,
-            key: str,
-            value: Any,
-            ttl: Optional[int] = None,
-            serialize: bool = True) -> bool:
+    async def set(self, key: str, value: Any, ttl: Optional[int] = None, serialize: bool = True) -> bool:
         """Set value in cache.
 
         Args:
@@ -76,7 +71,7 @@ class CacheManager:
             if serialize:
                 if isinstance(value, (dict, list)):
                     value = json.dumps(value)
-        else:
+                else:
                     value = pickle.dumps(value)
 
             ttl = ttl or self.default_ttl
@@ -145,8 +140,7 @@ class CacheManager:
         except Exception:
             return -2
 
-    async def increment(self, key: str, amount: int = 1,
-                        ttl: Optional[int] = None) -> int:
+    async def increment(self, key: str, amount: int = 1, ttl: Optional[int] = None) -> int:
         """Increment counter in cache.
 
         Args:
@@ -160,13 +154,12 @@ class CacheManager:
         try:
             value = await self.redis.incrby(key, amount)
             if ttl and await self.redis.ttl(key) == -1:
-    await self.redis.expire(key, ttl)
+                await self.redis.expire(key, ttl)
             return value
         except Exception:
             return 0
 
-    async def decrement(self, key: str, amount: int = 1,
-                        ttl: Optional[int] = None) -> int:
+    async def decrement(self, key: str, amount: int = 1, ttl: Optional[int] = None) -> int:
         """Decrement counter in cache.
 
         Args:
@@ -180,7 +173,7 @@ class CacheManager:
         try:
             value = await self.redis.decrby(key, amount)
             if ttl and await self.redis.ttl(key) == -1:
-    await self.redis.expire(key, ttl)
+                await self.redis.expire(key, ttl)
             return value
         except Exception:
             return 0
@@ -200,12 +193,7 @@ class CacheManager:
         except Exception:
             return None
 
-    async def set_hash(
-            self,
-            key: str,
-            field: str,
-            value: str,
-            ttl: Optional[int] = None) -> bool:
+    async def set_hash(self, key: str, field: str, value: str, ttl: Optional[int] = None) -> bool:
         """Set hash field value.
 
         Args:
@@ -218,9 +206,9 @@ class CacheManager:
             True if successful
         """
         try:
-    await self.redis.hset(key, field, value)
+            await self.redis.hset(key, field, value)
             if ttl and await self.redis.ttl(key) == -1:
-    await self.redis.expire(key, ttl)
+                await self.redis.expire(key, ttl)
             return True
         except Exception:
             return False
@@ -239,11 +227,7 @@ class CacheManager:
         except Exception:
             return {}
 
-    async def set_hash_mapping(
-            self,
-            key: str,
-            mapping: dict,
-            ttl: Optional[int] = None) -> bool:
+    async def set_hash_mapping(self, key: str, mapping: dict, ttl: Optional[int] = None) -> bool:
         """Set multiple hash fields.
 
         Args:
@@ -255,9 +239,9 @@ class CacheManager:
             True if successful
         """
         try:
-    await self.redis.hset(key, mapping=mapping)
+            await self.redis.hset(key, mapping=mapping)
             if ttl and await self.redis.ttl(key) == -1:
-    await self.redis.expire(key, ttl)
+                await self.redis.expire(key, ttl)
             return True
         except Exception:
             return False
@@ -278,11 +262,7 @@ class CacheManager:
         except Exception:
             return False
 
-    async def list_push(
-            self,
-            key: str,
-            value: Any,
-            ttl: Optional[int] = None) -> bool:
+    async def list_push(self, key: str, value: Any, ttl: Optional[int] = None) -> bool:
         """Push value to list.
 
         Args:
@@ -301,7 +281,7 @@ class CacheManager:
 
             await self.redis.lpush(key, value)
             if ttl and await self.redis.ttl(key) == -1:
-    await self.redis.expire(key, ttl)
+                await self.redis.expire(key, ttl)
             return True
         except Exception:
             return False
@@ -320,12 +300,7 @@ class CacheManager:
         except Exception:
             return None
 
-    async def list_get_range(
-            self,
-            key: str,
-            start: int = 0,
-            end: int = -
-            1) -> list:
+    async def list_get_range(self, key: str, start: int = 0, end: int = -1) -> list:
         """Get list range.
 
         Args:
@@ -353,7 +328,7 @@ class CacheManager:
             True if successful
         """
         try:
-    await self.redis.ltrim(key, start, end)
+            await self.redis.ltrim(key, start, end)
             return True
         except Exception:
             return False
@@ -376,5 +351,5 @@ class CacheManager:
             return 0
 
     async def close(self) -> Dict[str, Any]:
-    """Close cache manager."""
+        """Close cache manager."""
         await self.redis.close()

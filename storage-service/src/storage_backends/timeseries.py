@@ -69,7 +69,7 @@ class TimeseriesDBManager:
     async def _initialize_schema(self) -> Dict[str, Any]:
     """Initialize TimescaleDB schema"""
         try:
-    async with self.pool.acquire() as conn:
+            async with self.pool.acquire() as conn:
                 # Enable TimescaleDB extension
                 await conn.execute("CREATE EXTENSION IF NOT EXISTS timescaledb")
 
@@ -134,7 +134,7 @@ class TimeseriesDBManager:
     async def _create_continuous_aggregates(self) -> Dict[str, Any]:
     """Create continuous aggregates for common queries"""
         try:
-    async with self.pool.acquire() as conn:
+            async with self.pool.acquire() as conn:
                 # Daily article metrics
                 await conn.execute(
                     """
@@ -299,7 +299,7 @@ class TimeseriesDBManager:
             raise RuntimeError("TimescaleDB Manager not initialized")
 
         try:
-    async with self.pool.acquire() as conn:
+            async with self.pool.acquire() as conn:
                 query = """
                     SELECT time, article_id, source, category, language, word_count,
                            reading_time, engagement_score, quality_score, sentiment_score, metadata
@@ -355,7 +355,7 @@ class TimeseriesDBManager:
             raise RuntimeError("TimescaleDB Manager not initialized")
 
         try:
-    async with self.pool.acquire() as conn:
+            async with self.pool.acquire() as conn:
                 query = """
                     SELECT day, source, category, language, article_count,
                            avg_word_count, avg_reading_time, avg_engagement_score,
@@ -418,7 +418,7 @@ class TimeseriesDBManager:
             raise RuntimeError("TimescaleDB Manager not initialized")
 
         try:
-    async with self.pool.acquire() as conn:
+            async with self.pool.acquire() as conn:
                 query = """
                     SELECT hour, source, article_count, avg_engagement_score, avg_quality_score
                     FROM hourly_article_metrics

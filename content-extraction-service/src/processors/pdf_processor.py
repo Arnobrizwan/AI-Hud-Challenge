@@ -28,7 +28,7 @@ class PDFProcessor:
         include_tables: bool = True,
         include_metadata: bool = True,
     ) -> Dict[str, Any]:
-    """
+        """
         Process PDF content and extract text, images, and metadata.
 
         Args:
@@ -45,21 +45,15 @@ class PDFProcessor:
 
             # Try Document AI first (most accurate)
             try:
-                return await self._process_with_document_ai(
-                    pdf_url, include_images, include_tables, include_metadata
-                )
+                return await self._process_with_document_ai(pdf_url, include_images, include_tables, include_metadata)
             except Exception as e:
-                logger.warning(
-                    f"Document AI processing failed, trying fallback: {str(e)}")
+                logger.warning(f"Document AI processing failed, trying fallback: {str(e)}")
 
                 # Fallback to PyPDF2
                 try:
-                    return await self._process_with_pypdf2(
-                        pdf_url, include_images, include_metadata
-                    )
+                    return await self._process_with_pypdf2(pdf_url, include_images, include_metadata)
                 except Exception as e2:
-                    logger.warning(
-                        f"PyPDF2 processing failed, trying pdfplumber: {str(e2)}")
+                    logger.warning(f"PyPDF2 processing failed, trying pdfplumber: {str(e2)}")
 
                     # Final fallback to pdfplumber
                     return await self._process_with_pdfplumber(
@@ -70,12 +64,10 @@ class PDFProcessor:
             logger.error(f"PDF processing failed for {pdf_url}: {str(e)}")
             raise ContentProcessingError(f"PDF processing failed: {str(e)}")
 
-    async def _process_with_document_ai(self,
-                                        pdf_url: str,
-                                        include_images: bool,
-                                        include_tables: bool,
-                                        include_metadata: bool) -> Dict[str, Any]:
-    """Process PDF using GCP Document AI."""
+    async def _process_with_document_ai(
+        self, pdf_url: str, include_images: bool, include_tables: bool, include_metadata: bool
+    ) -> Dict[str, Any]:
+        """Process PDF using GCP Document AI."""
         try:
             # Extract text and structure
             document_data = await self.document_ai_service.process_document(
@@ -96,8 +88,7 @@ class PDFProcessor:
                 images = await self._process_document_ai_images(document_data["images"])
 
             if include_tables and "tables" in document_data:
-                tables = self._process_document_ai_tables(
-                    document_data["tables"])
+                tables = self._process_document_ai_tables(document_data["tables"])
 
             if include_metadata and "metadata" in document_data:
                 metadata = document_data["metadata"]
@@ -117,10 +108,8 @@ class PDFProcessor:
             logger.error(f"Document AI processing failed: {str(e)}")
             raise
 
-    async def _process_with_pypdf2(
-        self, pdf_url: str, include_images: bool, include_metadata: bool
-    ) -> Dict[str, Any]:
-    """Process PDF using PyPDF2 as fallback."""
+    async def _process_with_pypdf2(self, pdf_url: str, include_images: bool, include_metadata: bool) -> Dict[str, Any]:
+        """Process PDF using PyPDF2 as fallback."""
         try:
             import PyPDF2
             import requests
@@ -145,29 +134,13 @@ class PDFProcessor:
             metadata = {}
             if include_metadata and pdf_reader.metadata:
                 metadata = {
-                    "title": pdf_reader.metadata.get(
-                        "/Title",
-                        ""),
-                    "author": pdf_reader.metadata.get(
-                        "/Author",
-                        ""),
-                    "subject": pdf_reader.metadata.get(
-                        "/Subject",
-                        ""),
-                    "creator": pdf_reader.metadata.get(
-                        "/Creator",
-                        ""),
-                    "producer": pdf_reader.metadata.get(
-                        "/Producer",
-                        ""),
-                    "creation_date": str(
-                        pdf_reader.metadata.get(
-                            "/CreationDate",
-                            "")),
-                    "modification_date": str(
-                        pdf_reader.metadata.get(
-                            "/ModDate",
-                            "")),
+                    "title": pdf_reader.metadata.get("/Title", ""),
+                    "author": pdf_reader.metadata.get("/Author", ""),
+                    "subject": pdf_reader.metadata.get("/Subject", ""),
+                    "creator": pdf_reader.metadata.get("/Creator", ""),
+                    "producer": pdf_reader.metadata.get("/Producer", ""),
+                    "creation_date": str(pdf_reader.metadata.get("/CreationDate", "")),
+                    "modification_date": str(pdf_reader.metadata.get("/ModDate", "")),
                 }
 
             return {
@@ -185,12 +158,10 @@ class PDFProcessor:
             logger.error(f"PyPDF2 processing failed: {str(e)}")
             raise
 
-    async def _process_with_pdfplumber(self,
-                                       pdf_url: str,
-                                       include_images: bool,
-                                       include_tables: bool,
-                                       include_metadata: bool) -> Dict[str, Any]:
-    """Process PDF using pdfplumber as final fallback."""
+    async def _process_with_pdfplumber(
+        self, pdf_url: str, include_images: bool, include_tables: bool, include_metadata: bool
+    ) -> Dict[str, Any]:
+        """Process PDF using pdfplumber as final fallback."""
         try:
             import pdfplumber
             import requests
@@ -216,8 +187,7 @@ class PDFProcessor:
                         page_tables = page.extract_tables()
                         for table in page_tables:
                             if table:
-                                tables.append(
-                                    {"page": page_num + 1, "data": table})
+                                tables.append({"page": page_num + 1, "data": table})
 
                     # Extract images
                     if include_images:
@@ -235,16 +205,14 @@ class PDFProcessor:
                 # Extract metadata
                 if include_metadata and pdf.metadata:
                     metadata = {
-                        "title": pdf.metadata.get(
-                            "Title", ""), "author": pdf.metadata.get(
-                            "Author", ""), "subject": pdf.metadata.get(
-                            "Subject", ""), "creator": pdf.metadata.get(
-                            "Creator", ""), "producer": pdf.metadata.get(
-                            "Producer", ""), "creation_date": str(
-                            pdf.metadata.get(
-                                "CreationDate", "")), "modification_date": str(
-                                    pdf.metadata.get(
-                                        "ModDate", "")), }
+                        "title": pdf.metadata.get("Title", ""),
+                        "author": pdf.metadata.get("Author", ""),
+                        "subject": pdf.metadata.get("Subject", ""),
+                        "creator": pdf.metadata.get("Creator", ""),
+                        "producer": pdf.metadata.get("Producer", ""),
+                        "creation_date": str(pdf.metadata.get("CreationDate", "")),
+                        "modification_date": str(pdf.metadata.get("ModDate", "")),
+                    }
 
             content = "\n\n".join(content_parts)
 
@@ -263,8 +231,7 @@ class PDFProcessor:
             logger.error(f"pdfplumber processing failed: {str(e)}")
             raise
 
-    async def _process_document_ai_images(
-            self, images_data: List[Dict]) -> List[ProcessedImage]:
+    async def _process_document_ai_images(self, images_data: List[Dict]) -> List[ProcessedImage]:
         """Process images extracted by Document AI."""
         processed_images = []
 
@@ -285,14 +252,12 @@ class PDFProcessor:
                 processed_images.append(processed_image)
 
             except Exception as e:
-                logger.warning(
-                    f"Failed to process Document AI image: {str(e)}")
+                logger.warning(f"Failed to process Document AI image: {str(e)}")
                 continue
 
         return processed_images
 
-    def _process_document_ai_tables(
-            self, tables_data: List[Dict]) -> List[Dict[str, Any]]:
+    def _process_document_ai_tables(self, tables_data: List[Dict]) -> List[Dict[str, Any]]:
         """Process tables extracted by Document AI."""
         processed_tables = []
 
@@ -309,8 +274,7 @@ class PDFProcessor:
                 processed_tables.append(processed_table)
 
             except Exception as e:
-                logger.warning(
-                    f"Failed to process Document AI table: {str(e)}")
+                logger.warning(f"Failed to process Document AI table: {str(e)}")
                 continue
 
         return processed_tables
@@ -318,25 +282,20 @@ class PDFProcessor:
     async def extract_text_only(self, pdf_url: str) -> str:
         """Extract only text content from PDF."""
         try:
-            result = await self.process_pdf(
-                pdf_url, include_images=False, include_tables=False, include_metadata=False
-            )
+            result = await self.process_pdf(pdf_url, include_images=False, include_tables=False, include_metadata=False)
             return result.get("content", "")
         except Exception as e:
             logger.error(f"Text extraction failed for {pdf_url}: {str(e)}")
             raise ContentProcessingError(f"Text extraction failed: {str(e)}")
 
     async def extract_metadata_only(self, pdf_url: str) -> Dict[str, Any]:
-    """Extract only metadata from PDF."""
+        """Extract only metadata from PDF."""
         try:
-            result = await self.process_pdf(
-                pdf_url, include_images=False, include_tables=False, include_metadata=True
-            )
+            result = await self.process_pdf(pdf_url, include_images=False, include_tables=False, include_metadata=True)
             return result.get("metadata", {})
         except Exception as e:
             logger.error(f"Metadata extraction failed for {pdf_url}: {str(e)}")
-            raise ContentProcessingError(
-                f"Metadata extraction failed: {str(e)}")
+            raise ContentProcessingError(f"Metadata extraction failed: {str(e)}")
 
     def _is_valid_pdf_url(self, url: str) -> bool:
         """Check if URL points to a valid PDF file."""
@@ -348,7 +307,7 @@ class PDFProcessor:
             return False
 
     async def get_pdf_info(self, pdf_url: str) -> Dict[str, Any]:
-    """Get basic information about PDF without full processing."""
+        """Get basic information about PDF without full processing."""
         try:
             import requests
 

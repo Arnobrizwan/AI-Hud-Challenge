@@ -26,33 +26,27 @@ class ArchivalService:
         self._initialized = False
         logger.info("Archival Service cleanup complete")
 
-    async def delete_old_articles(
-            self, data_type: str, cutoff_date: datetime) -> Dict[str, Any]:
+    async def delete_old_articles(self, data_type: str, cutoff_date: datetime) -> Dict[str, Any]:
     """Delete old articles based on cutoff date"""
         # Placeholder implementation
         return {"deleted_count": 0}
 
-    async def delete_old_elasticsearch_data(
-        self, data_type: str, cutoff_date: datetime
-    ) -> Dict[str, Any]:
+    async def delete_old_elasticsearch_data(self, data_type: str, cutoff_date: datetime) -> Dict[str, Any]:
     """Delete old Elasticsearch data"""
         # Placeholder implementation
         return {"deleted_count": 0}
 
-    async def delete_old_redis_data(
-            self, data_type: str, cutoff_date: datetime) -> Dict[str, Any]:
+    async def delete_old_redis_data(self, data_type: str, cutoff_date: datetime) -> Dict[str, Any]:
     """Delete old Redis data"""
         # Placeholder implementation
         return {"deleted_count": 0}
 
-    async def archive_old_data(
-            self, data_type: str, cutoff_date: datetime) -> Dict[str, Any]:
+    async def archive_old_data(self, data_type: str, cutoff_date: datetime) -> Dict[str, Any]:
     """Archive old data"""
         # Placeholder implementation
         return {"archived_count": 0, "archive_location": ""}
 
-    async def anonymize_old_data(
-            self, data_type: str, cutoff_date: datetime) -> Dict[str, Any]:
+    async def anonymize_old_data(self, data_type: str, cutoff_date: datetime) -> Dict[str, Any]:
     """Anonymize old data"""
         # Placeholder implementation
         return {"anonymized_count": 0}

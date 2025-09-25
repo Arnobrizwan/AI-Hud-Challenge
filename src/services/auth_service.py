@@ -112,7 +112,7 @@ class FirebaseAuthService:
         start_time = time.time()
 
         try:
-    async with self._circuit_breaker:
+            async with self._circuit_breaker:
                 # Verify the token with Firebase
                 decoded_token = auth.verify_id_token(
                     token, check_revoked=True, app=self.app)
@@ -193,7 +193,7 @@ class FirebaseAuthService:
     async def get_user_by_uid(self, uid: str) -> Optional[UserClaims]:
         """Get user information by UID."""
         try:
-    async with self._circuit_breaker:
+            async with self._circuit_breaker:
                 user_record = auth.get_user(uid, app=self.app)
 
                 return UserClaims(
@@ -216,7 +216,7 @@ class FirebaseAuthService:
     async def revoke_tokens(self, uid: str) -> bool:
         """Revoke all tokens for a user."""
         try:
-    async with self._circuit_breaker:
+            async with self._circuit_breaker:
                 auth.revoke_refresh_tokens(uid, app=self.app)
                 logger.info(f"Revoked all tokens for user: {uid}")
                 return True
@@ -229,7 +229,7 @@ class FirebaseAuthService:
             self, uid: str, claims: Dict[str, Any]) -> bool:
         """Set custom claims for a user."""
         try:
-    async with self._circuit_breaker:
+            async with self._circuit_breaker:
                 auth.set_custom_user_claims(uid, claims, app=self.app)
                 logger.info(
                     f"Set custom claims for user: {uid}",
@@ -246,7 +246,7 @@ class FirebaseAuthService:
             self, uid: str, claims: Dict[str, Any] = None) -> str:
         """Create a custom token for a user."""
         try:
-    async with self._circuit_breaker:
+            async with self._circuit_breaker:
                 custom_token = auth.create_custom_token(
                     uid, developer_claims=claims, app=self.app)
                 return custom_token.decode("utf-8")

@@ -178,7 +178,7 @@ class CacheService:
             return 0
 
     async def get_cache_stats(self) -> Dict[str, Any]:
-    """
+        """
         Get cache statistics.
 
         Returns:

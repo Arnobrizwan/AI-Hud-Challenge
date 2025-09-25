@@ -142,7 +142,7 @@ class CloudTasksService:
             raise TaskProcessingError(f"Batch task creation failed: {str(e)}")
 
     async def get_task_status(self, task_name: str) -> Dict[str, Any]:
-    """
+        """
         Get task status and information.
 
         Args:
@@ -259,7 +259,7 @@ class CloudTasksService:
             return 0
 
     async def get_queue_stats(self) -> Dict[str, Any]:
-    """
+        """
         Get queue statistics.
 
         Returns:

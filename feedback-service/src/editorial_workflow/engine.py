@@ -56,8 +56,7 @@ class EditorialWorkflowEngine:
             eligible_reviewers = await self.rbac.get_eligible_reviewers(task_type, content_id)
 
             if not eligible_reviewers:
-                raise ValueError(
-                    f"No eligible reviewers found for task type: {task_type}")
+                raise ValueError(f"No eligible reviewers found for task type: {task_type}")
 
             # Create task with metadata
             task = ReviewTaskDB(
@@ -93,16 +92,11 @@ class EditorialWorkflowEngine:
             return self._db_to_schema(task)
 
         except Exception as e:
-            logger.error(
-                "Error creating review task",
-                error=str(e),
-                content_id=str(content_id))
+            logger.error("Error creating review task", error=str(e), content_id=str(content_id))
             raise
 
-    async def process_review_completion(
-        self, task_id: UUID, review_result: ReviewResultCreate
-    ) -> Dict[str, Any]:
-    """Process completed editorial review"""
+    async def process_review_completion(self, task_id: UUID, review_result: ReviewResultCreate) -> Dict[str, Any]:
+        """Process completed editorial review"""
         try:
             # Get task
             task = await self.get_task(task_id)
@@ -111,8 +105,7 @@ class EditorialWorkflowEngine:
 
             # Validate reviewer permissions
             if not await self.rbac.can_complete_task(review_result.reviewer_id, task):
-                raise PermissionError(
-                    "Insufficient permissions to complete task")
+                raise PermissionError("Insufficient permissions to complete task")
 
             # Process review decision
             workflow_actions = []
@@ -152,10 +145,7 @@ class EditorialWorkflowEngine:
             # Notify stakeholders
             await self.notify_review_completion(task, review_result)
 
-            logger.info(
-                "Review completed",
-                task_id=str(task_id),
-                decision=review_result.decision.value)
+            logger.info("Review completed", task_id=str(task_id), decision=review_result.decision.value)
 
             return {
                 "task_id": str(task_id),
@@ -165,10 +155,7 @@ class EditorialWorkflowEngine:
             }
 
         except Exception as e:
-            logger.error(
-                "Error processing review completion",
-                error=str(e),
-                task_id=str(task_id))
+            logger.error("Error processing review completion", error=str(e), task_id=str(task_id))
             raise
 
     async def get_task(self, task_id: UUID) -> Optional[ReviewTaskDB]:
@@ -177,9 +164,7 @@ class EditorialWorkflowEngine:
         result = await self.db.execute(select(ReviewTaskDB).where(ReviewTaskDB.id == task_id))
         return result.scalar_one_or_none()
 
-    async def get_tasks_for_user(
-        self, user_id: UUID, status: Optional[TaskStatus] = None
-    ) -> List[ReviewTask]:
+    async def get_tasks_for_user(self, user_id: UUID, status: Optional[TaskStatus] = None) -> List[ReviewTask]:
         """Get review tasks for a specific user"""
 
         query = select(ReviewTaskDB).where(ReviewTaskDB.assigned_to == user_id)
@@ -208,9 +193,7 @@ class EditorialWorkflowEngine:
         tasks = result.scalars().all()
         return [self._db_to_schema(task) for task in tasks]
 
-    async def approve_content(
-        self, task: ReviewTaskDB, review_result: ReviewResultCreate
-    ) -> List[str]:
+    async def approve_content(self, task: ReviewTaskDB, review_result: ReviewResultCreate) -> List[str]:
         """Approve content and trigger downstream actions"""
 
         actions = ["content_approved"]
@@ -227,9 +210,7 @@ class EditorialWorkflowEngine:
 
         return actions
 
-    async def reject_content(
-        self, task: ReviewTaskDB, review_result: ReviewResultCreate
-    ) -> List[str]:
+    async def reject_content(self, task: ReviewTaskDB, review_result: ReviewResultCreate) -> List[str]:
         """Reject content and trigger appropriate actions"""
 
         actions = ["content_rejected"]
@@ -245,9 +226,7 @@ class EditorialWorkflowEngine:
 
         return actions
 
-    async def request_changes(
-        self, task: ReviewTaskDB, review_result: ReviewResultCreate
-    ) -> List[str]:
+    async def request_changes(self, task: ReviewTaskDB, review_result: ReviewResultCreate) -> List[str]:
         """Request changes to content"""
 
         actions = ["changes_requested"]
@@ -260,9 +239,7 @@ class EditorialWorkflowEngine:
 
         return actions
 
-    async def escalate_task(
-        self, task: ReviewTaskDB, review_result: ReviewResultCreate
-    ) -> List[str]:
+    async def escalate_task(self, task: ReviewTaskDB, review_result: ReviewResultCreate) -> List[str]:
         """Escalate task to higher authority"""
 
         actions = ["task_escalated"]
@@ -278,10 +255,7 @@ class EditorialWorkflowEngine:
 
         return actions
 
-    async def select_reviewer(
-            self,
-            eligible_reviewers: List[User],
-            task_type: str) -> UUID:
+    async def select_reviewer(self, eligible_reviewers: List[User], task_type: str) -> UUID:
         """Select appropriate reviewer from eligible candidates"""
 
         # Simple round-robin selection
@@ -333,17 +307,14 @@ class EditorialWorkflowEngine:
 
         return datetime.utcnow() + timedelta(hours=hours)
 
-    async def find_escalation_reviewer(
-            self, task: ReviewTaskDB) -> Optional[UUID]:
+    async def find_escalation_reviewer(self, task: ReviewTaskDB) -> Optional[UUID]:
         """Find appropriate reviewer for escalated task"""
 
         # This would implement escalation logic
         # For now, return None (no escalation)
         return None
 
-    async def trigger_post_review_workflows(
-        self, task: ReviewTaskDB, review_result: ReviewResultCreate
-    ) -> None:
+    async def trigger_post_review_workflows(self, task: ReviewTaskDB, review_result: ReviewResultCreate) -> None:
         """Trigger downstream workflows after review completion"""
 
         # This would trigger various downstream processes
@@ -355,19 +326,14 @@ class EditorialWorkflowEngine:
             decision=review_result.decision.value,
         )
 
-    async def notify_review_completion(
-        self, task: ReviewTaskDB, review_result: ReviewResultCreate
-    ) -> None:
+    async def notify_review_completion(self, task: ReviewTaskDB, review_result: ReviewResultCreate) -> None:
         """Notify stakeholders about review completion"""
 
         # Send WebSocket notification
         await self.websocket_manager.broadcast_review_completion(task, review_result)
 
         # Send other notifications
-        logger.info(
-            "Review completion notifications sent",
-            task_id=str(
-                task.id))
+        logger.info("Review completion notifications sent", task_id=str(task.id))
 
     def _db_to_schema(self, task: ReviewTaskDB) -> ReviewTask:
         """Convert database model to schema"""
@@ -417,10 +383,8 @@ class ApprovalEngine:
     def __init__(self, db_session: AsyncSession):
         self.db = db_session
 
-    async def process_approval_chain(
-        self, content_id: UUID, approval_chain: List[str]
-    ) -> Dict[str, Any]:
-    """Process multi-level approval chain"""
+    async def process_approval_chain(self, content_id: UUID, approval_chain: List[str]) -> Dict[str, Any]:
+        """Process multi-level approval chain"""
         # This would implement complex approval workflows
         # For now, return simple success
         return {"status": "approved", "approval_chain": approval_chain}

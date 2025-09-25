@@ -43,7 +43,7 @@ class ABTestingFramework:
         self.experiment_data: Dict[str, ExperimentData] = {}
 
     async def initialize(self) -> Dict[str, Any]:
-    """Initialize the A/B testing framework"""
+        """Initialize the A/B testing framework"""
         try:
             logger.info("Initializing A/B testing framework...")
 
@@ -63,12 +63,11 @@ class ABTestingFramework:
             logger.info("A/B testing framework initialized successfully")
 
         except Exception as e:
-            logger.error(
-                f"Failed to initialize A/B testing framework: {str(e)}")
+            logger.error(f"Failed to initialize A/B testing framework: {str(e)}")
             raise
 
     async def cleanup(self) -> Dict[str, Any]:
-    """Cleanup A/B testing framework resources"""
+        """Cleanup A/B testing framework resources"""
         try:
             logger.info("Cleaning up A/B testing framework...")
 
@@ -83,11 +82,9 @@ class ABTestingFramework:
             logger.info("A/B testing framework cleanup completed")
 
         except Exception as e:
-            logger.error(
-                f"Error during A/B testing framework cleanup: {str(e)}")
+            logger.error(f"Error during A/B testing framework cleanup: {str(e)}")
 
-    async def create_experiment(
-            self, experiment_config: ExperimentConfig) -> Experiment:
+    async def create_experiment(self, experiment_config: ExperimentConfig) -> Experiment:
         """Create A/B test experiment"""
 
         logger.info(f"Creating experiment: {experiment_config.name}")
@@ -106,13 +103,10 @@ class ABTestingFramework:
         )
 
         # Ensure minimum sample size
-        sample_size = max(
-            sample_size, experiment_config.get(
-                "min_sample_size", 1000))
+        sample_size = max(sample_size, experiment_config.get("min_sample_size", 1000))
 
         experiment = Experiment(
-            id=str(
-                uuid4()),
+            id=str(uuid4()),
             name=experiment_config.name,
             hypothesis=experiment_config.hypothesis,
             variants=experiment_config.variants,
@@ -122,9 +116,7 @@ class ABTestingFramework:
             guardrail_metrics=experiment_config.guardrail_metrics,
             sample_size_per_variant=sample_size,
             start_date=experiment_config.start_date,
-            estimated_end_date=self._calculate_estimated_end_date(
-                sample_size,
-                experiment_config),
+            estimated_end_date=self._calculate_estimated_end_date(sample_size, experiment_config),
             status=ExperimentStatus.DRAFT,
             created_at=datetime.utcnow(),
         )
@@ -199,8 +191,7 @@ class ABTestingFramework:
         experiment_data = self.experiment_data[experiment_id]
 
         if variant not in experiment_data.variant_data:
-            logger.warning(
-                f"Variant {variant} not found in experiment {experiment_id}")
+            logger.warning(f"Variant {variant} not found in experiment {experiment_id}")
             return False
 
         # Initialize event tracking for variant if not exists
@@ -219,13 +210,10 @@ class ABTestingFramework:
 
         return True
 
-    async def analyze_experiment(
-        self, experiment_id: str, analysis_type: str = "frequentist"
-    ) -> ExperimentAnalysis:
+    async def analyze_experiment(self, experiment_id: str, analysis_type: str = "frequentist") -> ExperimentAnalysis:
         """Analyze experiment results with statistical testing"""
 
-        logger.info(
-            f"Analyzing experiment {experiment_id} with {analysis_type} analysis")
+        logger.info(f"Analyzing experiment {experiment_id} with {analysis_type} analysis")
 
         if experiment_id not in self.active_experiments:
             raise ValueError(f"Experiment {experiment_id} not found")
@@ -288,10 +276,8 @@ class ABTestingFramework:
                 continue
 
             # Primary metric analysis
-            control_values = self._extract_metric_values(
-                control_data, experiment.primary_metric)
-            variant_values = self._extract_metric_values(
-                variant_data, experiment.primary_metric)
+            control_values = self._extract_metric_values(control_data, experiment.primary_metric)
+            variant_values = self._extract_metric_values(variant_data, experiment.primary_metric)
 
             if len(control_values) == 0 or len(variant_values) == 0:
                 continue
@@ -303,13 +289,10 @@ class ABTestingFramework:
             # Secondary metrics analysis
             secondary_results = {}
             for metric in experiment.secondary_metrics:
-                control_metric_values = self._extract_metric_values(
-                    control_data, metric)
-                variant_metric_values = self._extract_metric_values(
-                    variant_data, metric)
+                control_metric_values = self._extract_metric_values(control_data, metric)
+                variant_metric_values = self._extract_metric_values(variant_data, metric)
 
-                if len(control_metric_values) > 0 and len(
-                        variant_metric_values) > 0:
+                if len(control_metric_values) > 0 and len(variant_metric_values) > 0:
                     secondary_test_result = await self.statistical_tester.two_sample_test(
                         control_metric_values,
                         variant_metric_values,
@@ -318,9 +301,7 @@ class ABTestingFramework:
                     secondary_results[metric] = secondary_test_result
 
             # Calculate effect size and confidence intervals
-            effect_size = await self.statistical_tester.calculate_effect_size(
-                control_values, variant_values
-            )
+            effect_size = await self.statistical_tester.calculate_effect_size(control_values, variant_values)
 
             confidence_interval = await self.statistical_tester.calculate_confidence_interval(
                 control_values, variant_values
@@ -338,9 +319,8 @@ class ABTestingFramework:
 
         # Determine overall significance
         overall_significance = any(
-            result.primary_metric_result.get(
-                "is_significant",
-                False) for result in results.values())
+            result.primary_metric_result.get("is_significant", False) for result in results.values()
+        )
 
         # Apply multiple testing correction
         multiple_testing_correction = await self._apply_multiple_testing_correction(results)
@@ -352,9 +332,7 @@ class ABTestingFramework:
             multiple_testing_correction=multiple_testing_correction,
         )
 
-    async def _bayesian_analysis(
-        self, experiment: Experiment, experiment_data: ExperimentData
-    ) -> BayesianAnalysis:
+    async def _bayesian_analysis(self, experiment: Experiment, experiment_data: ExperimentData) -> BayesianAnalysis:
         """Perform Bayesian statistical analysis"""
 
         if not self.bayesian_analyzer:
@@ -362,9 +340,7 @@ class ABTestingFramework:
 
         return await self.bayesian_analyzer.analyze_experiment(experiment, experiment_data)
 
-    async def _sequential_analysis(
-        self, experiment: Experiment, experiment_data: ExperimentData
-    ) -> SequentialAnalysis:
+    async def _sequential_analysis(self, experiment: Experiment, experiment_data: ExperimentData) -> SequentialAnalysis:
         """Perform sequential statistical analysis"""
 
         if not self.sequential_tester:
@@ -372,9 +348,7 @@ class ABTestingFramework:
 
         return await self.sequential_tester.analyze_experiment(experiment, experiment_data)
 
-    async def _extract_metric_values(
-        self, variant_data: Dict[str, Any], metric_name: str
-    ) -> List[float]:
+    async def _extract_metric_values(self, variant_data: Dict[str, Any], metric_name: str) -> List[float]:
         """Extract metric values from variant data"""
 
         if metric_name not in variant_data:
@@ -384,13 +358,10 @@ class ABTestingFramework:
         if not isinstance(events, list):
             return []
 
-        return [
-            event["value"] for event in events if isinstance(
-                event, dict) and "value" in event]
+        return [event["value"] for event in events if isinstance(event, dict) and "value" in event]
 
-    async def _check_statistical_significance(
-            self, analysis) -> Dict[str, Any]:
-    """Check statistical significance of analysis results"""
+    async def _check_statistical_significance(self, analysis) -> Dict[str, Any]:
+        """Check statistical significance of analysis results"""
         if isinstance(analysis, FrequentistAnalysis):
             return {
                 "overall_significant": analysis.overall_significance,
@@ -401,8 +372,7 @@ class ABTestingFramework:
             }
         elif isinstance(analysis, BayesianAnalysis):
             return {
-                "overall_significant": any(
-                    prob > 0.95 for prob in analysis.posterior_probabilities.values()),
+                "overall_significant": any(prob > 0.95 for prob in analysis.posterior_probabilities.values()),
                 "posterior_probabilities": analysis.posterior_probabilities,
             }
         elif isinstance(analysis, SequentialAnalysis):
@@ -416,13 +386,11 @@ class ABTestingFramework:
     async def _analyze_guardrail_metrics(
         self, experiment: Experiment, experiment_data: ExperimentData
     ) -> Dict[str, Any]:
-    """Analyze guardrail metrics for safety"""
+        """Analyze guardrail metrics for safety"""
         guardrail_analysis = {}
 
         for metric in experiment.guardrail_metrics:
-            control_values = self._extract_metric_values(
-                experiment_data.get_variant_data("control"), metric
-            )
+            control_values = self._extract_metric_values(experiment_data.get_variant_data("control"), metric)
 
             metric_analysis = {}
 
@@ -430,9 +398,7 @@ class ABTestingFramework:
                 if variant_name == "control":
                     continue
 
-                variant_values = self._extract_metric_values(
-                    experiment_data.get_variant_data(variant_name), metric
-                )
+                variant_values = self._extract_metric_values(experiment_data.get_variant_data(variant_name), metric)
 
                 if len(control_values) > 0 and len(variant_values) > 0:
                     # Check if variant is significantly worse
@@ -442,14 +408,12 @@ class ABTestingFramework:
 
                     metric_analysis[variant_name] = {
                         "is_significantly_worse": (
-                            test_result.get(
-                                "is_significant",
-                                False) and np.mean(variant_values) < np.mean(control_values)),
+                            test_result.get("is_significant", False)
+                            and np.mean(variant_values) < np.mean(control_values)
+                        ),
                         "control_mean": np.mean(control_values),
                         "variant_mean": np.mean(variant_values),
-                        "p_value": test_result.get(
-                            "p_value",
-                            1.0),
+                        "p_value": test_result.get("p_value", 1.0),
                     }
 
             guardrail_analysis[metric] = metric_analysis
@@ -474,7 +438,8 @@ class ABTestingFramework:
                             "title": f"Guardrail violation: {metric}",
                             "description": f"Variant {variant} significantly underperforms control on {metric}",
                             "action": "Consider stopping experiment or adjusting variant",
-                        })
+                        }
+                    )
 
         # Check for statistical significance
         if significance_results.get("overall_significant", False):
@@ -494,7 +459,8 @@ class ABTestingFramework:
                             "title": "Significant winner found",
                             "description": f"Variants {winning_variants} show significant improvement",
                             "action": "Consider deploying winning variant(s)",
-                        })
+                        }
+                    )
 
         # Check for insufficient power
         if isinstance(analysis, FrequentistAnalysis):
@@ -507,13 +473,12 @@ class ABTestingFramework:
                             "title": f"Insufficient sample size: {variant}",
                             "description": f"Variant {variant} has only {result.sample_size} samples",
                             "action": "Continue experiment to reach target sample size",
-                        })
+                        }
+                    )
 
         return recommendations
 
-    async def _apply_multiple_testing_correction(
-        self, results: Dict[str, VariantAnalysis]
-    ) -> Dict[str, Any]:
+    async def _apply_multiple_testing_correction(self, results: Dict[str, VariantAnalysis]) -> Dict[str, Any]:
     """Apply multiple testing correction (Bonferroni)"""
         n_tests = len(results)
         if n_tests <= 1:
@@ -540,8 +505,7 @@ class ABTestingFramework:
             "variant_results": corrected_results,
         }
 
-    async def validate_experiment_design(
-            self, config: ExperimentConfig) -> Dict[str, Any]:
+    async def validate_experiment_design(self, config: ExperimentConfig) -> Dict[str, Any]:
     """Validate experiment design"""
         errors = []
 
@@ -555,8 +519,7 @@ class ABTestingFramework:
         # Check traffic allocation
         total_allocation = sum(config.traffic_allocation.values())
         if abs(total_allocation - 1.0) > 0.01:
-            errors.append(
-                f"Traffic allocation must sum to 1.0, got {total_allocation}")
+            errors.append(f"Traffic allocation must sum to 1.0, got {total_allocation}")
 
         # Check sample size
         if config.minimum_detectable_effect <= 0:
@@ -580,17 +543,13 @@ class ABTestingFramework:
             "error_message": "; ".join(errors) if errors else None,
         }
 
-    def _calculate_estimated_end_date(
-            self,
-            sample_size: int,
-            config: ExperimentConfig) -> datetime:
+    def _calculate_estimated_end_date(self, sample_size: int, config: ExperimentConfig) -> datetime:
         """Calculate estimated end date based on sample size and traffic"""
 
         # Estimate based on daily traffic (this would come from actual traffic
         # data)
         estimated_daily_traffic = 10000  # Mock value
-        daily_sample_size = sample_size * \
-            sum(config.traffic_allocation.values())
+        daily_sample_size = sample_size * sum(config.traffic_allocation.values())
         estimated_days = max(1, sample_size / daily_sample_size)
 
         return config.start_date + timedelta(days=estimated_days)
@@ -599,9 +558,7 @@ class ABTestingFramework:
         """Get experiment by ID"""
         return self.active_experiments.get(experiment_id)
 
-    async def list_experiments(
-            self,
-            status: Optional[ExperimentStatus] = None) -> List[Experiment]:
+    async def list_experiments(self, status: Optional[ExperimentStatus] = None) -> List[Experiment]:
         """List experiments with optional status filter"""
 
         experiments = list(self.active_experiments.values())
