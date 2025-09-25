@@ -152,7 +152,7 @@ class TestAPIAdapter:
 
     @pytest.mark.asyncio
     async def test_has_more_pages(self, api_adapter) -> Dict[str, Any]:
-    """Test pagination logic."""
+        """Test pagination logic."""
         # Test page-based pagination
         articles = [{"title": f"Article {i}"} for i in range(20)]
         api_adapter.pagination_config = {"type": "page_based", "page_size": 20}

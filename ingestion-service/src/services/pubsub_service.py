@@ -27,22 +27,15 @@ class PubSubService:
         self.subscriber = pubsub_v1.SubscriberClient()
 
         # Topic paths
-        self.ingestion_topic_path = self.publisher.topic_path(
-            self.project_id, settings.PUBSUB_TOPIC_INGESTION
-        )
-        self.normalization_topic_path = self.publisher.topic_path(
-            self.project_id, settings.PUBSUB_TOPIC_NORMALIZATION
-        )
+        self.ingestion_topic_path = self.publisher.topic_path(self.project_id, settings.PUBSUB_TOPIC_INGESTION)
+        self.normalization_topic_path = self.publisher.topic_path(self.project_id, settings.PUBSUB_TOPIC_NORMALIZATION)
 
         # Subscription path
         self.subscription_path = self.subscriber.subscription_path(
             self.project_id, settings.PUBSUB_SUBSCRIPTION_INGESTION
         )
 
-    async def publish_article(
-            self,
-            article: NormalizedArticle,
-            topic: str = None) -> str:
+    async def publish_article(self, article: NormalizedArticle, topic: str = None) -> str:
         """Publish a single article to Pub/Sub."""
         try:
             # Choose topic
@@ -82,8 +75,7 @@ class PubSubService:
             )
 
             message_id = future.result()
-            logger.debug(
-                f"Published article {article.id} to {topic_path}: {message_id}")
+            logger.debug(f"Published article {article.id} to {topic_path}: {message_id}")
 
             return message_id
 
@@ -91,9 +83,7 @@ class PubSubService:
             logger.error(f"Error publishing article {article.id}: {e}")
             raise
 
-    async def publish_articles(
-        self, articles: List[NormalizedArticle], topic: str = None
-    ) -> List[str]:
+    async def publish_articles(self, articles: List[NormalizedArticle], topic: str = None) -> List[str]:
         """Publish multiple articles to Pub/Sub."""
         message_ids = []
 
@@ -107,10 +97,7 @@ class PubSubService:
 
         return message_ids
 
-    async def publish_batch(
-            self,
-            batch: ProcessingBatch,
-            topic: str = None) -> str:
+    async def publish_batch(self, batch: ProcessingBatch, topic: str = None) -> str:
         """Publish a processing batch to Pub/Sub."""
         try:
             # Choose topic
@@ -150,8 +137,7 @@ class PubSubService:
             )
 
             message_id = future.result()
-            logger.debug(
-                f"Published batch {batch.batch_id} to {topic_path}: {message_id}")
+            logger.debug(f"Published batch {batch.batch_id} to {topic_path}: {message_id}")
 
             return message_id
 
@@ -159,8 +145,7 @@ class PubSubService:
             logger.error(f"Error publishing batch {batch.batch_id}: {e}")
             raise
 
-    async def subscribe_to_ingestion(
-            self, callback, max_messages: int = 10) -> None:
+    async def subscribe_to_ingestion(self, callback, max_messages: int = 10) -> None:
         """Subscribe to ingestion messages."""
         try:
 
@@ -180,8 +165,7 @@ class PubSubService:
                     message.nack()
 
             # Start subscription
-            flow_control = pubsub_v1.types.FlowControl(
-                max_messages=max_messages)
+            flow_control = pubsub_v1.types.FlowControl(max_messages=max_messages)
 
             streaming_pull_future = self.subscriber.pull(
                 request={
@@ -219,20 +203,15 @@ class PubSubService:
             if "already exists" in str(e):
                 logger.info(f"Topic {topic_name} already exists")
                 return self.publisher.topic_path(self.project_id, topic_name)
-                else:
+            else:
                 logger.error(f"Error creating topic {topic_name}: {e}")
                 raise
 
-    async def create_subscription(
-            self,
-            topic_name: str,
-            subscription_name: str) -> str:
+    async def create_subscription(self, topic_name: str, subscription_name: str) -> str:
         """Create a Pub/Sub subscription."""
         try:
             topic_path = self.publisher.topic_path(self.project_id, topic_name)
-            subscription_path = self.subscriber.subscription_path(
-                self.project_id, subscription_name
-            )
+            subscription_path = self.subscriber.subscription_path(self.project_id, subscription_name)
 
             subscription = self.subscriber.create_subscription(
                 request={
@@ -247,42 +226,41 @@ class PubSubService:
         except Exception as e:
             if "already exists" in str(e):
                 logger.info(f"Subscription {subscription_name} already exists")
-                return self.subscriber.subscription_path(
-                    self.project_id, subscription_name)
-                else:
-                logger.error(
-                    f"Error creating subscription {subscription_name}: {e}")
+                return self.subscriber.subscription_path(self.project_id, subscription_name)
+            else:
+                logger.error(f"Error creating subscription {subscription_name}: {e}")
                 raise
 
     async def get_topic_info(self, topic_name: str) -> Dict[str, Any]:
-    """Get information about a topic."""
+        """Get information about a topic."""
         try:
             topic_path = self.publisher.topic_path(self.project_id, topic_name)
             topic = self.publisher.get_topic(request={"topic": topic_path})
 
-            return {"name": topic.name,
-                    "labels": dict(topic.labels),
-                    "message_retention_duration": str(topic.message_retention_duration),
-                    "kms_key_name": topic.kms_key_name,
-                    "schema_settings": ({"schema": topic.schema_settings.schema,
-                                         "encoding": topic.schema_settings.encoding.name,
-                                         } if topic.schema_settings else None),
+            return {
+                "name": topic.name,
+                "labels": dict(topic.labels),
+                "message_retention_duration": str(topic.message_retention_duration),
+                "kms_key_name": topic.kms_key_name,
+                "schema_settings": (
+                    {
+                        "schema": topic.schema_settings.schema,
+                        "encoding": topic.schema_settings.encoding.name,
                     }
+                    if topic.schema_settings
+                    else None
+                ),
+            }
 
         except Exception as e:
             logger.error(f"Error getting topic info for {topic_name}: {e}")
             return {}
 
-    async def get_subscription_info(
-            self, subscription_name: str) -> Dict[str, Any]:
-    """Get information about a subscription."""
+    async def get_subscription_info(self, subscription_name: str) -> Dict[str, Any]:
+        """Get information about a subscription."""
         try:
-            subscription_path = self.subscriber.subscription_path(
-                self.project_id, subscription_name
-            )
-            subscription = self.subscriber.get_subscription(
-                request={"subscription": subscription_path}
-            )
+            subscription_path = self.subscriber.subscription_path(self.project_id, subscription_name)
+            subscription = self.subscriber.get_subscription(request={"subscription": subscription_path})
 
             return {
                 "name": subscription.name,
@@ -290,28 +268,26 @@ class PubSubService:
                 "push_config": (
                     {
                         "push_endpoint": subscription.push_config.push_endpoint,
-                        "attributes": dict(
-                            subscription.push_config.attributes),
-                    } if subscription.push_config else None),
+                        "attributes": dict(subscription.push_config.attributes),
+                    }
+                    if subscription.push_config
+                    else None
+                ),
                 "ack_deadline_seconds": subscription.ack_deadline_seconds,
                 "retain_acked_messages": subscription.retain_acked_messages,
-                "message_retention_duration": str(
-                    subscription.message_retention_duration),
-                "labels": dict(
-                    subscription.labels),
+                "message_retention_duration": str(subscription.message_retention_duration),
+                "labels": dict(subscription.labels),
             }
 
         except Exception as e:
-            logger.error(
-                f"Error getting subscription info for {subscription_name}: {e}")
+            logger.error(f"Error getting subscription info for {subscription_name}: {e}")
             return {}
 
     async def list_topics(self) -> List[str]:
         """List all topics in the project."""
         try:
             project_path = self.publisher.project_path(self.project_id)
-            topics = self.publisher.list_topics(
-                request={"project": project_path})
+            topics = self.publisher.list_topics(request={"project": project_path})
 
             topic_names = []
             for topic in topics:
@@ -327,8 +303,7 @@ class PubSubService:
         """List all subscriptions in the project."""
         try:
             project_path = self.subscriber.project_path(self.project_id)
-            subscriptions = self.subscriber.list_subscriptions(
-                request={"project": project_path})
+            subscriptions = self.subscriber.list_subscriptions(request={"project": project_path})
 
             subscription_names = []
             for subscription in subscriptions:
@@ -356,16 +331,12 @@ class PubSubService:
     async def delete_subscription(self, subscription_name: str) -> bool:
         """Delete a Pub/Sub subscription."""
         try:
-            subscription_path = self.subscriber.subscription_path(
-                self.project_id, subscription_name
-            )
-            self.subscriber.delete_subscription(
-                request={"subscription": subscription_path})
+            subscription_path = self.subscriber.subscription_path(self.project_id, subscription_name)
+            self.subscriber.delete_subscription(request={"subscription": subscription_path})
 
             logger.info(f"Deleted subscription: {subscription_path}")
             return True
 
         except Exception as e:
-            logger.error(
-                f"Error deleting subscription {subscription_name}: {e}")
+            logger.error(f"Error deleting subscription {subscription_name}: {e}")
             return False

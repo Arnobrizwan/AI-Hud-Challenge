@@ -461,7 +461,7 @@ class FirestoreService:
             return None
 
     def _source_config_to_dict(self, source_config: SourceConfig) -> Dict[str, Any]:
-    """Convert source config to Firestore-compatible dictionary."""
+        """Convert source config to Firestore-compatible dictionary."""
         return {
             "id": source_config.id,
             "name": source_config.name,
@@ -528,7 +528,7 @@ class FirestoreService:
             return None
 
     def _batch_to_dict(self, batch: ProcessingBatch) -> Dict[str, Any]:
-    """Convert batch to Firestore-compatible dictionary."""
+        """Convert batch to Firestore-compatible dictionary."""
         return {
             "batch_id": batch.batch_id,
             "source_id": batch.source_id,
@@ -586,7 +586,7 @@ class FirestoreService:
             return None
 
     def _metrics_to_dict(self, metrics: ContentMetrics) -> Dict[str, Any]:
-    """Convert metrics to Firestore-compatible dictionary."""
+        """Convert metrics to Firestore-compatible dictionary."""
         return {
             "source_id": metrics.source_id,
             "date": metrics.date,
