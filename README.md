@@ -252,6 +252,45 @@ ELASTICSEARCH_URL=http://elasticsearch:9200
 PROMETHEUS_URL=http://prometheus:9090
 ```
 
+### **🔐 Security Configuration**
+
+**⚠️ IMPORTANT: Never commit service account keys or credentials to the repository!**
+
+#### **For Local Development:**
+```bash
+# Create your own service account key
+gcloud iam service-accounts create news-hub-dev \
+  --display-name="News Hub Development"
+
+# Download the key (keep it secure!)
+gcloud iam service-accounts keys create config/service-account-key.json \
+  --iam-account=news-hub-dev@YOUR_PROJECT_ID.iam.gserviceaccount.com
+
+# Add to .gitignore (already included)
+echo "config/service-account-key.json" >> .gitignore
+```
+
+#### **For Production Deployment:**
+1. **Create GitHub Secrets** in your repository settings:
+   - `GCP_PROJECT_ID`: Your Google Cloud Project ID
+   - `GCP_SA_KEY`: Your service account key (JSON content)
+
+2. **Create Service Account:**
+```bash
+# Create production service account
+gcloud iam service-accounts create news-hub-prod \
+  --display-name="News Hub Production"
+
+# Grant necessary permissions
+gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+  --member="serviceAccount:news-hub-prod@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/run.admin"
+
+# Download key and add to GitHub Secrets
+gcloud iam service-accounts keys create key.json \
+  --iam-account=news-hub-prod@YOUR_PROJECT_ID.iam.gserviceaccount.com
+```
+
 ### **Service Dependencies**
 - All services depend on PostgreSQL and Redis
 - ML services depend on MLflow
