@@ -311,7 +311,7 @@ class RSSAdapter(BaseAdapter):
             return False
 
     def get_source_info(self) -> Dict[str, Any]:
-    """Get information about the RSS source."""
+        """Get information about the RSS source."""
         return {
             "type": "RSS/Atom Feed",
             "url": self.source_config.url,

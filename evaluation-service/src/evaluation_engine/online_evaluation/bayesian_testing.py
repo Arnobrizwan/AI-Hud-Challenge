@@ -376,7 +376,7 @@ class BayesianTestingFramework:
             return {"lower": 0, "upper": 0}
 
     def _beta_binomial_credible_interval(self, test: Dict[str, Any], level: float) -> Dict[str, Any]:
-    """Calculate credible interval for Beta-Binomial test"""
+        """Calculate credible interval for Beta-Binomial test"""
         control_posterior = test["control_posterior"]
         treatment_posterior = test["treatment_posterior"]
 

@@ -304,7 +304,7 @@ class SequentialTestingFramework:
         }
 
     async def _check_stopping_conditions(self, test: Dict[str, Any], interim_result: Dict[str, Any]) -> Dict[str, Any]:
-    """Check if test should stop"""
+        """Check if test should stop"""
         # Check if interim analysis suggests stopping
         if interim_result.get("should_stop", False):
             return {

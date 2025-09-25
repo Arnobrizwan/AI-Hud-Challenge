@@ -249,7 +249,7 @@ class OnlineEvaluator:
     async def _generate_overall_summary(
         self, experiment_results: List[Dict[str, Any]]
     ) -> Dict[str, Any]:
-    """Generate overall summary of online evaluation results"""
+        """Generate overall summary of online evaluation results"""
         if not experiment_results:
             return {}
 

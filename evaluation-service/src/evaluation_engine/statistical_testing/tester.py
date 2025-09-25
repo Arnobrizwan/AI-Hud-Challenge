@@ -124,7 +124,7 @@ class StatisticalTester:
         }
 
     async def _mann_whitney_u_test(self, data1: np.ndarray, data2: np.ndarray, alternative: str) -> Dict[str, Any]:
-    """Mann-Whitney U test (non-parametric)"""
+        """Mann-Whitney U test (non-parametric)"""
         statistic, p_value = mannwhitneyu(data1, data2, alternative=alternative)
 
         return {

@@ -100,7 +100,7 @@ class BaseAdapter(ABC):
             await asyncio.sleep(delay)
 
     def _create_ingestion_metadata(self, response: HTTPResponse = None) -> Dict[str, Any]:
-    """Create ingestion metadata for articles."""
+        """Create ingestion metadata for articles."""
         metadata = {
             "source_id": self.source_config.id,
             "source_type": self.source_config.type,

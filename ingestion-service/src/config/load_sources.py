@@ -232,7 +232,7 @@ class SourceConfigLoader:
             logger.error(f"Error saving sources to file: {e}")
 
     def get_global_config(self) -> Dict[str, Any]:
-    """Get global configuration."""
+        """Get global configuration."""
         return self.global_config
 
     def update_global_config(self, updates: Dict[str, Any]) -> bool:
