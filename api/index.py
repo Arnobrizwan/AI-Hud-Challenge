@@ -11,36 +11,14 @@ from typing import Any, Dict
 # Add the project root to Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-try:
-    from fastapi import FastAPI, HTTPException
-    from fastapi.middleware.cors import CORSMiddleware
-    from fastapi.responses import JSONResponse
-    import structlog
-except ImportError as e:
-    print(f"Import error: {e}")
-    # Minimal fallback
-    from fastapi import FastAPI, HTTPException
-    from fastapi.responses import JSONResponse
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+import logging
 
-# Configure logging
-try:
-    structlog.configure(
-        processors=[
-            structlog.stdlib.filter_by_level,
-            structlog.stdlib.add_logger_name,
-            structlog.stdlib.add_log_level,
-            structlog.processors.TimeStamper(fmt="iso"),
-            structlog.processors.JSONRenderer(),
-        ],
-        context_class=dict,
-        logger_factory=structlog.stdlib.LoggerFactory(),
-        wrapper_class=structlog.stdlib.BoundLogger,
-        cache_logger_on_first_use=True,
-    )
-    logger = structlog.get_logger(__name__)
-except:
-    import logging
-    logger = logging.getLogger(__name__)
+# Configure simple logging for Vercel
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Create FastAPI application
 app = FastAPI(
@@ -92,7 +70,7 @@ async def rank_content():
         "results": []
     }
 
-@app.get("/docs")
+@app.get("/api/docs")
 async def get_docs():
     """API documentation."""
     return {
@@ -100,8 +78,9 @@ async def get_docs():
         "endpoints": [
             {"path": "/", "method": "GET", "description": "Root endpoint"},
             {"path": "/health", "method": "GET", "description": "Health check"},
+            {"path": "/api/health", "method": "GET", "description": "API health check"},
             {"path": "/rank", "method": "POST", "description": "Content ranking"},
-            {"path": "/docs", "method": "GET", "description": "This documentation"}
+            {"path": "/api/docs", "method": "GET", "description": "This documentation"}
         ]
     }
 
