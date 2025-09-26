@@ -9,7 +9,7 @@ import structlog
 from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
 
-from ..config import settings
+from config import settings
 
 logger = structlog.get_logger(__name__)
 

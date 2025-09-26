@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     WORKERS: int = Field(default=1, description="Number of worker processes")
 
     # Google Cloud Configuration
-    GCP_PROJECT_ID: str = Field(description="GCP Project ID")
+    GCP_PROJECT_ID: str = Field(default="test-project", description="GCP Project ID")
     GCP_REGION: str = Field(default="us-central1", description="GCP Region")
     GOOGLE_APPLICATION_CREDENTIALS: Optional[str] = Field(default=None, description="Path to GCP credentials")
 

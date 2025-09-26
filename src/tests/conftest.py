@@ -4,7 +4,7 @@ pytest configuration and fixtures for testing the Foundations & Guards service.
 
 import asyncio
 from datetime import datetime, timedelta
-from typing import AsyncGenerator, Generator
+from typing import Any, AsyncGenerator, Dict, Generator
 from unittest.mock import Mock, patch
 
 import fakeredis
@@ -56,8 +56,8 @@ def client() -> Generator[TestClient, None, None]:
 def mock_redis():
     """Create a mock Redis client using fakeredis."""
     fake_redis = fakeredis.FakeRedis(decode_responses=True)
-    with patch("aioredis.from_url") as mock_from_url:
-        mock_from_url.return_value = fake_redis
+    with patch("aioredis.create_redis_pool") as mock_create_pool:
+        mock_create_pool.return_value = fake_redis
         yield fake_redis
 
 
@@ -254,7 +254,7 @@ class AsyncTestCase:
 
     @staticmethod
     async def wait_for_condition(condition_func, timeout=5.0, interval=0.1) -> Dict[str, Any]:
-    """Wait for a condition to be true."""
+        """Wait for a condition to be true."""
         import time
 
         start_time = time.time()
@@ -268,7 +268,7 @@ class AsyncTestCase:
 
     @staticmethod
     async def assert_eventually(assertion_func, timeout=5.0, interval=0.1) -> Dict[str, Any]:
-    """Assert that a condition becomes true within timeout."""
+        """Assert that a condition becomes true within timeout."""
         success = await AsyncTestCase.wait_for_condition(assertion_func, timeout, interval)
         if not success:
             raise AssertionError(f"Condition not met within {timeout} seconds")

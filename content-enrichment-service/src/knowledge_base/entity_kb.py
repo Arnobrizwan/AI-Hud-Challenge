@@ -11,7 +11,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-from ..config import settings
+from config import settings
 
 logger = structlog.get_logger(__name__)
 
@@ -21,7 +21,11 @@ class EntityKnowledgeBase:
 
     def __init__(self):
         """Initialize the knowledge base."""
-        self.engine = create_async_engine(settings.database_url)
+        # Convert postgresql:// to postgresql+asyncpg:// for async support
+        database_url = settings.database_url
+        if database_url.startswith("postgresql://"):
+            database_url = database_url.replace("postgresql://", "postgresql+asyncpg://")
+        self.engine = create_async_engine(database_url)
         self.session_factory = sessionmaker(self.engine, class_=AsyncSession, expire_on_commit=False)
 
         # Initialize embedding model for semantic similarity

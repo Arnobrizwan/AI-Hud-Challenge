@@ -49,11 +49,10 @@ class SlidingWindowRateLimiter:
         if self.redis_pool is None:
             async with self._lock:
                 if self.redis_pool is None:
-                    self.redis_pool = aioredis.from_url(
+                    self.redis_pool = await aioredis.create_redis_pool(
                         self.redis_url,
-                        max_connections=settings.REDIS_MAX_CONNECTIONS,
-                        retry_on_timeout=True,
-                        decode_responses=True,
+                        maxsize=settings.REDIS_MAX_CONNECTIONS,
+                        encoding='utf-8',
                     )
                     logger.info("Redis connection pool initialized")
         return self.redis_pool
@@ -180,7 +179,7 @@ class SlidingWindowRateLimiter:
         try:
             # Remove expired entries and count current
             async with redis.pipeline() as pipe:
-    await pipe.zremrangebyscore(redis_key, 0, window_start)
+                await pipe.zremrangebyscore(redis_key, 0, window_start)
                 await pipe.zcard(redis_key)
                 results = await pipe.execute()
                 current_count = results[1]
@@ -208,10 +207,10 @@ class SlidingWindowRateLimiter:
                 reset_time=reset_time,
                 window_seconds=window_seconds)
 
-    async def close(self) -> Dict[str, Any]:
-    """Close Redis connection."""
+    async def close(self) -> None:
+        """Close Redis connection."""
         if self.redis_pool:
-    await self.redis_pool.close()
+            await self.redis_pool.close()
             logger.info("Redis connection closed")
 
 
@@ -354,8 +353,8 @@ class DistributedRateLimiter:
         except Exception:
             return False
 
-    async def close(self) -> Dict[str, Any]:
-    """Close rate limiter connections."""
+    async def close(self) -> None:
+        """Close rate limiter connections."""
         await self.limiter.close()
 
 

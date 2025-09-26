@@ -16,12 +16,12 @@ class Settings(BaseSettings):
     log_level: str = Field(default="INFO", env="LOG_LEVEL")
 
     # Database
-    database_url: str = Field(..., env="DATABASE_URL")
+    database_url: str = Field(default="postgresql://test:test@localhost:5432/test", env="DATABASE_URL")
     database_pool_size: int = Field(default=20, env="DATABASE_POOL_SIZE")
     database_max_overflow: int = Field(default=30, env="DATABASE_MAX_OVERFLOW")
 
     # Redis
-    redis_url: str = Field(..., env="REDIS_URL")
+    redis_url: str = Field(default="redis://localhost:6379", env="REDIS_URL")
     redis_max_connections: int = Field(default=100, env="REDIS_MAX_CONNECTIONS")
     redis_socket_timeout: int = Field(default=5, env="REDIS_SOCKET_TIMEOUT")
 
@@ -74,7 +74,7 @@ class Settings(BaseSettings):
     rate_limit_window: int = Field(default=3600, env="RATE_LIMIT_WINDOW")
 
     # Security
-    secret_key: str = Field(..., env="SECRET_KEY")
+    secret_key: str = Field(default="test-secret-key", env="SECRET_KEY")
     algorithm: str = Field(default="HS256", env="ALGORITHM")
     access_token_expire_minutes: int = Field(default=30, env="ACCESS_TOKEN_EXPIRE_MINUTES")
 
@@ -94,6 +94,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = False
+        extra = "ignore"  # Ignore extra environment variables
 
 
 # Global settings instance

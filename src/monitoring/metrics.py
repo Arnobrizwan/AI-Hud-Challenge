@@ -209,18 +209,24 @@ class RankingMetricsCollector(MetricsCollector):
 
             # Update Prometheus metrics
             variant = algorithm_variant or "unknown"
-            self.request_counter.labels(
-                algorithm_variant=variant,
-                status="success").inc()
-            self.response_time_histogram.labels(
-                algorithm_variant=variant).observe(
-                response_time_ms / 1000)
-            self.feature_time_histogram.observe(feature_time_ms / 1000)
-            self.ranking_time_histogram.labels(
-                algorithm_variant=variant).observe(
-                ranking_time_ms / 1000)
-            self.cache_hit_rate_gauge.set(cache_hit_rate)
-            self.article_count_histogram.observe(article_count)
+            if hasattr(self, 'request_counter'):
+                self.request_counter.labels(
+                    algorithm_variant=variant,
+                    status="success").inc()
+            if hasattr(self, 'response_time_histogram'):
+                self.response_time_histogram.labels(
+                    algorithm_variant=variant).observe(
+                    response_time_ms / 1000)
+            if hasattr(self, 'feature_time_histogram'):
+                self.feature_time_histogram.observe(feature_time_ms / 1000)
+            if hasattr(self, 'ranking_time_histogram'):
+                self.ranking_time_histogram.labels(
+                    algorithm_variant=variant).observe(
+                    ranking_time_ms / 1000)
+            if hasattr(self, 'cache_hit_rate_gauge'):
+                self.cache_hit_rate_gauge.set(cache_hit_rate)
+            if hasattr(self, 'article_count_histogram'):
+                self.article_count_histogram.observe(article_count)
 
         except Exception as e:
             logger.error("Failed to record ranking metrics", error=str(e))
@@ -233,7 +239,8 @@ class RankingMetricsCollector(MetricsCollector):
             self.increment_counter(f"error_{error_type}")
 
             # Update Prometheus metrics
-            self.error_counter.labels(error_type=error_type).inc()
+            if hasattr(self, 'error_counter'):
+                self.error_counter.labels(error_type=error_type).inc()
 
         except Exception as e:
             logger.error("Failed to record error metrics", error=str(e))
@@ -317,17 +324,41 @@ class SystemMetricsCollector(MetricsCollector):
         self.system_metrics: deque = deque(maxlen=1000)
 
         # Prometheus metrics
-        self.cpu_usage_gauge = Gauge(
-            "system_cpu_usage_percent",
-            "CPU usage percentage")
-        self.memory_usage_gauge = Gauge(
-            "system_memory_usage_bytes",
-            "Memory usage in bytes")
-        self.redis_connections_gauge = Gauge(
-            "redis_connections", "Number of Redis connections")
-        self.active_requests_gauge = Gauge(
-            "active_requests", "Number of active requests")
-        self.queue_size_gauge = Gauge("queue_size", "Queue size")
+        self._init_prometheus_metrics()
+
+    def _init_prometheus_metrics(self):
+        """Initialize Prometheus metrics."""
+        try:
+            self.cpu_usage_gauge = Gauge(
+                "system_cpu_usage_percent",
+                "CPU usage percentage")
+        except ValueError:
+            # Metric already exists, skip creation
+            pass
+
+        try:
+            self.memory_usage_gauge = Gauge(
+                "system_memory_usage_bytes",
+                "Memory usage in bytes")
+        except ValueError:
+            pass
+
+        try:
+            self.redis_connections_gauge = Gauge(
+                "redis_connections", "Number of Redis connections")
+        except ValueError:
+            pass
+
+        try:
+            self.active_requests_gauge = Gauge(
+                "active_requests", "Number of active requests")
+        except ValueError:
+            pass
+
+        try:
+            self.queue_size_gauge = Gauge("queue_size", "Queue size")
+        except ValueError:
+            pass
 
     async def record_system_metrics(
         self,
@@ -358,11 +389,16 @@ class SystemMetricsCollector(MetricsCollector):
             self.set_gauge("queue_size", queue_size)
 
             # Update Prometheus metrics
-            self.cpu_usage_gauge.set(cpu_usage)
-            self.memory_usage_gauge.set(memory_usage)
-            self.redis_connections_gauge.set(redis_connections)
-            self.active_requests_gauge.set(active_requests)
-            self.queue_size_gauge.set(queue_size)
+            if hasattr(self, 'cpu_usage_gauge'):
+                self.cpu_usage_gauge.set(cpu_usage)
+            if hasattr(self, 'memory_usage_gauge'):
+                self.memory_usage_gauge.set(memory_usage)
+            if hasattr(self, 'redis_connections_gauge'):
+                self.redis_connections_gauge.set(redis_connections)
+            if hasattr(self, 'active_requests_gauge'):
+                self.active_requests_gauge.set(active_requests)
+            if hasattr(self, 'queue_size_gauge'):
+                self.queue_size_gauge.set(queue_size)
 
         except Exception as e:
             logger.error("Failed to record system metrics", error=str(e))

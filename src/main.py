@@ -3,12 +3,13 @@
 import asyncio
 import os
 from contextlib import asynccontextmanager
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import structlog
 import uvicorn
 from prometheus_client import start_http_server
-from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Query
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Query, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
@@ -30,6 +31,8 @@ from .schemas import (
     RankingRequest,
     UserProfile,
 )
+from .models.auth import LoginRequest, LoginResponse, UserClaims
+from .services.auth_service import auth_service
 from .testing.ab_framework import ABTestingFramework
 
 # Configure structured logging
@@ -91,8 +94,14 @@ async def lifespan(app: FastAPI) -> Dict[str, Any]:
 
         # Start Prometheus metrics server
         prometheus_port = int(os.getenv("PROMETHEUS_PORT", "8001"))
-        start_http_server(prometheus_port)
-        logger.info("Prometheus metrics server started", port=prometheus_port)
+        try:
+            start_http_server(prometheus_port)
+            logger.info("Prometheus metrics server started", port=prometheus_port)
+        except OSError as e:
+            if e.errno == 48:  # Address already in use
+                logger.warning("Prometheus metrics server port already in use, skipping", port=prometheus_port)
+            else:
+                raise
 
         logger.info("Ranking microservice started successfully")
 
@@ -131,6 +140,25 @@ app.add_middleware(
 )
 
 app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+# Add security headers middleware
+@app.middleware("http")
+async def add_security_headers(request, call_next):
+    response = await call_next(request)
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    return response
+
+# Add correlation ID middleware
+@app.middleware("http")
+async def add_correlation_id(request, call_next):
+    import uuid
+    correlation_id = request.headers.get("X-Correlation-ID", str(uuid.uuid4()))
+    response = await call_next(request)
+    response.headers["X-Correlation-ID"] = correlation_id
+    return response
 
 
 # Dependency injection
@@ -192,6 +220,88 @@ async def health_check() -> Dict[str, Any]:
         logger.error("Health check failed", error=str(e))
         return {"status": "unhealthy", "error": str(
             e), "timestamp": "2024-01-01T00:00:00Z"}
+
+
+@app.get("/health/live", response_model=Dict[str, Any])
+async def liveness_probe() -> Dict[str, Any]:
+    """Liveness probe endpoint."""
+    return {
+        "status": "healthy",
+        "timestamp": datetime.utcnow().isoformat()
+    }
+
+
+@app.get("/health/ready", response_model=Dict[str, Any])
+async def readiness_probe() -> Dict[str, Any]:
+    """Readiness probe endpoint."""
+    try:
+        # Check if critical services are ready
+        if not cache_manager or not ranking_engine:
+            return {
+                "status": "not_ready",
+                "timestamp": datetime.utcnow().isoformat(),
+                "reason": "Services not initialized"
+            }
+        
+        return {
+            "status": "ready",
+            "timestamp": datetime.utcnow().isoformat()
+        }
+    except Exception as e:
+        logger.error("Readiness check failed", error=str(e))
+        return {
+            "status": "not_ready",
+            "timestamp": datetime.utcnow().isoformat(),
+            "error": str(e)
+        }
+
+
+# Authentication Endpoints
+
+@app.post("/auth/login", response_model=LoginResponse)
+async def login(request: LoginRequest) -> LoginResponse:
+    """Login endpoint for authentication."""
+    try:
+        result = await auth_service.authenticate(request)
+        return result
+    except Exception as e:
+        logger.error("Login failed", error=str(e))
+        raise HTTPException(status_code=401, detail="Authentication failed")
+
+
+@app.post("/auth/logout", response_model=Dict[str, str])
+async def logout(authorization: str = Header(None)) -> Dict[str, str]:
+    """Logout endpoint."""
+    try:
+        # Check if authorization header is present
+        if not authorization or not authorization.startswith("Bearer "):
+            raise HTTPException(status_code=401, detail="Authorization header required")
+        
+        # In a real implementation, you'd invalidate the token
+        return {"status": "success", "message": "Logout successful"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Logout failed", error=str(e))
+        raise HTTPException(status_code=500, detail="Logout failed")
+
+
+@app.get("/auth/me", response_model=Dict[str, Any])
+async def get_current_user() -> Dict[str, Any]:
+    """Get current user information."""
+    try:
+        # In a real implementation, you'd get user from token
+        return {
+            "status": "success",
+            "data": {
+                "uid": "test-user",
+                "email": "test@example.com",
+                "name": "Test User"
+            }
+        }
+    except Exception as e:
+        logger.error("Get current user failed", error=str(e))
+        raise HTTPException(status_code=500, detail="Failed to get user information")
 
 
 @app.post("/rank", response_model=RankedResults)

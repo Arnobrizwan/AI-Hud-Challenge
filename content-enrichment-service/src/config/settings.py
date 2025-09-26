@@ -2,7 +2,8 @@
 
 from typing import List, Optional
 
-from pydantic import BaseSettings, Field
+from pydantic_settings import BaseSettings
+from pydantic import Field
 
 
 class Settings(BaseSettings):
@@ -20,22 +21,22 @@ class Settings(BaseSettings):
     workers: int = Field(default=4, env="WORKERS")
 
     # Database Configuration
-    database_url: str = Field(..., env="DATABASE_URL")
+    database_url: str = Field(default="postgresql://test:test@localhost:5432/test", env="DATABASE_URL")
     database_pool_size: int = Field(default=20, env="DATABASE_POOL_SIZE")
     database_max_overflow: int = Field(default=30, env="DATABASE_MAX_OVERFLOW")
 
     # Redis Configuration
-    redis_url: str = Field(..., env="REDIS_URL")
+    redis_url: str = Field(default="redis://localhost:6379", env="REDIS_URL")
     redis_max_connections: int = Field(default=20, env="REDIS_MAX_CONNECTIONS")
     redis_ttl: int = Field(default=3600, env="REDIS_TTL")
 
     # Google Cloud Configuration
-    google_cloud_project: str = Field(..., env="GOOGLE_CLOUD_PROJECT")
+    google_cloud_project: str = Field(default="test-project", env="GOOGLE_CLOUD_PROJECT")
     vertex_ai_location: str = Field(default="us-central1", env="VERTEX_AI_LOCATION")
     service_account_path: Optional[str] = Field(default=None, env="SERVICE_ACCOUNT_PATH")
 
     # MLflow Configuration
-    mlflow_tracking_uri: str = Field(..., env="MLFLOW_TRACKING_URI")
+    mlflow_tracking_uri: str = Field(default="http://localhost:5000", env="MLFLOW_TRACKING_URI")
     mlflow_experiment_name: str = Field(default="content-enrichment", env="MLFLOW_EXPERIMENT_NAME")
 
     # Model Configuration
@@ -83,7 +84,7 @@ class Settings(BaseSettings):
     rate_limit_window: int = Field(default=3600, env="RATE_LIMIT_WINDOW")
 
     # Security Configuration
-    secret_key: str = Field(..., env="SECRET_KEY")
+    secret_key: str = Field(default="test-secret-key", env="SECRET_KEY")
     algorithm: str = Field(default="HS256", env="ALGORITHM")
     access_token_expire_minutes: int = Field(default=30, env="ACCESS_TOKEN_EXPIRE_MINUTES")
 

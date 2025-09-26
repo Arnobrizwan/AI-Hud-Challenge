@@ -8,7 +8,7 @@ import structlog
 from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from ..config import settings
+from config import settings
 
 logger = structlog.get_logger(__name__)
 

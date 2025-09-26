@@ -11,7 +11,7 @@ import structlog
 from sqlalchemy import create_engine, text
 from sqlalchemy.ext.asyncio import create_async_engine
 
-from ..config import settings
+from config import settings
 
 logger = structlog.get_logger(__name__)
 

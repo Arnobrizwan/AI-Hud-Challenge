@@ -92,8 +92,8 @@ class CircuitBreaker:
             service=name,
             config=self.config.__dict__)
 
-    async def __aenter__(self) -> Dict[str, Any]:
-    """Async context manager entry."""
+    async def __aenter__(self) -> "CircuitBreaker":
+        """Async context manager entry."""
         await self._check_and_update_state()
 
         if self.state == CircuitBreakerState.OPEN:
@@ -102,12 +102,12 @@ class CircuitBreaker:
 
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb) -> Dict[str, Any]:
-    """Async context manager exit."""
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> bool:
+        """Async context manager exit."""
         if exc_type is None:
-    await self._record_success()
+            await self._record_success()
         elif issubclass(exc_type, self.config.expected_exception):
-    await self._record_failure()
+            await self._record_failure()
         # Don't suppress exceptions
         return False
 
@@ -120,7 +120,7 @@ class CircuitBreaker:
                     result = await asyncio.wait_for(
                         func(*args, **kwargs), timeout=self.config.timeout
                     )
-            else:
+                else:
                     result = await asyncio.wait_for(
                         asyncio.get_event_loop().run_in_executor(
                             None, functools.partial(func, *args, **kwargs)
@@ -138,20 +138,20 @@ class CircuitBreaker:
         if asyncio.iscoroutinefunction(func):
 
             @functools.wraps(func)
-            async def async_wrapper(*args, **kwargs) -> Dict[str, Any]:
-    return await self.call(func, *args, **kwargs)
+            async def async_wrapper(*args, **kwargs) -> Any:
+                return await self.call(func, *args, **kwargs)
 
             return async_wrapper
         else:
 
             @functools.wraps(func)
-            async def sync_wrapper(*args, **kwargs) -> Dict[str, Any]:
-    return await self.call(func, *args, **kwargs)
+            async def sync_wrapper(*args, **kwargs) -> Any:
+                return await self.call(func, *args, **kwargs)
 
             return sync_wrapper
 
-    async def _check_and_update_state(self) -> Dict[str, Any]:
-    """Check and update circuit breaker state."""
+    async def _check_and_update_state(self) -> None:
+        """Check and update circuit breaker state."""
         async with self._lock:
             current_time = time.time()
 
@@ -166,8 +166,8 @@ class CircuitBreaker:
                 if self.stats.success_count >= self.config.success_threshold:
                     self._transition_to_closed()
 
-    async def _record_success(self) -> Dict[str, Any]:
-    """Record successful request."""
+    async def _record_success(self) -> None:
+        """Record successful request."""
         async with self._lock:
             self.stats.success_count += 1
             self.stats.total_requests += 1
@@ -184,8 +184,8 @@ class CircuitBreaker:
                 stats=self.stats.__dict__,
             )
 
-    async def _record_failure(self) -> Dict[str, Any]:
-    """Record failed request."""
+    async def _record_failure(self) -> None:
+        """Record failed request."""
         async with self._lock:
             self.stats.failure_count += 1
             self.stats.total_requests += 1
@@ -282,7 +282,7 @@ class CircuitBreaker:
         return self.state == CircuitBreakerState.HALF_OPEN
 
     def get_stats(self) -> Dict[str, Any]:
-    """Get circuit breaker statistics."""
+        """Get circuit breaker statistics."""
         return {
             "name": self.name,
             "state": self.state.name,

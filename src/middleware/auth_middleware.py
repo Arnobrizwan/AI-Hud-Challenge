@@ -3,7 +3,7 @@ Authentication middleware for FastAPI.
 """
 
 import time
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from fastapi import HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -248,8 +248,8 @@ security = HTTPBearer()
 
 
 async def get_current_user(
-        credentials: HTTPAuthorizationCredentials = security):
-     -> Dict[str, Any]:"""Dependency to get current authenticated user."""
+        credentials: HTTPAuthorizationCredentials = security) -> Dict[str, Any]:
+    """Dependency to get current authenticated user."""
     try:
         validation_request = TokenValidationRequest(
             token=credentials.credentials, token_type=TokenType.ACCESS

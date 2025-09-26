@@ -11,8 +11,8 @@ from nltk.sentiment import SentimentIntensityAnalyzer
 from textblob import TextBlob
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, pipeline
 
-from ..config import settings
-from ..models.content import EmotionLabel, ExtractedContent, SentimentAnalysis, SentimentLabel
+from config import settings
+from models.content import EmotionLabel, ExtractedContent, SentimentAnalysis, SentimentLabel
 
 logger = structlog.get_logger(__name__)
 
@@ -33,9 +33,17 @@ class SentimentAnalyzer:
         self.emotion_pipeline = None
         self.vader_analyzer = SentimentIntensityAnalyzer()
         self.model_loaded = False
+        self._initialization_task = None
 
-        # Load models asynchronously
-        asyncio.create_task(self._initialize_models())
+        # Initialize models lazily when first needed
+
+    async def _ensure_models_loaded(self):
+        """Ensure models are loaded before use."""
+        if not self.model_loaded and self._initialization_task is None:
+            self._initialization_task = asyncio.create_task(self._initialize_models())
+            await self._initialization_task
+        elif self._initialization_task is not None:
+            await self._initialization_task
 
     async def _initialize_models(self) -> Dict[str, Any]:
         """Initialize sentiment and emotion analysis models."""
@@ -65,6 +73,9 @@ class SentimentAnalyzer:
     async def analyze_sentiment(self, content: ExtractedContent, language: str = "en") -> SentimentAnalysis:
         """Analyze sentiment and emotions in content."""
         try:
+            # Ensure models are loaded
+            await self._ensure_models_loaded()
+            
             # Prepare text for analysis
             text = f"{content.title} {content.summary or ''} {content.content[:2000]}"
 

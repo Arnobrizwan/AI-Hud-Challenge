@@ -249,7 +249,7 @@ class TestEventGroupingEngine:
             assert hasattr(location, "name")
             assert hasattr(location, "confidence")
 
-    def test_get_event_quality_metrics(self, event_grouping_engine):
+    def test_get_event_quality_metrics(self, event_grouping_engine, sample_article, sample_articles):
         """Test event quality metrics."""
         # Add some mock events
         from uuid import uuid4

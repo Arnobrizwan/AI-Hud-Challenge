@@ -13,8 +13,8 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.pipeline import Pipeline
 
-from ..config import settings
-from ..models.content import ExtractedContent, Topic, TopicCategory
+from config import settings
+from models.content import ExtractedContent, Topic, TopicCategory
 
 logger = structlog.get_logger(__name__)
 
@@ -29,9 +29,17 @@ class TopicClassifier:
         self.vectorizer = None
         self.label_encoder = None
         self.model_loaded = False
+        self._initialization_task = None
 
-        # Load or train model
-        asyncio.create_task(self._initialize_model())
+        # Initialize model lazily when first needed
+
+    async def _ensure_model_loaded(self):
+        """Ensure model is loaded before use."""
+        if not self.model_loaded and self._initialization_task is None:
+            self._initialization_task = asyncio.create_task(self._initialize_model())
+            await self._initialization_task
+        elif self._initialization_task is not None:
+            await self._initialization_task
 
     def _load_topic_taxonomy(self) -> Dict[str, Any]:
         """Load hierarchical topic taxonomy."""
@@ -274,6 +282,9 @@ class TopicClassifier:
     async def classify_topics(self, content: ExtractedContent, language: str = "en") -> List[Topic]:
         """Classify topics for content."""
         try:
+            # Ensure model is loaded
+            await self._ensure_model_loaded()
+            
             # Prepare text for classification
             text = f"{content.title} {content.summary or ''} {content.content[:1000]}"
 

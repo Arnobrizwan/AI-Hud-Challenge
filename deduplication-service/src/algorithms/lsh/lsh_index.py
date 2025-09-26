@@ -141,8 +141,6 @@ class LSHIndex:
         self.lsh = MinHashLSH(
             threshold=self.threshold,
             num_perm=self.num_perm,
-            num_bands=self.num_bands,
-            band_size=self.band_size,
         )
 
         # Clear Redis
@@ -242,8 +240,6 @@ class LSHIndex:
         self.lsh = MinHashLSH(
             threshold=self.threshold,
             num_perm=self.num_perm,
-            num_bands=self.num_bands,
-            band_size=self.band_size,
         )
 
         for article_id_str, minhash_data in articles_data.items():

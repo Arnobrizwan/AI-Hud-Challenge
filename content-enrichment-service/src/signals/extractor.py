@@ -9,7 +9,7 @@ from urllib.parse import urlparse
 import structlog
 import textstat
 
-from ..models.content import ContentSignal, ExtractedContent, TrustworthinessScore
+from models.content import ContentSignal, ExtractedContent, TrustworthinessScore
 
 logger = structlog.get_logger(__name__)
 

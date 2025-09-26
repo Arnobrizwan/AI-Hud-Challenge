@@ -18,124 +18,150 @@ from models.content import (
 
 
 class TestMetadataInfo:
-    """Test ContentMetadata model."""
+    """Test MetadataInfo model."""
 
     def test_valid_metadata(self):
         """Test valid metadata creation."""
         metadata = MetadataInfo(
+            author="Test Author",
             og_title="Test Title",
             og_description="Test Description",
             og_image="https://example.com/image.jpg",
-            site_name="Test Site",
+            tags=["tag1", "tag2"],
+            categories=["category1"],
         )
 
+        assert metadata.author == "Test Author"
         assert metadata.og_title == "Test Title"
         assert metadata.og_description == "Test Description"
         assert metadata.og_image == "https://example.com/image.jpg"
-        assert metadata.site_name == "Test Site"
+        assert metadata.tags == ["tag1", "tag2"]
+        assert metadata.categories == ["category1"]
 
     def test_empty_metadata(self):
         """Test empty metadata creation."""
         metadata = MetadataInfo()
         assert metadata.og_title is None
         assert metadata.og_description is None
-        assert metadata.json_ld == {}
+        assert metadata.tags == []
+        assert metadata.categories == []
 
 
-class TestQualityMetrics:
-    """Test QualityMetrics model."""
+class TestQualityAnalysis:
+    """Test QualityAnalysis model."""
 
-    def test_valid_quality_metrics(self):
-        """Test valid quality metrics creation."""
-        metrics = QualityAnalysis(
-            readability_score=75.0,
-            word_count=500,
-            character_count=2500,
-            sentence_count=25,
+    def test_valid_quality_analysis(self):
+        """Test valid quality analysis creation."""
+        analysis = QualityAnalysis(
+            content_id="test-123",
+            quality_score=0.85,
+            readability_score=0.75,
+            word_count=100,
+            sentence_count=10,
             paragraph_count=5,
-            average_sentence_length=20.0,
-            average_word_length=5.0,
-            image_to_text_ratio=0.1,
-            link_density=0.05,
-            spam_score=10.0,
-            duplicate_score=5.0,
-            content_freshness=80.0,
-            overall_quality=70.0,
+            avg_sentence_length=10.0,
+            flesch_kincaid_grade=8.0,
+            sentiment_score=0.1,
+            language_confidence=0.99,
         )
 
-        assert metrics.readability_score == 75.0
-        assert metrics.word_count == 500
-        assert metrics.overall_quality == 70.0
+        assert analysis.content_id == "test-123"
+        assert analysis.quality_score == 0.85
+        assert analysis.readability_score == 0.75
+        assert analysis.word_count == 100
+        assert analysis.sentence_count == 10
+        assert analysis.paragraph_count == 5
+        assert analysis.avg_sentence_length == 10.0
+        assert analysis.flesch_kincaid_grade == 8.0
+        assert analysis.sentiment_score == 0.1
+        assert analysis.language_confidence == 0.99
 
     def test_invalid_scores(self):
         """Test invalid score validation."""
         with pytest.raises(ValidationError):
-            QualityMetrics(
-                readability_score=150.0,  # Invalid: > 100
-                word_count=500,
-                character_count=2500,
-                sentence_count=25,
+            QualityAnalysis(
+                content_id="test-123",
+                quality_score=1.5,  # Invalid: > 1.0
+                readability_score=0.75,
+                word_count=100,
+                sentence_count=10,
                 paragraph_count=5,
-                average_sentence_length=20.0,
-                average_word_length=5.0,
-                image_to_text_ratio=0.1,
-                link_density=0.05,
-                spam_score=10.0,
-                duplicate_score=5.0,
-                content_freshness=80.0,
-                overall_quality=70.0,
+                avg_sentence_length=10.0,
+                flesch_kincaid_grade=8.0,
+                sentiment_score=0.1,
+                language_confidence=0.99,
             )
 
 
-class TestLanguageInfo:
-    """Test LanguageInfo model."""
+class TestProcessingMetrics:
+    """Test ProcessingMetrics model."""
 
-    def test_valid_language_info(self):
-        """Test valid language info creation."""
-        lang_info = LanguageInfo(detected_language="en", confidence=0.95, charset="utf-8", is_reliable=True)
+    def test_valid_processing_metrics(self):
+        """Test valid processing metrics creation."""
+        metrics = ProcessingMetrics(
+            total_extractions=100,
+            successful_extractions=95,
+            failed_extractions=5,
+            avg_processing_time_ms=500.0,
+            cache_hit_rate=0.8,
+            quality_scores={"high": 0.9, "medium": 0.7, "low": 0.5},
+            content_types={"article": 50, "blog": 30, "news": 20},
+            languages={"en": 80, "es": 15, "fr": 5},
+        )
 
-        assert lang_info.detected_language == "en"
-        assert lang_info.confidence == 0.95
-        assert lang_info.is_reliable is True
+        assert metrics.total_extractions == 100
+        assert metrics.successful_extractions == 95
+        assert metrics.failed_extractions == 5
+        assert metrics.avg_processing_time_ms == 500.0
+        assert metrics.cache_hit_rate == 0.8
+        assert metrics.quality_scores == {"high": 0.9, "medium": 0.7, "low": 0.5}
+        assert metrics.content_types == {"article": 50, "blog": 30, "news": 20}
+        assert metrics.languages == {"en": 80, "es": 15, "fr": 5}
 
-    def test_invalid_confidence(self):
-        """Test invalid confidence validation."""
+    def test_invalid_metrics(self):
+        """Test invalid metrics validation."""
         with pytest.raises(ValidationError):
-            LanguageInfo(detected_language="en", confidence=1.5, charset="utf-8")  # Invalid: > 1.0
+            ProcessingMetrics(
+                total_extractions=-1,  # Invalid: negative
+                successful_extractions=95,
+                failed_extractions=5,
+                avg_processing_time_ms=500.0,
+                cache_hit_rate=0.8,
+                quality_scores={},
+                content_types={},
+                languages={},
+            )
 
 
-class TestProcessedImage:
-    """Test ProcessedImage model."""
+class TestImageInfo:
+    """Test ImageInfo model."""
 
-    def test_valid_processed_image(self):
-        """Test valid processed image creation."""
-        image = ProcessedImage(
+    def test_valid_image_info(self):
+        """Test valid image info creation."""
+        image = ImageInfo(
             url="https://example.com/image.jpg",
             width=800,
             height=600,
             file_size=1024000,
             format="JPEG",
             alt_text="Test image",
-            is_optimized=True,
-            quality_score=0.85,
+            caption="Test caption",
         )
 
         assert image.url == "https://example.com/image.jpg"
         assert image.width == 800
         assert image.height == 600
-        assert image.quality_score == 0.85
+        assert image.file_size == 1024000
+        assert image.format == "JPEG"
+        assert image.alt_text == "Test image"
+        assert image.caption == "Test caption"
 
-    def test_invalid_quality_score(self):
-        """Test invalid quality score validation."""
-        with pytest.raises(ValidationError):
-            ProcessedImage(
-                url="https://example.com/image.jpg",
-                width=800,
-                height=600,
-                file_size=1024000,
-                format="JPEG",
-                quality_score=1.5,  # Invalid: > 1.0
-            )
+    def test_minimal_image_info(self):
+        """Test minimal image info creation."""
+        image = ImageInfo(url="https://example.com/image.jpg")
+        assert image.url == "https://example.com/image.jpg"
+        assert image.alt_text is None
+        assert image.caption is None
 
 
 class TestExtractedContent:
@@ -144,285 +170,91 @@ class TestExtractedContent:
     def test_valid_extracted_content(self):
         """Test valid extracted content creation."""
         metadata = MetadataInfo(og_title="Test Title")
-        quality_metrics = QualityMetrics(
-            readability_score=75.0,
-            word_count=500,
-            character_count=2500,
-            sentence_count=25,
-            paragraph_count=5,
-            average_sentence_length=20.0,
-            average_word_length=5.0,
-            image_to_text_ratio=0.1,
-            link_density=0.05,
-            spam_score=10.0,
-            duplicate_score=5.0,
-            content_freshness=80.0,
-            overall_quality=70.0,
-        )
-        language_info = LanguageInfo(detected_language="en", confidence=0.95)
-        extraction_stats = ExtractionStats(
-            extraction_time_ms=5000,
-            html_fetch_time_ms=1000,
-            content_extraction_time_ms=2000,
-            image_processing_time_ms=1000,
-            quality_analysis_time_ms=1000,
-            total_processing_time_ms=5000,
-            bytes_processed=50000,
-            images_processed=3,
-            links_found=10,
-            scripts_removed=5,
-            styles_removed=2,
-            ads_removed=1,
-        )
-
+        
         content = ExtractedContent(
+            content_id="test-123",
             url="https://example.com/article",
             title="Test Article",
             content="This is test content.",
-            metadata=metadata,
-            quality_metrics=quality_metrics,
-            language_info=language_info,
+            summary="Test summary",
+            language="en",
+            content_type=ContentType.ARTICLE,
             word_count=500,
             reading_time=3,
-            extraction_method=ExtractionMethod.READABILITY,
-            content_type=ContentType.HTML,
-            content_hash="abc123",
-            extraction_stats=extraction_stats,
+            quality_score=0.85,
+            metadata=metadata,
+            status=ProcessingStatus.COMPLETED,
         )
 
+        assert content.content_id == "test-123"
         assert content.url == "https://example.com/article"
         assert content.title == "Test Article"
         assert content.word_count == 500
         assert content.reading_time == 3
 
-    def test_content_hash_calculation(self):
-        """Test content hash calculation."""
-        metadata = MetadataInfo(og_title="Test Title")
-        quality_metrics = QualityMetrics(
-            readability_score=75.0,
-            word_count=500,
-            character_count=2500,
-            sentence_count=25,
-            paragraph_count=5,
-            average_sentence_length=20.0,
-            average_word_length=5.0,
-            image_to_text_ratio=0.1,
-            link_density=0.05,
-            spam_score=10.0,
-            duplicate_score=5.0,
-            content_freshness=80.0,
-            overall_quality=70.0,
-        )
-        language_info = LanguageInfo(detected_language="en", confidence=0.95)
-        extraction_stats = ExtractionStats(
-            extraction_time_ms=5000,
-            html_fetch_time_ms=1000,
-            content_extraction_time_ms=2000,
-            image_processing_time_ms=1000,
-            quality_analysis_time_ms=1000,
-            total_processing_time_ms=5000,
-            bytes_processed=50000,
-            images_processed=3,
-            links_found=10,
-            scripts_removed=5,
-            styles_removed=2,
-            ads_removed=1,
-        )
+    def test_content_validation(self):
+        """Test content validation."""
+        with pytest.raises(ValidationError):
+            ExtractedContent(
+                content_id="test-123",
+                title="Test Article",
+                content="This is test content.",
+                language="en",
+                content_type=ContentType.ARTICLE,
+                word_count=500,
+                reading_time=3,
+                quality_score=1.5,  # Invalid: > 1.0
+                status=ProcessingStatus.COMPLETED,
+            )
 
+    def test_content_type_enum(self):
+        """Test content type enum values."""
         content = ExtractedContent(
-            url="https://example.com/article",
+            content_id="test-123",
             title="Test Article",
             content="This is test content.",
-            metadata=metadata,
-            quality_metrics=quality_metrics,
-            language_info=language_info,
-            word_count=500,
-            reading_time=3,
-            extraction_method=ExtractionMethod.READABILITY,
-            content_type=ContentType.HTML,
-            content_hash="",
-            extraction_stats=extraction_stats,
+            language="en",
+            content_type=ContentType.NEWS,
+            word_count=100,
+            reading_time=1,
+            quality_score=0.8,
+            status=ProcessingStatus.COMPLETED,
         )
+        assert content.content_type == ContentType.NEWS
 
-        calculated_hash = content.calculate_content_hash()
-        assert calculated_hash is not None
-        assert len(calculated_hash) == 64  # SHA256 hash length
-
-    def test_reading_time_calculation(self):
-        """Test reading time calculation."""
-        metadata = MetadataInfo()
-        quality_metrics = QualityMetrics(
-            readability_score=75.0,
-            word_count=400,  # 400 words = 2 minutes at 200 wpm
-            character_count=2000,
-            sentence_count=20,
-            paragraph_count=4,
-            average_sentence_length=20.0,
-            average_word_length=5.0,
-            image_to_text_ratio=0.1,
-            link_density=0.05,
-            spam_score=10.0,
-            duplicate_score=5.0,
-            content_freshness=80.0,
-            overall_quality=70.0,
-        )
-        language_info = LanguageInfo(detected_language="en", confidence=0.95)
-        extraction_stats = ExtractionStats(
-            extraction_time_ms=5000,
-            html_fetch_time_ms=1000,
-            content_extraction_time_ms=2000,
-            image_processing_time_ms=1000,
-            quality_analysis_time_ms=1000,
-            total_processing_time_ms=5000,
-            bytes_processed=50000,
-            images_processed=3,
-            links_found=10,
-            scripts_removed=5,
-            styles_removed=2,
-            ads_removed=1,
-        )
-
+    def test_processing_status_enum(self):
+        """Test processing status enum values."""
         content = ExtractedContent(
-            url="https://example.com/article",
+            content_id="test-123",
             title="Test Article",
             content="This is test content.",
-            metadata=metadata,
-            quality_metrics=quality_metrics,
-            language_info=language_info,
-            word_count=400,
-            reading_time=0,  # Will be calculated
-            extraction_method=ExtractionMethod.READABILITY,
-            content_type=ContentType.HTML,
-            content_hash="abc123",
-            extraction_stats=extraction_stats,
+            language="en",
+            content_type=ContentType.ARTICLE,
+            word_count=100,
+            reading_time=1,
+            quality_score=0.8,
+            status=ProcessingStatus.PENDING,
+        )
+        assert content.status == ProcessingStatus.PENDING
+
+
+class TestCacheStats:
+    """Test CacheStats model."""
+
+    def test_valid_cache_stats(self):
+        """Test valid cache stats creation."""
+        stats = CacheStats(
+            hit_count=100,
+            miss_count=20,
+            total_requests=120,
+            hit_rate=0.833,
+            cache_size=1024,
+            memory_usage=512,
         )
 
-        calculated_reading_time = content.calculate_reading_time()
-        assert calculated_reading_time == 2  # 400 words / 200 wpm = 2 minutes
-
-    def test_high_quality_check(self):
-        """Test high quality content check."""
-        metadata = MetadataInfo()
-        quality_metrics = QualityMetrics(
-            readability_score=80.0,
-            word_count=500,
-            character_count=2500,
-            sentence_count=25,
-            paragraph_count=5,
-            average_sentence_length=20.0,
-            average_word_length=5.0,
-            image_to_text_ratio=0.1,
-            link_density=0.05,
-            spam_score=20.0,  # Low spam score
-            duplicate_score=10.0,  # Low duplicate score
-            content_freshness=80.0,
-            overall_quality=85.0,  # High quality
-        )
-        language_info = LanguageInfo(detected_language="en", confidence=0.95)
-        extraction_stats = ExtractionStats(
-            extraction_time_ms=5000,
-            html_fetch_time_ms=1000,
-            content_extraction_time_ms=2000,
-            image_processing_time_ms=1000,
-            quality_analysis_time_ms=1000,
-            total_processing_time_ms=5000,
-            bytes_processed=50000,
-            images_processed=3,
-            links_found=10,
-            scripts_removed=5,
-            styles_removed=2,
-            ads_removed=1,
-        )
-
-        content = ExtractedContent(
-            url="https://example.com/article",
-            title="Test Article",
-            content="This is test content.",
-            metadata=metadata,
-            quality_metrics=quality_metrics,
-            language_info=language_info,
-            word_count=500,
-            reading_time=3,
-            extraction_method=ExtractionMethod.READABILITY,
-            content_type=ContentType.HTML,
-            content_hash="abc123",
-            extraction_stats=extraction_stats,
-        )
-
-        assert content.is_high_quality() is True
-        assert content.is_high_quality(min_quality_score=0.8) is True
-        assert content.is_high_quality(min_quality_score=0.9) is False
-
-    def test_duplicate_detection(self):
-        """Test duplicate content detection."""
-        metadata = MetadataInfo()
-        quality_metrics = QualityMetrics(
-            readability_score=75.0,
-            word_count=500,
-            character_count=2500,
-            sentence_count=25,
-            paragraph_count=5,
-            average_sentence_length=20.0,
-            average_word_length=5.0,
-            image_to_text_ratio=0.1,
-            link_density=0.05,
-            spam_score=10.0,
-            duplicate_score=5.0,
-            content_freshness=80.0,
-            overall_quality=70.0,
-        )
-        language_info = LanguageInfo(detected_language="en", confidence=0.95)
-        extraction_stats = ExtractionStats(
-            extraction_time_ms=5000,
-            html_fetch_time_ms=1000,
-            content_extraction_time_ms=2000,
-            image_processing_time_ms=1000,
-            quality_analysis_time_ms=1000,
-            total_processing_time_ms=5000,
-            bytes_processed=50000,
-            images_processed=3,
-            links_found=10,
-            scripts_removed=5,
-            styles_removed=2,
-            ads_removed=1,
-        )
-
-        content1 = ExtractedContent(
-            url="https://example.com/article1",
-            title="Test Article",
-            content="This is test content for article 1.",
-            metadata=metadata,
-            quality_metrics=quality_metrics,
-            language_info=language_info,
-            word_count=500,
-            reading_time=3,
-            extraction_method=ExtractionMethod.READABILITY,
-            content_type=ContentType.HTML,
-            content_hash="abc123",
-            extraction_stats=extraction_stats,
-        )
-
-        content2 = ExtractedContent(
-            url="https://example.com/article2",
-            title="Test Article",
-            content="This is test content for article 2.",
-            metadata=metadata,
-            quality_metrics=quality_metrics,
-            language_info=language_info,
-            word_count=500,
-            reading_time=3,
-            extraction_method=ExtractionMethod.READABILITY,
-            content_type=ContentType.HTML,
-            content_hash="def456",
-            extraction_stats=extraction_stats,
-        )
-
-        # Same content should be detected as duplicate
-        content1.content_hash = "same_hash"
-        content2.content_hash = "same_hash"
-        assert content1.is_duplicate_of(content2) is True
-
-        # Different content should not be detected as duplicate
-        content1.content_hash = "hash1"
-        content2.content_hash = "hash2"
-        assert content1.is_duplicate_of(content2) is False
+        assert stats.hit_count == 100
+        assert stats.miss_count == 20
+        assert stats.total_requests == 120
+        assert stats.hit_rate == 0.833
+        assert stats.cache_size == 1024
+        assert stats.memory_usage == 512

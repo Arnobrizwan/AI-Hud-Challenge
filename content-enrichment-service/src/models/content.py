@@ -203,8 +203,8 @@ class EnrichedContent(BaseModel):
     entities: List[Entity]
     topics: List[Topic]
     sentiment: SentimentAnalysis
-    signals: ContentSignal
-    trust_score: TrustworthinessScore
+    signals: Optional[ContentSignal] = None
+    trust_score: Optional[TrustworthinessScore] = None
     enrichment_timestamp: datetime
     model_versions: Dict[str, ModelVersion]
     processing_time_ms: int

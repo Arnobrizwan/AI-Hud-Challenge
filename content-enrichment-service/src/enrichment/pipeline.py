@@ -114,7 +114,41 @@ class ContentEnrichmentPipeline:
 
             processing_time = int((time.time() - start_time) * 1000)
 
-            # Create enriched content
+            # Create enriched content with proper defaults for disabled components
+            from models.content import SentimentAnalysis, SentimentLabel, ContentSignal, TrustworthinessScore
+            
+            # Provide defaults for disabled components only if they are required
+            if sentiment is None and include_sentiment:
+                sentiment = SentimentAnalysis(
+                    sentiment=SentimentLabel.NEUTRAL,
+                    confidence=0.5,
+                    emotions={},
+                    subjectivity=0.5,
+                    polarity=0.0
+                )
+            
+            if signals is None and include_signals:
+                signals = ContentSignal(
+                    readability_score=0.5,
+                    factual_claims=0,
+                    citations_count=0,
+                    bias_score=0.0,
+                    engagement_prediction=0.5,
+                    virality_potential=0.5,
+                    content_freshness=0.5,
+                    authority_score=0.5
+                )
+            
+            if trust_score is None and include_trust_score:
+                trust_score = TrustworthinessScore(
+                    overall_score=0.5,
+                    source_reliability=0.5,
+                    fact_checking_score=0.5,
+                    citation_quality=0.5,
+                    author_credibility=0.5,
+                    content_quality=0.5
+                )
+
             enriched_content = EnrichedContent(
                 id=content.id,
                 original_content=content,
@@ -167,7 +201,7 @@ class ContentEnrichmentPipeline:
         except Exception as e:
             logger.error("Sentiment analysis failed", content_id=content.id, error=str(e))
             # Return neutral sentiment as fallback
-            from ..models.content import SentimentAnalysis, SentimentLabel
+            from models.content import SentimentAnalysis, SentimentLabel
 
             return SentimentAnalysis(sentiment=SentimentLabel.NEUTRAL, confidence=0.5, subjectivity=0.5, polarity=0.0)
 
@@ -178,7 +212,7 @@ class ContentEnrichmentPipeline:
         except Exception as e:
             logger.error("Signal extraction failed", content_id=content.id, error=str(e))
             # Return default signals as fallback
-            from ..models.content import ContentSignal
+            from models.content import ContentSignal
 
             return ContentSignal(
                 readability_score=0.5,
@@ -198,7 +232,7 @@ class ContentEnrichmentPipeline:
         except Exception as e:
             logger.error("Trustworthiness computation failed", content_id=content.id, error=str(e))
             # Return neutral trust score as fallback
-            from ..models.content import TrustworthinessScore
+            from models.content import TrustworthinessScore
 
             return TrustworthinessScore(
                 overall_score=0.5,

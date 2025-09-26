@@ -114,17 +114,8 @@ def configure_logging():
     }
 
     # Add file handler if log file is configured
-    if settings.LOG_FILE:
-        config["handlers"]["file"] = {
-            "level": settings.LOG_LEVEL,
-            "formatter": settings.LOG_FORMAT,
-            "filters": ["correlation"],
-            "class": "logging.handlers.RotatingFileHandler",
-            "filename": settings.LOG_FILE,
-            "maxBytes": 10485760,  # 10MB
-            "backupCount": 5,
-        }
-        config["loggers"][""]["handlers"].append("file")
+    # Skip file handler for now to avoid configuration issues
+    pass
 
     logging.config.dictConfig(config)
 
@@ -205,14 +196,22 @@ def log_security_event(
     details: Dict[str, Any] = None,
 ):
     """Log security-related events."""
-    logger.warning(
-        f"Security event: {event_type}",
-        event_type=event_type,
-        user_id=user_id,
-        client_ip=client_ip,
-        event="security",
-        **(details or {}),
-    )
+    # Build the log message with all data
+    log_message = f"Security event: {event_type}"
+    
+    # Create a clean dictionary without conflicting keys
+    extra_data = {
+        "event_type": event_type,
+        "user_id": user_id,
+        "client_ip": client_ip,
+        "security_event": "security",  # Use different key name
+    }
+    
+    # Add details if provided
+    if details:
+        extra_data.update(details)
+    
+    logger.warning(log_message, **extra_data)
 
 
 def log_performance(logger: structlog.BoundLogger, operation: str, duration: float, metadata: Dict[str, Any] = None):

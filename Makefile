@@ -67,6 +67,16 @@ build:
 		-t $(IMAGE_NAME):dev \
 		.
 
+# Ultra-fast build (minimal dependencies)
+build-fast:
+	@echo "⚡ Building ultra-fast Docker image (minimal deps)..."
+	@DOCKER_BUILDKIT=1 docker build \
+		--platform $(PLATFORM) \
+		--progress=plain \
+		-f Dockerfile.fast \
+		-t $(IMAGE_NAME):fast \
+		.
+
 run:
 	@echo "🚀 Running optimized container..."
 	@docker run --rm -it -p 8080:8080 $(IMAGE_NAME):dev

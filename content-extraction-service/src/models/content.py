@@ -6,7 +6,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 
 
 class ContentType(str, Enum):
@@ -83,6 +83,20 @@ class ExtractedContent(BaseModel):
     processing_time_ms: Optional[int] = None
     error_message: Optional[str] = None
 
+    @validator('quality_score')
+    def validate_quality_score(cls, v):
+        """Validate that quality score is between 0.0 and 1.0."""
+        if not 0.0 <= v <= 1.0:
+            raise ValueError(f'Quality score must be between 0.0 and 1.0, got {v}')
+        return v
+
+    @validator('word_count', 'reading_time')
+    def validate_counts(cls, v):
+        """Validate that counts are non-negative."""
+        if v < 0:
+            raise ValueError(f'Count must be non-negative, got {v}')
+        return v
+
 
 class QualityAnalysis(BaseModel):
     """Quality analysis model."""
@@ -97,6 +111,20 @@ class QualityAnalysis(BaseModel):
     sentiment_score: float
     language_confidence: float
     analyzed_at: datetime = Field(default_factory=datetime.utcnow)
+
+    @validator('quality_score', 'readability_score', 'sentiment_score', 'language_confidence')
+    def validate_scores(cls, v):
+        """Validate that scores are between 0.0 and 1.0."""
+        if not 0.0 <= v <= 1.0:
+            raise ValueError(f'Score must be between 0.0 and 1.0, got {v}')
+        return v
+
+    @validator('word_count', 'sentence_count', 'paragraph_count')
+    def validate_counts(cls, v):
+        """Validate that counts are non-negative."""
+        if v < 0:
+            raise ValueError(f'Count must be non-negative, got {v}')
+        return v
 
 
 class ExtractionBatch(BaseModel):
@@ -135,3 +163,17 @@ class ProcessingMetrics(BaseModel):
     content_types: Dict[str, int]
     languages: Dict[str, int]
     last_updated: datetime = Field(default_factory=datetime.utcnow)
+
+    @validator('total_extractions', 'successful_extractions', 'failed_extractions')
+    def validate_counts(cls, v):
+        """Validate that counts are non-negative."""
+        if v < 0:
+            raise ValueError(f'Count must be non-negative, got {v}')
+        return v
+
+    @validator('cache_hit_rate')
+    def validate_cache_hit_rate(cls, v):
+        """Validate that cache hit rate is between 0.0 and 1.0."""
+        if not 0.0 <= v <= 1.0:
+            raise ValueError(f'Cache hit rate must be between 0.0 and 1.0, got {v}')
+        return v

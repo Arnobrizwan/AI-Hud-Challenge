@@ -157,10 +157,13 @@ class TestDeduplicationService:
     @pytest.mark.asyncio
     async def test_health_check(self, deduplication_service) -> Dict[str, Any]:
         """Test health check."""
-        # Mock the pipeline's health_check method
-        deduplication_service.pipeline.health_check = AsyncMock(
-            return_value={"status": "healthy", "lsh_index_size": 1000, "redis_connected": True}
+        # Mock the LSH index stats
+        deduplication_service.pipeline.lsh_index.get_index_stats = AsyncMock(
+            return_value={"index_size": 1000}
         )
+        
+        # Mock Redis ping
+        deduplication_service.pipeline.redis.ping = AsyncMock(return_value=True)
 
         health = await deduplication_service.health_check()
 

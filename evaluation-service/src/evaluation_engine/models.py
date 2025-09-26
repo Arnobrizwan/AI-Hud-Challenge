@@ -544,6 +544,38 @@ class AnalyzeExperimentResponse(BaseModel):
     analysis: ExperimentAnalysis
 
 
+# Offline Evaluation Request/Response models
+class OfflineEvaluationRequest(BaseModel):
+    """Request for offline model evaluation"""
+    
+    models: List[Dict[str, Any]]
+    datasets: List[Dict[str, Any]]
+    metrics: Dict[str, Any]
+
+
+class SingleModelEvaluationRequest(BaseModel):
+    """Request for single model evaluation"""
+    
+    model_settings: Dict[str, Any]
+    datasets: List[Dict[str, Any]]
+    metrics: Dict[str, Any]
+
+
+class CrossValidationRequest(BaseModel):
+    """Request for cross-validation"""
+    
+    model_settings: Dict[str, Any]
+    dataset_settings: Dict[str, Any]
+    cv_settings: Dict[str, Any]
+
+
+class FeatureImportanceRequest(BaseModel):
+    """Request for feature importance analysis"""
+    
+    model_settings: Dict[str, Any]
+    dataset_settings: Dict[str, Any]
+
+
 # Error models
 class EvaluationError(BaseModel):
     """Error response model"""

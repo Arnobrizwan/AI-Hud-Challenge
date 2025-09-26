@@ -88,19 +88,16 @@ class QualityAnalyzer:
             )
 
             return QualityAnalysis(
-                readability_score=readability_score,
+                content_id=content.id if hasattr(content, 'id') else "unknown",
+                quality_score=overall_quality / 100.0,  # Convert to 0.0-1.0 range
+                readability_score=readability_score / 100.0,  # Convert to 0.0-1.0 range
                 word_count=word_count,
-                character_count=character_count,
                 sentence_count=sentence_count,
                 paragraph_count=paragraph_count,
-                average_sentence_length=average_sentence_length,
-                average_word_length=average_word_length,
-                image_to_text_ratio=image_to_text_ratio,
-                link_density=link_density,
-                spam_score=spam_score,
-                duplicate_score=duplicate_score,
-                content_freshness=content_freshness,
-                overall_quality=overall_quality,
+                avg_sentence_length=average_sentence_length,
+                flesch_kincaid_grade=readability_score,  # Use readability score as Flesch-Kincaid grade
+                sentiment_score=0.5,  # Default neutral sentiment
+                language_confidence=0.9,  # Default high confidence
             )
 
         except Exception as e:

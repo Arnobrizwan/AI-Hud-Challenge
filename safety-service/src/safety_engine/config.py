@@ -111,7 +111,10 @@ class SafetySettings(BaseSettings):
     )
 
     # Configuration for pydantic-settings
-    model_config = {"env_file": ".env", "case_sensitive": False, "protected_namespaces": ()}
+    class Config:
+        env_file = ".env"
+        case_sensitive = False
+        extra = "ignore"  # Ignore extra environment variables
 
 
 class DriftDetectionConfig:

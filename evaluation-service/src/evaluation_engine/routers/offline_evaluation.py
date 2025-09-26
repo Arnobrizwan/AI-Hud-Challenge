@@ -9,6 +9,12 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from ..core import EvaluationEngine
 from ..dependencies import get_evaluation_engine
+from ..models import (
+    OfflineEvaluationRequest,
+    SingleModelEvaluationRequest,
+    CrossValidationRequest,
+    FeatureImportanceRequest,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -17,21 +23,19 @@ offline_evaluation_router = APIRouter()
 
 @offline_evaluation_router.post("/evaluate")
 async def evaluate_models(
-    models: List[Dict[str, Any]],
-    datasets: List[Dict[str, Any]],
-    metrics: Dict[str, Any],
+    request: OfflineEvaluationRequest,
     evaluation_engine: EvaluationEngine = Depends(get_evaluation_engine),
 ) -> Dict[str, Any]:
     """Evaluate models offline"""
     try:
-        logger.info(f"Evaluating {len(models)} models offline")
+        logger.info(f"Evaluating {len(request.models)} models offline")
 
-        results = await evaluation_engine.offline_evaluator.evaluate(models, datasets, metrics)
+        results = await evaluation_engine.offline_evaluator.evaluate(request.models, request.datasets, request.metrics)
 
         return {
             "status": "success",
             "results": results,
-            "message": f"Successfully evaluated {len(models)} models",
+            "message": f"Successfully evaluated {len(request.models)} models",
         }
 
     except Exception as e:
@@ -42,16 +46,14 @@ async def evaluate_models(
 @offline_evaluation_router.post("/evaluate/{model_name}")
 async def evaluate_single_model(
     model_name: str,
-    model_config: Dict[str, Any],
-    datasets: List[Dict[str, Any]],
-    metrics: Dict[str, Any],
+    request: SingleModelEvaluationRequest,
     evaluation_engine: EvaluationEngine = Depends(get_evaluation_engine),
 ) -> Dict[str, Any]:
     """Evaluate a single model offline"""
     try:
         logger.info(f"Evaluating model {model_name} offline")
 
-        result = await evaluation_engine.offline_evaluator.evaluate_model(model_config, datasets, metrics)
+        result = await evaluation_engine.offline_evaluator.evaluate_model(request.model_settings, request.datasets, request.metrics)
 
         return {
             "status": "success",
@@ -104,9 +106,7 @@ async def get_available_metrics(
 
 @offline_evaluation_router.post("/cross-validation")
 async def run_cross_validation(
-    model_config: Dict[str, Any],
-    dataset_config: Dict[str, Any],
-    cv_config: Dict[str, Any],
+    request: CrossValidationRequest,
     evaluation_engine: EvaluationEngine = Depends(get_evaluation_engine),
 ) -> Dict[str, Any]:
     """Run cross-validation for a model"""
@@ -115,8 +115,8 @@ async def run_cross_validation(
 
         # Mock cross-validation results
         results = {
-            "cv_strategy": cv_config.get("strategy", "kfold"),
-            "n_splits": cv_config.get("n_splits", 5),
+            "cv_strategy": request.cv_settings.get("strategy", "kfold"),
+            "n_splits": request.cv_settings.get("n_splits", 5),
             "scores": [0.85, 0.87, 0.83, 0.86, 0.84],
             "mean_score": 0.85,
             "std_score": 0.015,
@@ -132,8 +132,7 @@ async def run_cross_validation(
 
 @offline_evaluation_router.post("/feature-importance")
 async def analyze_feature_importance(
-    model_config: Dict[str, Any],
-    dataset_config: Dict[str, Any],
+    request: FeatureImportanceRequest,
     evaluation_engine: EvaluationEngine = Depends(get_evaluation_engine),
 ) -> Dict[str, Any]:
     """Analyze feature importance for a model"""

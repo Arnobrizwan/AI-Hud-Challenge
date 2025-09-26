@@ -147,8 +147,8 @@ def time_function(metric_name: str = None, labels: Dict[str, str] = None):
 
     def decorator(func):
         @wraps(func)
-        async def async_wrapper(*args, **kwargs) -> Dict[str, Any]:
-    start_time = time.time()
+        async def async_wrapper(*args, **kwargs) -> Any:
+            start_time = time.time()
             try:
                 result = await func(*args, **kwargs)
                 return result
