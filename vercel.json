@@ -19,6 +19,5 @@
     "api/index.py": {
       "maxDuration": 30
     }
-  },
-  "buildCommand": "pip install -r requirements.txt"
+  }
 }
