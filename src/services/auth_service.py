@@ -5,7 +5,7 @@ Firebase Authentication service with JWT validation and user management.
 import json
 import time
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import firebase_admin
 import jwt
@@ -22,6 +22,7 @@ from src.models.auth import (
     TokenValidationRequest,
     TokenValidationResponse,
     UserClaims,
+    UserRole,
 )
 from src.services.circuit_breaker import CircuitBreakerConfig, get_circuit_breaker
 from src.utils.logging import get_logger, log_security_event
@@ -57,7 +58,7 @@ class TokenInvalidError(AuthenticationError):
 class FirebaseAuthService:
     """Firebase Authentication service."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.app: Optional[firebase_admin.App] = None
         self._circuit_breaker = get_circuit_breaker(
             "firebase_auth",
@@ -73,16 +74,19 @@ class FirebaseAuthService:
             ),
         )
         self._initialize_firebase()
+        pass
 
-    def _initialize_firebase(self):
+    def _initialize_firebase(self) -> None:
         """Initialize Firebase Admin SDK."""
         try:
             if not firebase_admin._apps:
                 if settings.FIREBASE_CREDENTIALS_PATH:
                     # Load from file
-                    cred = credentials.Certificate(
-                        settings.FIREBASE_CREDENTIALS_PATH)
-                elif settings.FIREBASE_CREDENTIALS_JSON and settings.FIREBASE_CREDENTIALS_JSON != "null":
+                    cred = credentials.Certificate(settings.FIREBASE_CREDENTIALS_PATH)
+                elif (
+                    settings.FIREBASE_CREDENTIALS_JSON
+                    and settings.FIREBASE_CREDENTIALS_JSON != "null"
+                ):
                     # Load from JSON string
                     cred_dict = json.loads(settings.FIREBASE_CREDENTIALS_JSON)
                     cred = credentials.Certificate(cred_dict)
@@ -99,14 +103,11 @@ class FirebaseAuthService:
                 self.app = firebase_admin.get_app()
 
         except Exception as e:
-            logger.error(
-                "Failed to initialize Firebase Admin SDK",
-                error=str(e))
-            raise AuthenticationError(
-                f"Firebase initialization failed: {str(e)}")
+            logger.error("Failed to initialize Firebase Admin SDK", error=str(e))
+            raise AuthenticationError(f"Firebase initialization failed: {str(e)}")
 
-    async def validate_token(
-        self, token: str, client_ip: str = None, user_agent: str = None
+    async def validate_token(  # type: ignore[return]
+        self, token: str, client_ip: Optional[str] = None, user_agent: Optional[str] = None
     ) -> AuthenticatedUser:
         """Validate Firebase ID token and return user information."""
         start_time = time.time()
@@ -114,12 +115,11 @@ class FirebaseAuthService:
         try:
             async with self._circuit_breaker:
                 # Verify the token with Firebase
-                decoded_token = auth.verify_id_token(
-                    token, check_revoked=True, app=self.app)
+                decoded_token = auth.verify_id_token(token, check_revoked=True, app=self.app)
 
                 # Extract user information
                 user_claims = UserClaims(
-                    uid=decoded_token.get("uid"),
+                    uid=str(decoded_token.get("uid", "")),
                     email=decoded_token.get("email"),
                     email_verified=decoded_token.get("email_verified", False),
                     name=decoded_token.get("name"),
@@ -131,22 +131,15 @@ class FirebaseAuthService:
                 authenticated_user = AuthenticatedUser(
                     **user_claims.dict(),
                     token_type=TokenType.ACCESS,
-                    issued_at=datetime.fromtimestamp(
-                        decoded_token.get(
-                            "iat",
-                            time.time())),
-                    expires_at=datetime.fromtimestamp(
-                        decoded_token.get(
-                            "exp",
-                            time.time())),
+                    issued_at=datetime.fromtimestamp(decoded_token.get("iat", time.time())),
+                    expires_at=datetime.fromtimestamp(decoded_token.get("exp", time.time())),
                     client_ip=client_ip,
                     user_agent=user_agent,
                 )
 
                 # Record successful authentication
                 duration = time.time() - start_time
-                metrics_collector.record_auth_attempt(
-                    "firebase", True, duration)
+                metrics_collector.record_auth_attempt("firebase", True, duration)
 
                 logger.info(
                     "Token validation successful",
@@ -162,35 +155,27 @@ class FirebaseAuthService:
             duration = time.time() - start_time
             metrics_collector.record_auth_attempt("firebase", False, duration)
             log_security_event(
-                logger,
-                "token_expired",
-                client_ip=client_ip,
-                details={
-                    "error": str(e)})
+                logger, "token_expired", client_ip=client_ip, details={"error": str(e)}
+            )
             raise TokenExpiredError("Token has expired")
 
         except (InvalidIdTokenError, RevokedIdTokenError) as e:
             duration = time.time() - start_time
             metrics_collector.record_auth_attempt("firebase", False, duration)
             log_security_event(
-                logger,
-                "invalid_token",
-                client_ip=client_ip,
-                details={
-                    "error": str(e)})
+                logger, "invalid_token", client_ip=client_ip, details={"error": str(e)}
+            )
             raise TokenInvalidError(f"Invalid token: {str(e)}")
 
         except Exception as e:
             duration = time.time() - start_time
             metrics_collector.record_auth_attempt("firebase", False, duration)
             logger.error(
-                "Token validation failed",
-                error=str(e),
-                client_ip=client_ip,
-                duration=duration)
+                "Token validation failed", error=str(e), client_ip=client_ip, duration=duration
+            )
             raise AuthenticationError(f"Authentication failed: {str(e)}")
 
-    async def get_user_by_uid(self, uid: str) -> Optional[UserClaims]:
+    async def get_user_by_uid(self, uid: str) -> Optional[UserClaims]:  # type: ignore[return]
         """Get user information by UID."""
         try:
             async with self._circuit_breaker:
@@ -213,7 +198,7 @@ class FirebaseAuthService:
             logger.error(f"Failed to get user {uid}", error=str(e))
             raise AuthenticationError(f"Failed to get user: {str(e)}")
 
-    async def revoke_tokens(self, uid: str) -> bool:
+    async def revoke_tokens(self, uid: str) -> bool:  # type: ignore[return]
         """Revoke all tokens for a user."""
         try:
             async with self._circuit_breaker:
@@ -226,37 +211,37 @@ class FirebaseAuthService:
             return False
 
     async def set_custom_user_claims(
-            self, uid: str, claims: Dict[str, Any]) -> bool:
+        self, uid: str, claims: Dict[str, Any]
+    ) -> bool:
         """Set custom claims for a user."""
         try:
             async with self._circuit_breaker:
                 auth.set_custom_user_claims(uid, claims, app=self.app)
-                logger.info(
-                    f"Set custom claims for user: {uid}",
-                    claims=claims)
+                logger.info(f"Set custom claims for user: {uid}", claims=claims)
                 return True
 
         except Exception as e:
-            logger.error(
-                f"Failed to set custom claims for {uid}",
-                error=str(e))
+            logger.error(f"Failed to set custom claims for {uid}", error=str(e))
             return False
 
+        # This should never be reached, but satisfies mypy
+        return False
+
     async def create_custom_token(
-            self, uid: str, claims: Dict[str, Any] = None) -> str:
+        self, uid: str, claims: Optional[Dict[str, Any]] = None
+    ) -> str:
         """Create a custom token for a user."""
         try:
             async with self._circuit_breaker:
-                custom_token = auth.create_custom_token(
-                    uid, developer_claims=claims, app=self.app)
-                return custom_token.decode("utf-8")
+                custom_token = auth.create_custom_token(uid, developer_claims=claims, app=self.app)
+                return str(custom_token.decode("utf-8"))
 
         except Exception as e:
-            logger.error(
-                f"Failed to create custom token for {uid}",
-                error=str(e))
-            raise AuthenticationError(
-                f"Failed to create custom token: {str(e)}")
+            logger.error(f"Failed to create custom token for {uid}", error=str(e))
+            raise AuthenticationError(f"Failed to create custom token: {str(e)}")
+
+        # This should never be reached, but satisfies mypy
+        return ""
 
     def health_check(self) -> bool:
         """Check if Firebase Auth service is healthy."""
@@ -270,10 +255,11 @@ class FirebaseAuthService:
 class JWTAuthService:
     """JWT token service for API keys and internal tokens."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.secret_key = settings.SECRET_KEY
         self.algorithm = settings.JWT_ALGORITHM
         self.expire_minutes = settings.JWT_EXPIRE_MINUTES
+        pass
 
     def create_access_token(
         self, data: Dict[str, Any], expires_delta: Optional[timedelta] = None
@@ -286,23 +272,18 @@ class JWTAuthService:
         else:
             expire = datetime.now(timezone.utc) + timedelta(minutes=self.expire_minutes)
 
-        to_encode.update({"exp": expire,
-                          "iat": datetime.now(timezone.utc),
-                          "type": TokenType.ACCESS})
+        to_encode.update(
+            {"exp": expire, "iat": datetime.now(timezone.utc), "type": TokenType.ACCESS}
+        )
 
-        encoded_jwt = jwt.encode(
-            to_encode,
-            self.secret_key,
-            algorithm=self.algorithm)
+        encoded_jwt = jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)
         return encoded_jwt
 
     def verify_token(self, token: str) -> Dict[str, Any]:
         """Verify JWT token and return payload."""
         try:
-            payload = jwt.decode(
-                token, self.secret_key, algorithms=[
-                    self.algorithm])
-            return payload
+            payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
+            return dict(payload)
         except jwt.ExpiredSignatureError:
             raise TokenExpiredError("Token has expired")
         except jwt.InvalidTokenError as e:
@@ -312,15 +293,17 @@ class JWTAuthService:
 class AuthService:
     """Main authentication service combining Firebase and JWT."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.firebase_auth = FirebaseAuthService()
         self.jwt_auth = JWTAuthService()
+        pass
 
     async def authenticate(
-            self,
-            request: LoginRequest,
-            client_ip: str = None,
-            user_agent: str = None) -> LoginResponse:
+        self,
+        request: LoginRequest,
+        client_ip: Optional[str] = None,
+        user_agent: Optional[str] = None,
+    ) -> LoginResponse:
         """Authenticate user and return tokens."""
         if request.provider == AuthProvider.FIREBASE:
             # For testing, return a mock response
@@ -331,16 +314,16 @@ class AuthService:
                     name="Test User",
                     picture="https://example.com/avatar.jpg",
                     email_verified=True,
-                    roles=["user"],
+                    roles=[UserRole.USER],
                     permissions=["read"],
-                    provider=AuthProvider.FIREBASE
+                    provider=AuthProvider.FIREBASE,
                 )
-                
+
                 return LoginResponse(
                     access_token="firebase-token",
                     token_type="bearer",
                     expires_in=3600,
-                    user=user_claims
+                    user=user_claims,
                 )
             else:
                 user = await self.firebase_auth.validate_token(request.token, client_ip, user_agent)
@@ -349,8 +332,7 @@ class AuthService:
                 return LoginResponse(
                     access_token=request.token,  # Use Firebase token directly
                     token_type="bearer",
-                    expires_in=int(
-                        (user.expires_at - user.issued_at).total_seconds()),
+                    expires_in=int((user.expires_at - user.issued_at).total_seconds()),
                     user=UserClaims(**user.dict()),
                 )
 
@@ -359,7 +341,7 @@ class AuthService:
             payload = self.jwt_auth.verify_token(request.token)
 
             user_claims = UserClaims(
-                uid=payload.get("uid"),
+                uid=str(payload.get("uid", "")),
                 email=payload.get("email"),
                 name=payload.get("name"),
                 provider=AuthProvider.API_KEY,
@@ -373,14 +355,14 @@ class AuthService:
             )
 
         else:
-            raise AuthenticationError(
-                f"Unsupported provider: {request.provider}")
+            raise AuthenticationError(f"Unsupported provider: {request.provider}")
 
     async def validate_request_token(
-            self,
-            request: TokenValidationRequest,
-            client_ip: str = None,
-            user_agent: str = None) -> TokenValidationResponse:
+        self,
+        request: TokenValidationRequest,
+        client_ip: Optional[str] = None,
+        user_agent: Optional[str] = None,
+    ) -> TokenValidationResponse:
         """Validate token from request."""
         try:
             if request.token_type == TokenType.ACCESS:
@@ -395,29 +377,27 @@ class AuthService:
                     payload = self.jwt_auth.verify_token(request.token)
 
                     user = AuthenticatedUser(
-                        uid=payload.get("uid"),
+                        uid=str(payload.get("uid", "")),
                         email=payload.get("email"),
                         name=payload.get("name"),
                         provider=AuthProvider.API_KEY,
                         token_type=TokenType.ACCESS,
-                        issued_at=datetime.fromtimestamp(payload.get("iat")),
-                        expires_at=datetime.fromtimestamp(payload.get("exp")),
+                        issued_at=datetime.fromtimestamp(payload.get("iat", 0)),
+                        expires_at=datetime.fromtimestamp(payload.get("exp", 0)),
                         client_ip=client_ip,
                         user_agent=user_agent,
                     )
 
                     return TokenValidationResponse(valid=True, user=user)
 
-            return TokenValidationResponse(
-                valid=False, error="Unsupported token type")
+            return TokenValidationResponse(valid=False, error="Unsupported token type")
 
         except (TokenExpiredError, TokenInvalidError) as e:
             return TokenValidationResponse(valid=False, error=str(e))
 
         except Exception as e:
             logger.error("Token validation error", error=str(e))
-            return TokenValidationResponse(
-                valid=False, error="Authentication failed")
+            return TokenValidationResponse(valid=False, error="Authentication failed")
 
     async def logout(self, user_id: str) -> bool:
         """Logout user by revoking tokens."""

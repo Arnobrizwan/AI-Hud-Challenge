@@ -2,8 +2,9 @@
 Security middleware for adding security headers and CORS handling.
 """
 
+import asyncio
 import uuid
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.cors import CORSMiddleware
@@ -40,9 +41,9 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         self.enable_referrer_policy = enable_referrer_policy
         self.custom_headers = custom_headers or {}
 
-    async def dispatch(self, request: Request, call_next) -> Response:
+    async def dispatch(self, request: Request, call_next: Any) -> Response:
         """Add security headers to response."""
-        response = await call_next(request)
+        response: Response = await call_next(request)
 
         # Add security headers
         if self.enable_hsts and request.url.scheme == "https":
@@ -84,11 +85,11 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 class CorrelationIdMiddleware(BaseHTTPMiddleware):
     """Middleware for handling request correlation IDs."""
 
-    def __init__(self, app: ASGIApp, header_name: str = "X-Correlation-ID"):
+    def __init__(self, app: ASGIApp, header_name: str = "X-Correlation-ID") -> None:
         super().__init__(app)
         self.header_name = header_name
 
-    async def dispatch(self, request: Request, call_next) -> Response:
+    async def dispatch(self, request: Request, call_next: Any) -> Response:
         """Process correlation ID for request tracking."""
         # Get correlation ID from header or generate new one
         correlation_id = request.headers.get(self.header_name) or str(uuid.uuid4())
@@ -100,7 +101,7 @@ class CorrelationIdMiddleware(BaseHTTPMiddleware):
         request.state.correlation_id = correlation_id
 
         # Process request
-        response = await call_next(request)
+        response: Response = await call_next(request)
 
         # Add correlation ID to response headers
         response.headers[self.header_name] = correlation_id
@@ -111,11 +112,11 @@ class CorrelationIdMiddleware(BaseHTTPMiddleware):
 class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
     """Middleware for limiting request body size."""
 
-    def __init__(self, app: ASGIApp, max_size: int = None):
+    def __init__(self, app: ASGIApp, max_size: Optional[int] = None) -> None:
         super().__init__(app)
         self.max_size = max_size or settings.MAX_REQUEST_SIZE
 
-    async def dispatch(self, request: Request, call_next) -> Response:
+    async def dispatch(self, request: Request, call_next: Any) -> Response:
         """Check request size limits."""
         # Check Content-Length header
         content_length = request.headers.get("content-length")
@@ -140,22 +141,24 @@ class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
             except ValueError:
                 logger.warning("Invalid Content-Length header", content_length=content_length)
 
-        return await call_next(request)
+        response: Response = await call_next(request)
+        return response
 
 
 class RequestTimeoutMiddleware(BaseHTTPMiddleware):
     """Middleware for handling request timeouts."""
 
-    def __init__(self, app: ASGIApp, timeout_seconds: int = None):
+    def __init__(self, app: ASGIApp, timeout_seconds: Optional[float] = None) -> None:
         super().__init__(app)
         self.timeout_seconds = timeout_seconds or settings.REQUEST_TIMEOUT
 
-    async def dispatch(self, request: Request, call_next) -> Response:
+    async def dispatch(self, request: Request, call_next: Any) -> Response:
         """Apply request timeout."""
-        import asyncio
 
         try:
-            response = await asyncio.wait_for(call_next(request), timeout=self.timeout_seconds)
+            response: Response = await asyncio.wait_for(
+                call_next(request), timeout=self.timeout_seconds
+            )
             return response
 
         except asyncio.TimeoutError:
@@ -180,9 +183,9 @@ class ContentValidationMiddleware(BaseHTTPMiddleware):
     def __init__(
         self,
         app: ASGIApp,
-        allowed_content_types: List[str] = None,
-        require_content_type: List[str] = None,
-    ):
+        allowed_content_types: Optional[List[str]] = None,
+        require_content_type: Optional[List[str]] = None,
+    ) -> None:
         super().__init__(app)
         self.allowed_content_types = allowed_content_types or [
             "application/json",
@@ -192,7 +195,7 @@ class ContentValidationMiddleware(BaseHTTPMiddleware):
         ]
         self.require_content_type = require_content_type or ["POST", "PUT", "PATCH"]
 
-    async def dispatch(self, request: Request, call_next) -> Response:
+    async def dispatch(self, request: Request, call_next: Any) -> Response:
         """Validate request content type."""
         method = request.method
         content_type = request.headers.get("content-type", "").split(";")[0].strip()
@@ -228,12 +231,14 @@ class ContentValidationMiddleware(BaseHTTPMiddleware):
                 headers={"content-type": "application/json"},
             )
 
-        return await call_next(request)
+        response: Response = await call_next(request)
+        return response
 
 
-def create_cors_middleware() -> CORSMiddleware:
+def create_cors_middleware(app: ASGIApp) -> CORSMiddleware:
     """Create CORS middleware with configured settings."""
     return CORSMiddleware(
+        app,
         allow_origins=settings.CORS_ORIGINS,
         allow_credentials=settings.CORS_CREDENTIALS,
         allow_methods=settings.CORS_METHODS,
@@ -268,7 +273,7 @@ class SecurityMiddlewareStack:
 
         # 2. CORS handling
         if config.get("enable_cors", True):
-            app = create_cors_middleware()(app)
+            app = create_cors_middleware(app)
 
         # 3. Request validation
         app = ContentValidationMiddleware(
@@ -278,12 +283,18 @@ class SecurityMiddlewareStack:
         )
 
         # 4. Request size limiting
-        app = RequestSizeLimitMiddleware(app, max_size=config.get("max_request_size", settings.MAX_REQUEST_SIZE))
+        app = RequestSizeLimitMiddleware(
+            app, max_size=config.get("max_request_size", settings.MAX_REQUEST_SIZE)
+        )
 
         # 5. Request timeout
-        app = RequestTimeoutMiddleware(app, timeout_seconds=config.get("request_timeout", settings.REQUEST_TIMEOUT))
+        app = RequestTimeoutMiddleware(
+            app, timeout_seconds=config.get("request_timeout", settings.REQUEST_TIMEOUT)
+        )
 
         # 6. Correlation ID (innermost)
-        app = CorrelationIdMiddleware(app, header_name=config.get("correlation_header", "X-Correlation-ID"))
+        app = CorrelationIdMiddleware(
+            app, header_name=config.get("correlation_header", "X-Correlation-ID")
+        )
 
         return app

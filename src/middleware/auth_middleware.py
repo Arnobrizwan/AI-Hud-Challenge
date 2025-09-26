@@ -3,15 +3,15 @@ Authentication middleware for FastAPI.
 """
 
 import time
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
-from fastapi import HTTPException, status
+from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 
-from src.config.settings import settings
+# from src.config.settings import settings  # Unused import
 from src.models.auth import TokenType, TokenValidationRequest
 from src.models.common import ErrorResponse, ResponseStatus
 from src.services.auth_service import (
@@ -29,7 +29,7 @@ logger = get_logger(__name__)
 class AuthenticationMiddleware(BaseHTTPMiddleware):
     """Middleware for handling authentication across all requests."""
 
-    def __init__(self, app, excluded_paths: list = None):
+    def __init__(self, app: Any, excluded_paths: Optional[List[str]] = None) -> None:
         super().__init__(app)
         self.excluded_paths = excluded_paths or [
             "/health",
@@ -40,30 +40,27 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
             "/auth/login",
         ]
 
-    async def dispatch(self, request: Request, call_next) -> Response:
+    async def dispatch(self, request: Request, call_next: Any) -> Response:
         """Process authentication for incoming requests."""
         start_time = time.time()
 
         # Skip authentication for excluded paths
-        if any(request.url.path.startswith(path)
-               for path in self.excluded_paths):
-            return await call_next(request)
+        if any(request.url.path.startswith(path) for path in self.excluded_paths):
+            response: Response = await call_next(request)
+            return response
 
         # Extract authorization header
         auth_header = request.headers.get("authorization")
         if not auth_header:
-            return self._create_unauthorized_response(
-                "Missing authorization header")
+            return self._create_unauthorized_response("Missing authorization header")
 
         # Parse Bearer token
         try:
             scheme, token = auth_header.split(" ", 1)
             if scheme.lower() != "bearer":
-                return self._create_unauthorized_response(
-                    "Invalid authorization scheme")
+                return self._create_unauthorized_response("Invalid authorization scheme")
         except ValueError:
-            return self._create_unauthorized_response(
-                "Invalid authorization header format")
+            return self._create_unauthorized_response("Invalid authorization header format")
 
         # Get client information
         client_ip = self._get_client_ip(request)
@@ -71,8 +68,7 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
 
         # Validate token
         try:
-            validation_request = TokenValidationRequest(
-                token=token, token_type=TokenType.ACCESS)
+            validation_request = TokenValidationRequest(token=token, token_type=TokenType.ACCESS)
 
             validation_response = await auth_service.validate_request_token(
                 validation_request, client_ip, user_agent
@@ -110,7 +106,8 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
             duration = time.time() - start_time
             metrics_collector.record_auth_attempt("middleware", True, duration)
 
-            return await call_next(request)
+            auth_response: Response = await call_next(request)
+            return auth_response
 
         except (TokenExpiredError, TokenInvalidError) as e:
             log_security_event(
@@ -121,21 +118,17 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
             )
 
             duration = time.time() - start_time
-            metrics_collector.record_auth_attempt(
-                "middleware", False, duration)
+            metrics_collector.record_auth_attempt("middleware", False, duration)
 
             return self._create_unauthorized_response(str(e))
 
         except AuthenticationError as e:
             logger.error(
-                "Authentication error",
-                error=str(e),
-                client_ip=client_ip,
-                path=request.url.path)
+                "Authentication error", error=str(e), client_ip=client_ip, path=request.url.path
+            )
 
             duration = time.time() - start_time
-            metrics_collector.record_auth_attempt(
-                "middleware", False, duration)
+            metrics_collector.record_auth_attempt("middleware", False, duration)
 
             return self._create_unauthorized_response("Authentication failed")
 
@@ -148,11 +141,9 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
             )
 
             duration = time.time() - start_time
-            metrics_collector.record_auth_attempt(
-                "middleware", False, duration)
+            metrics_collector.record_auth_attempt("middleware", False, duration)
 
-            return self._create_unauthorized_response(
-                "Authentication service unavailable")
+            return self._create_unauthorized_response("Authentication service unavailable")
 
     def _get_client_ip(self, request: Request) -> str:
         """Extract client IP address from request."""
@@ -190,10 +181,10 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
 class OptionalAuthenticationMiddleware(BaseHTTPMiddleware):
     """Middleware for optional authentication (sets user if token is valid)."""
 
-    def __init__(self, app):
+    def __init__(self, app: Any) -> None:
         super().__init__(app)
 
-    async def dispatch(self, request: Request, call_next) -> Response:
+    async def dispatch(self, request: Request, call_next: Any) -> Response:
         """Process optional authentication."""
         # Try to authenticate if authorization header is present
         auth_header = request.headers.get("authorization")
@@ -225,7 +216,8 @@ class OptionalAuthenticationMiddleware(BaseHTTPMiddleware):
         else:
             request.state.authenticated = False
 
-        return await call_next(request)
+        response: Response = await call_next(request)
+        return response
 
     def _get_client_ip(self, request: Request) -> str:
         """Extract client IP address from request."""
@@ -248,7 +240,8 @@ security = HTTPBearer()
 
 
 async def get_current_user(
-        credentials: HTTPAuthorizationCredentials = security) -> Dict[str, Any]:
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+) -> Dict[str, Any]:
     """Dependency to get current authenticated user."""
     try:
         validation_request = TokenValidationRequest(
@@ -264,7 +257,7 @@ async def get_current_user(
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
-        return validation_response.user
+        return validation_response.user.dict()
 
     except Exception as e:
         logger.error("Failed to get current user", error=str(e))
@@ -275,16 +268,16 @@ async def get_current_user(
         )
 
 
-async def get_optional_user(request: Request) -> Optional:
+async def get_optional_user(request: Request) -> Optional[Any]:
     """Dependency to get optional authenticated user."""
     return getattr(request.state, "user", None)
 
 
-def require_roles(*required_roles):
+def require_roles(*required_roles: str) -> Any:
     """Decorator to require specific user roles."""
 
-    def decorator(func):
-        async def wrapper(*args, **kwargs) -> Dict[str, Any]:
+    def decorator(func: Any) -> Any:
+        async def wrapper(*args: Any, **kwargs: Any) -> Dict[str, Any]:
             # Get user from request state or dependencies
             user = None
             for arg in args:
@@ -294,34 +287,33 @@ def require_roles(*required_roles):
 
             if not user:
                 raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Authentication required")
+                    status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required"
+                )
 
             if not any(role in user.roles for role in required_roles):
                 log_security_event(
                     logger,
                     "insufficient_permissions",
                     user_id=user.uid,
-                    details={
-                        "required_roles": list(required_roles),
-                        "user_roles": user.roles},
+                    details={"required_roles": list(required_roles), "user_roles": user.roles},
                 )
                 raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Insufficient permissions")
+                    status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
+                )
 
-            return await func(*args, **kwargs)
+            result: Dict[str, Any] = await func(*args, **kwargs)
+            return result
 
         return wrapper
 
     return decorator
 
 
-def require_permissions(*required_permissions):
+def require_permissions(*required_permissions: str) -> Any:
     """Decorator to require specific permissions."""
 
-    def decorator(func):
-        async def wrapper(*args, **kwargs) -> Dict[str, Any]:
+    def decorator(func: Any) -> Any:
+        async def wrapper(*args: Any, **kwargs: Any) -> Dict[str, Any]:
             # Get user from request state or dependencies
             user = None
             for arg in args:
@@ -331,11 +323,10 @@ def require_permissions(*required_permissions):
 
             if not user:
                 raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Authentication required")
+                    status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required"
+                )
 
-            if not all(
-                    perm in user.permissions for perm in required_permissions):
+            if not all(perm in user.permissions for perm in required_permissions):
                 log_security_event(
                     logger,
                     "insufficient_permissions",
@@ -346,10 +337,11 @@ def require_permissions(*required_permissions):
                     },
                 )
                 raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Insufficient permissions")
+                    status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
+                )
 
-            return await func(*args, **kwargs)
+            result: Dict[str, Any] = await func(*args, **kwargs)
+            return result
 
         return wrapper
 

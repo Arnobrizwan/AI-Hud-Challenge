@@ -3,10 +3,9 @@ Redis-based rate limiting service with sliding window algorithm.
 """
 
 import asyncio
-import json
 import time
-from datetime import datetime, timedelta
-from typing import Any, Dict, Optional, Tuple
+from datetime import datetime
+from typing import Dict, Optional, Tuple
 
 import aioredis
 
@@ -21,12 +20,7 @@ logger = get_logger(__name__)
 class RateLimitExceeded(Exception):
     """Raised when rate limit is exceeded."""
 
-    def __init__(
-            self,
-            limit_type: str,
-            limit: int,
-            window_seconds: int,
-            reset_time: datetime):
+    def __init__(self, limit_type: str, limit: int, window_seconds: int, reset_time: datetime):
         self.limit_type = limit_type
         self.limit = limit
         self.window_seconds = window_seconds
@@ -39,7 +33,7 @@ class RateLimitExceeded(Exception):
 class SlidingWindowRateLimiter:
     """Redis-based sliding window rate limiter."""
 
-    def __init__(self, redis_url: str = None):
+    def __init__(self, redis_url: Optional[str] = None) -> None:
         self.redis_url = redis_url or settings.REDIS_URL
         self.redis_pool: Optional[aioredis.Redis] = None
         self._lock = asyncio.Lock()
@@ -52,7 +46,7 @@ class SlidingWindowRateLimiter:
                     self.redis_pool = await aioredis.create_redis_pool(
                         self.redis_url,
                         maxsize=settings.REDIS_MAX_CONNECTIONS,
-                        encoding='utf-8',
+                        encoding="utf-8",
                     )
                     logger.info("Redis connection pool initialized")
         return self.redis_pool
@@ -94,8 +88,7 @@ class SlidingWindowRateLimiter:
                 # Check if limit exceeded
                 if current_count >= limit:
                     # Calculate reset time
-                    reset_time = datetime.fromtimestamp(
-                        current_time + window_seconds)
+                    reset_time = datetime.fromtimestamp(current_time + window_seconds)
 
                     rate_limit_info = RateLimitInfo(
                         limit=limit,
@@ -125,8 +118,7 @@ class SlidingWindowRateLimiter:
 
                 # Calculate remaining requests and reset time
                 remaining = max(0, limit - current_count - 1)
-                reset_time = datetime.fromtimestamp(
-                    current_time + window_seconds)
+                reset_time = datetime.fromtimestamp(current_time + window_seconds)
 
                 rate_limit_info = RateLimitInfo(
                     limit=limit,
@@ -160,7 +152,7 @@ class SlidingWindowRateLimiter:
             deleted = await redis.delete(redis_key)
 
             logger.info(f"Rate limit reset for key: {key}")
-            return deleted > 0
+            return bool(deleted and deleted > 0)
 
         except Exception as e:
             logger.error(f"Failed to reset rate limit for {key}", error=str(e))
@@ -195,17 +187,12 @@ class SlidingWindowRateLimiter:
             )
 
         except Exception as e:
-            logger.error(
-                "Failed to get rate limit info",
-                key=key,
-                error=str(e))
+            logger.error("Failed to get rate limit info", key=key, error=str(e))
             # Return safe defaults on error
             reset_time = datetime.fromtimestamp(current_time + window_seconds)
             return RateLimitInfo(
-                limit=limit,
-                remaining=limit,
-                reset_time=reset_time,
-                window_seconds=window_seconds)
+                limit=limit, remaining=limit, reset_time=reset_time, window_seconds=window_seconds
+            )
 
     async def close(self) -> None:
         """Close Redis connection."""
@@ -217,7 +204,7 @@ class SlidingWindowRateLimiter:
 class DistributedRateLimiter:
     """Distributed rate limiter with multiple limit types."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.limiter = SlidingWindowRateLimiter()
 
         # Default rate limits from settings
@@ -242,11 +229,9 @@ class DistributedRateLimiter:
         key = f"user:{user_id}"
         return await self.limiter.check_rate_limit(key, limit, window_seconds)
 
-    async def check_ip_rate_limit(self,
-                                  ip_address: str,
-                                  limit: Optional[int] = None,
-                                  window_seconds: Optional[int] = None) -> Tuple[bool,
-                                                                                 RateLimitInfo]:
+    async def check_ip_rate_limit(
+        self, ip_address: str, limit: Optional[int] = None, window_seconds: Optional[int] = None
+    ) -> Tuple[bool, RateLimitInfo]:
         """Check rate limit for an IP address."""
         limit = limit or self.default_limits["per_ip"]["limit"]
         window_seconds = window_seconds or self.default_limits["per_ip"]["window"]
@@ -268,8 +253,7 @@ class DistributedRateLimiter:
         key = "global"
         return await self.limiter.check_rate_limit(key, limit, window_seconds)
 
-    async def check_multiple_limits(
-            self, checks: list) -> Dict[str, Tuple[bool, RateLimitInfo]]:
+    async def check_multiple_limits(self, checks: list) -> Dict[str, Tuple[bool, RateLimitInfo]]:
         """Check multiple rate limits concurrently."""
         tasks = []
         check_names = []
@@ -277,14 +261,12 @@ class DistributedRateLimiter:
         for check in checks:
             if check["type"] == "user":
                 task = self.check_user_rate_limit(
-                    check["identifier"],
-                    check.get("limit"),
-                    check.get("window_seconds"))
+                    check["identifier"], check.get("limit"), check.get("window_seconds")
+                )
             elif check["type"] == "ip":
                 task = self.check_ip_rate_limit(
-                    check["identifier"],
-                    check.get("limit"),
-                    check.get("window_seconds"))
+                    check["identifier"], check.get("limit"), check.get("window_seconds")
+                )
             elif check["type"] == "endpoint":
                 task = self.check_endpoint_rate_limit(
                     check["endpoint"],
@@ -305,10 +287,18 @@ class DistributedRateLimiter:
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
         return {
-            name: result if not isinstance(
-                result, Exception) else (
-                False, None) for name, result in zip(
-                check_names, results)}
+            name: (
+                (result[0], result[1])
+                if isinstance(result, tuple) and not isinstance(result, Exception)
+                else (
+                    False,
+                    RateLimitInfo(
+                        limit=0, remaining=0, reset_time=datetime.utcnow(), window_seconds=0
+                    ),
+                )
+            )
+            for name, result in zip(check_names, results)
+        }
 
     async def reset_user_rate_limit(self, user_id: str) -> bool:
         """Reset rate limit for a user."""
@@ -321,10 +311,8 @@ class DistributedRateLimiter:
         return await self.limiter.reset_rate_limit(key)
 
     async def get_user_rate_limit_info(
-            self,
-            user_id: str,
-            limit: Optional[int] = None,
-            window_seconds: Optional[int] = None) -> RateLimitInfo:
+        self, user_id: str, limit: Optional[int] = None, window_seconds: Optional[int] = None
+    ) -> RateLimitInfo:
         """Get rate limit information for a user."""
         limit = limit or self.default_limits["per_user"]["limit"]
         window_seconds = window_seconds or self.default_limits["per_user"]["window"]
@@ -333,10 +321,8 @@ class DistributedRateLimiter:
         return await self.limiter.get_rate_limit_info(key, limit, window_seconds)
 
     async def get_ip_rate_limit_info(
-            self,
-            ip_address: str,
-            limit: Optional[int] = None,
-            window_seconds: Optional[int] = None) -> RateLimitInfo:
+        self, ip_address: str, limit: Optional[int] = None, window_seconds: Optional[int] = None
+    ) -> RateLimitInfo:
         """Get rate limit information for an IP address."""
         limit = limit or self.default_limits["per_ip"]["limit"]
         window_seconds = window_seconds or self.default_limits["per_ip"]["window"]

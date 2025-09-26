@@ -47,7 +47,7 @@ class UserClaims(BaseModel):
     provider: AuthProvider = Field(default=AuthProvider.FIREBASE, description="Auth provider")
 
     @validator("email")
-    def validate_email(cls, v):
+    def validate_email(cls, v: str) -> str:
         """Validate email format."""
         if v and "@" not in v:
             raise ValueError("Invalid email format")

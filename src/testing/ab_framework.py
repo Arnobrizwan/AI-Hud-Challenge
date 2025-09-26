@@ -1,12 +1,9 @@
 """A/B testing framework for ranking algorithms."""
 
-import asyncio
 import hashlib
-import json
-import random
 from dataclasses import dataclass
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from datetime import datetime
+from typing import Any, Dict, List
 
 import structlog
 
@@ -61,10 +58,7 @@ class ABTestingFramework:
                         variant_id="hybrid",
                         name="Hybrid ML + Heuristic",
                         weight=0.3,
-                        config={
-                            "algorithm": "hybrid",
-                            "ml_weight": 0.7,
-                            "heuristic_weight": 0.3},
+                        config={"algorithm": "hybrid", "ml_weight": 0.7, "heuristic_weight": 0.3},
                     ),
                     ABTestVariant(
                         variant_id="heuristic",
@@ -126,15 +120,12 @@ class ABTestingFramework:
 
             self.experiments[personalization_experiment.experiment_id] = personalization_experiment
 
-            logger.info(
-                "A/B test experiments initialized",
-                count=len(
-                    self.experiments))
+            logger.info("A/B test experiments initialized", count=len(self.experiments))
+            return {"status": "initialized", "experiments_count": len(self.experiments)}
 
         except Exception as e:
-            logger.error(
-                "Failed to initialize A/B test experiments",
-                error=str(e))
+            logger.error("Failed to initialize A/B test experiments", error=str(e))
+            return {"status": "error", "error": str(e)}
 
     async def get_variant(self, user_id: str, experiment: str) -> str:
         """Get variant assignment for user in experiment."""
@@ -148,14 +139,12 @@ class ABTestingFramework:
             cache_key = f"ab_assignment:{experiment}:{user_id}"
             cached_variant = await self.cache_manager.get(cache_key)
             if cached_variant:
-                return cached_variant
+                return str(cached_variant)
 
             # Get experiment
             exp = self.experiments.get(experiment)
             if not exp or not exp.is_active:
-                logger.warning(
-                    "Experiment not found or inactive",
-                    experiment=experiment)
+                logger.warning("Experiment not found or inactive", experiment=experiment)
                 return "control"  # Default variant
 
             # Check if experiment is still active
@@ -177,16 +166,11 @@ class ABTestingFramework:
 
         except Exception as e:
             logger.error(
-                "Variant assignment failed",
-                error=str(e),
-                user_id=user_id,
-                experiment=experiment)
+                "Variant assignment failed", error=str(e), user_id=user_id, experiment=experiment
+            )
             return "control"
 
-    async def _assign_variant(
-            self,
-            user_id: str,
-            experiment: ABTestExperiment) -> str:
+    async def _assign_variant(self, user_id: str, experiment: ABTestExperiment) -> str:
         """Assign variant to user using consistent hashing."""
         # Use consistent hashing to ensure same user gets same variant
         hash_input = f"{user_id}:{experiment.experiment_id}"
@@ -205,11 +189,7 @@ class ABTestingFramework:
         # Fallback to last variant
         return experiment.variants[-1].variant_id
 
-    async def _log_assignment(
-            self,
-            user_id: str,
-            experiment: str,
-            variant: str) -> Dict[str, Any]:
+    async def _log_assignment(self, user_id: str, experiment: str, variant: str) -> Dict[str, Any]:
         """Log variant assignment for analysis."""
         try:
             assignment = {
@@ -221,16 +201,15 @@ class ABTestingFramework:
 
             # In production, this would log to a data warehouse
             logger.info("Variant assigned", **assignment)
+            return {"status": "logged", "assignment": assignment}
 
         except Exception as e:
             logger.warning("Failed to log assignment", error=str(e))
+            return {"status": "error", "error": str(e)}
 
-    async def record_result(self,
-                            user_id: str,
-                            experiment: str,
-                            variant: str,
-                            metrics: Dict[str,
-                                          float]) -> Dict[str, Any]:
+    async def record_result(
+        self, user_id: str, experiment: str, variant: str, metrics: Dict[str, float]
+    ) -> Dict[str, Any]:
         """Record experiment result for analysis."""
         try:
             result = ExperimentResult(
@@ -250,9 +229,11 @@ class ABTestingFramework:
                 variant=variant,
                 user_id=user_id,
             )
+            return {"status": "recorded", "experiment": experiment, "variant": variant}
 
         except Exception as e:
             logger.error("Failed to record experiment result", error=str(e))
+            return {"status": "error", "error": str(e)}
 
     async def get_experiment_stats(self, experiment: str) -> Dict[str, Any]:
         """Get statistics for an experiment."""
@@ -267,20 +248,15 @@ class ABTestingFramework:
                 return {"error": "Experiment not found"}
 
             # Filter results for this experiment
-            exp_results = [
-                r for r in self.results if r.experiment_id == experiment]
+            exp_results = [r for r in self.results if r.experiment_id == experiment]
 
             if not exp_results:
-                return {
-                    "experiment_id": experiment,
-                    "total_users": 0,
-                    "variants": {}}
+                return {"experiment_id": experiment, "total_users": 0, "variants": {}}
 
             # Group by variant
             variant_stats = {}
             for variant in exp.variants:
-                variant_results = [
-                    r for r in exp_results if r.variant_id == variant.variant_id]
+                variant_results = [r for r in exp_results if r.variant_id == variant.variant_id]
 
                 if variant_results:
                     # Calculate metrics
@@ -289,10 +265,8 @@ class ABTestingFramework:
                     # Calculate average metrics
                     avg_metrics = {}
                     for metric in variant_results[0].metrics.keys():
-                        values = [r.metrics.get(metric, 0)
-                                  for r in variant_results]
-                        avg_metrics[metric] = sum(
-                            values) / len(values) if values else 0
+                        values = [r.metrics.get(metric, 0) for r in variant_results]
+                        avg_metrics[metric] = sum(values) / len(values) if values else 0
 
                     variant_stats[variant.variant_id] = {
                         "name": variant.name,
@@ -336,17 +310,14 @@ class ABTestingFramework:
                 f"experiment:{experiment.experiment_id}", experiment.dict(), ttl=86400
             )
 
-            logger.info(
-                "Experiment created",
-                experiment_id=experiment.experiment_id)
+            logger.info("Experiment created", experiment_id=experiment.experiment_id)
             return True
 
         except Exception as e:
             logger.error("Failed to create experiment", error=str(e))
             return False
 
-    async def update_experiment(
-            self, experiment_id: str, updates: Dict[str, Any]) -> bool:
+    async def update_experiment(self, experiment_id: str, updates: Dict[str, Any]) -> bool:
         """Update an existing experiment."""
         try:
             exp = self.experiments.get(experiment_id)
@@ -427,10 +398,10 @@ class ABTestingFramework:
                     "is_active": exp.is_active,
                     "start_date": exp.start_date.isoformat(),
                     "end_date": exp.end_date.isoformat() if exp.end_date else None,
-                    "variant_count": len(
-                        exp.variants),
+                    "variant_count": len(exp.variants),
                     "stats": stats,
-                })
+                }
+            )
 
         return experiments
 
@@ -442,20 +413,18 @@ class ABTestingFramework:
                 return {"error": "Experiment not found"}
 
             # Get experiment results
-            exp_results = [
-                r for r in self.results if r.experiment_id == experiment_id]
+            exp_results = [r for r in self.results if r.experiment_id == experiment_id]
             if not exp_results:
                 return {"error": "No results found"}
 
             # Group by variant
             variant_data = {}
             for variant in exp.variants:
-                variant_results = [
-                    r for r in exp_results if r.variant_id == variant.variant_id]
+                variant_results = [r for r in exp_results if r.variant_id == variant.variant_id]
                 variant_data[variant.variant_id] = variant_results
 
             # Perform statistical tests
-            analysis = {
+            analysis: Dict[str, Any] = {
                 "experiment_id": experiment_id,
                 "total_users": len(set(r.user_id for r in exp_results)),
                 "analysis_date": datetime.utcnow().isoformat(),
@@ -471,7 +440,7 @@ class ABTestingFramework:
 
                 # Calculate average metrics
                 avg_metrics = {}
-                for metric in results[0].metrics.keys():
+                for metric in dict(results[0].metrics).keys():
                     values = [r.metrics.get(metric, 0) for r in results]
                     avg_metrics[metric] = {
                         "mean": sum(values) / len(values) if values else 0,

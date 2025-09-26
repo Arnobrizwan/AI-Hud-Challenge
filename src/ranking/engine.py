@@ -1,10 +1,9 @@
 """Advanced content ranking engine with ML and heuristics."""
 
-import asyncio
 import math
 import time
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List
 
 import lightgbm as lgb
 import numpy as np
@@ -13,12 +12,9 @@ from sklearn.preprocessing import StandardScaler
 
 from ..features.extractor import RankingFeatureExtractor
 from ..monitoring.metrics import RankingMetricsCollector
-from ..optimization.cache import CacheManager
 from ..personalization.engine import PersonalizationEngine
 from ..schemas import (
     Article,
-    FeatureVector,
-    PersonalizedScore,
     RankedArticle,
     RankedResults,
     RankingRequest,
@@ -31,7 +27,7 @@ logger = structlog.get_logger(__name__)
 class ContentRankingEngine:
     """Advanced content ranking with ML and heuristics."""
 
-    def __init__(self, cache_manager: CacheManager):
+    def __init__(self, cache_manager: Any) -> None:
         self.cache_manager = cache_manager
         self.feature_extractor = RankingFeatureExtractor(cache_manager)
         self.personalization_engine = PersonalizationEngine(cache_manager)
@@ -55,11 +51,12 @@ class ContentRankingEngine:
         # Load models lazily
         self._initialized = False
 
-    async def _ensure_initialized(self):
+    async def _ensure_initialized(self) -> None:
         """Ensure models are initialized."""
         if not self._initialized:
             await self._load_models()
             self._initialized = True
+        pass
 
     async def _load_models(self) -> Dict[str, Any]:
         """Load ML models asynchronously."""
@@ -69,14 +66,16 @@ class ContentRankingEngine:
             self.ranker_model = self._create_dummy_model()
             self.model_loaded = True
             logger.info("ML models loaded successfully")
+            return {"status": "success", "models_loaded": True}
         except Exception as e:
             logger.error("Failed to load ML models", error=str(e))
             self.model_loaded = False
+            return {"status": "error", "error": str(e)}
 
-    def _create_dummy_model(self):
+    def _create_dummy_model(self) -> Any:
         """Create a dummy LightGBM model for demonstration."""
         # In production, this would load from a trained model file
-        params = {
+        params: Dict[str, Any] = {
             "objective": "lambdarank",
             "metric": "ndcg",
             "boosting_type": "gbdt",
@@ -92,7 +91,7 @@ class ContentRankingEngine:
     async def rank_content(self, request: RankingRequest) -> RankedResults:
         """Main ranking pipeline with personalization."""
         await self._ensure_initialized()
-        
+
         start_time = time.time()
 
         try:
@@ -155,10 +154,7 @@ class ContentRankingEngine:
             )
 
         except Exception as e:
-            logger.error(
-                "Ranking failed",
-                error=str(e),
-                user_id=request.user_id)
+            logger.error("Ranking failed", error=str(e), user_id=request.user_id)
             await self.metrics_collector.record_error()
             raise
 
@@ -171,7 +167,7 @@ class ContentRankingEngine:
 
     async def _get_dummy_articles(self, count: int) -> List[Article]:
         """Generate dummy articles for testing."""
-        from ..schemas import Article, Author, ContentType, Source
+        from ..schemas import Article, Author, Source
 
         articles = []
         for i in range(count):
@@ -235,17 +231,15 @@ class ContentRankingEngine:
         return np.array(features_matrix)
 
     async def ml_ranking(
-            self,
-            candidates: List[Article],
-            features: np.ndarray,
-            request: RankingRequest) -> List[RankedArticle]:
+        self, candidates: List[Article], features: np.ndarray, request: RankingRequest
+    ) -> List[RankedArticle]:
         """ML-based ranking using LightGBM."""
         if not self.model_loaded or self.ranker_model is None:
-            logger.warning(
-                "ML model not loaded, falling back to heuristic ranking")
+            logger.warning("ML model not loaded, falling back to heuristic ranking")
             return await self.heuristic_ranking(candidates, features, request)
 
-        try:
+        # ML-based ranking
+        try:  # type: ignore[unreachable]
             # Normalize features
             features_normalized = self.scaler.fit_transform(features)
 
@@ -256,10 +250,8 @@ class ContentRankingEngine:
             ranked_articles = []
             for i, (article, score) in enumerate(zip(candidates, scores)):
                 ranked_article = RankedArticle(
-                    article=article,
-                    rank=i + 1,
-                    score=float(score),
-                    explanation="ML-based ranking")
+                    article=article, rank=i + 1, score=float(score), explanation="ML-based ranking"
+                )
                 ranked_articles.append(ranked_article)
 
             # Sort by score (descending)
@@ -276,10 +268,8 @@ class ContentRankingEngine:
             return await self.heuristic_ranking(candidates, features, request)
 
     async def hybrid_ranking(
-            self,
-            candidates: List[Article],
-            features: np.ndarray,
-            request: RankingRequest) -> List[RankedArticle]:
+        self, candidates: List[Article], features: np.ndarray, request: RankingRequest
+    ) -> List[RankedArticle]:
         """Hybrid ranking combining ML and heuristics."""
         # Get ML scores
         ml_articles = await self.ml_ranking(candidates, features, request)
@@ -289,8 +279,7 @@ class ContentRankingEngine:
 
         # Combine scores with weights
         combined_articles = []
-        for ml_article, heuristic_article in zip(
-                ml_articles, heuristic_articles):
+        for ml_article, heuristic_article in zip(ml_articles, heuristic_articles):
             combined_score = 0.7 * ml_article.score + 0.3 * heuristic_article.score
 
             combined_article = RankedArticle(
@@ -311,17 +300,14 @@ class ContentRankingEngine:
         return combined_articles[: request.limit]
 
     async def heuristic_ranking(
-            self,
-            candidates: List[Article],
-            features: np.ndarray,
-            request: RankingRequest) -> List[RankedArticle]:
+        self, candidates: List[Article], features: np.ndarray, request: RankingRequest
+    ) -> List[RankedArticle]:
         """Heuristic-based ranking using multiple signals."""
-        ranked_articles = []
+        ranked_articles: List[RankedArticle] = []
 
         for i, article in enumerate(candidates):
             # Extract features for this article
-            article_features = features[i] if len(
-                features) > i else np.zeros(10)
+            article_features = features[i] if len(features) > i else np.zeros(10)
 
             # Compute heuristic score
             score = await self._compute_heuristic_score(article, article_features, request)
@@ -338,8 +324,8 @@ class ContentRankingEngine:
         ranked_articles.sort(key=lambda x: x.score, reverse=True)
 
         # Update ranks
-        for i, article in enumerate(ranked_articles):
-            article.rank = i + 1
+        for i, ranked_article in enumerate(ranked_articles):
+            ranked_article.rank = i + 1
 
         return ranked_articles[: request.limit]
 
@@ -350,8 +336,7 @@ class ContentRankingEngine:
         score = 0.0
 
         # Freshness score (higher for newer content)
-        age_hours = (datetime.utcnow() -
-                     article.published_at).total_seconds() / 3600
+        age_hours = (datetime.utcnow() - article.published_at).total_seconds() / 3600
         freshness_score = math.exp(-age_hours / 24)  # 24-hour half-life
         score += freshness_score * self.default_weights["freshness"]
 
@@ -366,19 +351,16 @@ class ContentRankingEngine:
 
         # Source authority (if available)
         if article.source.authority_score:
-            score += article.source.authority_score * \
-                self.default_weights["authority"]
+            score += article.source.authority_score * self.default_weights["authority"]
 
         # Personalization (if enabled)
         if request.enable_personalization:
             personalization_score = await self._get_personalization_score(article, request.user_id)
-            score += personalization_score * \
-                self.default_weights["personalization"]
+            score += personalization_score * self.default_weights["personalization"]
 
         return min(score, 1.0)  # Cap at 1.0
 
-    async def _get_personalization_score(
-            self, article: Article, user_id: str) -> float:
+    async def _get_personalization_score(self, article: Article, user_id: str) -> float:
         """Get personalization score for article."""
         try:
             personalized_scores = await self.personalization_engine.personalize_ranking(
@@ -394,21 +376,19 @@ class ContentRankingEngine:
     ) -> List[RankedArticle]:
         """Apply diversity and freshness constraints."""
         # Apply diversity constraint (limit articles from same source)
-        source_counts = {}
+        source_counts: Dict[str, int] = {}
         filtered_articles = []
 
         for article in ranked_articles:
             source_id = article.article.source.id
-            if source_counts.get(
-                    source_id, 0) < 3:  # Max 3 articles per source
+            if source_counts.get(source_id, 0) < 3:  # Max 3 articles per source
                 filtered_articles.append(article)
                 source_counts[source_id] = source_counts.get(source_id, 0) + 1
 
         # Apply freshness constraint (boost recent content)
         now = datetime.utcnow()
         for article in filtered_articles:
-            age_hours = (
-                now - article.article.published_at).total_seconds() / 3600
+            age_hours = (now - article.article.published_at).total_seconds() / 3600
             if age_hours < 1:  # Breaking news boost
                 article.score *= 1.2
             elif age_hours < 6:  # Recent news boost
@@ -424,10 +404,8 @@ class ContentRankingEngine:
         return filtered_articles[: request.limit]
 
     async def _log_ranking_decision(
-            self,
-            request: RankingRequest,
-            results: List[RankedArticle],
-            algorithm_variant: str) -> Dict[str, Any]:
+        self, request: RankingRequest, results: List[RankedArticle], algorithm_variant: str
+    ) -> Dict[str, Any]:
         """Log ranking decision for model updates and analysis."""
         try:
             # In production, this would log to a data warehouse
@@ -436,9 +414,9 @@ class ContentRankingEngine:
                 user_id=request.user_id,
                 algorithm_variant=algorithm_variant,
                 article_count=len(results),
-                avg_score=sum(
-                    r.score for r in results) /
-                len(results) if results else 0,
+                avg_score=sum(r.score for r in results) / len(results) if results else 0,
             )
         except Exception as e:
             logger.warning("Failed to log ranking decision", error=str(e))
+
+        return {"status": "logged", "algorithm_variant": algorithm_variant}

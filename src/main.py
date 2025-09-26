@@ -1,37 +1,34 @@
 """FastAPI application for the ranking microservice."""
 
-import asyncio
 import os
 from contextlib import asynccontextmanager
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, AsyncGenerator, Dict, List, Optional
 
 import structlog
 import uvicorn
-from prometheus_client import start_http_server
-from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Query, Header
+from fastapi import BackgroundTasks, Depends, FastAPI, Header, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
+from prometheus_client import start_http_server
 
+from .models.auth import LoginRequest, LoginResponse
 from .monitoring.metrics import (
     HealthChecker,
     MetricsExporter,
     RankingMetricsCollector,
     SystemMetricsCollector,
 )
-from .optimization.cache import CacheManager, FeatureCache, RankingCache
+from .optimization.cache import CacheManager
 from .ranking.engine import ContentRankingEngine
 from .schemas import (
     ABTestExperiment,
     Article,
-    HealthStatus,
     RankedResults,
-    RankingMetrics,
     RankingRequest,
     UserProfile,
 )
-from .models.auth import LoginRequest, LoginResponse, UserClaims
 from .services.auth_service import auth_service
 from .testing.ab_framework import ABTestingFramework
 
@@ -66,9 +63,10 @@ ab_framework: Optional[ABTestingFramework] = None
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> Dict[str, Any]:
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan manager."""
-    global cache_manager, ranking_engine, metrics_collector, system_collector, health_checker, ab_framework
+    global cache_manager, ranking_engine, metrics_collector
+    global system_collector, health_checker, ab_framework
 
     # Startup
     logger.info("Starting ranking microservice")
@@ -90,7 +88,7 @@ async def lifespan(app: FastAPI) -> Dict[str, Any]:
         ranking_engine = ContentRankingEngine(cache_manager)
 
         # Start metrics export
-        metrics_exporter = MetricsExporter(metrics_collector, system_collector)
+        MetricsExporter(metrics_collector, system_collector)
 
         # Start Prometheus metrics server
         prometheus_port = int(os.getenv("PROMETHEUS_PORT", "8001"))
@@ -99,7 +97,9 @@ async def lifespan(app: FastAPI) -> Dict[str, Any]:
             logger.info("Prometheus metrics server started", port=prometheus_port)
         except OSError as e:
             if e.errno == 48:  # Address already in use
-                logger.warning("Prometheus metrics server port already in use, skipping", port=prometheus_port)
+                logger.warning(
+                    "Prometheus metrics server port already in use, skipping", port=prometheus_port
+                )
             else:
                 raise
 
@@ -141,9 +141,10 @@ app.add_middleware(
 
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
+
 # Add security headers middleware
 @app.middleware("http")
-async def add_security_headers(request, call_next):
+async def add_security_headers(request: Any, call_next: Any) -> Any:
     response = await call_next(request)
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-Content-Type-Options"] = "nosniff"
@@ -151,10 +152,12 @@ async def add_security_headers(request, call_next):
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     return response
 
+
 # Add correlation ID middleware
 @app.middleware("http")
-async def add_correlation_id(request, call_next):
+async def add_correlation_id(request: Any, call_next: Any) -> Any:
     import uuid
+
     correlation_id = request.headers.get("X-Correlation-ID", str(uuid.uuid4()))
     response = await call_next(request)
     response.headers["X-Correlation-ID"] = correlation_id
@@ -164,29 +167,25 @@ async def add_correlation_id(request, call_next):
 # Dependency injection
 async def get_cache_manager() -> CacheManager:
     if not cache_manager:
-        raise HTTPException(status_code=500,
-                            detail="Cache manager not initialized")
+        raise HTTPException(status_code=500, detail="Cache manager not initialized")
     return cache_manager
 
 
 async def get_ranking_engine() -> ContentRankingEngine:
     if not ranking_engine:
-        raise HTTPException(status_code=500,
-                            detail="Ranking engine not initialized")
+        raise HTTPException(status_code=500, detail="Ranking engine not initialized")
     return ranking_engine
 
 
 async def get_metrics_collector() -> RankingMetricsCollector:
     if not metrics_collector:
-        raise HTTPException(status_code=500,
-                            detail="Metrics collector not initialized")
+        raise HTTPException(status_code=500, detail="Metrics collector not initialized")
     return metrics_collector
 
 
 async def get_ab_framework() -> ABTestingFramework:
     if not ab_framework:
-        raise HTTPException(status_code=500,
-                            detail="A/B testing framework not initialized")
+        raise HTTPException(status_code=500, detail="A/B testing framework not initialized")
     return ab_framework
 
 
@@ -209,26 +208,20 @@ async def health_check() -> Dict[str, Any]:
     """Health check endpoint."""
     try:
         if not health_checker:
-            raise HTTPException(
-                status_code=500,
-                detail="Health checker not initialized")
+            raise HTTPException(status_code=500, detail="Health checker not initialized")
 
         health_status = await health_checker.check_health()
         return health_status
 
     except Exception as e:
         logger.error("Health check failed", error=str(e))
-        return {"status": "unhealthy", "error": str(
-            e), "timestamp": "2024-01-01T00:00:00Z"}
+        return {"status": "unhealthy", "error": str(e), "timestamp": "2024-01-01T00:00:00Z"}
 
 
 @app.get("/health/live", response_model=Dict[str, Any])
 async def liveness_probe() -> Dict[str, Any]:
     """Liveness probe endpoint."""
-    return {
-        "status": "healthy",
-        "timestamp": datetime.utcnow().isoformat()
-    }
+    return {"status": "healthy", "timestamp": datetime.utcnow().isoformat()}
 
 
 @app.get("/health/ready", response_model=Dict[str, Any])
@@ -240,23 +233,17 @@ async def readiness_probe() -> Dict[str, Any]:
             return {
                 "status": "not_ready",
                 "timestamp": datetime.utcnow().isoformat(),
-                "reason": "Services not initialized"
+                "reason": "Services not initialized",
             }
-        
-        return {
-            "status": "ready",
-            "timestamp": datetime.utcnow().isoformat()
-        }
+
+        return {"status": "ready", "timestamp": datetime.utcnow().isoformat()}
     except Exception as e:
         logger.error("Readiness check failed", error=str(e))
-        return {
-            "status": "not_ready",
-            "timestamp": datetime.utcnow().isoformat(),
-            "error": str(e)
-        }
+        return {"status": "not_ready", "timestamp": datetime.utcnow().isoformat(), "error": str(e)}
 
 
 # Authentication Endpoints
+
 
 @app.post("/auth/login", response_model=LoginResponse)
 async def login(request: LoginRequest) -> LoginResponse:
@@ -276,7 +263,7 @@ async def logout(authorization: str = Header(None)) -> Dict[str, str]:
         # Check if authorization header is present
         if not authorization or not authorization.startswith("Bearer "):
             raise HTTPException(status_code=401, detail="Authorization header required")
-        
+
         # In a real implementation, you'd invalidate the token
         return {"status": "success", "message": "Logout successful"}
     except HTTPException:
@@ -293,11 +280,7 @@ async def get_current_user() -> Dict[str, Any]:
         # In a real implementation, you'd get user from token
         return {
             "status": "success",
-            "data": {
-                "uid": "test-user",
-                "email": "test@example.com",
-                "name": "Test User"
-            }
+            "data": {"uid": "test-user", "email": "test@example.com", "name": "Test User"},
         }
     except Exception as e:
         logger.error("Get current user failed", error=str(e))
@@ -310,23 +293,18 @@ async def rank_content(
     background_tasks: BackgroundTasks,
     engine: ContentRankingEngine = Depends(get_ranking_engine),
     metrics: RankingMetricsCollector = Depends(get_metrics_collector),
-):
+) -> RankedResults:
     """Rank content based on request parameters."""
     try:
-        logger.info(
-            "Ranking request received",
-            user_id=request.user_id,
-            limit=request.limit)
+        logger.info("Ranking request received", user_id=request.user_id, limit=request.limit)
 
         # Perform ranking
         results = await engine.rank_content(request)
 
         # Log ranking decision for analysis
         background_tasks.add_task(
-            log_ranking_decision,
-            request.user_id,
-            request.model_dump(),
-            results.model_dump())
+            log_ranking_decision, request.user_id, request.model_dump(), results.model_dump()
+        )
 
         logger.info(
             "Ranking completed",
@@ -340,32 +318,25 @@ async def rank_content(
     except Exception as e:
         logger.error("Ranking failed", error=str(e), user_id=request.user_id)
         await metrics.record_error("ranking_failed")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Ranking failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Ranking failed: {str(e)}")
 
 
 @app.get("/articles/{article_id}", response_model=Article)
-async def get_article(article_id: str) -> Dict[str, Any]:
+async def get_article(article_id: str) -> Article:
     """Get article by ID."""
     try:
         # In production, this would query a content database
         # For now, return a dummy article
-        from .schemas import Article, Author, ContentType, Source
+        from .schemas import Article, Author, Source
 
         article = Article(
             id=article_id,
             title=f"Article {article_id}",
             content=f"This is the content for article {article_id}",
             url=f"https://example.com/articles/{article_id}",
-            published_at="2024-01-01T00:00:00Z",
-            source=Source(
-                id="source_1",
-                name="Example Source",
-                domain="example.com"),
-            author=Author(
-                id="author_1",
-                name="Example Author"),
+            published_at=datetime(2024, 1, 1),
+            source=Source(id="source_1", name="Example Source", domain="example.com"),
+            author=Author(id="author_1", name="Example Author"),
             word_count=500,
             reading_time=2,
             quality_score=0.8,
@@ -374,17 +345,14 @@ async def get_article(article_id: str) -> Dict[str, Any]:
         return article
 
     except Exception as e:
-        logger.error(
-            "Failed to get article",
-            error=str(e),
-            article_id=article_id)
+        logger.error("Failed to get article", error=str(e), article_id=article_id)
         raise HTTPException(status_code=404, detail="Article not found")
 
 
 @app.get("/users/{user_id}/profile", response_model=UserProfile)
 async def get_user_profile(
-        user_id: str,
-        cache: CacheManager = Depends(get_cache_manager)):
+    user_id: str, cache: CacheManager = Depends(get_cache_manager)
+) -> UserProfile:
     """Get user profile for personalization."""
     try:
         # Get user profile from cache
@@ -397,8 +365,8 @@ async def get_user_profile(
                 source_preferences={},
                 reading_patterns={},
                 content_preferences={},
-                created_at="2024-01-01T00:00:00Z",
-                updated_at="2024-01-01T00:00:00Z",
+                created_at=datetime(2024, 1, 1),
+                updated_at=datetime(2024, 1, 1),
             )
         else:
             profile = UserProfile(**profile_data)
@@ -406,20 +374,14 @@ async def get_user_profile(
         return profile
 
     except Exception as e:
-        logger.error(
-            "Failed to get user profile",
-            error=str(e),
-            user_id=user_id)
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to get user profile")
+        logger.error("Failed to get user profile", error=str(e), user_id=user_id)
+        raise HTTPException(status_code=500, detail="Failed to get user profile")
 
 
 @app.put("/users/{user_id}/profile", response_model=Dict[str, str])
 async def update_user_profile(
-        user_id: str,
-        profile: UserProfile,
-        cache: CacheManager = Depends(get_cache_manager)):
+    user_id: str, profile: UserProfile, cache: CacheManager = Depends(get_cache_manager)
+) -> Dict[str, str]:
     """Update user profile."""
     try:
         # Update profile in cache
@@ -429,17 +391,14 @@ async def update_user_profile(
         return {"message": "Profile updated successfully"}
 
     except Exception as e:
-        logger.error(
-            "Failed to update user profile",
-            error=str(e),
-            user_id=user_id)
-        raise HTTPException(status_code=500,
-                            detail="Failed to update user profile")
+        logger.error("Failed to update user profile", error=str(e), user_id=user_id)
+        raise HTTPException(status_code=500, detail="Failed to update user profile")
 
 
 @app.get("/experiments", response_model=List[Dict[str, Any]])
 async def get_experiments(
-        ab_framework: ABTestingFramework = Depends(get_ab_framework)):
+    ab_framework: ABTestingFramework = Depends(get_ab_framework),
+) -> List[Dict[str, Any]]:
     """Get all A/B test experiments."""
     try:
         experiments = await ab_framework.get_all_experiments()
@@ -447,59 +406,45 @@ async def get_experiments(
 
     except Exception as e:
         logger.error("Failed to get experiments", error=str(e))
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to get experiments")
+        raise HTTPException(status_code=500, detail="Failed to get experiments")
 
 
 @app.get("/experiments/{experiment_id}/stats", response_model=Dict[str, Any])
 async def get_experiment_stats(
-        experiment_id: str,
-        ab_framework: ABTestingFramework = Depends(get_ab_framework)):
+    experiment_id: str, ab_framework: ABTestingFramework = Depends(get_ab_framework)
+) -> Dict[str, Any]:
     """Get experiment statistics."""
     try:
         stats = await ab_framework.get_experiment_stats(experiment_id)
         return stats
 
     except Exception as e:
-        logger.error(
-            "Failed to get experiment stats",
-            error=str(e),
-            experiment_id=experiment_id)
-        raise HTTPException(status_code=500,
-                            detail="Failed to get experiment stats")
+        logger.error("Failed to get experiment stats", error=str(e), experiment_id=experiment_id)
+        raise HTTPException(status_code=500, detail="Failed to get experiment stats")
 
 
 @app.post("/experiments", response_model=Dict[str, str])
 async def create_experiment(
-        experiment: ABTestExperiment,
-        ab_framework: ABTestingFramework = Depends(get_ab_framework)):
+    experiment: ABTestExperiment, ab_framework: ABTestingFramework = Depends(get_ab_framework)
+) -> Dict[str, str]:
     """Create a new A/B test experiment."""
     try:
         success = await ab_framework.create_experiment(experiment)
         if success:
             return {"message": "Experiment created successfully"}
         else:
-            raise HTTPException(
-                status_code=400,
-                detail="Failed to create experiment")
+            raise HTTPException(status_code=400, detail="Failed to create experiment")
 
     except Exception as e:
         logger.error("Failed to create experiment", error=str(e))
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to create experiment")
+        raise HTTPException(status_code=500, detail="Failed to create experiment")
 
 
 @app.get("/metrics/performance", response_model=Dict[str, Any])
 async def get_performance_metrics(
-        time_window: int = Query(
-            60,
-            ge=1,
-            le=1440,
-            description="Time window in minutes"),
+    time_window: int = Query(60, ge=1, le=1440, description="Time window in minutes"),
     metrics: RankingMetricsCollector = Depends(get_metrics_collector),
-):
+) -> Dict[str, Any]:
     """Get performance metrics."""
     try:
         summary = metrics.get_performance_summary(time_window)
@@ -507,14 +452,13 @@ async def get_performance_metrics(
 
     except Exception as e:
         logger.error("Failed to get performance metrics", error=str(e))
-        raise HTTPException(status_code=500,
-                            detail="Failed to get performance metrics")
+        raise HTTPException(status_code=500, detail="Failed to get performance metrics")
 
 
 @app.get("/metrics/algorithm-comparison", response_model=Dict[str, Any])
 async def get_algorithm_comparison(
     metrics: RankingMetricsCollector = Depends(get_metrics_collector),
-):
+) -> Dict[str, Any]:
     """Get algorithm performance comparison."""
     try:
         comparison = metrics.get_algorithm_comparison()
@@ -522,38 +466,29 @@ async def get_algorithm_comparison(
 
     except Exception as e:
         logger.error("Failed to get algorithm comparison", error=str(e))
-        raise HTTPException(status_code=500,
-                            detail="Failed to get algorithm comparison")
+        raise HTTPException(status_code=500, detail="Failed to get algorithm comparison")
 
 
 @app.get("/metrics/system", response_model=Dict[str, Any])
 async def get_system_metrics(
-        time_window: int = Query(
-            60,
-            ge=1,
-            le=1440,
-            description="Time window in minutes"),
-    system_collector: SystemMetricsCollector = Depends(
-            lambda: system_collector),
-):
+    time_window: int = Query(60, ge=1, le=1440, description="Time window in minutes"),
+    system_collector: SystemMetricsCollector = Depends(lambda: system_collector),
+) -> Dict[str, Any]:
     """Get system metrics."""
     try:
         if not system_collector:
-            raise HTTPException(status_code=500,
-                                detail="System collector not initialized")
+            raise HTTPException(status_code=500, detail="System collector not initialized")
 
         summary = system_collector.get_system_summary(time_window)
         return summary
 
     except Exception as e:
         logger.error("Failed to get system metrics", error=str(e))
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to get system metrics")
+        raise HTTPException(status_code=500, detail="Failed to get system metrics")
 
 
 @app.get("/cache/stats", response_model=Dict[str, Any])
-async def get_cache_stats(cache: CacheManager = Depends(get_cache_manager)):
+async def get_cache_stats(cache: CacheManager = Depends(get_cache_manager)) -> Dict[str, Any]:
     """Get cache statistics."""
     try:
         stats = cache.get_stats()
@@ -561,13 +496,11 @@ async def get_cache_stats(cache: CacheManager = Depends(get_cache_manager)):
 
     except Exception as e:
         logger.error("Failed to get cache stats", error=str(e))
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to get cache stats")
+        raise HTTPException(status_code=500, detail="Failed to get cache stats")
 
 
 @app.post("/cache/clear", response_model=Dict[str, str])
-async def clear_cache(cache: CacheManager = Depends(get_cache_manager)):
+async def clear_cache(cache: CacheManager = Depends(get_cache_manager)) -> Dict[str, str]:
     """Clear cache."""
     try:
         # In production, this would be more selective
@@ -586,7 +519,8 @@ async def clear_cache(cache: CacheManager = Depends(get_cache_manager)):
 
 
 async def log_ranking_decision(
-        user_id: str, request: Dict[str, Any], results: Dict[str, Any]) -> Dict[str, Any]:
+    user_id: str, request: Dict[str, Any], results: Dict[str, Any]
+) -> Dict[str, Any]:
     """Log ranking decision for analysis."""
     try:
         # In production, this would log to a data warehouse
@@ -597,36 +531,31 @@ async def log_ranking_decision(
             algorithm_variant=results.get("algorithm_variant"),
             article_count=len(results.get("articles", [])),
         )
+        return {"status": "logged", "user_id": user_id}
     except Exception as e:
         logger.error("Failed to log ranking decision", error=str(e))
+        return {"status": "error", "user_id": user_id, "error": str(e)}
 
 
 # Error handlers
 
 
 @app.exception_handler(HTTPException)
-async def http_exception_handler(request, exc) -> Dict[str, Any]:
+async def http_exception_handler(request: Any, exc: HTTPException) -> JSONResponse:
     """Handle HTTP exceptions."""
-    logger.error(
-        "HTTP exception",
-        status_code=exc.status_code,
-        detail=exc.detail)
+    logger.error("HTTP exception", status_code=exc.status_code, detail=exc.detail)
     return JSONResponse(
-        status_code=exc.status_code,
-        content={
-            "detail": exc.detail,
-            "status_code": exc.status_code})
+        status_code=exc.status_code, content={"detail": exc.detail, "status_code": exc.status_code}
+    )
 
 
 @app.exception_handler(Exception)
-async def general_exception_handler(request, exc) -> Dict[str, Any]:
+async def general_exception_handler(request: Any, exc: Exception) -> JSONResponse:
     """Handle general exceptions."""
     logger.error("Unhandled exception", error=str(exc))
     return JSONResponse(
-        status_code=500,
-        content={
-            "detail": "Internal server error",
-            "status_code": 500})
+        status_code=500, content={"detail": "Internal server error", "status_code": 500}
+    )
 
 
 if __name__ == "__main__":
@@ -638,9 +567,5 @@ if __name__ == "__main__":
 
     # Start server
     uvicorn.run(
-        "src.main:app",
-        host=host,
-        port=port,
-        workers=workers,
-        log_level=log_level,
-        reload=False)
+        "src.main:app", host=host, port=port, workers=workers, log_level=log_level, reload=False
+    )

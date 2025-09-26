@@ -21,7 +21,7 @@ correlation_id: ContextVar[Optional[str]] = ContextVar("correlation_id", default
 class CorrelationFilter(logging.Filter):
     """Add correlation ID to log records."""
 
-    def filter(self, record):
+    def filter(self, record: logging.LogRecord) -> bool:
         """Add correlation ID to the log record."""
         record.correlation_id = correlation_id.get() or str(uuid.uuid4())
         return True
@@ -30,7 +30,9 @@ class CorrelationFilter(logging.Filter):
 class JSONFormatter(jsonlogger.JsonFormatter):
     """Custom JSON formatter with additional fields."""
 
-    def add_fields(self, log_record: Dict[str, Any], record: logging.LogRecord, message_dict: Dict[str, Any]):
+    def add_fields(
+        self, log_record: Dict[str, Any], record: logging.LogRecord, message_dict: Dict[str, Any]
+    ) -> None:
         """Add custom fields to the log record."""
         super().add_fields(log_record, record, message_dict)
 
@@ -59,7 +61,7 @@ class JSONFormatter(jsonlogger.JsonFormatter):
             log_record["duration"] = record.duration
 
 
-def configure_logging():
+def configure_logging() -> None:
     """Configure application logging."""
 
     # Configure structlog
@@ -74,7 +76,11 @@ def configure_logging():
             structlog.processors.StackInfoRenderer(),
             structlog.processors.format_exc_info,
             structlog.processors.UnicodeDecoder(),
-            (structlog.processors.JSONRenderer() if settings.LOG_FORMAT == "json" else structlog.dev.ConsoleRenderer()),
+            (
+                structlog.processors.JSONRenderer()
+                if settings.LOG_FORMAT == "json"
+                else structlog.dev.ConsoleRenderer()
+            ),
         ],
         wrapper_class=structlog.stdlib.BoundLogger,
         logger_factory=structlog.stdlib.LoggerFactory(),
@@ -120,7 +126,7 @@ def configure_logging():
     logging.config.dictConfig(config)
 
 
-def get_logger(name: str = None) -> structlog.BoundLogger:
+def get_logger(name: Optional[str] = None) -> Any:
     """Get a logger instance."""
     return structlog.get_logger(name)
 
@@ -142,7 +148,7 @@ def log_request(
     client_ip: str,
     user_id: Optional[str] = None,
     request_id: Optional[str] = None,
-):
+) -> None:
     """Log incoming request."""
     logger.info(
         "Incoming request",
@@ -163,7 +169,7 @@ def log_response(
     duration: float,
     user_id: Optional[str] = None,
     request_id: Optional[str] = None,
-):
+) -> None:
     """Log outgoing response."""
     logger.info(
         "Request completed",
@@ -177,7 +183,9 @@ def log_response(
     )
 
 
-def log_error(logger: structlog.BoundLogger, error: Exception, context: Dict[str, Any] = None):
+def log_error(
+    logger: structlog.BoundLogger, error: Exception, context: Optional[Dict[str, Any]] = None
+) -> None:
     """Log an error with context."""
     logger.error(
         "Error occurred",
@@ -193,12 +201,12 @@ def log_security_event(
     event_type: str,
     user_id: Optional[str] = None,
     client_ip: Optional[str] = None,
-    details: Dict[str, Any] = None,
-):
+    details: Optional[Dict[str, Any]] = None,
+) -> None:
     """Log security-related events."""
     # Build the log message with all data
     log_message = f"Security event: {event_type}"
-    
+
     # Create a clean dictionary without conflicting keys
     extra_data = {
         "event_type": event_type,
@@ -206,15 +214,20 @@ def log_security_event(
         "client_ip": client_ip,
         "security_event": "security",  # Use different key name
     }
-    
+
     # Add details if provided
     if details:
         extra_data.update(details)
-    
+
     logger.warning(log_message, **extra_data)
 
 
-def log_performance(logger: structlog.BoundLogger, operation: str, duration: float, metadata: Dict[str, Any] = None):
+def log_performance(
+    logger: structlog.BoundLogger,
+    operation: str,
+    duration: float,
+    metadata: Optional[Dict[str, Any]] = None,
+) -> None:
     """Log performance metrics."""
     logger.info(
         f"Performance: {operation}",

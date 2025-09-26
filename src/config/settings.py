@@ -13,7 +13,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     """Application configuration with environment variable support."""
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", case_sensitive=True, extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", case_sensitive=True, extra="ignore"
+    )
 
     # Application Settings
     APP_NAME: str = "Foundations & Guards Service"
@@ -27,13 +29,17 @@ class Settings(BaseSettings):
     WORKERS: int = Field(default=1, description="Number of worker processes")
 
     # Security Settings
-    SECRET_KEY: str = Field(description="Secret key for JWT signing")
+    SECRET_KEY: str = Field(
+        default="dev-secret-key-change-in-production", description="Secret key for JWT signing"
+    )
     JWT_ALGORITHM: str = Field(default="RS256", description="JWT algorithm")
     JWT_EXPIRE_MINUTES: int = Field(default=30, description="JWT expiration in minutes")
 
     # Firebase Configuration
-    FIREBASE_PROJECT_ID: str = Field(description="Firebase project ID")
-    FIREBASE_CREDENTIALS_PATH: Optional[str] = Field(default=None, description="Path to Firebase service account JSON")
+    FIREBASE_PROJECT_ID: str = Field(default="dev-project-id", description="Firebase project ID")
+    FIREBASE_CREDENTIALS_PATH: Optional[str] = Field(
+        default=None, description="Path to Firebase service account JSON"
+    )
     FIREBASE_CREDENTIALS_JSON: Optional[str] = Field(
         default=None, description="Firebase service account JSON as string"
     )
@@ -65,7 +71,10 @@ class Settings(BaseSettings):
     # Security Headers
     ENABLE_SECURITY_HEADERS: bool = Field(default=True, description="Enable security headers")
     CSP_POLICY: str = Field(
-        default="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'",
+        default=(
+            "default-src 'self'; script-src 'self' 'unsafe-inline'; "
+            "style-src 'self' 'unsafe-inline'"
+        ),
         description="Content Security Policy",
     )
 
@@ -80,11 +89,17 @@ class Settings(BaseSettings):
 
     # Health Check Configuration
     HEALTH_CHECK_PATH: str = Field(default="/health", description="Health check endpoint")
-    HEALTH_CHECK_DEPENDENCIES: bool = Field(default=True, description="Include dependency checks in health endpoint")
+    HEALTH_CHECK_DEPENDENCIES: bool = Field(
+        default=True, description="Include dependency checks in health endpoint"
+    )
 
     # Circuit Breaker Configuration
-    CIRCUIT_BREAKER_FAILURE_THRESHOLD: int = Field(default=5, description="Circuit breaker failure threshold")
-    CIRCUIT_BREAKER_RECOVERY_TIMEOUT: int = Field(default=60, description="Circuit breaker recovery timeout in seconds")
+    CIRCUIT_BREAKER_FAILURE_THRESHOLD: int = Field(
+        default=5, description="Circuit breaker failure threshold"
+    )
+    CIRCUIT_BREAKER_RECOVERY_TIMEOUT: int = Field(
+        default=60, description="Circuit breaker recovery timeout in seconds"
+    )
     CIRCUIT_BREAKER_EXPECTED_EXCEPTION: tuple = Field(
         default=(Exception,), description="Expected exceptions for circuit breaker"
     )
@@ -92,10 +107,12 @@ class Settings(BaseSettings):
     # GCP Configuration
     GCP_PROJECT_ID: Optional[str] = Field(default=None, description="GCP Project ID")
     GCP_REGION: str = Field(default="us-central1", description="GCP Region")
-    CLOUD_RUN_SERVICE_NAME: str = Field(default="foundations-guards-service", description="Cloud Run service name")
+    CLOUD_RUN_SERVICE_NAME: str = Field(
+        default="foundations-guards-service", description="Cloud Run service name"
+    )
 
     @validator("ENVIRONMENT")
-    def validate_environment(cls, v):
+    def validate_environment(cls, v: str) -> str:
         """Validate environment setting."""
         allowed_environments = ["development", "staging", "production"]
         if v not in allowed_environments:
@@ -103,7 +120,7 @@ class Settings(BaseSettings):
         return v
 
     @validator("LOG_LEVEL")
-    def validate_log_level(cls, v):
+    def validate_log_level(cls, v: str) -> str:
         """Validate log level setting."""
         allowed_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
         if v.upper() not in allowed_levels:
@@ -111,7 +128,7 @@ class Settings(BaseSettings):
         return v.upper()
 
     @validator("LOG_FORMAT")
-    def validate_log_format(cls, v):
+    def validate_log_format(cls, v: str) -> str:
         """Validate log format setting."""
         allowed_formats = ["json", "text"]
         if v not in allowed_formats:
@@ -119,7 +136,7 @@ class Settings(BaseSettings):
         return v
 
     @validator("JWT_ALGORITHM")
-    def validate_jwt_algorithm(cls, v):
+    def validate_jwt_algorithm(cls, v: str) -> str:
         """Validate JWT algorithm."""
         allowed_algorithms = ["HS256", "RS256", "ES256"]
         if v not in allowed_algorithms:

@@ -3,26 +3,26 @@ pytest configuration and fixtures for testing the Foundations & Guards service.
 """
 
 import asyncio
+import time
 from datetime import datetime, timedelta
 from typing import Any, AsyncGenerator, Dict, Generator
 from unittest.mock import Mock, patch
 
 import fakeredis
 import pytest
-import pytest_asyncio
-import redis
 from fastapi.testclient import TestClient
 
 from src.config.settings import settings
 from src.main import app
 from src.models.auth import AuthenticatedUser, AuthProvider, TokenType, UserClaims
-from src.services.auth_service import auth_service
+
+# from src.services.auth_service import auth_service  # Unused import
 from src.services.rate_limiter import rate_limiter
 
 
 # Test settings override
 @pytest.fixture(scope="session", autouse=True)
-def override_settings():
+def override_settings() -> None:
     """Override settings for testing."""
     settings.ENVIRONMENT = "testing"
     settings.DEBUG = True
@@ -36,7 +36,7 @@ def override_settings():
 
 # Event loop fixture for async tests
 @pytest.fixture(scope="session")
-def event_loop():
+def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
     """Create an instance of the default event loop for the test session."""
     loop = asyncio.get_event_loop_policy().new_event_loop()
     yield loop
@@ -53,7 +53,7 @@ def client() -> Generator[TestClient, None, None]:
 
 # Mock Redis fixture
 @pytest.fixture(scope="function")
-def mock_redis():
+def mock_redis() -> Generator[fakeredis.FakeRedis, None, None]:
     """Create a mock Redis client using fakeredis."""
     fake_redis = fakeredis.FakeRedis(decode_responses=True)
     with patch("aioredis.create_redis_pool") as mock_create_pool:
@@ -63,7 +63,7 @@ def mock_redis():
 
 # Mock Firebase Auth fixture
 @pytest.fixture(scope="function")
-def mock_firebase_auth():
+def mock_firebase_auth() -> Generator[Mock, None, None]:
     """Mock Firebase authentication."""
     with patch("firebase_admin.auth.verify_id_token") as mock_verify:
         mock_verify.return_value = {
@@ -94,7 +94,7 @@ def test_user() -> UserClaims:
 
 # Authenticated test user fixture
 @pytest.fixture(scope="function")
-def authenticated_user(test_user) -> AuthenticatedUser:
+def authenticated_user(test_user: Any) -> AuthenticatedUser:
     """Create an authenticated test user."""
     return AuthenticatedUser(
         **test_user.dict(),
@@ -110,7 +110,12 @@ def authenticated_user(test_user) -> AuthenticatedUser:
 @pytest.fixture(scope="function")
 def valid_jwt_token() -> str:
     """Create a valid JWT token for testing."""
-    return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0LXVzZXItMTIzIiwiZW1haWwiOiJ0ZXN0QGV4YW1wbGUuY29tIiwiZXhwIjoxNzAzMTY5NjAwfQ.test-signature"
+    return (
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
+        "eyJzdWIiOiJ0ZXN0LXVzZXItMTIzIiwiZW1haWwiOiJ0ZXN0QGV4YW1wbGUuY29tIiwi"
+        "ZXhwIjoxNzAzMTY5NjAwfQ."
+        "test-signature"
+    )
 
 
 # Invalid JWT token fixture
@@ -125,13 +130,15 @@ def invalid_jwt_token() -> str:
 def expired_jwt_token() -> str:
     """Create an expired JWT token for testing."""
     return (
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0LXVzZXItMTIzIiwiZXhwIjoxNTc3ODM2ODAwfQ.expired-signature"
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
+        "eyJzdWIiOiJ0ZXN0LXVzZXItMTIzIiwiZXhwIjoxNTc3ODM2ODAwfQ."
+        "expired-signature"
     )
 
 
 # Mock rate limiter fixture
 @pytest.fixture(scope="function")
-async def mock_rate_limiter() -> Dict[str, Any]:
+async def mock_rate_limiter() -> AsyncGenerator[Dict[str, Any], None]:
     """Mock rate limiter for testing."""
     with (
         patch.object(rate_limiter, "check_user_rate_limit") as mock_user_limit,
@@ -151,12 +158,12 @@ async def db_session() -> Dict[str, Any]:
     """Create a database session for testing."""
     # This would be implemented if using a database like PostgreSQL
     # For now, we're using Redis only
-    pass
+    return {"status": "no_database"}
 
 
 # Mock external services
 @pytest.fixture(scope="function")
-def mock_external_services():
+def mock_external_services() -> Generator[Mock, None, None]:
     """Mock external services for testing."""
     with patch("httpx.AsyncClient") as mock_client:
         mock_response = Mock()
@@ -171,7 +178,7 @@ def mock_external_services():
 
 # Test data fixtures
 @pytest.fixture(scope="function")
-def sample_request_data():
+def sample_request_data() -> Dict[str, Any]:
     """Sample request data for testing."""
     return {
         "name": "Test News Source",
@@ -185,7 +192,7 @@ def sample_request_data():
 
 
 @pytest.fixture(scope="function")
-def sample_filter_data():
+def sample_filter_data() -> Dict[str, Any]:
     """Sample filter data for testing."""
     return {
         "keywords": ["technology", "ai"],
@@ -200,14 +207,14 @@ def sample_filter_data():
 
 # Performance testing fixtures
 @pytest.fixture(scope="function")
-def performance_test_config():
+def performance_test_config() -> Dict[str, Any]:
     """Configuration for performance testing."""
     return {"concurrent_requests": 100, "total_requests": 1000, "timeout": 30.0, "rate_limit": 1000}
 
 
 # Security testing fixtures
 @pytest.fixture(scope="function")
-def security_test_payloads():
+def security_test_payloads() -> Dict[str, Any]:
     """Security test payloads for testing."""
     return {
         "sql_injection": ["'; DROP TABLE users; --", "1' OR '1'='1"],
@@ -219,14 +226,42 @@ def security_test_payloads():
 
 # Cleanup fixtures
 @pytest.fixture(scope="function", autouse=True)
-async def cleanup_redis(mock_redis) -> Dict[str, Any]:
+async def cleanup_redis(mock_redis: Any) -> AsyncGenerator[None, None]:
     """Clean up Redis after each test."""
     yield
     mock_redis.flushdb()
 
 
 @pytest.fixture(scope="function", autouse=True)
-def cleanup_metrics():
+def cleanup_circuit_breakers() -> Generator[None, None, None]:
+    """Clean up circuit breakers after each test."""
+    yield
+    from src.services.circuit_breaker import circuit_breaker_registry
+
+    circuit_breaker_registry.reset_all()
+
+
+@pytest.fixture(scope="function", autouse=True)
+def setup_health_checker() -> Generator[None, None, None]:
+    """Initialize health checker for tests."""
+    import src.main
+    from src.monitoring.metrics import (
+        HealthChecker,
+        RankingMetricsCollector,
+        SystemMetricsCollector,
+    )
+
+    # Initialize health checker if not already initialized
+    if src.main.health_checker is None:
+        ranking_collector = RankingMetricsCollector()
+        system_collector = SystemMetricsCollector()
+        src.main.health_checker = HealthChecker(ranking_collector, system_collector)
+
+    yield
+
+
+@pytest.fixture(scope="function", autouse=True)
+def cleanup_metrics() -> Generator[None, None, None]:
     """Clean up metrics after each test."""
     yield
     # Reset any global metrics state if needed
@@ -234,7 +269,7 @@ def cleanup_metrics():
 
 # Mock environment variables
 @pytest.fixture(scope="function")
-def mock_env_vars():
+def mock_env_vars() -> Generator[Dict[str, str], None, None]:
     """Mock environment variables for testing."""
     env_vars = {
         "ENVIRONMENT": "testing",
@@ -253,10 +288,10 @@ class AsyncTestCase:
     """Base class for async test utilities."""
 
     @staticmethod
-    async def wait_for_condition(condition_func, timeout=5.0, interval=0.1) -> Dict[str, Any]:
+    async def wait_for_condition(
+        condition_func: Any, timeout: float = 5.0, interval: float = 0.1
+    ) -> bool:
         """Wait for a condition to be true."""
-        import time
-
         start_time = time.time()
 
         while time.time() - start_time < timeout:
@@ -267,7 +302,9 @@ class AsyncTestCase:
         return False
 
     @staticmethod
-    async def assert_eventually(assertion_func, timeout=5.0, interval=0.1) -> Dict[str, Any]:
+    async def assert_eventually(
+        assertion_func: Any, timeout: float = 5.0, interval: float = 0.1
+    ) -> None:
         """Assert that a condition becomes true within timeout."""
         success = await AsyncTestCase.wait_for_condition(assertion_func, timeout, interval)
         if not success:
@@ -275,7 +312,7 @@ class AsyncTestCase:
 
 
 # Test markers
-def pytest_configure(config):
+def pytest_configure(config: Any) -> None:
     """Configure pytest markers."""
     config.addinivalue_line("markers", "unit: mark test as a unit test")
     config.addinivalue_line("markers", "integration: mark test as an integration test")

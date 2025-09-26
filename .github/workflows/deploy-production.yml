@@ -54,8 +54,9 @@ jobs:
     - name: 🔐 Setup Google Cloud
       uses: google-github-actions/setup-gcloud@v1
       with:
-        service_account_key: ${{ secrets.GCP_SA_KEY }}
-        project_id: ${{ env.PROJECT_ID }}
+        project_id: ${{ secrets.GCP_PROJECT_ID }}
+    - name: 🔐 Authenticate to Google Cloud
+      run: echo "${{ secrets.GCP_SA_KEY }}" | base64 -d > gcp-key.json && gcloud auth activate-service-account --key-file=gcp-key.json
 
     - name: 🐳 Configure Docker
       run: gcloud auth configure-docker
@@ -118,8 +119,9 @@ jobs:
     - name: 🔐 Setup Google Cloud
       uses: google-github-actions/setup-gcloud@v1
       with:
-        service_account_key: ${{ secrets.GCP_SA_KEY }}
-        project_id: ${{ env.PROJECT_ID }}
+        project_id: ${{ secrets.GCP_PROJECT_ID }}
+    - name: 🔐 Authenticate to Google Cloud
+      run: echo "${{ secrets.GCP_SA_KEY }}" | base64 -d > gcp-key.json && gcloud auth activate-service-account --key-file=gcp-key.json
 
     - name: 🏗️ Setup Terraform
       uses: hashicorp/setup-terraform@v2
@@ -172,8 +174,9 @@ jobs:
     - name: 🔐 Setup Google Cloud
       uses: google-github-actions/setup-gcloud@v1
       with:
-        service_account_key: ${{ secrets.GCP_SA_KEY }}
-        project_id: ${{ env.PROJECT_ID }}
+        project_id: ${{ secrets.GCP_PROJECT_ID }}
+    - name: 🔐 Authenticate to Google Cloud
+      run: echo "${{ secrets.GCP_SA_KEY }}" | base64 -d > gcp-key.json && gcloud auth activate-service-account --key-file=gcp-key.json
 
     - name: 🚀 Deploy to Cloud Run
       run: |
@@ -211,8 +214,9 @@ jobs:
     - name: 🔐 Setup Google Cloud
       uses: google-github-actions/setup-gcloud@v1
       with:
-        service_account_key: ${{ secrets.GCP_SA_KEY }}
-        project_id: ${{ env.PROJECT_ID }}
+        project_id: ${{ secrets.GCP_PROJECT_ID }}
+    - name: 🔐 Authenticate to Google Cloud
+      run: echo "${{ secrets.GCP_SA_KEY }}" | base64 -d > gcp-key.json && gcloud auth activate-service-account --key-file=gcp-key.json
 
     - name: 🧪 Run smoke tests
       run: |
@@ -222,15 +226,10 @@ jobs:
       run: |
         python scripts/update_dashboards.py
 
-    - name: 📨 Send deployment notification
-      uses: 8398a7/action-slack@v3
-      with:
-        status: ${{ job.status }}
-        channel: '#deployments'
-        text: '🚀 News Hub Pipeline deployed successfully!'
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-      if: always()
+    - name: 📨 Deployment completed
+      run: |
+        echo "🚀 News Hub Pipeline deployed successfully!"
+        echo "Deployment status: ${{ job.status }}"
 
   # ==================== ROLLBACK (if needed) ====================
   rollback:

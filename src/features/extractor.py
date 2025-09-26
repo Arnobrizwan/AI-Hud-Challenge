@@ -31,24 +31,26 @@ class RankingFeatureExtractor:
     async def compute_content_features(self, article: Article) -> Dict[str, float]:
         """Content quality and characteristics features."""
         try:
-            features = {}
+            features: Dict[str, float] = {}
 
             # Basic content metrics
-            features["title_length"] = len(article.title)
-            features["content_length"] = len(article.content) if article.content else 0
-            features["word_count"] = article.word_count
-            features["reading_time"] = article.reading_time
-            features["quality_score"] = article.quality_score
+            features["title_length"] = float(len(article.title))
+            features["content_length"] = float(len(article.content) if article.content else 0)
+            features["word_count"] = float(article.word_count)
+            features["reading_time"] = float(article.reading_time)
+            features["quality_score"] = float(article.quality_score)
 
             # Readability features
             if article.content:
                 features["readability_score"] = await self._compute_readability(article.content)
-                features["avg_sentence_length"] = await self._compute_avg_sentence_length(article.content)
-                features["paragraph_count"] = len(article.content.split("\n\n"))
+                features["avg_sentence_length"] = await self._compute_avg_sentence_length(
+                    article.content
+                )
+                features["paragraph_count"] = float(len(article.content.split("\n\n")))
             else:
                 features["readability_score"] = 0.5
-                features["avg_sentence_length"] = 0
-                features["paragraph_count"] = 0
+                features["avg_sentence_length"] = 0.0
+                features["paragraph_count"] = 0.0
 
             # Sentiment features
             if article.sentiment:
@@ -59,14 +61,14 @@ class RankingFeatureExtractor:
                 features["sentiment_subjectivity"] = 0.0
 
             # Entity and topic features
-            features["entity_count"] = len(article.entities)
-            features["topic_count"] = len(article.topics)
-            features["unique_topics"] = len(set(t.name for t in article.topics))
+            features["entity_count"] = float(len(article.entities))
+            features["topic_count"] = float(len(article.topics))
+            features["unique_topics"] = float(len(set(t.name for t in article.topics)))
 
             # Media features
             features["has_image"] = 1.0 if article.image_url else 0.0
             features["has_video"] = 1.0 if article.videos else 0.0
-            features["video_count"] = len(article.videos) if article.videos else 0
+            features["video_count"] = float(len(article.videos) if article.videos else 0)
 
             # Language features
             features["language"] = 1.0 if article.language == "en" else 0.0
@@ -91,7 +93,7 @@ class RankingFeatureExtractor:
             age_hours = (now - article.published_at).total_seconds() / 3600
             age_days = age_hours / 24
 
-            features = {}
+            features: Dict[str, float] = {}
 
             # Age features
             features["age_hours"] = age_hours
@@ -115,8 +117,8 @@ class RankingFeatureExtractor:
             features["is_this_month"] = 1.0 if age_days < 30 else 0.0
 
             # Temporal features
-            features["hour_of_day"] = article.published_at.hour
-            features["day_of_week"] = article.published_at.weekday()
+            features["hour_of_day"] = float(article.published_at.hour)
+            features["day_of_week"] = float(article.published_at.weekday())
             features["is_weekend"] = 1.0 if article.published_at.weekday() >= 5 else 0.0
             features["is_business_hours"] = 1.0 if 9 <= article.published_at.hour <= 17 else 0.0
 
@@ -135,7 +137,7 @@ class RankingFeatureExtractor:
             # Get authority scores from cache or compute
             authority_scores = await self.authority_scorer.get_authority_scores(article.source.id)
 
-            features = {}
+            features: Dict[str, float] = {}
 
             # Source authority features
             features["source_authority"] = authority_scores.authority_score
@@ -159,9 +161,9 @@ class RankingFeatureExtractor:
 
             # Domain features
             domain = article.url.split("/")[2] if "://" in article.url else ""
-            features["domain_length"] = len(domain)
+            features["domain_length"] = float(len(domain))
             features["is_https"] = 1.0 if article.url.startswith("https://") else 0.0
-            features["subdomain_count"] = len(domain.split(".")) - 2 if "." in domain else 0
+            features["subdomain_count"] = float(len(domain.split(".")) - 2 if "." in domain else 0)
 
             return features
 
@@ -169,7 +171,9 @@ class RankingFeatureExtractor:
             logger.error("Authority feature extraction failed", error=str(e), article_id=article.id)
             return self._get_default_authority_features()
 
-    async def compute_personalization_features(self, article: Article, user_id: str) -> Dict[str, float]:
+    async def compute_personalization_features(
+        self, article: Article, user_id: str
+    ) -> Dict[str, float]:
         """Personalization features based on user preferences."""
         try:
             # Get user profile from cache
@@ -177,7 +181,7 @@ class RankingFeatureExtractor:
             if not user_profile:
                 return self._get_default_personalization_features()
 
-            features = {}
+            features: Dict[str, float] = {}
 
             # Topic affinity features
             topic_scores = []
@@ -217,7 +221,9 @@ class RankingFeatureExtractor:
                 features["time_preference"] = 0.5
 
             # Historical interaction features
-            features["user_engagement_score"] = await self._get_user_engagement_score(user_id, article.id)
+            features["user_engagement_score"] = await self._get_user_engagement_score(
+                user_id, article.id
+            )
 
             return features
 
@@ -225,7 +231,9 @@ class RankingFeatureExtractor:
             logger.error("Personalization feature extraction failed", error=str(e), user_id=user_id)
             return self._get_default_personalization_features()
 
-    async def compute_contextual_features(self, article: Article, request: RankingRequest) -> Dict[str, float]:
+    async def compute_contextual_features(
+        self, article: Article, request: RankingRequest
+    ) -> Dict[str, float]:
         """Contextual features based on request context."""
         try:
             features = {}
@@ -240,7 +248,9 @@ class RankingFeatureExtractor:
                 features["title_query_match"] = 1.0 if query_lower in title_lower else 0.0
                 features["content_query_match"] = 1.0 if query_lower in content_lower else 0.0
                 features["query_word_count"] = len(query_lower.split())
-                features["title_query_similarity"] = await self._compute_text_similarity(query_lower, title_lower)
+                features["title_query_similarity"] = await self._compute_text_similarity(
+                    query_lower, title_lower
+                )
             else:
                 features["title_query_match"] = 0.0
                 features["content_query_match"] = 0.0
@@ -249,7 +259,11 @@ class RankingFeatureExtractor:
 
             # Geographic features
             if request.location and article.country:
-                geo_distance = await self.geo_calculator.compute_distance(request.location, article.country)
+                # Convert country to location dict (simplified - in real app would geocode)
+                country_location = {"lat": 0.0, "lng": 0.0}  # Placeholder
+                geo_distance = await self.geo_calculator.compute_distance(
+                    request.location, country_location
+                )
                 features["geo_distance"] = geo_distance
                 features["geo_relevance"] = 1.0 / (1.0 + geo_distance) if geo_distance > 0 else 1.0
             else:
@@ -257,14 +271,18 @@ class RankingFeatureExtractor:
                 features["geo_relevance"] = 0.5
 
             # Content type features
-            features["requested_content_type"] = 1.0 if article.content_type in request.content_types else 0.0
+            features["requested_content_type"] = (
+                1.0 if article.content_type in request.content_types else 0.0
+            )
 
             # Topic filtering features
             if request.topics:
                 article_topic_names = [t.name.lower() for t in article.topics]
                 requested_topics = [t.lower() for t in request.topics]
                 topic_match = len(set(article_topic_names).intersection(set(requested_topics)))
-                features["topic_filter_match"] = topic_match / len(requested_topics) if requested_topics else 0.0
+                features["topic_filter_match"] = (
+                    topic_match / len(requested_topics) if requested_topics else 0.0
+                )
             else:
                 features["topic_filter_match"] = 0.0
 
@@ -290,23 +308,32 @@ class RankingFeatureExtractor:
             return features
 
         except Exception as e:
-            logger.error("Contextual feature extraction failed", error=str(e), article_id=article.id)
+            logger.error(
+                "Contextual feature extraction failed", error=str(e), article_id=article.id
+            )
             return self._get_default_contextual_features()
 
-    async def compute_interaction_features(self, article: Article, user_id: str) -> Dict[str, float]:
+    async def compute_interaction_features(
+        self, article: Article, user_id: str
+    ) -> Dict[str, float]:
         """User interaction features."""
         try:
-            features = {}
+            features: Dict[str, float] = {}
 
             # Engagement metrics
-            features["view_count"] = article.view_count
-            features["like_count"] = article.like_count
-            features["share_count"] = article.share_count
-            features["comment_count"] = article.comment_count
+            features["view_count"] = float(article.view_count)
+            features["like_count"] = float(article.like_count)
+            features["share_count"] = float(article.share_count)
+            features["comment_count"] = float(article.comment_count)
 
             # Engagement ratios
-            total_engagement = article.view_count + article.like_count + article.share_count + article.comment_count
-            features["total_engagement"] = total_engagement
+            total_engagement = (
+                article.view_count
+                + article.like_count
+                + article.share_count
+                + article.comment_count
+            )
+            features["total_engagement"] = float(total_engagement)
             features["engagement_rate"] = total_engagement / max(article.view_count, 1)
             features["like_rate"] = article.like_count / max(article.view_count, 1)
             features["share_rate"] = article.share_count / max(article.view_count, 1)
@@ -317,18 +344,22 @@ class RankingFeatureExtractor:
             features["user_has_viewed"] = 1.0 if user_interactions.get("viewed", False) else 0.0
             features["user_has_liked"] = 1.0 if user_interactions.get("liked", False) else 0.0
             features["user_has_shared"] = 1.0 if user_interactions.get("shared", False) else 0.0
-            features["user_has_commented"] = 1.0 if user_interactions.get("commented", False) else 0.0
+            features["user_has_commented"] = (
+                1.0 if user_interactions.get("commented", False) else 0.0
+            )
 
             # Trending features
             trending_score = await self.trending_detector.compute_trending_score(article)
-            features["trending_score"] = trending_score.trending_score
-            features["trending_velocity"] = trending_score.velocity
-            features["trending_acceleration"] = trending_score.acceleration
+            features["trending_score"] = float(trending_score.trending_score)
+            features["trending_velocity"] = float(trending_score.velocity)
+            features["trending_acceleration"] = float(trending_score.acceleration)
 
             return features
 
         except Exception as e:
-            logger.error("Interaction feature extraction failed", error=str(e), article_id=article.id)
+            logger.error(
+                "Interaction feature extraction failed", error=str(e), article_id=article.id
+            )
             return self._get_default_interaction_features()
 
     # Helper methods
@@ -336,9 +367,9 @@ class RankingFeatureExtractor:
     async def _compute_readability(self, content: str) -> float:
         """Compute readability score using Flesch Reading Ease."""
         try:
-            score = flesch_reading_ease(content)
+            score = float(flesch_reading_ease(content))
             # Normalize to 0-1 range
-            return max(0, min(1, (score - 0) / 100))
+            return max(0.0, min(1.0, (score - 0) / 100))
         except BaseException:
             return 0.5
 
@@ -352,7 +383,7 @@ class RankingFeatureExtractor:
     async def _compute_caps_ratio(self, text: str) -> float:
         """Compute ratio of capital letters."""
         if not text:
-            return 0
+            return 0.0
         return sum(1 for c in text if c.isupper()) / len(text)
 
     async def _compute_text_similarity(self, text1: str, text2: str) -> float:
@@ -630,10 +661,12 @@ class AuthorityScorer:
 class GeographicCalculator:
     """Geographic distance and relevance calculations."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.earth_radius_km = 6371
 
-    async def compute_distance(self, location1: Dict[str, float], location2: Dict[str, float]) -> float:
+    async def compute_distance(
+        self, location1: Dict[str, float], location2: Dict[str, float]
+    ) -> float:
         """Compute distance between two locations in kilometers."""
         try:
             lat1, lon1 = location1.get("lat", 0), location1.get("lng", 0)
