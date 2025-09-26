@@ -5,8 +5,8 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from ..entities.extractor import EntityExtractor
-from ..models.content import ContentType, EntityType, ExtractedContent
+from entities.extractor import EntityExtractor
+from models.content import ContentType, EntityType, ExtractedContent
 
 
 class TestEntityExtractor:

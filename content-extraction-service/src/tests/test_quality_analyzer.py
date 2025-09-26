@@ -2,12 +2,13 @@
 Unit tests for quality analyzer.
 """
 
+from typing import Any, Dict
 from unittest.mock import Mock, patch
 
 import pytest
 
-from ..models.content import QualityMetrics
-from ..utils.quality_analyzer import QualityAnalyzer
+from models.content import QualityAnalysis
+from utils.quality_analyzer import QualityAnalyzer
 
 
 class TestQualityAnalyzer:

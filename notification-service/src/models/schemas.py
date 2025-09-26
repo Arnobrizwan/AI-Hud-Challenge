@@ -222,3 +222,18 @@ class BatchNotificationResponse(BaseModel):
     errors: List[str] = Field(default_factory=list)
     processing_time_ms: int
     metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+class BreakingNewsEvent(BaseModel):
+    """Breaking news event model."""
+
+    event_id: str
+    title: str
+    content: str
+    severity: str
+    confidence: float
+    source: str
+    category: str
+    location: Optional[str] = None
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    metadata: Dict[str, Any] = Field(default_factory=dict)

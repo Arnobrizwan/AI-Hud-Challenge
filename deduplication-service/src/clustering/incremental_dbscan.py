@@ -31,7 +31,7 @@ class IncrementalDBSCAN:
         self.eps = eps
         self.min_samples = min_samples
         self.max_cluster_size = max_cluster_size
-        self.temporal_decay_half_life = temporal_decay_half_lours * 3600  # Convert to seconds
+        self.temporal_decay_half_life = temporal_decay_half_life_hours * 3600  # Convert to seconds
 
         # Clustering state
         self.clusters: Dict[int, Set[UUID]] = {}

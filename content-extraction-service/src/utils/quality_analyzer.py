@@ -9,8 +9,8 @@ from typing import List, Optional
 
 from loguru import logger
 
-from ..exceptions import QualityAnalysisError
-from ..models.content import QualityMetrics
+from exceptions import QualityAnalysisError
+from models.content import QualityAnalysis
 
 
 class QualityAnalyzer:
@@ -33,7 +33,7 @@ class QualityAnalyzer:
         url: Optional[str] = None,
         title: Optional[str] = None,
         language_hint: Optional[str] = None,
-    ) -> QualityMetrics:
+    ) -> QualityAnalysis:
         """
         Analyze content quality and return comprehensive metrics.
 
@@ -87,7 +87,7 @@ class QualityAnalyzer:
                 average_sentence_length,
             )
 
-            return QualityMetrics(
+            return QualityAnalysis(
                 readability_score=readability_score,
                 word_count=word_count,
                 character_count=character_count,
@@ -498,7 +498,7 @@ class QualityAnalyzer:
             "reliable",
         ]
 
-    async def get_quality_recommendations(self, metrics: QualityMetrics) -> List[str]:
+    async def get_quality_recommendations(self, metrics: QualityAnalysis) -> List[str]:
         """Get recommendations for improving content quality."""
         recommendations = []
 

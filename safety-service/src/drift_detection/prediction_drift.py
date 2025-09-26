@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 from safety_engine.config import get_drift_config
-from safety_engine.models import PredictionDriftResult
+from .models import PredictionDriftResult
 from scipy import stats
 from sklearn.calibration import calibration_curve
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score

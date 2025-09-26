@@ -7,13 +7,13 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import structlog
 
-from ..entities.extractor import EntityExtractor
-from ..knowledge_base.entity_kb import EntityKnowledgeBase
-from ..models.content import EnrichedContent, ExtractedContent, ModelVersion, ProcessingMode
-from ..sentiment.analyzer import SentimentAnalyzer
-from ..signals.extractor import SignalExtractor
-from ..topics.classifier import TopicClassifier
-from ..utils.language_detector import LanguageDetector
+from entities.extractor import EntityExtractor
+from knowledge_base.entity_kb import EntityKnowledgeBase
+from models.content import EnrichedContent, ExtractedContent, ModelVersion, ProcessingMode
+from sentiment.analyzer import SentimentAnalyzer
+from signals.extractor import SignalExtractor
+from topics.classifier import TopicClassifier
+from utils.language_detector import LanguageDetector
 
 logger = structlog.get_logger(__name__)
 

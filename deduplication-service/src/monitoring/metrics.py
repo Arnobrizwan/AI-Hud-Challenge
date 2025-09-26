@@ -4,7 +4,7 @@ import asyncio
 import time
 from collections import defaultdict, deque
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import redis.asyncio as redis
 from prometheus_client import CollectorRegistry, Counter, Gauge, Histogram, generate_latest

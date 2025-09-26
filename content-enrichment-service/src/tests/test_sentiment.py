@@ -5,8 +5,8 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from ..models.content import ContentType, EmotionLabel, ExtractedContent, SentimentLabel
-from ..sentiment.analyzer import SentimentAnalyzer
+from models.content import ContentType, EmotionLabel, ExtractedContent, SentimentLabel
+from sentiment.analyzer import SentimentAnalyzer
 
 
 class TestSentimentAnalyzer:

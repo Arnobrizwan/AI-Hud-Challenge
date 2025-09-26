@@ -14,23 +14,30 @@ from src.summarization.models import ContentType, Language, ProcessedContent, Su
 @pytest.fixture
 def client():
     """Create test client"""
-    return TestClient(app)
+    # Mock the cache and metrics collector
+    with patch("src.main.summary_cache") as mock_cache, patch("src.main.metrics_collector") as mock_metrics:
+        mock_cache.generate_key.return_value = "test_key"
+        mock_cache.get.return_value = None
+        mock_cache.set.return_value = None
+        mock_metrics.increment_cache_hit.return_value = None
+        mock_metrics.increment_error.return_value = None
+        mock_metrics.record_summarization_metrics.return_value = None
+        return TestClient(app)
 
 
 @pytest.fixture
 def sample_content():
     """Sample content for testing"""
     return ProcessedContent(
-        text="This is a sample article about artificial intelligence and machine learning. "
+        content="This is a sample article about artificial intelligence and machine learning. "
         "The field has seen tremendous growth in recent years with applications in "
         "various domains including healthcare, finance, and transportation. "
         "Researchers are continuously working on improving algorithms and models "
         "to make AI more efficient and accessible.",
-        title="AI and Machine Learning Advances",
-        author="Test Author",
-        source="Test Source",
-        language=Language.ENGLISH,
-        content_type=ContentType.NEWS_ARTICLE,
+        content_type=ContentType.NEWS,
+        language=Language.EN,
+        word_count=50,
+        processing_time=0.1,
     )
 
 
@@ -38,10 +45,10 @@ def sample_content():
 def sample_request(sample_content):
     """Sample summarization request"""
     return SummarizationRequest(
-        content=sample_content,
-        target_lengths=[50, 120],
-        methods=["hybrid"],
-        headline_styles=["news", "engaging"],
+        content=sample_content.content,
+        title="AI and Machine Learning Advances",
+        max_length=200,
+        style="neutral",
     )
 
 
@@ -91,24 +98,12 @@ class TestSummarizationEndpoints:
         mock_engine.generate_summary.return_value = mock_result
 
         batch_request = {
-            "requests": [
-                {
-                    "content": {
-                        "text": "First article content...",
-                        "language": "en",
-                        "content_type": "news_article",
-                    },
-                    "target_lengths": [120],
-                },
-                {
-                    "content": {
-                        "text": "Second article content...",
-                        "language": "en",
-                        "content_type": "news_article",
-                    },
-                    "target_lengths": [120],
-                },
-            ]
+            "contents": [
+                "First article content...",
+                "Second article content..."
+            ],
+            "titles": ["First Article", "Second Article"],
+            "max_length": 120
         }
 
         response = client.post("/summarize/batch", json=batch_request)
@@ -131,12 +126,7 @@ class TestHeadlineEndpoints:
         mock_generator.generate_headlines.return_value = mock_headlines
 
         response = client.post(
-            "/headlines/generate",
-            json={
-                "content": "Sample article content...",
-                "styles": ["news", "engaging"],
-                "num_variants": 2,
-            },
+            "/headlines/generate?content=Sample article content...&styles=news&styles=engaging&num_variants=2"
         )
 
         # Should return 200 or 500 depending on initialization
@@ -164,8 +154,7 @@ class TestQualityEndpoints:
         mock_validator.validate_summary_quality.return_value = mock_metrics
 
         response = client.post(
-            "/quality/validate",
-            json={"original": "Original article text...", "summary": "Generated summary text..."},
+            "/quality/validate?original=Original article text...&summary=Generated summary text..."
         )
 
         # Should return 200 or 500 depending on initialization

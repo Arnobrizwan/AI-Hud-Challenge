@@ -119,7 +119,7 @@ class MultidimensionalDriftDetector:
                 )
             else:
                 concept_drift_results = ConceptDriftResult(
-                    drift_detected=False, drift_score=0.0, affected_features=[], confidence=1.0)
+                    drift_score=0.0, is_drifted=False, feature_importance_changes={}, model_performance_change=0.0)
 
             # Prediction drift detection
             prediction_drift_results = None
@@ -135,10 +135,10 @@ class MultidimensionalDriftDetector:
                 )
             else:
                 prediction_drift_results = PredictionDriftResult(
-                    drift_detected=False,
                     drift_score=0.0,
-                    prediction_accuracy_change=0.0,
-                    confidence=1.0,
+                    is_drifted=False,
+                    prediction_distribution_change=0.0,
+                    accuracy_change=0.0,
                 )
 
             # Feature importance drift
@@ -155,10 +155,10 @@ class MultidimensionalDriftDetector:
                 )
             else:
                 importance_drift_results = ImportanceDriftResult(
-                    drift_detected=False,
                     drift_score=0.0,
-                    feature_importance_changes={},
-                    confidence=1.0,
+                    is_drifted=False,
+                    importance_changes={},
+                    top_changed_features=[],
                 )
 
             # Calculate overall drift severity

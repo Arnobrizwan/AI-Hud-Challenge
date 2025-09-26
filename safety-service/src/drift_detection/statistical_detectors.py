@@ -9,7 +9,7 @@ from typing import Any, Dict, Tuple
 import numpy as np
 import pandas as pd
 from safety_engine.config import get_drift_config
-from safety_engine.models import StatisticalTestResult
+from .models import StatisticalTestResult
 from scipy import stats
 from scipy.stats import chi2_contingency, ks_2samp, wasserstein_distance
 
@@ -58,7 +58,7 @@ class KolmogorovSmirnovDetector(BaseStatisticalDetector):
                     statistic=0.0,
                     is_significant=False,
                     drift_score=0.0,
-                    threshold=0.05,
+                    threshold=self.alpha,
                 )
 
             # Perform KS test
@@ -86,6 +86,7 @@ class KolmogorovSmirnovDetector(BaseStatisticalDetector):
                 statistic=0.0,
                 is_significant=False,
                 drift_score=0.0,
+                threshold=self.alpha,
             )
 
 
@@ -129,6 +130,7 @@ class ChiSquareDetector(BaseStatisticalDetector):
                 statistic=chi2,
                 is_significant=is_significant,
                 drift_score=drift_score,
+                threshold=self.alpha,
             )
 
         except Exception as e:
@@ -139,6 +141,7 @@ class ChiSquareDetector(BaseStatisticalDetector):
                 statistic=0.0,
                 is_significant=False,
                 drift_score=0.0,
+                threshold=self.alpha,
             )
 
 
@@ -170,6 +173,7 @@ class PopulationStabilityIndexDetector(BaseStatisticalDetector):
                 statistic=psi_score,
                 is_significant=is_significant,
                 drift_score=drift_score,
+                threshold=self.psi_threshold,
             )
 
         except Exception as e:
@@ -179,7 +183,9 @@ class PopulationStabilityIndexDetector(BaseStatisticalDetector):
                 p_value=1.0,
                 statistic=0.0,
                 is_significant=False,
-                drift_score=0.0)
+                drift_score=0.0,
+                threshold=self.psi_threshold,
+            )
 
     def calculate_psi(self, reference_data: pd.Series,
                       current_data: pd.Series) -> float:
@@ -255,6 +261,7 @@ class WassersteinDetector(BaseStatisticalDetector):
                     statistic=0.0,
                     is_significant=False,
                     drift_score=0.0,
+                    threshold=self.distance_threshold,
                 )
 
             # Calculate Wasserstein distance
@@ -273,6 +280,7 @@ class WassersteinDetector(BaseStatisticalDetector):
                 statistic=distance,
                 is_significant=is_significant,
                 drift_score=drift_score,
+                threshold=self.distance_threshold,
             )
 
         except Exception as e:
@@ -283,4 +291,5 @@ class WassersteinDetector(BaseStatisticalDetector):
                 statistic=0.0,
                 is_significant=False,
                 drift_score=0.0,
+                threshold=self.distance_threshold,
             )

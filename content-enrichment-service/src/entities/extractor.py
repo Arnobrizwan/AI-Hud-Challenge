@@ -8,9 +8,9 @@ import spacy
 import structlog
 from spacy import displacy
 
-from ..knowledge_base.entity_kb import EntityKnowledgeBase
-from ..models.content import Entity, EntityType, ExtractedContent
-from ..utils.text_processor import TextProcessor
+from knowledge_base.entity_kb import EntityKnowledgeBase
+from models.content import Entity, EntityType, ExtractedContent
+from utils.text_processor import TextProcessor
 
 logger = structlog.get_logger(__name__)
 

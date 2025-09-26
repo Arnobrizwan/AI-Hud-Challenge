@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 import pandas as pd
 from safety_engine.config import get_drift_config
-from safety_engine.models import ConceptDriftResult
+from .models import ConceptDriftResult
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, roc_auc_score

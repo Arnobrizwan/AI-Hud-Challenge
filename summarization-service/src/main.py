@@ -6,26 +6,26 @@ FastAPI application with Vertex AI and advanced NLP models
 import asyncio
 import logging
 from contextlib import asynccontextmanager
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 import uvicorn
 from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from headline_generation.generator import HeadlineGenerator
+from .headline_generation.generator import HeadlineGenerator
 from pydantic import BaseModel, Field
-from quality_validation.validator import SummaryQualityValidator
-from summarization.engine import ContentSummarizationEngine
-from summarization.models import (
+from .quality_validation.validator import SummaryQualityValidator
+from .summarization.engine import ContentSummarizationEngine
+from .summarization.models import (
     BatchSummarizationRequest,
     SummarizationRequest,
     SummarizationResponse,
     SummaryResult,
 )
 
-from config.settings import Settings
-from monitoring.metrics import MetricsCollector
-from optimization.cache import SummaryCache
+from .config.settings import Settings
+from .monitoring.metrics import MetricsCollector
+from .optimization.cache import SummaryCache
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -70,9 +70,9 @@ async def lifespan(app: FastAPI) -> Dict[str, Any]:
     # Cleanup
     logger.info("Shutting down Summarization Service...")
     if summarization_engine:
-    await summarization_engine.cleanup()
+        await summarization_engine.cleanup()
     if headline_generator:
-    await headline_generator.cleanup()
+        await headline_generator.cleanup()
 
 
 # Create FastAPI application
@@ -86,7 +86,7 @@ app = FastAPI(
 # Add middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.ALLOWED_ORIGINS,
+    allow_origins=settings.allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -117,8 +117,9 @@ async def readiness_check() -> Dict[str, Any]:
 @app.post("/summarize", response_model=SummarizationResponse)
 async def summarize_content(
         request: SummarizationRequest,
-        background_tasks: BackgroundTasks):
-     -> Dict[str, Any]:"""
+        background_tasks: BackgroundTasks
+) -> Dict[str, Any]:
+    """
     Generate AI-powered summary and headlines for content
 
     Supports:
@@ -130,20 +131,25 @@ async def summarize_content(
     """
     try:
         # Check cache first
-        cache_key = summary_cache.generate_key(request)
-        cached_result = await summary_cache.get(cache_key)
-        if cached_result:
-            metrics_collector.increment_cache_hit()
-            return cached_result
+        if summary_cache:
+            cache_key = summary_cache.generate_key(request)
+            cached_result = await summary_cache.get(cache_key)
+            if cached_result:
+                if metrics_collector:
+                    metrics_collector.increment_cache_hit()
+                return cached_result
 
         # Generate summary
         result = await summarization_engine.generate_summary(request)
 
         # Cache result
-        await summary_cache.set(cache_key, result, ttl=3600)
+        if summary_cache:
+            cache_key = summary_cache.generate_key(request)
+            await summary_cache.set(cache_key, result, ttl=3600)
 
         # Record metrics
-        metrics_collector.record_summarization_metrics(result)
+        if metrics_collector:
+            metrics_collector.record_summarization_metrics(result)
 
         # Background quality validation
         background_tasks.add_task(
@@ -160,7 +166,8 @@ async def summarize_content(
 
     except Exception as e:
         logger.error(f"Summarization failed: {str(e)}")
-        metrics_collector.increment_error()
+        if metrics_collector:
+            metrics_collector.increment_error()
         raise HTTPException(status_code=500,
                             detail=f"Summarization failed: {str(e)}")
 
@@ -168,8 +175,9 @@ async def summarize_content(
 @app.post("/summarize/batch", response_model=List[SummarizationResponse])
 async def batch_summarize(
         request: BatchSummarizationRequest,
-        background_tasks: BackgroundTasks):
-     -> Dict[str, Any]:"""
+        background_tasks: BackgroundTasks
+) -> Dict[str, Any]:
+    """
     Batch summarization for multiple content pieces
 
     Optimized for processing multiple articles simultaneously
@@ -220,8 +228,9 @@ async def generate_headlines(
             "news",
             "engaging",
             "neutral"],
-        num_variants: int = 5):
-     -> Dict[str, Any]:"""
+        num_variants: int = 5
+) -> Dict[str, Any]:
+    """
     Generate multiple headline variants with different styles
 
     Styles: news, engaging, question, neutral, urgent

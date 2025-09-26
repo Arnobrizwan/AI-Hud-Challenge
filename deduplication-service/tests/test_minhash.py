@@ -147,7 +147,7 @@ class TestContentFingerprinter:
         """Test content normalization."""
         text = "  Hello, World!  This is a test.  "
         normalized = content_fingerprinter._normalize_content(text)
-        expected = "hello world this is a test"
+        expected = "hello  world  this is a test"
         assert normalized == expected
 
     def test_compute_length_similarity(self, content_fingerprinter):

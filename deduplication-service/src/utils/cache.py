@@ -2,7 +2,7 @@
 
 import json
 import pickle
-from typing import Any, Optional, Union
+from typing import Any, Dict, Optional, Union
 
 import redis.asyncio as redis
 

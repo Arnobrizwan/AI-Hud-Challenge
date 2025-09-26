@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from ..enrichment.pipeline import ContentEnrichmentPipeline
-from ..models.content import ContentType, ExtractedContent, ProcessingMode
+from enrichment.pipeline import ContentEnrichmentPipeline
+from models.content import ContentType, ExtractedContent, ProcessingMode
 
 
 class TestContentEnrichmentPipeline:

@@ -2,12 +2,10 @@
 # Usage: 
 #   make dev-up        # All 16 services (10-15 minutes)
 #   make dev-up-fast   # Core services only (3-5 minutes)
-version: '3.8'
 
 services:
   # ==================== INFRASTRUCTURE ====================
   redis:
-    profiles: ["full"]
     image: redis:7-alpine
     ports: ["6379:6379"]
     volumes: ["redis_data:/data"]
@@ -16,15 +14,15 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+    profiles: ["fast", "full"]
 
   postgres:
-    profiles: ["full"]
     image: pgvector/pgvector:pg15
     environment:
       POSTGRES_DB: newshub
       POSTGRES_USER: newshub
       POSTGRES_PASSWORD: dev_password
-    ports: ["5432:5432"]
+    ports: ["8432:5432"]
     volumes: 
       - postgres_data:/var/lib/postgresql/data
       - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql
@@ -33,9 +31,9 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    profiles: ["fast", "full"]
 
   elasticsearch:
-    profiles: ["full"]
     image: elasticsearch:8.8.0
     environment:
       - discovery.type=single-node
@@ -43,17 +41,17 @@ services:
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ports: ["9200:9200"]
     volumes: ["elasticsearch_data:/usr/share/elasticsearch/data"]
+    profiles: ["full"]
 
   prometheus:
-    profiles: ["full"]
     image: prom/prometheus:latest
     ports: ["9090:9090"]
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
+    profiles: ["full"]
 
   grafana:
-    profiles: ["full"]
     image: grafana/grafana:latest
     ports: ["3001:3000"]
     environment:
@@ -62,9 +60,9 @@ services:
       - grafana_data:/var/lib/grafana
       - ./monitoring/dashboards:/etc/grafana/provisioning/dashboards
       - ./monitoring/datasources:/etc/grafana/provisioning/datasources
+    profiles: ["full"]
 
   mlflow:
-    profiles: ["full"]
     image: python:3.11-slim
     ports: ["5000:5000"]
     command: >
@@ -74,10 +72,10 @@ services:
              --default-artifact-root ./mlflow-artifacts"
     volumes: ["mlflow_data:/mlflow"]
     depends_on: [postgres]
+    profiles: ["full"]
 
   # ==================== CORE SERVICES (1-8) ====================
   foundations-guards:
-    profiles: ["full"]
     build: 
       context: ./safety-service
       dockerfile: Dockerfile.dev
@@ -94,7 +92,6 @@ services:
     profiles: ["fast", "full"]
 
   ingestion-normalization:
-    profiles: ["full"]
     build: 
       context: ./ingestion-service
       dockerfile: Dockerfile.dev
@@ -113,7 +110,6 @@ services:
     profiles: ["fast", "full"]
 
   content-extraction:
-    profiles: ["full"]
     build:
       context: ./content-extraction-service
       dockerfile: Dockerfile.dev
@@ -130,7 +126,6 @@ services:
     profiles: ["fast", "full"]
 
   enrichment:
-    profiles: ["full"]
     build:
       context: ./content-enrichment-service
       dockerfile: Dockerfile.dev
@@ -144,7 +139,6 @@ services:
     profiles: ["full"]
 
   deduplication:
-    profiles: ["full"]
     build:
       context: ./deduplication-service
       dockerfile: Dockerfile.dev
@@ -154,9 +148,9 @@ services:
       - DATABASE_URL=postgresql://newshub:dev_password@postgres:5432/newshub
     depends_on: [redis, postgres]
     volumes: ["./deduplication-service:/app"]
+    profiles: ["full"]
 
   ranking:
-    profiles: ["full"]
     build:
       context: ./src
       dockerfile: Dockerfile.dev
@@ -167,9 +161,9 @@ services:
       - MLFLOW_TRACKING_URI=http://mlflow:5000
     depends_on: [redis, postgres, mlflow]
     volumes: ["./src:/app"]
+    profiles: ["full"]
 
   summarization:
-    profiles: ["full"]
     build:
       context: ./summarization-service
       dockerfile: Dockerfile.dev
@@ -179,9 +173,9 @@ services:
       - DATABASE_URL=postgresql://newshub:dev_password@postgres:5432/newshub
     depends_on: [redis, postgres]
     volumes: ["./summarization-service:/app"]
+    profiles: ["full"]
 
   personalization:
-    profiles: ["full"]
     build:
       context: ./personalization-service
       dockerfile: Dockerfile.dev
@@ -192,10 +186,11 @@ services:
       - MLFLOW_TRACKING_URI=http://mlflow:5000
     depends_on: [redis, postgres, mlflow]
     volumes: ["./personalization-service:/app"]
+    profiles: ["full"]
 
   # ==================== INTELLIGENCE SERVICES (9-12) ====================
+
   notification-decisioning:
-    profiles: ["full"]
     build:
       context: ./notification-service
       dockerfile: Dockerfile.dev
@@ -205,9 +200,9 @@ services:
       - DATABASE_URL=postgresql://newshub:dev_password@postgres:5432/newshub
     depends_on: [redis, postgres]
     volumes: ["./notification-service:/app"]
+    profiles: ["full"]
 
   feedback-human-loop:
-    profiles: ["full"]
     build:
       context: ./feedback-service
       dockerfile: Dockerfile.dev
@@ -218,9 +213,9 @@ services:
       - MLFLOW_TRACKING_URI=http://mlflow:5000
     depends_on: [redis, postgres, mlflow]
     volumes: ["./feedback-service:/app"]
+    profiles: ["full"]
 
   evaluation-suite:
-    profiles: ["full"]
     build:
       context: ./evaluation-service
       dockerfile: Dockerfile.dev
@@ -231,9 +226,9 @@ services:
       - MLFLOW_TRACKING_URI=http://mlflow:5000
     depends_on: [redis, postgres, mlflow]
     volumes: ["./evaluation-service:/app"]
+    profiles: ["full"]
 
   mlops-orchestration:
-    profiles: ["full"]
     build:
       context: ./mlops-orchestration-service
       dockerfile: Dockerfile.dev
@@ -244,10 +239,11 @@ services:
       - MLFLOW_TRACKING_URI=http://mlflow:5000
     depends_on: [redis, postgres, mlflow]
     volumes: ["./mlops-orchestration-service:/app"]
+    profiles: ["full"]
 
   # ==================== PLATFORM SERVICES (13-16) ====================
+
   drift-abuse-safety:
-    profiles: ["full"]
     build:
       context: ./safety-service
       dockerfile: Dockerfile.dev
@@ -258,9 +254,9 @@ services:
       - SERVICE_MODE=drift_abuse  # Different mode for drift detection
     depends_on: [redis, postgres]
     volumes: ["./safety-service:/app"]
+    profiles: ["full"]
 
   storage-indexing:
-    profiles: ["full"]
     build:
       context: ./storage-service
       dockerfile: Dockerfile.dev
@@ -271,9 +267,9 @@ services:
       - ELASTICSEARCH_URL=http://elasticsearch:9200
     depends_on: [redis, postgres, elasticsearch]
     volumes: ["./storage-service:/app"]
+    profiles: ["full"]
 
   realtime-interfaces:
-    profiles: ["full"]
     build:
       context: ./realtime-interface-service
       dockerfile: Dockerfile.dev
@@ -283,9 +279,9 @@ services:
       - DATABASE_URL=postgresql://newshub:dev_password@postgres:5432/newshub
     depends_on: [redis, postgres]
     volumes: ["./realtime-interface-service:/app"]
+    profiles: ["full"]
 
   observability-runbooks:
-    profiles: ["full"]
     build:
       context: ./observability-service
       dockerfile: Dockerfile.dev
@@ -296,8 +292,10 @@ services:
       - PROMETHEUS_URL=http://prometheus:9090
     depends_on: [redis, postgres, prometheus]
     volumes: ["./observability-service:/app"]
+    profiles: ["full"]
 
   # ==================== API GATEWAY & UI ====================
+
   api-gateway:
     build:
       context: ./src
@@ -313,7 +311,6 @@ services:
     profiles: ["fast", "full"]
 
   admin-ui:
-    profiles: ["full"]
     build:
       context: ./feedback-service/frontend
       dockerfile: Dockerfile.dev
@@ -321,6 +318,7 @@ services:
     environment:
       - REACT_APP_API_URL=http://localhost:8000
     volumes: ["./feedback-service/frontend:/app"]
+    profiles: ["full"]
 
 volumes:
   redis_data:
@@ -332,6 +330,5 @@ volumes:
 
 networks:
   default:
-    profiles: ["full"]
     name: news-hub-network
 

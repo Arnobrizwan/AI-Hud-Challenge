@@ -40,7 +40,7 @@ class LSHIndex:
         self.index_name = index_name
 
         # Initialize LSH
-        self.lsh = MinHashLSH(threshold=threshold, num_perm=num_perm, num_bands=num_bands, band_size=band_size)
+        self.lsh = MinHashLSH(threshold=threshold, num_perm=num_perm)
 
         # Redis keys
         self.index_key = f"{index_name}:lsh"

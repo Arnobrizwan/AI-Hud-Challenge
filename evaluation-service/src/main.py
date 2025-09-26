@@ -10,18 +10,18 @@ from contextlib import asynccontextmanager
 from typing import Any, Dict
 
 import uvicorn
-from evaluation_engine.cache import init_cache
-from evaluation_engine.config import get_settings
-from evaluation_engine.core import EvaluationEngine
-from evaluation_engine.database import init_database
-from evaluation_engine.dependencies import get_evaluation_engine
-from evaluation_engine.middleware import (
+from .evaluation_engine.cache import init_cache
+from .evaluation_engine.config import get_settings
+from .evaluation_engine.core import EvaluationEngine
+from .evaluation_engine.database import init_database
+from .evaluation_engine.dependencies import get_evaluation_engine
+from .evaluation_engine.middleware import (
     ErrorHandlingMiddleware,
     PerformanceMonitoringMiddleware,
     RequestLoggingMiddleware,
 )
-from evaluation_engine.monitoring import EvaluationMonitoring
-from evaluation_engine.routers import (
+from .evaluation_engine.monitoring import EvaluationMonitoring
+from .evaluation_engine.routers import (
     business_impact_router,
     dashboard_router,
     drift_detection_router,

@@ -5,24 +5,24 @@ Unit tests for data models.
 import pytest
 from pydantic import ValidationError
 
-from ..models.content import (
-    ContentMetadata,
+from models.content import (
+    MetadataInfo,
     ContentType,
     ExtractedContent,
-    ExtractionMethod,
-    ExtractionStats,
-    LanguageInfo,
-    ProcessedImage,
-    QualityMetrics,
+    ImageInfo,
+    QualityAnalysis,
+    ProcessingStatus,
+    CacheStats,
+    ProcessingMetrics,
 )
 
 
-class TestContentMetadata:
+class TestMetadataInfo:
     """Test ContentMetadata model."""
 
     def test_valid_metadata(self):
         """Test valid metadata creation."""
-        metadata = ContentMetadata(
+        metadata = MetadataInfo(
             og_title="Test Title",
             og_description="Test Description",
             og_image="https://example.com/image.jpg",
@@ -36,7 +36,7 @@ class TestContentMetadata:
 
     def test_empty_metadata(self):
         """Test empty metadata creation."""
-        metadata = ContentMetadata()
+        metadata = MetadataInfo()
         assert metadata.og_title is None
         assert metadata.og_description is None
         assert metadata.json_ld == {}
@@ -47,7 +47,7 @@ class TestQualityMetrics:
 
     def test_valid_quality_metrics(self):
         """Test valid quality metrics creation."""
-        metrics = QualityMetrics(
+        metrics = QualityAnalysis(
             readability_score=75.0,
             word_count=500,
             character_count=2500,
@@ -143,7 +143,7 @@ class TestExtractedContent:
 
     def test_valid_extracted_content(self):
         """Test valid extracted content creation."""
-        metadata = ContentMetadata(og_title="Test Title")
+        metadata = MetadataInfo(og_title="Test Title")
         quality_metrics = QualityMetrics(
             readability_score=75.0,
             word_count=500,
@@ -197,7 +197,7 @@ class TestExtractedContent:
 
     def test_content_hash_calculation(self):
         """Test content hash calculation."""
-        metadata = ContentMetadata(og_title="Test Title")
+        metadata = MetadataInfo(og_title="Test Title")
         quality_metrics = QualityMetrics(
             readability_score=75.0,
             word_count=500,
@@ -250,7 +250,7 @@ class TestExtractedContent:
 
     def test_reading_time_calculation(self):
         """Test reading time calculation."""
-        metadata = ContentMetadata()
+        metadata = MetadataInfo()
         quality_metrics = QualityMetrics(
             readability_score=75.0,
             word_count=400,  # 400 words = 2 minutes at 200 wpm
@@ -302,7 +302,7 @@ class TestExtractedContent:
 
     def test_high_quality_check(self):
         """Test high quality content check."""
-        metadata = ContentMetadata()
+        metadata = MetadataInfo()
         quality_metrics = QualityMetrics(
             readability_score=80.0,
             word_count=500,
@@ -355,7 +355,7 @@ class TestExtractedContent:
 
     def test_duplicate_detection(self):
         """Test duplicate content detection."""
-        metadata = ContentMetadata()
+        metadata = MetadataInfo()
         quality_metrics = QualityMetrics(
             readability_score=75.0,
             word_count=500,
