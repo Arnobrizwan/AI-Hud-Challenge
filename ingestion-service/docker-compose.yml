@@ -85,7 +85,6 @@ services:
       ENABLE_RSS_FEEDS: "True"
       ENABLE_JSON_FEEDS: "True"
       ENABLE_API_SOURCES: "True"
-      ENABLE_WEB_SCRAPING: "True"
       
       # Performance settings
       BATCH_SIZE: "100"
