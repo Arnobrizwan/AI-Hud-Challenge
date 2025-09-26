@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "python src/main.py",
     "start": "python src/main.py",
-    "build": "echo 'Build completed'",
+    "build": "pip install -r requirements.txt",
     "vercel-build": "pip install -r requirements.txt"
   },
   "engines": {
