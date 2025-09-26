@@ -1,3 +1,27 @@
+# Core FastAPI dependencies
 fastapi==0.104.1
 uvicorn==0.24.0
 pydantic==2.5.0
+
+# Essential FastAPI extensions
+python-multipart==0.0.6
+httpx==0.25.2
+aiofiles==23.2.1
+
+# Logging and monitoring (lightweight)
+structlog==23.2.0
+
+# Basic utilities
+python-dotenv==1.0.0
+
+# ML dependencies (lightweight versions for Vercel)
+numpy==1.24.3
+scikit-learn==1.3.0
+
+# Note: Excluded heavy packages that don't work well in Vercel:
+# - redis (use Vercel KV or external Redis service)
+# - lightgbm (too large for serverless)
+# - pandas (use lighter alternatives if needed)
+# - prometheus-client (use external monitoring)
+# - psycopg2-binary (use external database)
+# - sqlalchemy (use external database)
