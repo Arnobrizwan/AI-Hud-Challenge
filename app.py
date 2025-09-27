@@ -290,9 +290,9 @@ async def general_exception_handler(request: Any, exc: Exception) -> JSONRespons
     )
 
 if __name__ == "__main__":
-    # Configuration for AWS deployment
+    # Configuration for Railway deployment
     host = os.getenv("HOST", "0.0.0.0")
-    port = int(os.getenv("PORT", "8000"))  # AWS App Runner default port
+    port = int(os.getenv("PORT", "8000"))  # Railway default port
     log_level = os.getenv("LOG_LEVEL", "info")
     
     # Start server
