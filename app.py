@@ -4,15 +4,12 @@ Integrates all microservices into a single deployable application
 """
 
 import os
-import asyncio
-from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 
 # Try to import structlog, fallback to standard logging
@@ -43,42 +40,13 @@ except ImportError:
     logger = logging.getLogger(__name__)
 
 # Global variables for service integration
-services_initialized = False
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """Application lifespan manager."""
-    global services_initialized
-    
-    # Startup
-    try:
-        logger.info("Starting AI News Hub")
-        
-        # Initialize services here
-        # For now, we'll just mark as initialized
-        services_initialized = True
-        logger.info("AI News Hub started successfully")
-        
-    except Exception as e:
-        logger.error(f"Failed to start AI News Hub: {str(e)}")
-        # Don't raise, just log the error and continue
-        services_initialized = False
-    
-    yield
-    
-    # Shutdown
-    try:
-        logger.info("Shutting down AI News Hub")
-        services_initialized = False
-    except Exception as e:
-        logger.error(f"Error during shutdown: {str(e)}")
+services_initialized = True
 
 # Create FastAPI application
 app = FastAPI(
     title="AI News Hub",
     description="Intelligent news aggregation and personalization platform",
     version="1.0.0",
-    lifespan=lifespan,
 )
 
 # Add middleware
@@ -90,26 +58,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.add_middleware(GZipMiddleware, minimum_size=1000)
-
-# Add security headers middleware
-@app.middleware("http")
-async def add_security_headers(request: Any, call_next: Any) -> Any:
-    response = await call_next(request)
-    response.headers["X-Frame-Options"] = "DENY"
-    response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["X-XSS-Protection"] = "1; mode=block"
-    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-    return response
-
-# Add correlation ID middleware
-@app.middleware("http")
-async def add_correlation_id(request: Any, call_next: Any) -> Any:
-    import uuid
-    correlation_id = request.headers.get("X-Correlation-ID", str(uuid.uuid4()))
-    response = await call_next(request)
-    response.headers["X-Correlation-ID"] = correlation_id
-    return response
+# Simplified middleware - removed complex middleware that might cause 502 errors
 
 # API Endpoints
 
