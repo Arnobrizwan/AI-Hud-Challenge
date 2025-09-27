@@ -3,46 +3,42 @@
 
 set -e
 
-echo "🏗️ Building all services for production..."
+echo "🏗️ Building AI News Hub for Hugging Face Spaces..."
 
-SERVICES=(
-  "safety-service"
-  "ingestion-service" 
-  "content-extraction-service"
-  "content-enrichment-service"
-  "deduplication-service"
-  "src"
-  "summarization-service"
-  "personalization-service"
-  "notification-service"
-  "feedback-service"
-  "evaluation-service"
-  "mlops-orchestration-service"
-  "storage-service"
-  "realtime-interface-service"
-  "observability-service"
-)
+# Build main application
+echo "🔨 Building main application..."
+docker build -t ai-news-hub:latest .
 
-REGISTRY=${REGISTRY:-"gcr.io"}
-PROJECT_ID=${PROJECT_ID:-"your-project-id"}
-TAG=${TAG:-"latest"}
+echo "✅ Main application built successfully: ai-news-hub:latest"
 
-for service in "${SERVICES[@]}"; do
-  echo "🔨 Building $service..."
+# Optional: Build individual services for local development
+if [[ "$BUILD_SERVICES" == "true" ]]; then
+  echo "🔨 Building individual services..."
   
-  # Build the Docker image
-  IMAGE_TAG="${REGISTRY}/${PROJECT_ID}/${service}:${TAG}"
-  
-  docker build -t "$IMAGE_TAG" "./$service"
-  
-  # Push to registry if not local
-  if [[ "$REGISTRY" != "local" ]]; then
-    echo "📤 Pushing $service to registry..."
-    docker push "$IMAGE_TAG"
-  fi
-  
-  echo "✅ $service built successfully: $IMAGE_TAG"
-done
+  SERVICES=(
+    "safety-service"
+    "ingestion-service" 
+    "content-extraction-service"
+    "content-enrichment-service"
+    "deduplication-service"
+    "src"
+    "summarization-service"
+    "personalization-service"
+    "notification-service"
+    "feedback-service"
+    "evaluation-service"
+    "mlops-orchestration-service"
+    "storage-service"
+    "realtime-interface-service"
+    "observability-service"
+  )
 
-echo "🎉 All services built successfully!"
+  for service in "${SERVICES[@]}"; do
+    echo "🔨 Building $service..."
+    docker build -t "ai-news-hub-$service:latest" "./$service"
+    echo "✅ $service built successfully: ai-news-hub-$service:latest"
+  done
+fi
 
+echo "🎉 Build completed successfully!"
+echo "🚀 Ready for Hugging Face Spaces deployment!"
