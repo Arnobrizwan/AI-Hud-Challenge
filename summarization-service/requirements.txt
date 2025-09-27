@@ -35,7 +35,7 @@ langdetect==1.0.9
 redis==5.0.1
 
 # Monitoring and metrics
-psutil==5.9.6
+psutil==7.1.0
 prometheus-client==0.19.0
 
 # HTTP and networking
