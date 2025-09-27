@@ -96,7 +96,7 @@ structlog==23.2.0
 loguru==0.7.2
 
 # Configuration
-dynaconf==3.2.4
+dynaconf==3.2.11
 # omegaconf==2.3.0  # Removed due to PyYAML build issues
 
 # Serialization
