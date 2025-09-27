@@ -9,33 +9,38 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-import structlog
 import uvicorn
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 
-# Configure structured logging
-structlog.configure(
-    processors=[
-        structlog.stdlib.filter_by_level,
-        structlog.stdlib.add_logger_name,
-        structlog.stdlib.add_log_level,
-        structlog.stdlib.PositionalArgumentsFormatter(),
-        structlog.processors.TimeStamper(fmt="iso"),
-        structlog.processors.StackInfoRenderer(),
-        structlog.processors.format_exc_info,
-        structlog.processors.UnicodeDecoder(),
-        structlog.processors.JSONRenderer(),
-    ],
-    context_class=dict,
-    logger_factory=structlog.stdlib.LoggerFactory(),
-    wrapper_class=structlog.stdlib.BoundLogger,
-    cache_logger_on_first_use=True,
-)
-
-logger = structlog.get_logger(__name__)
+# Try to import structlog, fallback to standard logging
+try:
+    import structlog
+    # Configure structured logging
+    structlog.configure(
+        processors=[
+            structlog.stdlib.filter_by_level,
+            structlog.stdlib.add_logger_name,
+            structlog.stdlib.add_log_level,
+            structlog.stdlib.PositionalArgumentsFormatter(),
+            structlog.processors.TimeStamper(fmt="iso"),
+            structlog.processors.StackInfoRenderer(),
+            structlog.processors.format_exc_info,
+            structlog.processors.UnicodeDecoder(),
+            structlog.processors.JSONRenderer(),
+        ],
+        context_class=dict,
+        logger_factory=structlog.stdlib.LoggerFactory(),
+        wrapper_class=structlog.stdlib.BoundLogger,
+        cache_logger_on_first_use=True,
+    )
+    logger = structlog.get_logger(__name__)
+except ImportError:
+    import logging
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
 
 # Global variables for service integration
 services_initialized = False
@@ -46,23 +51,27 @@ async def lifespan(app: FastAPI):
     global services_initialized
     
     # Startup
-    logger.info("Starting AI News Hub")
-    
     try:
+        logger.info("Starting AI News Hub")
+        
         # Initialize services here
         # For now, we'll just mark as initialized
         services_initialized = True
         logger.info("AI News Hub started successfully")
         
     except Exception as e:
-        logger.error("Failed to start AI News Hub", error=str(e))
-        raise
+        logger.error(f"Failed to start AI News Hub: {str(e)}")
+        # Don't raise, just log the error and continue
+        services_initialized = False
     
     yield
     
     # Shutdown
-    logger.info("Shutting down AI News Hub")
-    services_initialized = False
+    try:
+        logger.info("Shutting down AI News Hub")
+        services_initialized = False
+    except Exception as e:
+        logger.error(f"Error during shutdown: {str(e)}")
 
 # Create FastAPI application
 app = FastAPI(
@@ -104,32 +113,43 @@ async def add_correlation_id(request: Any, call_next: Any) -> Any:
 
 # API Endpoints
 
-@app.get("/", response_model=Dict[str, str])
+@app.get("/", response_model=Dict[str, Any])
 async def root() -> Dict[str, Any]:
     """Root endpoint with service information."""
-    return {
-        "service": "AI News Hub",
-        "version": "1.0.0",
-        "status": "running",
-        "description": "Intelligent news aggregation and personalization platform",
-        "services": [
-            "safety-service",
-            "ingestion-service", 
-            "content-extraction-service",
-            "content-enrichment-service",
-            "deduplication-service",
-            "ranking-service",
-            "summarization-service",
-            "personalization-service",
-            "notification-service",
-            "feedback-service",
-            "evaluation-service",
-            "mlops-orchestration-service",
-            "storage-service",
-            "realtime-interface-service",
-            "observability-service"
-        ]
-    }
+    try:
+        return {
+            "service": "AI News Hub",
+            "version": "1.0.0",
+            "status": "running",
+            "description": "Intelligent news aggregation and personalization platform",
+            "timestamp": datetime.utcnow().isoformat(),
+            "services": [
+                "safety-service",
+                "ingestion-service", 
+                "content-extraction-service",
+                "content-enrichment-service",
+                "deduplication-service",
+                "ranking-service",
+                "summarization-service",
+                "personalization-service",
+                "notification-service",
+                "feedback-service",
+                "evaluation-service",
+                "mlops-orchestration-service",
+                "storage-service",
+                "realtime-interface-service",
+                "observability-service"
+            ]
+        }
+    except Exception as e:
+        logger.error(f"Root endpoint error: {str(e)}")
+        return {
+            "service": "AI News Hub",
+            "version": "1.0.0",
+            "status": "running",
+            "error": str(e),
+            "timestamp": datetime.utcnow().isoformat()
+        }
 
 @app.get("/health", response_model=Dict[str, Any])
 async def health_check() -> Dict[str, Any]:
@@ -142,8 +162,8 @@ async def health_check() -> Dict[str, Any]:
             "version": "1.0.0"
         }
     except Exception as e:
-        logger.error("Health check failed", error=str(e))
-        return {"status": "unhealthy", "error": str(e), "timestamp": "2024-01-01T00:00:00Z"}
+        logger.error(f"Health check failed: {str(e)}")
+        return {"status": "unhealthy", "error": str(e), "timestamp": datetime.utcnow().isoformat()}
 
 @app.get("/health/live", response_model=Dict[str, Any])
 async def liveness_probe() -> Dict[str, Any]:
