@@ -4,6 +4,7 @@ Integrates all microservices into a single deployable application
 """
 
 import os
+import asyncio
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
@@ -12,32 +13,10 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-# Try to import structlog, fallback to standard logging
-try:
-    import structlog
-    # Configure structured logging
-    structlog.configure(
-        processors=[
-            structlog.stdlib.filter_by_level,
-            structlog.stdlib.add_logger_name,
-            structlog.stdlib.add_log_level,
-            structlog.stdlib.PositionalArgumentsFormatter(),
-            structlog.processors.TimeStamper(fmt="iso"),
-            structlog.processors.StackInfoRenderer(),
-            structlog.processors.format_exc_info,
-            structlog.processors.UnicodeDecoder(),
-            structlog.processors.JSONRenderer(),
-        ],
-        context_class=dict,
-        logger_factory=structlog.stdlib.LoggerFactory(),
-        wrapper_class=structlog.stdlib.BoundLogger,
-        cache_logger_on_first_use=True,
-    )
-    logger = structlog.get_logger(__name__)
-except ImportError:
-    import logging
-    logging.basicConfig(level=logging.INFO)
-    logger = logging.getLogger(__name__)
+# Simple logging setup
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Global variables for service integration
 services_initialized = True
