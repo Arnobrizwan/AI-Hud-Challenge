@@ -44,7 +44,7 @@ opentelemetry-instrumentation-redis==0.42b0
 
 # HTTP and API
 httpx==0.25.2
-aiohttp==3.9.1
+aiohttp==3.12.15
 requests==2.31.0
 
 # Utilities

@@ -50,7 +50,7 @@ grafana-api==1.0.3
 
 # HTTP clients
 httpx==0.25.2
-aiohttp==3.9.1
+aiohttp==3.12.15
 requests==2.31.0
 
 # Authentication and Security
