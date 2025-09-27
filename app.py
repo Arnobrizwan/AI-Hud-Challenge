@@ -290,9 +290,9 @@ async def general_exception_handler(request: Any, exc: Exception) -> JSONRespons
     )
 
 if __name__ == "__main__":
-    # Configuration for Hugging Face Spaces
+    # Configuration for AWS deployment
     host = os.getenv("HOST", "0.0.0.0")
-    port = int(os.getenv("PORT", "7860"))  # Hugging Face Spaces default port
+    port = int(os.getenv("PORT", "8000"))  # AWS App Runner default port
     log_level = os.getenv("LOG_LEVEL", "info")
     
     # Start server

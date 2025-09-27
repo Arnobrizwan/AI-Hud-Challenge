@@ -1,0 +1,15 @@
+version: 1.0
+runtime: docker
+build:
+  commands:
+    build:
+      - echo "Building AI News Hub"
+      - docker build -t ai-news-hub .
+run:
+  runtime-version: latest
+  command: python app.py
+  network:
+    port: 8000
+  env:
+    - name: PORT
+      value: "8000"
