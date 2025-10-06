@@ -35,7 +35,7 @@ lifelines==0.27.8
 # Visualization and Monitoring
 matplotlib==3.7.2
 seaborn==0.12.2
-plotly==5.17.0
+plotly==6.3.1
 grafana-api==1.0.3
 
 # HTTP and API clients
