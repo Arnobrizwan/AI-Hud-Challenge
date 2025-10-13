@@ -63,7 +63,7 @@ jobs:
         output: 'trivy-results.sarif'
 
     - name: Upload Trivy scan results
-      uses: github/codeql-action/upload-sarif@v3
+      uses: github/codeql-action/upload-sarif@v4
       if: always()
       continue-on-error: true
       with:
@@ -108,7 +108,7 @@ jobs:
         output: 'trivy-container-results.sarif'
 
     - name: Upload container scan results
-      uses: github/codeql-action/upload-sarif@v3
+      uses: github/codeql-action/upload-sarif@v4
       if: always()
       continue-on-error: true
       with:
