@@ -24,7 +24,7 @@ requests==2.31.0
 requests-html==0.10.0
 
 # Google Cloud services
-google-cloud-pubsub==2.18.4
+google-cloud-pubsub==2.31.1
 google-cloud-firestore==2.13.1
 google-cloud-storage==2.10.0
 google-auth==2.25.2
