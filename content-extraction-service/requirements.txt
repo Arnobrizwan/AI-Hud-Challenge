@@ -93,5 +93,5 @@ httpx==0.25.2
 responses==0.24.1
 
 # Production
-gunicorn==21.2.0
+gunicorn==23.0.0
 psutil==5.9.6
