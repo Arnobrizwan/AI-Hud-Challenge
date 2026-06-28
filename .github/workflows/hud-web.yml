@@ -7,9 +7,7 @@ name: HUD Web · CI/CD
 on:
   push:
     branches: [main]
-    paths: ["web/**", ".github/workflows/hud-web.yml"]
   pull_request:
-    paths: ["web/**", ".github/workflows/hud-web.yml"]
   workflow_dispatch:
 
 defaults:
