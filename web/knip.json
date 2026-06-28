@@ -1,0 +1,12 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "app/**/{page,layout,loading,error,not-found,template,route,default}.{ts,tsx}",
+    "proxy.ts",
+    "convex/**/*.ts",
+    "next.config.ts"
+  ],
+  "project": ["**/*.{ts,tsx}"],
+  "ignore": ["convex/_generated/**", "**/*.html"],
+  "ignoreDependencies": ["tailwindcss", "@tailwindcss/postcss", "babel-plugin-react-compiler"]
+}

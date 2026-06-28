@@ -51,27 +51,3 @@ export const record = mutation({
     }
   },
 });
-
-/** Batch "seen" marker — fired as cards scroll past, to drive novelty. */
-export const markSeen = mutation({
-  args: { itemIds: v.array(v.id("items")) },
-  handler: async (ctx, { itemIds }) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return;
-    // de-dup against already-seen to keep the table lean
-    const existing = await ctx.db
-      .query("feedback")
-      .withIndex("by_user_action", (q) => q.eq("userId", userId).eq("action", "seen"))
-      .collect();
-    const have = new Set(existing.map((e) => e.itemId));
-    for (const itemId of itemIds) {
-      if (have.has(itemId)) continue;
-      await ctx.db.insert("feedback", {
-        userId,
-        itemId,
-        action: "seen",
-        createdAt: Date.now(),
-      });
-    }
-  },
-});
