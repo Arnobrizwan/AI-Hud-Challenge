@@ -20,6 +20,8 @@ export default defineSchema({
     focusVsPopularMix: v.number(), // 0 = all popular, 1 = all focus
     bookmarkResurfaceHours: v.number(),
     quietHours: v.optional(v.object({ start: v.number(), end: v.number() })), // 0-23
+    // per-topic breaking-alert thresholds (0..1 interest needed to notify)
+    topicThresholds: v.optional(v.array(v.object({ topic: v.string(), threshold: v.number() }))),
     onboarded: v.boolean(),
   }).index("by_user", ["userId"]),
 
@@ -58,6 +60,10 @@ export default defineSchema({
     errorCount: v.number(),
     successCount: v.number(),
     lastError: v.optional(v.string()),
+    // ---- quality / abuse signals (auto-managed) ----
+    spamScore: v.optional(v.number()), // 0..1, raises -> auto-downgrade weight
+    qualityScore: v.optional(v.number()), // learned engagement quality 0..1
+    autoDowngraded: v.optional(v.boolean()),
   }).index("by_sourceId", ["sourceId"])
     .index("by_enabled", ["enabled"]),
 
@@ -95,10 +101,23 @@ export default defineSchema({
     }),
     clusterId: v.optional(v.id("clusters")),
     isRepresentative: v.boolean(),
+    // ---- extended pipeline signals (waves) ----
+    simhash: v.optional(v.string()), // 64-bit SimHash (hex) for borderline dedup
+    vector: v.optional(v.array(v.number())), // hashing-trick semantic vector
+    contentHash: v.optional(v.string()), // for update-diff trendlets
+    version: v.optional(v.number()), // bumped when content changes
+    updatedAt: v.optional(v.number()),
+    trendlet: v.optional(v.union(v.literal("new"), v.literal("updated"))),
+    entityLinks: v.optional(
+      v.array(v.object({ name: v.string(), qid: v.string() })),
+    ), // Wikidata QIDs
+    readableText: v.optional(v.string()), // readability-extracted main text
+    flagged: v.optional(v.boolean()), // NSFW/spam/profanity
   }).index("by_dedupeKey", ["dedupeKey"])
     .index("by_publishedAt", ["publishedAt"])
     .index("by_cluster", ["clusterId"])
-    .index("by_source", ["sourceId"]),
+    .index("by_source", ["sourceId"])
+    .index("by_simhash", ["simhash"]),
 
   // ---- Event clusters (dedup grouping) -------------------------------------
   clusters: defineTable({
@@ -145,12 +164,14 @@ export default defineSchema({
       v.literal("click"),
       v.literal("dwell"),
       v.literal("seen"),
+      v.literal("more_like_this"),
     ),
     value: v.optional(v.number()), // dwell ms etc.
     createdAt: v.number(),
   }).index("by_user", ["userId"])
     .index("by_user_item", ["userId", "itemId"])
-    .index("by_user_action", ["userId", "action"]),
+    .index("by_user_action", ["userId", "action"])
+    .index("by_item", ["itemId"]),
 
   // ---- Bookmarks ------------------------------------------------------------
   bookmarks: defineTable({
@@ -195,9 +216,13 @@ export default defineSchema({
       novelty: v.number(),
       dupF1: v.number(),
       diversity: v.number(),
+      clusterPurity: v.optional(v.number()),
+      factuality: v.optional(v.number()),
+      timeToSurfaceMs: v.optional(v.number()),
     }),
     sampleSize: v.number(),
     notes: v.optional(v.string()),
+    configVersion: v.optional(v.number()),
   }).index("by_createdAt", ["createdAt"]),
 
   // ---- Hot-reloadable pipeline config (singleton row) ----------------------
@@ -216,5 +241,121 @@ export default defineSchema({
     explorationEpsilon: v.number(),
     maxPerSourcePerScreen: v.number(),
     updatedAt: v.number(),
+    version: v.optional(v.number()),
   }).index("by_key", ["key"]),
+
+  // ---- Notification audit log (cooldown + dedup + escalation) ---------------
+  notificationsLog: defineTable({
+    userId: v.id("users"),
+    itemId: v.id("items"),
+    clusterId: v.optional(v.id("clusters")),
+    sentAt: v.number(),
+    reason: v.string(), // velocity | engagement | interest
+    score: v.number(),
+  }).index("by_user", ["userId"])
+    .index("by_user_cluster", ["userId", "clusterId"]),
+
+  // ---- Learned per-source stats (learning-to-rank prior) -------------------
+  sourceStats: defineTable({
+    sourceId: v.string(),
+    impressions: v.number(),
+    clicks: v.number(),
+    saves: v.number(),
+    mutes: v.number(),
+    ctr: v.number(),
+    saveRate: v.number(),
+    muteRate: v.number(),
+    satisfaction: v.number(), // 0..1 learned quality
+    updatedAt: v.number(),
+  }).index("by_sourceId", ["sourceId"]),
+
+  // ---- Config registry: versioned ranking config + promote/rollback --------
+  configVersions: defineTable({
+    version: v.number(),
+    weights: v.object({
+      recency: v.number(),
+      sourceWeight: v.number(),
+      topicalMatch: v.number(),
+      novelty: v.number(),
+      velocity: v.number(),
+      popularity: v.number(),
+    }),
+    recencyHalfLifeHours: v.number(),
+    breakingVelocityThreshold: v.number(),
+    explorationEpsilon: v.number(),
+    maxPerSourcePerScreen: v.number(),
+    createdAt: v.number(),
+    note: v.optional(v.string()),
+    promoted: v.boolean(), // was/is the active production config
+  }).index("by_version", ["version"]),
+
+  // ---- A/B experiments (canary on ranking config) --------------------------
+  experiments: defineTable({
+    name: v.string(),
+    status: v.union(v.literal("running"), v.literal("stopped")),
+    controlVersion: v.number(),
+    variantVersion: v.number(),
+    trafficPct: v.number(), // % of users on variant
+    createdAt: v.number(),
+    metrics: v.optional(v.object({
+      controlSatisfaction: v.number(),
+      variantSatisfaction: v.number(),
+      samples: v.number(),
+    })),
+  }).index("by_status", ["status"]),
+
+  // ---- Observability alerts -------------------------------------------------
+  alerts: defineTable({
+    type: v.string(), // source_outage | pipeline_error | drift | cost | data_quality
+    severity: v.union(v.literal("info"), v.literal("warn"), v.literal("critical")),
+    message: v.string(),
+    createdAt: v.number(),
+    resolved: v.boolean(),
+  }).index("by_createdAt", ["createdAt"])
+    .index("by_resolved", ["resolved"]),
+
+  // ---- Drift snapshots (topic/entity distribution over time) ----------------
+  driftSnapshots: defineTable({
+    createdAt: v.number(),
+    topicDist: v.array(v.object({ topic: v.string(), share: v.number() })),
+    divergence: v.number(), // JS divergence vs previous window
+  }).index("by_createdAt", ["createdAt"]),
+
+  // ---- Human labels (internal labeling UI) ----------------------------------
+  labels: defineTable({
+    userId: v.id("users"),
+    kind: v.union(
+      v.literal("dup_pair"),
+      v.literal("cluster_correct"),
+      v.literal("summary_factual"),
+    ),
+    itemId: v.optional(v.id("items")),
+    otherItemId: v.optional(v.id("items")),
+    label: v.string(), // yes | no | unsure
+    createdAt: v.number(),
+  }).index("by_kind", ["kind"]),
+
+  // ---- WebSub subscriptions -------------------------------------------------
+  subscriptions: defineTable({
+    sourceId: v.string(),
+    topicUrl: v.string(),
+    hubUrl: v.string(),
+    secret: v.string(),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("active"),
+      v.literal("failed"),
+    ),
+    leaseSeconds: v.optional(v.number()),
+    subscribedAt: v.optional(v.number()),
+    lastPingAt: v.optional(v.number()),
+  }).index("by_sourceId", ["sourceId"]),
+
+  // ---- Gold evaluation set (curated relevance labels) -----------------------
+  goldSet: defineTable({
+    topic: v.string(),
+    keyword: v.string(), // a title substring marking a relevant story
+    relevance: v.number(), // graded 0..1
+    createdAt: v.number(),
+  }).index("by_topic", ["topic"]),
 });

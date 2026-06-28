@@ -4,6 +4,7 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { DEFAULT_PREFS, DEFAULT_CONFIG } from "./defaults";
 import { scoreForUser, topicalMatch, type UserContext } from "../lib/pipeline/rank";
 import { normalizeTitle } from "../lib/pipeline/text";
+import { isGrounded } from "../lib/pipeline/summarize";
 
 const WINDOW_MS = 48 * 3600 * 1000;
 
@@ -136,6 +137,47 @@ export const runEval = mutation({
       : 0;
     const dupF1 = (2 * dupRecall * (multiSourceRatio || 1)) / (dupRecall + (multiSourceRatio || 1) || 1);
 
+    // cluster purity: for multi-member clusters, share whose members agree on the
+    // cluster's dominant topic.
+    let purSum = 0, purN = 0;
+    for (const c of clusters) {
+      if (c.memberCount < 2) continue;
+      const members = await ctx.db
+        .query("items")
+        .withIndex("by_cluster", (q) => q.eq("clusterId", c._id))
+        .collect();
+      if (members.length < 2) continue;
+      const counts = new Map<string, number>();
+      for (const m of members) for (const t of m.topics) counts.set(t, (counts.get(t) ?? 0) + 1);
+      const top = Math.max(0, ...counts.values());
+      purSum += top / members.length;
+      purN++;
+    }
+    const clusterPurity = purN ? purSum / purN : 1;
+
+    // summary factuality: fraction of abstractive summaries that pass grounding.
+    const withAbs = items.filter((i) => i.summaryAbstractive);
+    let grounded = 0;
+    for (const i of withAbs) {
+      if (isGrounded(i.summaryAbstractive!, (i.readableText ?? i.summaryExtractive) + " " + i.title))
+        grounded++;
+    }
+    const factuality = withAbs.length ? grounded / withAbs.length : 1;
+
+    // time-to-surface: median (fetchedAt - publishedAt) over the window.
+    const lags = items.map((i) => Math.max(0, i.fetchedAt - i.publishedAt)).sort((a, b) => a - b);
+    const timeToSurfaceMs = lags.length ? lags[Math.floor(lags.length / 2)] : 0;
+
+    // gold-set precision (if a curated gold set exists): top-K titles matching a gold keyword.
+    const gold = await ctx.db.query("goldSet").collect();
+    let goldNote = "";
+    if (gold.length > 0) {
+      const hit = topK.filter((r) =>
+        gold.some((g) => r.it.title.toLowerCase().includes(g.keyword.toLowerCase())),
+      ).length;
+      goldNote = ` · gold-hit ${hit}/${topK.length}`;
+    }
+
     const metrics = {
       precisionAtK,
       ndcgAtK,
@@ -143,14 +185,19 @@ export const runEval = mutation({
       novelty,
       dupF1,
       diversity,
+      clusterPurity,
+      factuality,
+      timeToSurfaceMs,
     };
 
+    const cfgVersion = cfg?.version;
     await ctx.db.insert("evalRuns", {
       createdAt: Date.now(),
       k: K,
       metrics,
       sampleSize: items.length,
-      notes: rel.size > 0 ? "explicit+proxy relevance" : "proxy relevance (no feedback yet)",
+      notes: (rel.size > 0 ? "explicit+proxy relevance" : "proxy relevance") + goldNote,
+      configVersion: cfgVersion,
     });
 
     return { metrics, sampleSize: items.length };

@@ -11,6 +11,7 @@ const actionValidator = v.union(
   v.literal("click"),
   v.literal("dwell"),
   v.literal("seen"),
+  v.literal("more_like_this"),
 );
 
 /** Record a feedback signal; mute_source also updates prefs. */

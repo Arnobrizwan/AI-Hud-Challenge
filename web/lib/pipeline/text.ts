@@ -78,6 +78,84 @@ export function extractiveSummary(text: string, max = 160): string {
   return (lastSpace > 0 ? slice.slice(0, lastSpace) : slice).trim() + "…";
 }
 
+/** 32-bit hash of a token (FNV-1a). */
+function fnv1a(s: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+/**
+ * 64-bit SimHash (as 16-hex) over tokens — borderline near-dup fallback to
+ * complement MinHash/LSH. Similar texts → small Hamming distance.
+ */
+export function simHash(tokens: string[]): string {
+  const bits = new Array(64).fill(0);
+  for (const t of tokens) {
+    const h1 = fnv1a(t);
+    const h2 = fnv1a(t + "#");
+    for (let i = 0; i < 32; i++) bits[i] += (h1 >>> i) & 1 ? 1 : -1;
+    for (let i = 0; i < 32; i++) bits[32 + i] += (h2 >>> i) & 1 ? 1 : -1;
+  }
+  // pack into hex
+  let hex = "";
+  for (let nib = 0; nib < 16; nib++) {
+    let v = 0;
+    for (let b = 0; b < 4; b++) if (bits[nib * 4 + b] > 0) v |= 1 << b;
+    hex += v.toString(16);
+  }
+  return hex;
+}
+
+export function hammingHex(a: string, b: string): number {
+  if (a.length !== b.length) return 64;
+  let d = 0;
+  for (let i = 0; i < a.length; i++) {
+    let x = parseInt(a[i], 16) ^ parseInt(b[i], 16);
+    while (x) { d += x & 1; x >>= 1; }
+  }
+  return d;
+}
+
+/** Fixed-dim hashing-trick vector (L2-normalized) — a lightweight "embedding". */
+export function hashingVector(tokens: string[], dim = 64): number[] {
+  const v = new Array(dim).fill(0);
+  for (const t of tokens) {
+    const h = fnv1a(t);
+    const idx = h % dim;
+    v[idx] += (h & 1) ? 1 : -1;
+  }
+  let norm = 0;
+  for (const x of v) norm += x * x;
+  norm = Math.sqrt(norm) || 1;
+  return v.map((x) => x / norm);
+}
+
+export function cosine(a: number[], b: number[]): number {
+  if (!a || !b || a.length !== b.length) return 0;
+  let dot = 0;
+  for (let i = 0; i < a.length; i++) dot += a[i] * b[i];
+  return dot;
+}
+
+/**
+ * Readability-style main-content extraction: drop nav/boilerplate blocks and
+ * keep the longest text-dense paragraphs. Heuristic fallback (no DOM).
+ */
+export function readabilityExtract(html: string | undefined | null): string {
+  if (!html) return "";
+  const blocks = html
+    .replace(/<(nav|header|footer|aside|script|style|form)[\s\S]*?<\/\1>/gi, " ")
+    .split(/<\/?(?:p|div|section|article|br|li)[^>]*>/i)
+    .map((b) => stripHtml(b))
+    .filter((b) => b.split(/\s+/).length >= 8); // text-dense only
+  const text = blocks.join("\n\n").replace(/\n{3,}/g, "\n\n").trim();
+  return text;
+}
+
 /** Stable 53-bit hash → hex string (djb2-xor variant). No crypto needed. */
 export function hashString(s: string): string {
   let h1 = 0xdeadbeef ^ s.length;

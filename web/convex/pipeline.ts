@@ -8,6 +8,9 @@ import { normalizeBatch } from "../lib/pipeline/normalize";
 import { enrichBatch } from "../lib/pipeline/enrich";
 import { dedupCluster } from "../lib/pipeline/dedup";
 import { computeItemFeatures } from "../lib/pipeline/rank";
+import { simHash, hashingVector, tokenize, normalizeTitle } from "../lib/pipeline/text";
+import { linkEntities } from "../lib/pipeline/kb";
+import { isFlagged } from "../lib/pipeline/safety";
 import type { RawItem } from "../lib/pipeline/types";
 import { DEFAULT_CONFIG } from "./defaults";
 
@@ -106,6 +109,24 @@ export const runPipeline = internalAction({
         };
       });
 
+      // ---- Stage 3b: SimHash + hashing-vector + safety flag + KB linking ----
+      const tokensFor = (it: (typeof enriched)[number]) =>
+        tokenize(normalizeTitle(it.title) + " " + (it.readableText || it.summaryExtractive));
+      const simhashes = enriched.map((it) => simHash(tokensFor(it)));
+      const vectors = enriched.map((it) => hashingVector(tokensFor(it)));
+
+      // Wikidata linking only for representatives (cap API calls), shared cache.
+      const kbCache = new Map<string, string | null>();
+      const entityLinks = await time("kb-link", enriched.length, async () => {
+        const out: { name: string; qid: string }[][] = enriched.map(() => []);
+        for (let i = 0; i < enriched.length; i++) {
+          const isRep = dedup.clusters[dedup.itemCluster[i]]?.representativeIndex === i;
+          if (!isRep || enriched[i].entities.length === 0) continue;
+          out[i] = await linkEntities(enriched[i].entities, kbCache, 3);
+        }
+        return out;
+      });
+
       const itemPayloads = enriched.map((it, i) => ({
         dedupeKey: it.dedupeKey,
         sourceId: it.sourceId,
@@ -115,6 +136,8 @@ export const runPipeline = internalAction({
         url: it.url,
         canonicalUrl: it.canonicalUrl,
         summaryExtractive: it.summaryExtractive,
+        readableText: it.readableText || undefined,
+        contentHash: it.contentHash,
         image: it.image,
         author: it.author,
         lang: it.lang,
@@ -122,9 +145,13 @@ export const runPipeline = internalAction({
         wordCount: it.wordCount,
         topics: it.topics,
         entities: it.entities,
+        entityLinks: entityLinks[i].length ? entityLinks[i] : undefined,
         contentType: it.contentType,
         engagement: { points: it.points ?? 0, comments: it.comments ?? 0 },
         features: features[i],
+        simhash: simhashes[i],
+        vector: vectors[i],
+        flagged: isFlagged(it.title, it.readableText || it.summaryExtractive),
         clusterIndex: dedup.itemCluster[i],
         isRepresentative: dedup.clusters[dedup.itemCluster[i]]?.representativeIndex === i,
       }));
@@ -138,8 +165,12 @@ export const runPipeline = internalAction({
         }),
       );
 
-      // housekeeping
+      // housekeeping + learning + safety/observability ops
       await ctx.runMutation(internal.pipelineStore.pruneOld, { olderThanMs: RECENT_WINDOW_MS });
+      await ctx.runMutation(internal.learning.recomputeSourceStats, {});
+      await ctx.runMutation(internal.mlops.dataQualityCheck, {});
+      await ctx.runMutation(internal.mlops.driftCheck, {});
+      await ctx.runMutation(internal.mlops.autoDowngradeSources, {});
 
       await ctx.runMutation(internal.pipelineStore.finishRun, {
         runId,

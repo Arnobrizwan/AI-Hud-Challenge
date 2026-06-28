@@ -64,6 +64,10 @@ export interface UserContext {
   mutedSources: string[];
   focusVsPopularMix: number; // 0 popular .. 1 focus
   seen: Set<string>; // item ids the user has already been shown
+  /** ε-greedy exploration rate (0..1). Unseen items get a deterministic boost. */
+  epsilon?: number;
+  /** learning-to-rank prior: per-source satisfaction 0..1 from feedback. */
+  sourceSatisfaction?: Record<string, number>;
 }
 
 export interface UserScore {
@@ -104,7 +108,12 @@ export function scoreForUser(
   const novelty = ctx.seen.has(item.id) ? 0.2 : 1;
   const f = item.features;
 
-  const base = weights.recency * f.recency + weights.sourceWeight * f.sourceWeight;
+  // learning-to-rank prior: blend static source weight with learned satisfaction
+  const satisfaction = ctx.sourceSatisfaction?.[item.sourceId];
+  const effSourceWeight =
+    satisfaction === undefined ? f.sourceWeight : 0.6 * f.sourceWeight + 0.4 * satisfaction;
+
+  const base = weights.recency * f.recency + weights.sourceWeight * effSourceWeight;
   const focusComponent = weights.topicalMatch * tm + weights.novelty * novelty;
   const popularComponent = weights.popularity * f.popularity + weights.velocity * f.velocity;
 
@@ -113,6 +122,14 @@ export function scoreForUser(
   const wPop = 0.4 + 0.6 * (1 - mix);
 
   let score = base + wFocus * focusComponent + wPop * popularComponent;
+
+  // ε-greedy exploration: unseen items get a deterministic exploration bonus so
+  // the feed surfaces some discovery, not just exploitation of the top scorers.
+  const eps = ctx.epsilon ?? 0;
+  if (eps > 0 && novelty === 1) {
+    score += eps * explorationJitter(item.id);
+  }
+
   if (ctx.mutedSources.includes(item.sourceId)) score *= 0.001; // effectively hidden
 
   const lane: "focus" | "trending" =
@@ -134,4 +151,14 @@ export function scoreForUser(
 
 function clamp01(x: number): number {
   return Math.max(0, Math.min(1, x));
+}
+
+/** Deterministic 0..1 jitter from an id (no Math.random — query-safe). */
+function explorationJitter(id: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < id.length; i++) {
+    h ^= id.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return ((h >>> 0) % 1000) / 1000;
 }

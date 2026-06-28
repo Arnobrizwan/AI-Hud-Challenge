@@ -49,6 +49,8 @@ export interface NormalizedItem extends RawItem {
   canonicalUrl: string;
   dedupeKey: string;
   summaryExtractive: string;
+  readableText: string; // readability-extracted main content
+  contentHash: string; // hash of title+content for update-diff trendlets
   lang: string;
   publishedAt: number;
   wordCount: number;

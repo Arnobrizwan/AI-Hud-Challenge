@@ -29,6 +29,12 @@ export const getFeed = query({
       .unique();
     const weights = cfgRow?.weights ?? DEFAULT_CONFIG.weights;
     const maxPerSource = cfgRow?.maxPerSourcePerScreen ?? DEFAULT_CONFIG.maxPerSourcePerScreen;
+    const epsilon = cfgRow?.explorationEpsilon ?? DEFAULT_CONFIG.explorationEpsilon;
+
+    // learned per-source satisfaction prior (learning-to-rank)
+    const statRows = await ctx.db.query("sourceStats").collect();
+    const sourceSatisfaction: Record<string, number> = {};
+    for (const s of statRows) sourceSatisfaction[s.sourceId] = s.satisfaction;
 
     const cutoff = Date.now() - FEED_WINDOW_MS;
     const recent = await ctx.db
@@ -69,6 +75,8 @@ export const getFeed = query({
       mutedSources: prefsRow?.mutedSources ?? DEFAULT_PREFS.mutedSources,
       focusVsPopularMix: prefsRow?.focusVsPopularMix ?? DEFAULT_PREFS.focusVsPopularMix,
       seen,
+      epsilon,
+      sourceSatisfaction,
     };
 
     type Card = ReturnType<typeof shape>;
@@ -80,6 +88,7 @@ export const getFeed = query({
       );
       let score = s.score;
       if (downed.has(it._id)) score *= 0.25;
+      if (it.flagged) score *= 0.05; // safety: down-rank flagged content
       return {
         _id: it._id,
         title: it.title,
@@ -100,6 +109,9 @@ export const getFeed = query({
         breakdown: s.breakdown,
         bookmarked: bookmarked.has(it._id),
         related: it.clusterId ? Math.max(0, (clusterSize.get(it.clusterId) ?? 1) - 1) : 0,
+        trendlet: it.trendlet ?? null,
+        flagged: it.flagged ?? false,
+        entityLinks: it.entityLinks ?? [],
       };
     };
 
@@ -119,6 +131,63 @@ export const getFeed = query({
     });
 
     return { items: cards.slice(0, limit ?? 60), generatedAt: Date.now() };
+  },
+});
+
+/**
+ * Public (REST) feed — global ranking, no per-user personalization. Backs the
+ * documented `GET /api/feed` contract. Returns a stable list + an ETag basis.
+ */
+export const publicFeed = query({
+  args: { topic: v.optional(v.string()), limit: v.optional(v.number()), offset: v.optional(v.number()) },
+  handler: async (ctx, { topic, limit, offset }) => {
+    const cutoff = Date.now() - FEED_WINDOW_MS;
+    const cfgRow = await ctx.db
+      .query("pipelineConfig")
+      .withIndex("by_key", (q) => q.eq("key", "default"))
+      .unique();
+    const weights = cfgRow?.weights ?? DEFAULT_CONFIG.weights;
+
+    const recent = await ctx.db
+      .query("items")
+      .withIndex("by_publishedAt", (q) => q.gte("publishedAt", cutoff))
+      .collect();
+    const items = recent
+      .filter((i) => i.isRepresentative && !i.flagged)
+      .filter((i) => (topic && topic !== "all" ? i.topics.includes(topic) : true));
+
+    const ranked = items
+      .map((it) => {
+        const s = scoreForUser(
+          { topics: it.topics, sourceId: it.sourceId, id: it._id, features: it.features },
+          { focusTopics: [], boostedSources: [], mutedSources: [], focusVsPopularMix: 0.5, seen: new Set() },
+          weights,
+        );
+        return { it, score: s.score };
+      })
+      .sort((a, b) => b.score - a.score);
+
+    const off = offset ?? 0;
+    const page = ranked.slice(off, off + (limit ?? 30));
+    const latest = items.reduce((m, i) => Math.max(m, i.fetchedAt), 0);
+    return {
+      etag: `W/"${latest}-${ranked.length}"`,
+      total: ranked.length,
+      items: page.map(({ it, score }) => ({
+        id: it._id,
+        title: it.title,
+        url: it.url,
+        canonicalUrl: it.canonicalUrl,
+        source: it.sourceName,
+        kind: it.kind,
+        summary: it.summaryAbstractive ?? it.summaryExtractive,
+        publishedAt: it.publishedAt,
+        topics: it.topics,
+        clusterId: it.clusterId ?? null,
+        engagement: it.engagement,
+        score,
+      })),
+    };
   },
 });
 

@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useAction } from "convex/react";
+import { useAuthActions } from "@convex-dev/auth/react";
+import { useRouter } from "next/navigation";
 import { api } from "@/convex/_generated/api";
 import { cn } from "@/lib/utils";
-import { KeyRound, Check, X, Loader2, Trash2, Sparkles } from "lucide-react";
+import { KeyRound, Check, X, Loader2, Trash2, Sparkles, ShieldAlert } from "lucide-react";
 
 const TOPICS = [
   "ai", "llm", "ml", "agents", "startups", "programming", "open-source",
@@ -94,11 +96,58 @@ export function SettingsView() {
           </div>
         </section>
 
+        <DangerZone />
+
         <p className="text-ink-faint text-[11px] text-center pb-6">
           Stream speed and the focus↔trending mix live on the Feed control deck.
         </p>
       </div>
     </div>
+  );
+}
+
+function DangerZone() {
+  const deleteAccount = useMutation(api.account.deleteMyAccount);
+  const { signOut } = useAuthActions();
+  const router = useRouter();
+  const [confirm, setConfirm] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  async function onDelete() {
+    setBusy(true);
+    try {
+      await deleteAccount({});
+      await signOut();
+      router.push("/");
+    } catch {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="hud-panel p-5 border-[rgba(255,93,115,0.4)]">
+      <div className="flex items-center gap-2 mb-1">
+        <ShieldAlert className="w-4 h-4 text-rose" />
+        <h2 className="hud-label !text-rose">Data & privacy · right to erasure</h2>
+      </div>
+      <p className="text-ink-dim text-xs mb-3">
+        Permanently delete your account and <span className="text-ink">all</span> your
+        data (prefs, bookmarks, keys, feedback). Irreversible (GDPR/CCPA).
+      </p>
+      {!confirm ? (
+        <button onClick={() => setConfirm(true)} className="hud-btn !border-[rgba(255,93,115,0.5)] !text-rose !bg-[rgba(255,93,115,0.1)]">
+          Delete my account
+        </button>
+      ) : (
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-rose">Are you sure?</span>
+          <button onClick={onDelete} disabled={busy} className="hud-btn !border-[rgba(255,93,115,0.5)] !text-rose !bg-[rgba(255,93,115,0.12)]">
+            {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Yes, delete everything"}
+          </button>
+          <button onClick={() => setConfirm(false)} className="hud-btn !py-1.5 !px-3">Cancel</button>
+        </div>
+      )}
+    </section>
   );
 }
 

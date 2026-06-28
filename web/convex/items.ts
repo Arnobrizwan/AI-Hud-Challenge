@@ -25,6 +25,30 @@ export const getItem = query({
   },
 });
 
+/** Public (REST) cluster view: representative + related members. */
+export const publicCluster = query({
+  args: { clusterId: v.id("clusters") },
+  handler: async (ctx, { clusterId }) => {
+    const cluster = await ctx.db.get(clusterId);
+    if (!cluster) return null;
+    const members = await ctx.db
+      .query("items")
+      .withIndex("by_cluster", (q) => q.eq("clusterId", clusterId))
+      .collect();
+    return {
+      id: clusterId,
+      title: cluster.title,
+      memberCount: cluster.memberCount,
+      topics: cluster.topics,
+      velocity: cluster.velocity,
+      members: members.map((m) => ({
+        id: m._id, title: m.title, url: m.url, source: m.sourceName,
+        publishedAt: m.publishedAt, isRepresentative: m.isRepresentative,
+      })),
+    };
+  },
+});
+
 export const getRawForSummary = internalQuery({
   args: { itemId: v.id("items") },
   handler: async (ctx, { itemId }) => {

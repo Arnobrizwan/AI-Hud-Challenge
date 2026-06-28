@@ -1,6 +1,7 @@
 import { internalMutation } from "./_generated/server";
 import { v } from "convex/values";
-import { Id } from "./_generated/dataModel";
+import { Id, Doc } from "./_generated/dataModel";
+import { hammingHex } from "../lib/pipeline/text";
 
 /**
  * Persistence for the pipeline. Kept separate from the orchestrator action so
@@ -31,6 +32,12 @@ const itemInput = v.object({
     popularity: v.number(),
     velocity: v.number(),
   }),
+  readableText: v.optional(v.string()),
+  contentHash: v.optional(v.string()),
+  entityLinks: v.optional(v.array(v.object({ name: v.string(), qid: v.string() }))),
+  simhash: v.optional(v.string()),
+  vector: v.optional(v.array(v.number())),
+  flagged: v.optional(v.boolean()),
   clusterIndex: v.number(),
   isRepresentative: v.boolean(),
 });
@@ -51,18 +58,21 @@ export const storeResults = internalMutation({
   },
   handler: async (ctx, { fetchedAt, clusters, items }) => {
     // 1. resolve existing copies up front (exact-dup by dedupeKey)
-    const existingByKey = new Map<string, Id<"items">>();
-    const existingPoints = new Map<string, number>();
+    const existingByKey = new Map<string, Doc<"items">>();
     for (const it of items) {
       const ex = await ctx.db
         .query("items")
         .withIndex("by_dedupeKey", (q) => q.eq("dedupeKey", it.dedupeKey))
         .unique();
-      if (ex) {
-        existingByKey.set(it.dedupeKey, ex._id);
-        existingPoints.set(it.dedupeKey, ex.engagement.points);
-      }
+      if (ex) existingByKey.set(it.dedupeKey, ex);
     }
+
+    // recent items for INCREMENTAL clustering (attach new items to prior events
+    // via SimHash Hamming distance — streaming dedup across batches).
+    const recentForMerge = await ctx.db
+      .query("items")
+      .withIndex("by_publishedAt", (q) => q.gte("publishedAt", fetchedAt - 24 * 3600 * 1000))
+      .take(600);
 
     // Only materialize clusters that contain at least one NEW item — otherwise
     // every all-duplicate rerun would leak empty cluster docs forever.
@@ -86,25 +96,68 @@ export const storeResults = internalMutation({
       clusterIdByIndex.set(idx, id);
     }
 
-    // 2. insert new items; refresh hotter dups
+    // 2. insert new items; refresh hotter dups + trendlets + incremental merge
     let inserted = 0;
     let duplicates = 0;
+    let updatedTrend = 0;
+    let merged = 0;
     const repByCluster = new Map<number, Id<"items">>();
     for (const it of items) {
-      const existingId = existingByKey.get(it.dedupeKey);
+      const existing = existingByKey.get(it.dedupeKey);
       const clusterId = clusterIdByIndex.get(it.clusterIndex);
-      if (existingId) {
+      if (existing) {
         duplicates++;
-        if (it.engagement.points > (existingPoints.get(it.dedupeKey) ?? 0)) {
-          await ctx.db.patch(existingId, { engagement: it.engagement, features: it.features });
+        const patch: Record<string, unknown> = {};
+        if (it.engagement.points > existing.engagement.points) {
+          patch.engagement = it.engagement;
+          patch.features = it.features;
         }
-        if (it.isRepresentative && clusterId) repByCluster.set(it.clusterIndex, existingId);
+        // trendlet: content changed since last fetch → "updated"
+        if (it.contentHash && existing.contentHash && it.contentHash !== existing.contentHash) {
+          patch.trendlet = "updated";
+          patch.version = (existing.version ?? 1) + 1;
+          patch.updatedAt = fetchedAt;
+          patch.summaryExtractive = it.summaryExtractive;
+          patch.contentHash = it.contentHash;
+          updatedTrend++;
+        }
+        if (Object.keys(patch).length) await ctx.db.patch(existing._id, patch);
+        if (it.isRepresentative && clusterId) repByCluster.set(it.clusterIndex, existing._id);
         continue;
       }
+
+      // incremental clustering: near-dup of a recent item from a prior batch?
+      let mergeClusterId: Id<"clusters"> | undefined;
+      if (it.simhash) {
+        for (const r of recentForMerge) {
+          if (r.simhash && r.clusterId && hammingHex(it.simhash, r.simhash) <= 3) {
+            mergeClusterId = r.clusterId;
+            break;
+          }
+        }
+      }
+
       const { clusterIndex, isRepresentative, ...rest } = it;
-      const id = await ctx.db.insert("items", { ...rest, fetchedAt, clusterId, isRepresentative });
+      const finalCluster = mergeClusterId ?? clusterId;
+      const id = await ctx.db.insert("items", {
+        ...rest,
+        fetchedAt,
+        clusterId: finalCluster,
+        isRepresentative: mergeClusterId ? false : isRepresentative,
+        trendlet: "new" as const,
+        version: 1,
+      });
       inserted++;
-      if (isRepresentative) repByCluster.set(clusterIndex, id);
+      if (mergeClusterId) {
+        merged++;
+        const c = await ctx.db.get(mergeClusterId);
+        if (c) await ctx.db.patch(mergeClusterId, {
+          memberCount: c.memberCount + 1,
+          lastUpdatedAt: fetchedAt,
+        });
+      } else if (isRepresentative) {
+        repByCluster.set(clusterIndex, id);
+      }
     }
 
     // 3. set representative pointer on clusters
@@ -113,7 +166,7 @@ export const storeResults = internalMutation({
       if (cid) await ctx.db.patch(cid, { representativeItemId: itemId });
     }
 
-    return { inserted, duplicates, clusters: clusterIdByIndex.size };
+    return { inserted, duplicates, clusters: clusterIdByIndex.size, merged, updatedTrend };
   },
 });
 

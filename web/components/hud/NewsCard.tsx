@@ -35,6 +35,9 @@ export interface FeedCard {
   bookmarked: boolean;
   related: number;
   resurfaced?: boolean;
+  trendlet?: "new" | "updated" | null;
+  flagged?: boolean;
+  entityLinks?: { name: string; qid: string }[];
 }
 
 export function NewsCard({
@@ -103,6 +106,8 @@ export function NewsCard({
               {laneFocus ? "Focus" : "Trending"}
             </span>
             {card.resurfaced && <span className="hud-chip hud-chip-amber">From bookmarks</span>}
+            {card.trendlet === "new" && <span className="hud-chip">▲ New</span>}
+            {card.trendlet === "updated" && <span className="hud-chip hud-chip-amber">↻ Updated</span>}
             {card.engagement.points > 50 && (
               <span className="hud-chip hud-chip-rose">
                 <Flame className="w-2.5 h-2.5" /> {card.engagement.points}
