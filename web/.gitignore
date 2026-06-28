@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# The parent repo's root .gitignore is a Python project's and aggressively
+# ignores `lib/` and `*.json`. Re-include this app's sources so they are never
+# silently dropped from commits again.
+!lib/
+!lib/**
+!**/*.json
+package-lock.json
