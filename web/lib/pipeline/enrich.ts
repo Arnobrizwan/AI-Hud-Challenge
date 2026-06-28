@@ -32,7 +32,15 @@ const KNOWN_ORGS = [
   "GitHub", "Vercel", "Cloudflare", "AWS", "Reddit", "Twitter", "X", "Perplexity",
 ];
 
-function classifyTopics(text: string, sourceTopics: string[]): string[] {
+/**
+ * Cross-topic aggregators span the whole taxonomy, so their declared topics are
+ * NOT a meaningful per-item signal — flooring with them would stamp the source's
+ * entire topic set onto every story (making topic tabs show identical results).
+ * Topical sources (newsletters, subreddits, blogs) keep the floor.
+ */
+const AGGREGATOR_KINDS = new Set(["hackernews"]);
+
+function classifyTopics(text: string, sourceTopics: string[], useFloor: boolean): string[] {
   const hay = " " + text.toLowerCase() + " ";
   const scored: [string, number][] = [];
   for (const [topic, kws] of Object.entries(TOPIC_KEYWORDS)) {
@@ -42,8 +50,21 @@ function classifyTopics(text: string, sourceTopics: string[]): string[] {
   }
   scored.sort((a, b) => b[1] - a[1]);
   const top = scored.slice(0, 4).map(([t]) => t);
-  // Always include the source's declared topics as a floor signal.
-  return Array.from(new Set([...top, ...sourceTopics])).slice(0, 5);
+  // Content-derived topics are authoritative; source topics only floor for
+  // topical sources (never for cross-topic aggregators like HackerNews).
+  const floor = useFloor ? sourceTopics : [];
+  const merged = top.length > 0 ? [...top, ...floor] : floor;
+  return Array.from(new Set(merged)).slice(0, 5);
+}
+
+/** Recompute topics for an item from its text + source (used at enrich + backfill). */
+export function computeTopics(
+  title: string,
+  text: string,
+  sourceTopics: string[],
+  kind: string,
+): string[] {
+  return classifyTopics(title + " " + text, sourceTopics, !AGGREGATOR_KINDS.has(kind));
 }
 
 function extractEntities(title: string, text: string): string[] {
@@ -77,10 +98,9 @@ function detectContentType(item: NormalizedItem): EnrichedItem["contentType"] {
 /** Stage 3 — enrich one normalized item. */
 export function enrichItem(item: NormalizedItem): EnrichedItem {
   const text = item.contentText || item.summaryExtractive || "";
-  const basis = item.title + " " + text;
   return {
     ...item,
-    topics: classifyTopics(basis, item.sourceTopics),
+    topics: computeTopics(item.title, text, item.sourceTopics, item.kind),
     entities: extractEntities(item.title, text),
     contentType: detectContentType(item),
   };

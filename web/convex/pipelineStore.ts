@@ -2,6 +2,7 @@ import { internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 import { Id, Doc } from "./_generated/dataModel";
 import { hammingHex } from "../lib/pipeline/text";
+import { computeTopics } from "../lib/pipeline/enrich";
 
 /**
  * Persistence for the pipeline. Kept separate from the orchestrator action so
@@ -209,6 +210,38 @@ export const finishRun = internalMutation({
   },
   handler: async (ctx, { runId, ...rest }) => {
     await ctx.db.patch(runId, { ...rest, finishedAt: Date.now() });
+  },
+});
+
+/**
+ * Backfill: recompute topics for existing items with the current classifier
+ * (e.g. after fixing aggregator source-topic flooding). Run once via the CLI:
+ *   npx convex run pipelineStore:reclassifyTopics --prod
+ */
+export const reclassifyTopics = internalMutation({
+  args: { limit: v.optional(v.number()) },
+  handler: async (ctx, { limit }) => {
+    const cutoff = Date.now() - 5 * 24 * 3600 * 1000;
+    const items = await ctx.db
+      .query("items")
+      .withIndex("by_publishedAt", (q) => q.gte("publishedAt", cutoff))
+      .take(limit ?? 2000);
+    const sources = await ctx.db.query("sources").collect();
+    const srcTopics = new Map(sources.map((s) => [s.sourceId, s.topics]));
+    let updated = 0;
+    for (const it of items) {
+      const topics = computeTopics(
+        it.title,
+        it.readableText || it.summaryExtractive || "",
+        srcTopics.get(it.sourceId) ?? [],
+        it.kind,
+      );
+      if (JSON.stringify(topics) !== JSON.stringify(it.topics)) {
+        await ctx.db.patch(it._id, { topics });
+        updated++;
+      }
+    }
+    return { scanned: items.length, updated };
   },
 });
 
