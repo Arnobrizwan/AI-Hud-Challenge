@@ -1,0 +1,135 @@
+import { query, mutation, internalQuery, internalMutation } from "./_generated/server";
+import { v } from "convex/values";
+import { getAuthUserId } from "@convex-dev/auth/server";
+import { SEED_SOURCES } from "./seedData";
+import { DEFAULT_CONFIG } from "./defaults";
+
+const kindValidator = v.union(
+  v.literal("rss"),
+  v.literal("hackernews"),
+  v.literal("reddit"),
+  v.literal("x"),
+  v.literal("newsletter"),
+);
+
+/** Public: list all sources with health stats (for dashboard + settings). */
+export const listSources = query({
+  args: {},
+  handler: async (ctx) => {
+    const rows = await ctx.db.query("sources").collect();
+    return rows.sort((a, b) => b.weight - a.weight);
+  },
+});
+
+export const toggleSource = mutation({
+  args: { sourceId: v.string(), enabled: v.boolean() },
+  handler: async (ctx, { sourceId, enabled }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+    const row = await ctx.db
+      .query("sources")
+      .withIndex("by_sourceId", (q) => q.eq("sourceId", sourceId))
+      .unique();
+    if (row) await ctx.db.patch(row._id, { enabled });
+  },
+});
+
+export const upsertSource = mutation({
+  args: {
+    sourceId: v.string(),
+    name: v.string(),
+    kind: kindValidator,
+    url: v.string(),
+    topics: v.array(v.string()),
+    weight: v.number(),
+    enabled: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+    const row = await ctx.db
+      .query("sources")
+      .withIndex("by_sourceId", (q) => q.eq("sourceId", args.sourceId))
+      .unique();
+    if (row) {
+      await ctx.db.patch(row._id, args);
+    } else {
+      await ctx.db.insert("sources", {
+        ...args,
+        errorCount: 0,
+        successCount: 0,
+      });
+    }
+  },
+});
+
+/** Idempotent: seed the default source catalog + pipeline config if empty. */
+export const seed = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const existing = await ctx.db.query("sources").collect();
+    const have = new Set(existing.map((s) => s.sourceId));
+    let inserted = 0;
+    for (const s of SEED_SOURCES) {
+      if (have.has(s.sourceId)) continue;
+      await ctx.db.insert("sources", {
+        ...s,
+        errorCount: 0,
+        successCount: 0,
+      });
+      inserted++;
+    }
+    const cfg = await ctx.db
+      .query("pipelineConfig")
+      .withIndex("by_key", (q) => q.eq("key", "default"))
+      .unique();
+    if (!cfg) {
+      await ctx.db.insert("pipelineConfig", {
+        ...DEFAULT_CONFIG,
+        updatedAt: Date.now(),
+      });
+    }
+    return { inserted, total: existing.length + inserted };
+  },
+});
+
+// ---- internal (pipeline) --------------------------------------------------
+
+export const listEnabled = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db
+      .query("sources")
+      .withIndex("by_enabled", (q) => q.eq("enabled", true))
+      .collect();
+  },
+});
+
+export const recordFetch = internalMutation({
+  args: {
+    sourceId: v.string(),
+    ok: v.boolean(),
+    etag: v.optional(v.string()),
+    lastModified: v.optional(v.string()),
+    error: v.optional(v.string()),
+  },
+  handler: async (ctx, { sourceId, ok, etag, lastModified, error }) => {
+    const row = await ctx.db
+      .query("sources")
+      .withIndex("by_sourceId", (q) => q.eq("sourceId", sourceId))
+      .unique();
+    if (!row) return;
+    await ctx.db.patch(row._id, {
+      lastFetchedAt: Date.now(),
+      ...(ok
+        ? {
+            lastSuccessAt: Date.now(),
+            successCount: row.successCount + 1,
+            etag: etag ?? row.etag,
+            lastModified: lastModified ?? row.lastModified,
+            lastError: undefined,
+          }
+        : { errorCount: row.errorCount + 1, lastError: error }),
+    });
+  },
+});
