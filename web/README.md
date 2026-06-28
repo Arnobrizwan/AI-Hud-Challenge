@@ -9,7 +9,9 @@ and a live operator dashboard for the ranking pipeline.
 Built for the **Open HUD Challenge**. Stack: **Next.js 16 (App Router) · Convex ·
 TypeScript · Tailwind v4**, deployed on **Vercel**.
 
-→ See **[PIPELINE.md](./PIPELINE.md)** for how every stage of the AI/ML pipeline is implemented.
+**▶ Live:** **https://hud-news.vercel.app** — sign in as **guest** to try instantly.
+
+**Docs:** [PIPELINE.md](./PIPELINE.md) (every AI/ML stage) · [PRODUCT.md](./PRODUCT.md) (six-pager) · [FEATURE_DICTIONARY.md](./FEATURE_DICTIONARY.md) · [RUNBOOK.md](./RUNBOOK.md) (runbook + ADRs + privacy) · [BUILD_NOTES.md](./BUILD_NOTES.md) · [design/hud-design.html](./design/hud-design.html) (browser mockup)
 
 ---
 

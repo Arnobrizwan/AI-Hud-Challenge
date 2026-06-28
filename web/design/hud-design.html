@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>HUD — Design Mockup</title>
+<style>
+  :root{
+    --bg0:#04060f; --bg1:#070b18; --grid:rgba(56,189,248,.06);
+    --cyan:#2ee6e6; --cyanS:#5bd6ff; --violet:#a06bff; --violetS:#c4a0ff;
+    --amber:#ffb547; --rose:#ff5d73; --green:#36e0a6;
+    --ink:#dce8ff; --dim:#8aa0c8; --faint:#54688f;
+    --line:rgba(110,160,230,.16); --lineB:rgba(94,226,255,.45); --glow:rgba(46,230,230,.35);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;color:var(--ink);font-family:ui-sans-serif,system-ui,sans-serif;
+    background-color:var(--bg0);
+    background-image:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(160,107,255,.12),transparent 60%),
+      radial-gradient(ellipse 70% 50% at 90% 110%,rgba(46,230,230,.1),transparent 55%),
+      linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+    background-size:100% 100%,100% 100%,44px 44px,44px 44px;background-attachment:fixed;}
+  .mono{font-family:ui-monospace,Menlo,monospace;letter-spacing:.04em}
+  .wrap{display:flex;min-height:100vh}
+  /* nav rail */
+  .rail{width:78px;border-right:1px solid var(--line);padding:20px 8px;display:flex;flex-direction:column;gap:6px;align-items:stretch}
+  .rail .logo{color:var(--cyan);text-align:center;font-size:20px;text-shadow:0 0 18px var(--glow)}
+  .rail a{color:var(--faint);text-decoration:none;text-align:center;font-size:9px;font-weight:700;letter-spacing:.08em;
+    padding:10px 0;border-radius:10px;border:1px solid transparent}
+  .rail a.on{color:var(--cyan);background:rgba(46,230,230,.1);border-color:var(--lineB)}
+  .rail a .ic{display:block;font-size:15px;margin-bottom:3px}
+  /* main */
+  .main{flex:1;min-width:0;display:flex;flex-direction:column}
+  .topbar{height:48px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 24px}
+  .label{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--faint);font-weight:700}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);display:inline-block;margin-right:8px;animation:pulse 1.6s infinite}
+  @keyframes pulse{50%{opacity:.35}}
+  .chip{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;font-size:10px;font-weight:700;letter-spacing:.12em;
+    text-transform:uppercase;border-radius:999px;border:1px solid var(--lineB);color:var(--cyanS);background:rgba(46,230,230,.08);white-space:nowrap}
+  .chip.v{border-color:rgba(160,107,255,.5);color:var(--violetS);background:rgba(160,107,255,.1)}
+  .chip.a{border-color:rgba(255,181,71,.5);color:var(--amber);background:rgba(255,181,71,.1)}
+  .chip.r{border-color:rgba(255,93,115,.5);color:var(--rose);background:rgba(255,93,115,.12)}
+  /* control deck */
+  .deck{display:flex;align-items:center;gap:12px;padding:12px 24px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .tabs{display:flex;gap:4px}
+  .tab{padding:5px 10px;border-radius:8px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);border:1px solid transparent}
+  .tab.on{color:var(--cyan);border-color:var(--lineB);background:rgba(46,230,230,.1)}
+  .deck .right{margin-left:auto;display:flex;align-items:center;gap:18px}
+  .slider{display:flex;align-items:center;gap:8px;color:var(--dim);font-size:11px}
+  .track{width:90px;height:3px;border-radius:999px;background:var(--line);position:relative}
+  .track .knob{position:absolute;top:-5px;width:13px;height:13px;border-radius:50%;background:var(--cyan);box-shadow:0 0 8px var(--glow)}
+  .breaking{display:flex;align-items:center;gap:12px;padding:8px 24px;border-bottom:1px solid var(--line);background:rgba(255,93,115,.05);font-size:12px;color:var(--dim)}
+  /* stream */
+  .stream{padding:18px 24px;display:flex;flex-direction:column;gap:12px;max-width:780px;margin:0 auto;width:100%}
+  .card{position:relative;background:linear-gradient(160deg,rgba(13,20,42,.86),rgba(7,11,24,.78));border:1px solid var(--line);
+    border-radius:14px;backdrop-filter:blur(10px);padding:16px;display:flex;gap:14px;
+    clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px)}
+  .card .edge{position:absolute;left:0;top:0;bottom:0;width:3px}
+  .meta{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+  .fav{width:14px;height:14px;border-radius:3px;background:var(--line)}
+  .src{font-size:11px;color:var(--dim);font-weight:500}
+  .age{font-size:10px;color:var(--faint);margin-left:auto}
+  .title{font-size:15px;line-height:1.35;color:var(--ink)}
+  .sum{font-size:12.5px;color:var(--dim);line-height:1.55;margin-top:6px}
+  .foot{display:flex;align-items:center;gap:6px;margin-top:10px;flex-wrap:wrap}
+  .topic{font-size:9px;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;padding:2px 6px;border:1px solid var(--line);border-radius:6px}
+  .acts{margin-left:auto;display:flex;gap:4px;color:var(--faint);font-size:13px}
+  .gauges{display:flex;flex-direction:column;gap:8px;align-items:center}
+  .gauge{position:relative;width:46px;height:46px}
+  .gauge svg{transform:rotate(-90deg)}
+  .gauge .val{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;font-family:ui-monospace,monospace}
+  .glabel{font-size:8px;letter-spacing:.16em;color:var(--faint);text-transform:uppercase;text-align:center;margin-top:2px}
+  .note{max-width:780px;margin:18px auto;color:var(--faint);font-size:11px;line-height:1.7;padding:0 24px}
+  .note b{color:var(--cyanS)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="rail">
+    <div class="logo mono">◈</div>
+    <div class="label" style="text-align:center;font-size:8px;margin-bottom:8px">HUD</div>
+    <a class="on" href="#"><span class="ic">◎</span>Feed</a>
+    <a href="#"><span class="ic">⬡</span>Saved</a>
+    <a href="#"><span class="ic">◷</span>Pipeline</a>
+    <a href="#"><span class="ic">⚙</span>Config</a>
+    <div style="flex:1"></div>
+    <a href="#"><span class="ic">⏻</span>Exit</a>
+  </nav>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="label"><span class="dot"></span>108 signals · 11 sources live</div>
+      <div style="display:flex;gap:12px;align-items:center">
+        <span class="chip">pipeline ok</span>
+        <span style="font-size:11px;color:var(--dim)">ravi@signal.dev</span>
+      </div>
+    </div>
+
+    <div class="deck">
+      <div class="tabs">
+        <span class="tab on">◇ All</span><span class="tab">AI</span><span class="tab">LLM</span>
+        <span class="tab">Agents</span><span class="tab">Startups</span><span class="tab">Security</span>
+      </div>
+      <div class="right">
+        <div class="slider">⬓ <div class="track"><div class="knob" style="left:62%"></div></div> focus-led</div>
+        <div class="slider">⌁ <div class="track" style="width:70px"><div class="knob" style="left:40%"></div></div></div>
+        <span class="chip" style="cursor:pointer">⏸ pause</span>
+      </div>
+    </div>
+
+    <div class="breaking">
+      <span class="chip r">⚡ Breaking</span>
+      <span class="chip" style="padding:1px 6px">focus</span>
+      <span style="color:var(--ink)">DeepSeek-V4 drops with 2× throughput at half the cost</span>
+      <span style="color:var(--faint);font-size:10px">· Hacker News · 612▲</span>
+    </div>
+
+    <div class="stream" id="stream"></div>
+    <div class="note">
+      <b>Design intent.</b> Edge-anchored chrome, sacred center, glanceable cards. Each card answers <b>“why am I seeing this?”</b>
+      via two rings — <b>Focus</b> (topical match) and <b>Pop</b> (popularity) — plus a Focus/Trending lane edge (cyan = focus, violet = trending).
+      Auto-scroll flows hands-free at a user-set pace; hover or <b>space</b> pauses, <b>J/K</b> step, <b>S</b> saves. Breaking pings ride a thin top ticker, never blocking the stream.
+      This is the HUD I’d use myself: high signal, zero black box, fully tunable.
+    </div>
+  </div>
+</div>
+
+<script>
+  // ring helper
+  function ring(pct,color){
+    const r=20,c=2*Math.PI*r,off=c*(1-pct/100);
+    return `<div class="gauge"><svg width="46" height="46">
+      <circle cx="23" cy="23" r="${r}" fill="none" stroke="var(--line)" stroke-width="3.5"/>
+      <circle cx="23" cy="23" r="${r}" fill="none" stroke="${color}" stroke-width="3.5" stroke-linecap="round"
+        stroke-dasharray="${c}" stroke-dashoffset="${off}" style="filter:drop-shadow(0 0 4px ${color})"/>
+    </svg><div class="val" style="color:${color}">${pct}</div></div>`;
+  }
+  const data=[
+    {src:"Hacker News",lane:"focus",flame:"612",age:"2h",title:"DeepSeek-V4 drops with 2× throughput at half the cost",
+      sum:"Open-weight release; benchmarks rival frontier models on reasoning, MoE routing detailed in the paper.",
+      topics:["llm","open-source","ai"],focus:100,pop:97,related:5,trend:"new"},
+    {src:"TLDR AI",lane:"focus",age:"5h",title:"Agents that write their own evals — a practical guide",
+      sum:"Walkthrough of self-grading agent loops with grounding checks and a banned-token guardrail.",
+      topics:["agents","llm"],focus:88,pop:64,related:2},
+    {src:"The Verge",lane:"trending",flame:"204",age:"4h",title:"Ford hired AI and sacked humans. It backfired badly",
+      sum:"Customer-service automation rollback after escalation spikes; what teams got wrong about handoff.",
+      topics:["ai","business"],focus:67,pop:86,related:3,trend:"updated"},
+    {src:"r/LocalLLaMA",lane:"trending",age:"6h",title:"Running a 70B locally on a single 24GB card with new quant",
+      sum:"Community benchmark thread; 4-bit AWQ vs GGUF tradeoffs and tokens/sec on consumer GPUs.",
+      topics:["llm","hardware"],focus:74,pop:70,related:8},
+  ];
+  document.getElementById('stream').innerHTML = data.map(d=>{
+    const focusLane=d.lane==="focus";
+    const edge=focusLane?"var(--cyan)":"var(--violet)";
+    const laneChip=focusLane?`<span class="chip">Focus</span>`:`<span class="chip v">Trending</span>`;
+    const flame=d.flame?`<span class="chip r">🔥 ${d.flame}</span>`:"";
+    const trend=d.trend==="new"?`<span class="chip">▲ New</span>`:d.trend==="updated"?`<span class="chip a">↻ Updated</span>`:"";
+    return `<article class="card">
+      <span class="edge" style="background:${edge}"></span>
+      <div style="flex:1;min-width:0">
+        <div class="meta"><span class="fav"></span><span class="src">${d.src}</span>${laneChip}${trend}${flame}<span class="age">${d.age}</span></div>
+        <div class="title">${d.title}</div>
+        <div class="sum">${d.sum}</div>
+        <div class="foot">
+          ${d.topics.map(t=>`<span class="topic">${t}</span>`).join("")}
+          <span style="font-size:9px;color:var(--cyanS)">+${d.related} related</span>
+          <span class="acts">✦ ⓘ ▲ ▼ 🔇 ⌀ ⬡ ↗</span>
+        </div>
+      </div>
+      <div class="gauges">
+        ${ring(d.focus,"var(--cyan)")}<div class="glabel">Focus</div>
+        ${ring(d.pop,"var(--violet)")}<div class="glabel">Pop</div>
+      </div>
+    </article>`;
+  }).join("");
+</script>
+</body>
+</html>
