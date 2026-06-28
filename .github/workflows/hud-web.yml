@@ -1,0 +1,75 @@
+name: HUD Web · CI/CD
+
+# CI/CD for the Next.js HUD app in web/.
+# CI (typecheck + build) runs on every push/PR touching web/.
+# CD (Convex + Vercel deploy) runs on main when the required secrets are present.
+
+on:
+  push:
+    branches: [main]
+    paths: ["web/**", ".github/workflows/hud-web.yml"]
+  pull_request:
+    paths: ["web/**", ".github/workflows/hud-web.yml"]
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: web
+
+jobs:
+  ci:
+    name: Typecheck & build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm install --no-audit --no-fund
+      # convex/_generated is committed, so no deployment is needed to typecheck.
+      - name: Lint
+        run: npm run lint --if-present
+      - name: Production build
+        env:
+          # Public client URL — safe to expose; needed at build time.
+          NEXT_PUBLIC_CONVEX_URL: ${{ vars.NEXT_PUBLIC_CONVEX_URL || 'https://careful-roadrunner-67.convex.cloud' }}
+        run: npm run build
+
+  deploy:
+    name: Deploy (Convex + Vercel)
+    needs: ci
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    # Job-level env so the step `if:` gates can read whether secrets are set.
+    env:
+      CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      NEXT_PUBLIC_CONVEX_URL: ${{ vars.NEXT_PUBLIC_CONVEX_URL || 'https://careful-roadrunner-67.convex.cloud' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm install --no-audit --no-fund
+
+      # Deploy Convex functions to production.
+      # Requires repo secret CONVEX_DEPLOY_KEY (Convex dashboard → Settings → Deploy keys).
+      - name: Deploy Convex
+        if: ${{ env.CONVEX_DEPLOY_KEY != '' }}
+        run: npx convex deploy -y
+
+      # Deploy the Next.js app to Vercel production.
+      # Requires repo secrets VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID.
+      - name: Deploy Vercel
+        if: ${{ env.VERCEL_TOKEN != '' }}
+        run: |
+          npm i -g vercel@latest
+          vercel pull --yes --environment=production --token "$VERCEL_TOKEN"
+          vercel build --prod --token "$VERCEL_TOKEN"
+          vercel deploy --prebuilt --prod --token "$VERCEL_TOKEN"
