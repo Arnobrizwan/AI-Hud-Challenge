@@ -29,6 +29,8 @@ jobs:
       # convex/_generated is committed, so no deployment is needed to typecheck.
       - name: Lint
         run: npm run lint --if-present
+      - name: Unit tests (pipeline)
+        run: npm test
       - name: Production build
         env:
           # Public client URL — safe to expose; needed at build time.
