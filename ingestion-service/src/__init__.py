@@ -1,3 +1,0 @@
-"""
-Ingestion Service Package
-"""

@@ -1,1 +1,0 @@
-# Crowdsourcing package

@@ -1,1 +1,0 @@
-# Editorial workflow package

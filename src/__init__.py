@@ -1,1 +1,0 @@
-# Ranking Microservice Package

@@ -1,6 +1,0 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: feedback-service
-  labels:
-    name: feedback-service

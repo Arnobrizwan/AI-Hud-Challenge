@@ -1,1 +1,0 @@
-# Feedback collection package
