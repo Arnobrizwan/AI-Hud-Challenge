@@ -5,7 +5,9 @@ import { DEFAULT_PREFS, DEFAULT_CONFIG } from "./defaults";
 import { scoreForUser, type UserContext } from "../lib/pipeline/rank";
 import { Doc } from "./_generated/dataModel";
 
-const FEED_WINDOW_MS = 48 * 3600 * 1000;
+// 72h so daily newsletters (TLDR AI, AI News, The Rundown) reliably appear
+// alongside high-frequency sources like HackerNews.
+const FEED_WINDOW_MS = 72 * 3600 * 1000;
 
 /**
  * The HUD feed. Read-time personalized ranking over recent representative

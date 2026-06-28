@@ -71,12 +71,21 @@ export async function fetchRss(source: SourceSpec): Promise<FetchResult> {
   if (source.etag) headers["If-None-Match"] = source.etag;
   if (source.lastModified) headers["If-Modified-Since"] = source.lastModified;
 
-  let res: Response;
-  try {
-    res = await fetch(source.url, { headers, redirect: "follow" });
-  } catch (e) {
-    return { items: [], error: `network: ${(e as Error).message}` };
+  // Reddit aggressively rate-limits datacenter IPs; retry a couple of times
+  // with backoff. Other sources fetch once.
+  const attempts = source.kind === "reddit" || source.kind === "x" ? 3 : 1;
+  let res: Response | null = null;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      res = await fetch(source.url, { headers, redirect: "follow" });
+    } catch (e) {
+      if (i === attempts - 1) return { items: [], error: `network: ${(e as Error).message}` };
+      res = null;
+    }
+    if (res && res.status !== 429 && res.status !== 503) break;
+    if (i < attempts - 1) await new Promise((r) => setTimeout(r, 1200 * (i + 1)));
   }
+  if (!res) return { items: [], error: "no response" };
   if (res.status === 304) return { items: [], notModified: true };
   if (!res.ok) return { items: [], error: `http ${res.status}` };
 

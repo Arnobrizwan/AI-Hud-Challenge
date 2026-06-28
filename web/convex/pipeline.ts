@@ -11,8 +11,8 @@ import { computeItemFeatures } from "../lib/pipeline/rank";
 import type { RawItem } from "../lib/pipeline/types";
 import { DEFAULT_CONFIG } from "./defaults";
 
-const MAX_AGE_MS = 4 * 24 * 3600 * 1000; // keep last 4 days
-const RECENT_WINDOW_MS = 3 * 24 * 3600 * 1000;
+const MAX_AGE_MS = 5 * 24 * 3600 * 1000; // ingest items up to 5 days old
+const RECENT_WINDOW_MS = 5 * 24 * 3600 * 1000; // prune older than 5 days (> 72h feed window)
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 

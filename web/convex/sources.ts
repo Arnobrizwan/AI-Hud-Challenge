@@ -68,15 +68,27 @@ export const seed = mutation({
   args: {},
   handler: async (ctx) => {
     const existing = await ctx.db.query("sources").collect();
-    const have = new Set(existing.map((s) => s.sourceId));
+    const byId = new Map(existing.map((s) => [s.sourceId, s]));
     let inserted = 0;
+    let updated = 0;
     for (const s of SEED_SOURCES) {
-      if (have.has(s.sourceId)) continue;
-      await ctx.db.insert("sources", {
-        ...s,
-        errorCount: 0,
-        successCount: 0,
-      });
+      const cur = byId.get(s.sourceId);
+      if (cur) {
+        // Refresh catalog metadata (e.g. corrected feed URLs) but preserve the
+        // user's enable toggle and the ingest stats.
+        if (cur.url !== s.url || cur.name !== s.name || cur.weight !== s.weight) {
+          await ctx.db.patch(cur._id, {
+            url: s.url,
+            name: s.name,
+            topics: s.topics,
+            weight: s.weight,
+            kind: s.kind,
+          });
+          updated++;
+        }
+        continue;
+      }
+      await ctx.db.insert("sources", { ...s, errorCount: 0, successCount: 0 });
       inserted++;
     }
     const cfg = await ctx.db
@@ -89,7 +101,7 @@ export const seed = mutation({
         updatedAt: Date.now(),
       });
     }
-    return { inserted, total: existing.length + inserted };
+    return { inserted, updated, total: existing.length + inserted };
   },
 });
 

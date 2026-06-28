@@ -25,6 +25,23 @@ TypeScript · Tailwind v4**, deployed on **Vercel**.
 - **Pipeline dashboard**: throughput, source health, **hot-reload ranking weights**, eval metrics (P@K, nDCG, coverage, novelty, diversity, dup-F1), and per-run stage timings.
 - **Multi-user** via Convex Auth (password + one-tap guest), with per-user prefs/bookmarks/keys fully isolated.
 
+## Sources & status
+
+Configured in `convex/seedData.ts`; manage live from the dashboard.
+
+| Source | Status | Notes |
+|---|---|---|
+| **HackerNews** | ✅ live | Algolia API — real points + comments |
+| **TLDR AI** | ✅ live | RSS |
+| **AI News (smol.ai)** | ✅ live | RSS `news.smol.ai/rss.xml` |
+| **The Rundown AI** | ✅ live | beehiiv RSS |
+| **Latent Space** | ✅ live | RSS (bonus AI newsletter) |
+| OpenAI / DeepMind / Hugging Face blogs, TechCrunch, Ars Technica, The Verge, VentureBeat | ✅ live | RSS |
+| **Subreddits** (MachineLearning, LocalLLaMA, artificial, programming, startups) | ⚠️ partial | Reddit `429`-rate-limits datacenter IPs (Convex/Vercel egress). r/MachineLearning works; the rest are intermittent. **Reliable fix:** add Reddit OAuth app creds (`REDDIT_CLIENT_ID`/`SECRET`) and use the authenticated JSON API. |
+| **X / Twitter** (@OpenAI, @karpathy, @sama) | ⛔ off by default | No free X API; nitter mirrors are mostly dead. Enable by pointing a source at a working RSS-bridge URL, or wire an X API v2 bearer token. |
+
+The feed shows items from the last **72h**, so daily newsletters appear alongside high-frequency sources like HackerNews.
+
 ## Architecture
 
 ```
