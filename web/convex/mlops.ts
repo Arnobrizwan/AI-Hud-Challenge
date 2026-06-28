@@ -1,7 +1,41 @@
-import { mutation, query, internalMutation } from "./_generated/server";
+import { mutation, query, internalMutation, type MutationCtx } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { DEFAULT_CONFIG } from "./defaults";
+import { assignArm } from "../lib/pipeline/experiment";
+
+/**
+ * Roll the live config back to a saved version and mark it the promoted one in
+ * the registry. Shared by the manual `rollbackTo` mutation and the automated
+ * eval-regression rollback. Returns false if the version doesn't exist.
+ */
+export async function performRollback(ctx: MutationCtx, version: number): Promise<boolean> {
+  const ver = await ctx.db
+    .query("configVersions")
+    .withIndex("by_version", (q) => q.eq("version", version))
+    .unique();
+  if (!ver) return false;
+  const cfg = await ctx.db.query("pipelineConfig").withIndex("by_key", (q) => q.eq("key", "default")).unique();
+  const next = {
+    key: "default",
+    weights: ver.weights,
+    recencyHalfLifeHours: ver.recencyHalfLifeHours,
+    breakingVelocityThreshold: ver.breakingVelocityThreshold,
+    explorationEpsilon: ver.explorationEpsilon,
+    maxPerSourcePerScreen: ver.maxPerSourcePerScreen,
+    updatedAt: Date.now(),
+    version,
+  };
+  if (cfg) await ctx.db.patch(cfg._id, next);
+  else await ctx.db.insert("pipelineConfig", next);
+  // Keep the registry's promoted flag consistent: exactly one promoted version.
+  const all = await ctx.db.query("configVersions").withIndex("by_version").order("desc").take(50);
+  for (const cv of all) {
+    const promoted = cv.version === version;
+    if (cv.promoted !== promoted) await ctx.db.patch(cv._id, { promoted });
+  }
+  return true;
+}
 
 /**
  * MLOps + safety ops (sections 11, 12, 15):
@@ -50,24 +84,8 @@ export const rollbackTo = mutation({
   handler: async (ctx, { version }) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
-    const ver = await ctx.db
-      .query("configVersions")
-      .withIndex("by_version", (q) => q.eq("version", version))
-      .unique();
-    if (!ver) throw new Error("version not found");
-    const cfg = await ctx.db.query("pipelineConfig").withIndex("by_key", (q) => q.eq("key", "default")).unique();
-    const next = {
-      key: "default",
-      weights: ver.weights,
-      recencyHalfLifeHours: ver.recencyHalfLifeHours,
-      breakingVelocityThreshold: ver.breakingVelocityThreshold,
-      explorationEpsilon: ver.explorationEpsilon,
-      maxPerSourcePerScreen: ver.maxPerSourcePerScreen,
-      updatedAt: Date.now(),
-      version,
-    };
-    if (cfg) await ctx.db.patch(cfg._id, next);
-    else await ctx.db.insert("pipelineConfig", next);
+    const ok = await performRollback(ctx, version);
+    if (!ok) throw new Error("version not found");
     return { rolledBackTo: version };
   },
 });
@@ -202,6 +220,49 @@ export const stopCanary = mutation({
 export const listExperiments = query({
   args: {},
   handler: async (ctx) => ctx.db.query("experiments").withIndex("by_status").order("desc").take(10),
+});
+
+/**
+ * Attribute recent feedback to each running experiment's arms (same
+ * deterministic `assignArm` routing the feed uses) and record control vs
+ * variant satisfaction + sample counts so the console can show the lift.
+ * Run by the pipeline cron.
+ */
+export const recomputeExperimentMetrics = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const running = await ctx.db
+      .query("experiments")
+      .withIndex("by_status", (q) => q.eq("status", "running"))
+      .collect();
+    if (running.length === 0) return { updated: 0 };
+
+    const since = Date.now() - 7 * 24 * 3600 * 1000;
+    const fb = await ctx.db.query("feedback").withIndex("by_user").order("desc").take(5000);
+    const recent = fb.filter((f) => f.createdAt >= since);
+    const POS = new Set(["up", "save", "more_like_this", "click"]);
+    const NEG = new Set(["down", "not_interested", "mute_source"]);
+
+    let updated = 0;
+    for (const exp of running) {
+      let cPos = 0, cNeg = 0, cN = 0, vPos = 0, vNeg = 0, vN = 0;
+      for (const f of recent) {
+        const { arm } = assignArm(String(f.userId), exp);
+        const pos = POS.has(f.action), neg = NEG.has(f.action);
+        if (arm === "control") { cN++; if (pos) cPos++; if (neg) cNeg++; }
+        else { vN++; if (pos) vPos++; if (neg) vNeg++; }
+      }
+      await ctx.db.patch(exp._id, {
+        metrics: {
+          controlSatisfaction: cPos + cNeg > 0 ? cPos / (cPos + cNeg) : 0,
+          variantSatisfaction: vPos + vNeg > 0 ? vPos / (vPos + vNeg) : 0,
+          samples: cN + vN, // impressions attributed across both arms
+        },
+      });
+      updated++;
+    }
+    return { updated };
+  },
 });
 
 /** Auto-downgrade sources that keep failing or get muted a lot (spam plumbing). */

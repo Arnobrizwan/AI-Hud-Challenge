@@ -156,6 +156,41 @@ export function readabilityExtract(html: string | undefined | null): string {
   return text;
 }
 
+/**
+ * Dense semantic embeddings via a BYO key. Calls OpenAI
+ * `text-embedding-3-small` (with optional dimension reduction). Anthropic has no
+ * native embeddings endpoint, so it returns null → callers fall back to the
+ * local `hashingVector`. Returns one vector per input text, or null on any
+ * failure (the pipeline must never hard-depend on an external key).
+ */
+export async function denseEmbedding(opts: {
+  provider: "openai" | "anthropic";
+  key: string;
+  texts: string[];
+  model?: string;
+  dimensions?: number;
+}): Promise<number[][] | null> {
+  if (opts.provider !== "openai" || !opts.key || opts.texts.length === 0) return null;
+  try {
+    const res = await fetch("https://api.openai.com/v1/embeddings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${opts.key}` },
+      body: JSON.stringify({
+        model: opts.model || "text-embedding-3-small",
+        input: opts.texts,
+        dimensions: opts.dimensions ?? 256,
+      }),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { data?: { embedding: number[] }[] };
+    const out = data.data?.map((d) => d.embedding);
+    if (!out || out.length !== opts.texts.length) return null;
+    return out;
+  } catch {
+    return null;
+  }
+}
+
 /** Stable 53-bit hash → hex string (djb2-xor variant). No crypto needed. */
 export function hashString(s: string): string {
   let h1 = 0xdeadbeef ^ s.length;

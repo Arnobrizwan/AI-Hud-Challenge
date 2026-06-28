@@ -4,12 +4,14 @@ import { internal } from "./_generated/api";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
 import { ingestSource } from "../lib/pipeline/ingest";
+import { getRobots, isPathAllowed, type RobotsRules } from "../lib/pipeline/ingest/robots";
 import { normalizeBatch } from "../lib/pipeline/normalize";
 import { enrichBatch } from "../lib/pipeline/enrich";
 import { dedupCluster } from "../lib/pipeline/dedup";
 import { computeItemFeatures } from "../lib/pipeline/rank";
 import { simHash, hashingVector, tokenize, normalizeTitle } from "../lib/pipeline/text";
 import { linkEntities } from "../lib/pipeline/kb";
+import { embedTexts } from "../lib/pipeline/summarize";
 import { isFlagged } from "../lib/pipeline/safety";
 import type { RawItem } from "../lib/pipeline/types";
 import { DEFAULT_CONFIG } from "./defaults";
@@ -46,11 +48,48 @@ export const runPipeline = internalAction({
       const sources = await ctx.runQuery(internal.sources.listEnabled, {});
 
       // ---- Stage 1: ingest (sequential to be polite to sources) ----
+      // robots.txt is fetched once per origin (cached) and enforced before each
+      // request; Crawl-delay raises the politeness sleep. Per-domain budgets logged.
+      const robotsCache = new Map<string, RobotsRules>();
+      const domainBudget = new Map<string, { fetched: number; skipped: number; crawlDelaySec: number }>();
+      const bumpBudget = (host: string, key: "fetched" | "skipped", crawlDelaySec = 0) => {
+        const b = domainBudget.get(host) ?? { fetched: 0, skipped: 0, crawlDelaySec: 0 };
+        b[key]++;
+        if (crawlDelaySec) b.crawlDelaySec = crawlDelaySec;
+        domainBudget.set(host, b);
+      };
+
       const raws: RawItem[] = await time("ingest", sources.length, async () => {
         const all: RawItem[] = [];
         for (const s of sources) {
           // be polite: stagger requests, extra spacing for rate-limited hosts
-          await sleep(s.kind === "reddit" || s.kind === "x" ? 700 : 250);
+          let baseDelay = s.kind === "reddit" || s.kind === "x" ? 700 : 250;
+
+          // robots.txt enforcement (only for real http(s) feed urls)
+          let httpHost: string | null = null;
+          let path = "/";
+          if (/^https?:\/\//i.test(s.url)) {
+            try {
+              const u = new URL(s.url);
+              httpHost = u.host;
+              path = (u.pathname || "/") + (u.search || "");
+              const robots = await getRobots(robotsCache, u.origin);
+              if (robots.crawlDelaySec) baseDelay = Math.max(baseDelay, robots.crawlDelaySec * 1000);
+              if (!isPathAllowed(robots, path)) {
+                bumpBudget(httpHost, "skipped", robots.crawlDelaySec ?? 0);
+                await ctx.runMutation(internal.sources.recordFetch, {
+                  sourceId: s.sourceId,
+                  ok: false,
+                  error: `robots.txt disallows ${path}`,
+                });
+                continue;
+              }
+            } catch {
+              httpHost = null; // malformed url → skip robots, let adapter surface the error
+            }
+          }
+
+          await sleep(baseDelay);
           const res = await ingestSource({
             sourceId: s.sourceId,
             name: s.name,
@@ -68,7 +107,13 @@ export const runPipeline = internalAction({
             lastModified: res.lastModified,
             error: res.error,
           });
+          if (httpHost) bumpBudget(httpHost, "fetched");
           if (res.items.length) all.push(...res.items);
+        }
+        for (const [h, b] of domainBudget) {
+          console.log(
+            `[robots] ${h}: fetched=${b.fetched} skipped=${b.skipped} crawlDelay=${b.crawlDelaySec}s`,
+          );
         }
         return all;
       });
@@ -109,11 +154,24 @@ export const runPipeline = internalAction({
         };
       });
 
-      // ---- Stage 3b: SimHash + hashing-vector + safety flag + KB linking ----
+      // ---- Stage 3b: SimHash + semantic vector + safety flag + KB linking ----
       const tokensFor = (it: (typeof enriched)[number]) =>
         tokenize(normalizeTitle(it.title) + " " + (it.readableText || it.summaryExtractive));
       const simhashes = enriched.map((it) => simHash(tokensFor(it)));
-      const vectors = enriched.map((it) => hashingVector(tokensFor(it)));
+
+      // Semantic vector: prefer dense embeddings when a deployment-level BYO key
+      // (OPENAI_API_KEY) is configured; otherwise fall back to the local
+      // hashing-trick vector. The pipeline never hard-depends on a key.
+      const embedKey = process.env.OPENAI_API_KEY;
+      let vectors: number[][] | null = null;
+      if (embedKey && enriched.length) {
+        const embedText = (it: (typeof enriched)[number]) =>
+          `${it.title}. ${(it.readableText || it.summaryExtractive || "").slice(0, 1500)}`;
+        vectors = await time("embed", enriched.length, () =>
+          embedTexts({ provider: "openai", key: embedKey, texts: enriched.map(embedText), dimensions: 256 }),
+        );
+      }
+      if (!vectors) vectors = enriched.map((it) => hashingVector(tokensFor(it)));
 
       // Wikidata linking only for representatives (cap API calls), shared cache.
       const kbCache = new Map<string, string | null>();
@@ -137,6 +195,9 @@ export const runPipeline = internalAction({
         canonicalUrl: it.canonicalUrl,
         summaryExtractive: it.summaryExtractive,
         readableText: it.readableText || undefined,
+        // store the original source HTML alongside the cleaned text (capped to
+        // bound storage); enables re-extraction / richer NER later.
+        rawHtml: it.contentHtml ? it.contentHtml.slice(0, 16000) : undefined,
         contentHash: it.contentHash,
         image: it.image,
         author: it.author,
@@ -168,6 +229,7 @@ export const runPipeline = internalAction({
       // housekeeping + learning + safety/observability ops
       await ctx.runMutation(internal.pipelineStore.pruneOld, { olderThanMs: RECENT_WINDOW_MS });
       await ctx.runMutation(internal.learning.recomputeSourceStats, {});
+      await ctx.runMutation(internal.mlops.recomputeExperimentMetrics, {});
       await ctx.runMutation(internal.mlops.dataQualityCheck, {});
       await ctx.runMutation(internal.mlops.driftCheck, {});
       await ctx.runMutation(internal.mlops.autoDowngradeSources, {});

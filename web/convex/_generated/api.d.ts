@@ -20,6 +20,7 @@ import type * as defaults from "../defaults.js";
 import type * as evaluation from "../evaluation.js";
 import type * as feed from "../feed.js";
 import type * as feedback from "../feedback.js";
+import type * as goldData from "../goldData.js";
 import type * as http from "../http.js";
 import type * as items from "../items.js";
 import type * as labels from "../labels.js";
@@ -53,6 +54,7 @@ declare const fullApi: ApiFromModules<{
   evaluation: typeof evaluation;
   feed: typeof feed;
   feedback: typeof feedback;
+  goldData: typeof goldData;
   http: typeof http;
   items: typeof items;
   labels: typeof labels;

@@ -1,7 +1,54 @@
-import { query, mutation, internalQuery } from "./_generated/server";
+import { query, mutation, internalQuery, type QueryCtx } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { DEFAULT_CONFIG } from "./defaults";
+import { assignArm } from "../lib/pipeline/experiment";
+
+/**
+ * Resolve the ranking config a given user should see, applying any RUNNING A/B
+ * canary: the user is deterministically routed to the control or variant config
+ * version (configVersions table) by `assignArm`. Falls back to the live default
+ * config when no experiment is running or the version row is missing. Shared by
+ * feed.ts and evaluation.ts so traffic routing is consistent everywhere.
+ */
+export async function effectiveConfig(ctx: QueryCtx, userId: string | null) {
+  const cfgRow = await ctx.db
+    .query("pipelineConfig")
+    .withIndex("by_key", (q) => q.eq("key", "default"))
+    .unique();
+  const out = {
+    weights: cfgRow?.weights ?? DEFAULT_CONFIG.weights,
+    recencyHalfLifeHours: cfgRow?.recencyHalfLifeHours ?? DEFAULT_CONFIG.recencyHalfLifeHours,
+    explorationEpsilon: cfgRow?.explorationEpsilon ?? DEFAULT_CONFIG.explorationEpsilon,
+    maxPerSourcePerScreen: cfgRow?.maxPerSourcePerScreen ?? DEFAULT_CONFIG.maxPerSourcePerScreen,
+    version: cfgRow?.version,
+    arm: null as "control" | "variant" | null,
+    experiment: null as string | null,
+  };
+  if (!userId) return out;
+
+  const exp = await ctx.db
+    .query("experiments")
+    .withIndex("by_status", (q) => q.eq("status", "running"))
+    .first();
+  if (!exp) return out;
+
+  const { arm, version } = assignArm(userId, exp);
+  out.arm = arm;
+  out.experiment = exp.name;
+  const ver = await ctx.db
+    .query("configVersions")
+    .withIndex("by_version", (q) => q.eq("version", version))
+    .unique();
+  if (ver) {
+    out.weights = ver.weights;
+    out.recencyHalfLifeHours = ver.recencyHalfLifeHours;
+    out.explorationEpsilon = ver.explorationEpsilon;
+    out.maxPerSourcePerScreen = ver.maxPerSourcePerScreen;
+    out.version = ver.version;
+  }
+  return out;
+}
 
 /** Hot-reloadable pipeline config (singleton). Returns defaults if unset. */
 export const getConfig = query({

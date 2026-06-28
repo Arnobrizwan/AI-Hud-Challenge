@@ -9,7 +9,7 @@
 export type SeedSource = {
   sourceId: string;
   name: string;
-  kind: "rss" | "hackernews" | "reddit" | "x" | "newsletter";
+  kind: "rss" | "hackernews" | "reddit" | "x" | "newsletter" | "jsonfeed";
   url: string;
   topics: string[];
   weight: number;
@@ -176,6 +176,18 @@ export const SEED_SOURCES: SeedSource[] = [
     kind: "rss",
     url: "https://venturebeat.com/category/ai/feed/",
     topics: ["ai", "business"],
+    weight: 0.6,
+    enabled: true,
+  },
+
+  // ---- JSON Feed (jsonfeed.org spec) — Daring Fireball publishes a canonical
+  //      JSON Feed; exercises the dedicated jsonfeed adapter. ----
+  {
+    sourceId: "daring-fireball",
+    name: "Daring Fireball",
+    kind: "jsonfeed",
+    url: "https://daringfireball.net/feeds/json",
+    topics: ["programming", "design", "business"],
     weight: 0.6,
     enabled: true,
   },

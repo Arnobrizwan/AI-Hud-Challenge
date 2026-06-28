@@ -5,9 +5,22 @@ import { DEFAULT_CONFIG, DEFAULT_PREFS } from "./defaults";
 import { topicalMatch } from "../lib/pipeline/rank";
 
 const COOLDOWN_MS = 3 * 3600 * 1000; // one alert per cluster per 3h
-function inQuietHours(q: { start: number; end: number } | undefined, hour: number): boolean {
+
+/**
+ * Quiet-hours check in the user's LOCAL time. `timezoneOffset` is minutes from
+ * UTC; the local hour is derived from the current epoch + offset so a user in
+ * any timezone gets their window honored (not the server's UTC clock).
+ */
+function inQuietHours(
+  q: { start: number; end: number; timezoneOffset?: number } | undefined,
+  nowMs: number,
+): boolean {
   if (!q) return false;
-  return q.start <= q.end ? hour >= q.start && hour < q.end : hour >= q.start || hour < q.end;
+  const offsetMin = q.timezoneOffset ?? 0;
+  const localHour = Math.floor(((((nowMs + offsetMin * 60_000) / 3_600_000) % 24) + 24) % 24);
+  return q.start <= q.end
+    ? localHour >= q.start && localHour < q.end
+    : localHour >= q.start || localHour < q.end;
 }
 
 const BREAKING_WINDOW_MS = 3 * 3600 * 1000;
@@ -38,9 +51,8 @@ export const getBreaking = query({
       (prefs?.topicThresholds ?? []).map((t) => [t.topic, t.threshold]),
     );
 
-    // quiet hours / DND: suppress all breaking pings.
-    const hour = new Date(Date.now()).getUTCHours();
-    if (inQuietHours(prefs?.quietHours, hour)) return [];
+    // quiet hours / DND: suppress all breaking pings (in the user's local time).
+    if (inQuietHours(prefs?.quietHours, Date.now())) return [];
 
     // cooldown / cross-cluster dedup: skip clusters alerted in the last window.
     const recentLog = await ctx.db

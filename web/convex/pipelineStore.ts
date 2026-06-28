@@ -33,6 +33,7 @@ const itemInput = v.object({
     velocity: v.number(),
   }),
   readableText: v.optional(v.string()),
+  rawHtml: v.optional(v.string()),
   contentHash: v.optional(v.string()),
   entityLinks: v.optional(v.array(v.object({ name: v.string(), qid: v.string() }))),
   simhash: v.optional(v.string()),

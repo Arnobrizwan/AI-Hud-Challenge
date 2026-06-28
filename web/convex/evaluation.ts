@@ -1,10 +1,17 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { DEFAULT_PREFS, DEFAULT_CONFIG } from "./defaults";
+import { DEFAULT_PREFS } from "./defaults";
+import { effectiveConfig } from "./config";
 import { scoreForUser, topicalMatch, type UserContext } from "../lib/pipeline/rank";
 import { normalizeTitle } from "../lib/pipeline/text";
 import { isGrounded } from "../lib/pipeline/summarize";
+import {
+  precisionAtK as precAtK, ndcgAtK as ndcgK, goldRelevance,
+  evalQualityScore, shouldRollback, ROLLBACK_REGRESSION_THRESHOLD,
+} from "../lib/pipeline/evalMetrics";
+import { performRollback } from "./mlops";
+import { evaluateNerTopics, NER_TOPIC_GOLD } from "../lib/pipeline/nerEval";
 
 const WINDOW_MS = 48 * 3600 * 1000;
 
@@ -31,11 +38,10 @@ export const runEval = mutation({
       .query("userPrefs")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .unique();
-    const cfg = await ctx.db
-      .query("pipelineConfig")
-      .withIndex("by_key", (q) => q.eq("key", "default"))
-      .unique();
-    const weights = cfg?.weights ?? DEFAULT_CONFIG.weights;
+    // Respect a running A/B experiment: evaluate under the config this user is
+    // actually routed to (control or variant), not just the live default.
+    const eff = await effectiveConfig(ctx, userId);
+    const weights = eff.weights;
 
     const fb = await ctx.db
       .query("feedback")
@@ -69,7 +75,7 @@ export const runEval = mutation({
 
     // Evaluate the SAME per-source-diversified list the feed serves, so coverage
     // and diversity reflect what the user actually sees (not the raw ranking).
-    const maxPerSource = cfg?.maxPerSourcePerScreen ?? DEFAULT_CONFIG.maxPerSourcePerScreen;
+    const maxPerSource = eff.maxPerSourcePerScreen;
     const perSource = new Map<string, number>();
     const diversified = ranked.filter((r) => {
       const n = perSource.get(r.it.sourceId) ?? 0;
@@ -85,20 +91,11 @@ export const runEval = mutation({
       return topicalMatch(topics, focusTopics, sourceId, userCtx.boostedSources) >= 0.34 ? 1 : 0;
     };
 
-    let hits = 0;
-    let dcg = 0;
-    let idealRels: number[] = [];
-    topK.forEach((r, i) => {
-      const g = relevance(r.it._id, r.it.topics, r.it.sourceId);
-      if (g > 0) hits++;
-      dcg += g / Math.log2(i + 2);
-      idealRels.push(g);
-    });
-    idealRels = idealRels.sort((a, b) => b - a);
-    const idcg = idealRels.reduce((acc, g, i) => acc + g / Math.log2(i + 2), 0);
-
-    const precisionAtK = topK.length ? hits / topK.length : 0;
-    const ndcgAtK = idcg > 0 ? dcg / idcg : 0;
+    // Relevance vector in ranked order → shared Precision@K / nDCG@K (same math
+    // the offline CI gate enforces, lib/pipeline/evalMetrics.ts).
+    const rels = topK.map((r) => relevance(r.it._id, r.it.topics, r.it.sourceId));
+    const precisionAtK = precAtK(rels, K);
+    const ndcgAtK = ndcgK(rels, K);
 
     const distinctSources = new Set(topK.map((r) => r.it.sourceId));
     const enabledSources = (await ctx.db.query("sources").collect()).filter((s) => s.enabled);
@@ -168,15 +165,21 @@ export const runEval = mutation({
     const lags = items.map((i) => Math.max(0, i.fetchedAt - i.publishedAt)).sort((a, b) => a - b);
     const timeToSurfaceMs = lags.length ? lags[Math.floor(lags.length / 2)] : 0;
 
-    // gold-set precision (if a curated gold set exists): top-K titles matching a gold keyword.
+    // gold-set precision (if a curated gold set exists): graded relevance over
+    // the top-K titles, via the same goldRelevance() the CI gate uses.
     const gold = await ctx.db.query("goldSet").collect();
     let goldNote = "";
     if (gold.length > 0) {
-      const hit = topK.filter((r) =>
-        gold.some((g) => r.it.title.toLowerCase().includes(g.keyword.toLowerCase())),
-      ).length;
-      goldNote = ` · gold-hit ${hit}/${topK.length}`;
+      const goldEntries = gold.map((g) => ({ topic: g.topic, keyword: g.keyword, relevance: g.relevance }));
+      const goldRels = topK.map((r) => goldRelevance(r.it.title, goldEntries));
+      goldNote = ` · gold-P@${K} ${precAtK(goldRels, K).toFixed(2)} · gold-nDCG ${ndcgK(goldRels, K).toFixed(2)}`;
     }
+
+    // measured enrichment quality (NER + topic) against a tiny labeled set.
+    const ner = evaluateNerTopics(NER_TOPIC_GOLD);
+    const nerNote =
+      ` · NER P/R ${ner.entity.precision.toFixed(2)}/${ner.entity.recall.toFixed(2)}` +
+      ` · topic P/R ${ner.topic.precision.toFixed(2)}/${ner.topic.recall.toFixed(2)}`;
 
     const metrics = {
       precisionAtK,
@@ -190,17 +193,56 @@ export const runEval = mutation({
       timeToSurfaceMs,
     };
 
-    const cfgVersion = cfg?.version;
+    const cfgVersion = eff.version;
     await ctx.db.insert("evalRuns", {
       createdAt: Date.now(),
       k: K,
       metrics,
       sampleSize: items.length,
-      notes: (rel.size > 0 ? "explicit+proxy relevance" : "proxy relevance") + goldNote,
+      notes: (rel.size > 0 ? "explicit+proxy relevance" : "proxy relevance") + goldNote + nerNote,
       configVersion: cfgVersion,
     });
 
-    return { metrics, sampleSize: items.length };
+    // ---- MLOps auto-rollback (section 11): if this eval regressed beyond the
+    // threshold vs the last eval under a *previous* promoted config version,
+    // roll the live config back to that version and raise a critical alert. ----
+    let rolledBackTo: number | null = null;
+    if (cfgVersion != null) {
+      const candidateScore = evalQualityScore({
+        precisionAtK: metrics.precisionAtK,
+        ndcgAtK: metrics.ndcgAtK,
+        dupF1: metrics.dupF1,
+      });
+      const history = await ctx.db.query("evalRuns").withIndex("by_createdAt").order("desc").take(30);
+      const baseline = history.find(
+        (r) => r.configVersion != null && r.configVersion !== cfgVersion,
+      );
+      if (baseline && baseline.configVersion != null) {
+        const baselineScore = evalQualityScore({
+          precisionAtK: baseline.metrics.precisionAtK,
+          ndcgAtK: baseline.metrics.ndcgAtK,
+          dupF1: baseline.metrics.dupF1,
+        });
+        if (shouldRollback(candidateScore, baselineScore)) {
+          const ok = await performRollback(ctx, baseline.configVersion);
+          if (ok) {
+            rolledBackTo = baseline.configVersion;
+            await ctx.db.insert("alerts", {
+              type: "drift",
+              severity: "critical",
+              message:
+                `auto-rollback: eval quality ${candidateScore.toFixed(3)} for config v${cfgVersion} ` +
+                `regressed >${ROLLBACK_REGRESSION_THRESHOLD} below v${baseline.configVersion} ` +
+                `(${baselineScore.toFixed(3)}) — reverted to v${baseline.configVersion}`,
+              createdAt: Date.now(),
+              resolved: false,
+            });
+          }
+        }
+      }
+    }
+
+    return { metrics, sampleSize: items.length, rolledBackTo };
   },
 });
 
@@ -213,4 +255,14 @@ export const listEvals = query({
       .order("desc")
       .take(20);
   },
+});
+
+/**
+ * Measured enrichment quality: entity (NER) + topic precision/recall/F1 against
+ * the hand-labeled set. Pure — no DB read — so the dashboard can show how good
+ * the classifier actually is, not just self-reported coverage.
+ */
+export const nerTopicEval = query({
+  args: {},
+  handler: async () => evaluateNerTopics(NER_TOPIC_GOLD),
 });

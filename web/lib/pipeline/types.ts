@@ -6,7 +6,7 @@
  * Flow:  RawItem → NormalizedItem → EnrichedItem → (dedup) Cluster[] → ranked
  */
 
-export type SourceKind = "rss" | "hackernews" | "reddit" | "x" | "newsletter";
+export type SourceKind = "rss" | "hackernews" | "reddit" | "x" | "newsletter" | "jsonfeed";
 
 export interface SourceSpec {
   sourceId: string;

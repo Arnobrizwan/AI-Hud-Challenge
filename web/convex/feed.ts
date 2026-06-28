@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { DEFAULT_PREFS, DEFAULT_CONFIG } from "./defaults";
 import { scoreForUser, type UserContext } from "../lib/pipeline/rank";
+import { effectiveConfig } from "./config";
 import { Doc } from "./_generated/dataModel";
 
 // 72h so daily newsletters (TLDR AI, AI News, The Rundown) reliably appear
@@ -23,13 +24,11 @@ export const getFeed = query({
       .query("userPrefs")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .unique();
-    const cfgRow = await ctx.db
-      .query("pipelineConfig")
-      .withIndex("by_key", (q) => q.eq("key", "default"))
-      .unique();
-    const weights = cfgRow?.weights ?? DEFAULT_CONFIG.weights;
-    const maxPerSource = cfgRow?.maxPerSourcePerScreen ?? DEFAULT_CONFIG.maxPerSourcePerScreen;
-    const epsilon = cfgRow?.explorationEpsilon ?? DEFAULT_CONFIG.explorationEpsilon;
+    // A/B canary: route this user to control/variant config (deterministic).
+    const eff = await effectiveConfig(ctx, userId);
+    const weights = eff.weights;
+    const maxPerSource = eff.maxPerSourcePerScreen;
+    const epsilon = eff.explorationEpsilon;
 
     // learned per-source satisfaction prior (learning-to-rank)
     const statRows = await ctx.db.query("sourceStats").collect();
@@ -130,7 +129,12 @@ export const getFeed = query({
       return true;
     });
 
-    return { items: cards.slice(0, limit ?? 60), generatedAt: Date.now() };
+    return {
+      items: cards.slice(0, limit ?? 60),
+      generatedAt: Date.now(),
+      // surface the A/B arm so the console can attribute impressions + lift.
+      experiment: eff.experiment ? { name: eff.experiment, arm: eff.arm, version: eff.version } : null,
+    };
   },
 });
 

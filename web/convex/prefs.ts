@@ -41,7 +41,9 @@ export const updatePrefs = mutation({
     autoScrollSpeed: v.optional(v.number()),
     focusVsPopularMix: v.optional(v.number()),
     bookmarkResurfaceHours: v.optional(v.number()),
-    quietHours: v.optional(v.object({ start: v.number(), end: v.number() })),
+    quietHours: v.optional(
+      v.object({ start: v.number(), end: v.number(), timezoneOffset: v.optional(v.number()) }),
+    ),
     onboarded: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {

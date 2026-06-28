@@ -1,6 +1,7 @@
 import type { FetchResult, SourceSpec } from "../types";
 import { fetchRss } from "./rss";
 import { fetchHackerNews } from "./hackernews";
+import { fetchJsonFeed } from "./jsonfeed";
 
 /**
  * Stage 1 — ingest. Dispatches a source to its adapter.
@@ -10,6 +11,8 @@ export async function ingestSource(source: SourceSpec): Promise<FetchResult> {
   switch (source.kind) {
     case "hackernews":
       return fetchHackerNews(source);
+    case "jsonfeed":
+      return fetchJsonFeed(source);
     case "rss":
     case "reddit":
     case "x":
@@ -20,4 +23,4 @@ export async function ingestSource(source: SourceSpec): Promise<FetchResult> {
   }
 }
 
-export { fetchRss, fetchHackerNews };
+export { fetchRss, fetchHackerNews, fetchJsonFeed };

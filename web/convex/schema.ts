@@ -19,7 +19,10 @@ export default defineSchema({
     autoScrollSpeed: v.number(), // px/sec, 0 = paused
     focusVsPopularMix: v.number(), // 0 = all popular, 1 = all focus
     bookmarkResurfaceHours: v.number(),
-    quietHours: v.optional(v.object({ start: v.number(), end: v.number() })), // 0-23
+    // 0-23 local hours; timezoneOffset = minutes from UTC (e.g. -300 for EST)
+    quietHours: v.optional(
+      v.object({ start: v.number(), end: v.number(), timezoneOffset: v.optional(v.number()) }),
+    ),
     // per-topic breaking-alert thresholds (0..1 interest needed to notify)
     topicThresholds: v.optional(v.array(v.object({ topic: v.string(), threshold: v.number() }))),
     onboarded: v.boolean(),
@@ -47,6 +50,7 @@ export default defineSchema({
       v.literal("reddit"),
       v.literal("x"),
       v.literal("newsletter"),
+      v.literal("jsonfeed"),
     ),
     url: v.string(), // feed url or handle
     topics: v.array(v.string()),
@@ -112,6 +116,7 @@ export default defineSchema({
       v.array(v.object({ name: v.string(), qid: v.string() })),
     ), // Wikidata QIDs
     readableText: v.optional(v.string()), // readability-extracted main text
+    rawHtml: v.optional(v.string()), // original source HTML, alongside readableText
     flagged: v.optional(v.boolean()), // NSFW/spam/profanity
   }).index("by_dedupeKey", ["dedupeKey"])
     .index("by_publishedAt", ["publishedAt"])

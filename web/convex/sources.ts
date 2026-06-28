@@ -2,6 +2,7 @@ import { query, mutation, internalQuery, internalMutation } from "./_generated/s
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { SEED_SOURCES } from "./seedData";
+import { SEED_GOLD } from "./goldData";
 import { DEFAULT_CONFIG } from "./defaults";
 
 const kindValidator = v.union(
@@ -10,6 +11,7 @@ const kindValidator = v.union(
   v.literal("reddit"),
   v.literal("x"),
   v.literal("newsletter"),
+  v.literal("jsonfeed"),
 );
 
 /** Public: list all sources with health stats (for dashboard + settings). */
@@ -107,7 +109,16 @@ export const seed = mutation({
         updatedAt: Date.now(),
       });
     }
-    return { inserted, updated, total: existing.length + inserted };
+    // Seed the curated gold evaluation set once (idempotent).
+    const goldExisting = await ctx.db.query("goldSet").take(1);
+    let goldInserted = 0;
+    if (goldExisting.length === 0) {
+      for (const g of SEED_GOLD) {
+        await ctx.db.insert("goldSet", { ...g, createdAt: Date.now() });
+        goldInserted++;
+      }
+    }
+    return { inserted, updated, total: existing.length + inserted, goldInserted };
   },
 });
 

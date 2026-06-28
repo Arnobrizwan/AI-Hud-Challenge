@@ -1,11 +1,14 @@
 import type { EnrichedItem } from "./types";
-import { hashString, normalizeTitle, tokenize } from "./text";
+import { cosine, hammingHex, hashingVector, hashString, normalizeTitle, simHash, tokenize } from "./text";
 
 /**
  * Stage 4 — deduplication & event grouping.
  * Stage A: MinHash signatures over title+lead word-shingles, indexed with LSH
  *          banding to find candidate near-duplicate pairs cheaply.
- * Stage B: confirm candidates by estimated Jaccard >= threshold.
+ * Stage B: confirm candidates. A strong MinHash Jaccard (>= threshold) groups
+ *          outright. BORDERLINE candidates (just under threshold) get a second
+ *          opinion from two independent similarity views — SimHash Hamming
+ *          distance AND a hashing-vector cosine — and group only if BOTH agree.
  * Then union-find to form event clusters; elect a canonical representative.
  *
  * Concept ported from the Python repo's deduplication-service (LSH/MinHash).
@@ -16,8 +19,30 @@ const BANDS = 12; // rows per band = NUM_HASHES / BANDS = 4
 const SHINGLE_K = 3;
 const JACCARD_THRESHOLD = 0.5;
 
+// Stage B borderline confirmation thresholds.
+const BORDERLINE_LOW = 0.3; // below this, MinHash says clearly different — don't bother
+const SIMHASH_MAX_HAMMING = 6; // <=6 of 64 bits differ → near-identical surface form
+const COSINE_MIN = 0.7; // hashing-vector cosine agreement
+
+/**
+ * Decide a borderline (sub-threshold Jaccard) candidate pair. Requires BOTH the
+ * SimHash Hamming distance to be small AND the cosine similarity to be high, so
+ * a single noisy signal can't merge unrelated stories. Pure → unit-testable.
+ */
+export function isBorderlineDuplicate(jaccard: number, hamming: number, cos: number): boolean {
+  if (jaccard >= JACCARD_THRESHOLD) return true;
+  if (jaccard < BORDERLINE_LOW) return false;
+  return hamming <= SIMHASH_MAX_HAMMING && cos >= COSINE_MIN;
+}
+
 // deterministic per-permutation seeds
 const SEEDS = Array.from({ length: NUM_HASHES }, (_, i) => (i * 2654435761) >>> 0);
+
+/** Tokens used for the SimHash / hashing-vector borderline signals. */
+function dedupTokens(item: EnrichedItem): string[] {
+  const lead = (item.readableText || item.summaryExtractive || "").slice(0, 400);
+  return tokenize(normalizeTitle(item.title) + " " + lead);
+}
 
 function shingles(item: EnrichedItem): Set<string> {
   const lead = (item.summaryExtractive || "").slice(0, 200);
@@ -84,6 +109,10 @@ class UnionFind {
 export function dedupCluster(items: EnrichedItem[]): DedupResult {
   const n = items.length;
   const sigs = items.map((it) => minhash(shingles(it)));
+  // Independent similarity views for Stage B borderline confirmation.
+  const dtoks = items.map(dedupTokens);
+  const simhashes = dtoks.map((t) => simHash(t));
+  const vectors = dtoks.map((t) => hashingVector(t));
   const uf = new UnionFind(n);
 
   // LSH: bucket by band signature; candidates share at least one band.
@@ -102,8 +131,15 @@ export function dedupCluster(items: EnrichedItem[]): DedupResult {
     if (arr.length < 2) continue;
     for (let i = 0; i < arr.length; i++) {
       for (let j = i + 1; j < arr.length; j++) {
-        if (estJaccard(sigs[arr[i]], sigs[arr[j]]) >= JACCARD_THRESHOLD) {
-          uf.union(arr[i], arr[j]);
+        const a = arr[i], b = arr[j];
+        const jac = estJaccard(sigs[a], sigs[b]);
+        // Strong Jaccard groups outright; borderline pairs need SimHash + cosine
+        // to agree before merging (Stage B second opinion).
+        if (
+          jac >= JACCARD_THRESHOLD ||
+          isBorderlineDuplicate(jac, hammingHex(simhashes[a], simhashes[b]), cosine(vectors[a], vectors[b]))
+        ) {
+          uf.union(a, b);
         }
       }
     }

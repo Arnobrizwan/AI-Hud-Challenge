@@ -4,7 +4,7 @@ import {
   hashingVector, cosine, readabilityExtract, hashString, tokenize,
 } from "../text";
 import { canonicalizeUrl, normalizeBatch } from "../normalize";
-import { dedupCluster } from "../dedup";
+import { dedupCluster, isBorderlineDuplicate } from "../dedup";
 import { recencyScore, scoreForUser, computeItemFeatures, topicalMatch } from "../rank";
 import { enrichBatch } from "../enrich";
 import { isGrounded, buildExtractive } from "../summarize";
@@ -90,6 +90,27 @@ describe("dedup", () => {
     const { clusters } = dedupCluster(items);
     const rep = clusters[0].representativeIndex;
     expect(items[rep].sourceWeight).toBe(0.9);
+  });
+
+  // ---- Stage B borderline confirmation (SimHash + cosine) ----
+  it("isBorderlineDuplicate: strong Jaccard groups outright", () => {
+    expect(isBorderlineDuplicate(0.6, 40, 0.0)).toBe(true);
+  });
+  it("isBorderlineDuplicate: clearly-different Jaccard never groups", () => {
+    expect(isBorderlineDuplicate(0.1, 0, 1.0)).toBe(false);
+  });
+  it("isBorderlineDuplicate: borderline needs BOTH SimHash AND cosine to agree", () => {
+    expect(isBorderlineDuplicate(0.4, 3, 0.9)).toBe(true); // both pass
+    expect(isBorderlineDuplicate(0.4, 30, 0.9)).toBe(false); // SimHash too far
+    expect(isBorderlineDuplicate(0.4, 3, 0.4)).toBe(false); // cosine too low
+  });
+  it("does not over-merge unrelated stories via the borderline path", () => {
+    const items = [
+      eitem("Apple unveils new M5 chip for the next MacBook Pro lineup"),
+      eitem("EU passes sweeping antitrust law targeting big tech platforms"),
+    ];
+    const { itemCluster } = dedupCluster(items);
+    expect(itemCluster[0]).not.toBe(itemCluster[1]);
   });
 });
 

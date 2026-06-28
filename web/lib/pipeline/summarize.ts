@@ -1,4 +1,4 @@
-import { extractiveSummary } from "./text";
+import { extractiveSummary, denseEmbedding } from "./text";
 
 /**
  * Stage 6 — summarization.
@@ -16,6 +16,32 @@ const DEFAULT_MODELS: Record<Provider, string> = {
   openai: "gpt-4o-mini",
   anthropic: "claude-3-5-haiku-latest",
 };
+
+const DEFAULT_EMBED_MODELS: Record<Provider, string> = {
+  openai: "text-embedding-3-small",
+  anthropic: "", // no native embeddings endpoint → falls back to local vector
+};
+
+/**
+ * BYO-key dense embeddings (Stage 3b). Same provider/key plumbing as the
+ * abstractive summarizer; delegates the HTTP call to text.denseEmbedding.
+ * Returns null when no usable provider/key (caller falls back to hashingVector).
+ */
+export async function embedTexts(input: {
+  provider: Provider;
+  key: string;
+  model?: string | null;
+  texts: string[];
+  dimensions?: number;
+}): Promise<number[][] | null> {
+  return denseEmbedding({
+    provider: input.provider,
+    key: input.key,
+    model: input.model || DEFAULT_EMBED_MODELS[input.provider] || undefined,
+    texts: input.texts,
+    dimensions: input.dimensions,
+  });
+}
 
 const SYSTEM_PROMPT =
   "You compress a news item into a single, factual teaser of 18-32 words. " +
