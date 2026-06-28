@@ -6,7 +6,7 @@ import { useQuery } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "@/convex/_generated/api";
 import { cn } from "@/lib/utils";
-import { Radar, Bookmark, SlidersHorizontal, Gauge, LogOut, Activity } from "lucide-react";
+import { Radar, Bookmark, SlidersHorizontal, Gauge, LogOut, Activity, ShieldCheck } from "lucide-react";
 
 const NAV = [
   { href: "/feed", label: "Feed", icon: Radar, adminOnly: false },
@@ -84,6 +84,11 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
                 )}
               >
                 pipeline {stats.lastRunStatus}
+              </span>
+            )}
+            {user?.isAdmin && (
+              <span className="hud-chip flex items-center gap-1 !text-cyan" title="You have operator access">
+                <ShieldCheck style={{ width: 11, height: 11 }} /> Admin
               </span>
             )}
             <span className="text-[11px] text-ink-dim truncate max-w-[160px]">
