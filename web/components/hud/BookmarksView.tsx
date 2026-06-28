@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -9,7 +10,7 @@ import { Bookmark, Trash2, ExternalLink } from "lucide-react";
 export function BookmarksView() {
   const bookmarks = useQuery(api.bookmarks.list);
   const remove = useMutation(api.bookmarks.remove);
-  const now = Date.now();
+  const [now] = useState(() => Date.now());
 
   return (
     <div className="h-full overflow-y-auto hud-scroll px-4 sm:px-8 py-6">

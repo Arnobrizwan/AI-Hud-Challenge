@@ -12,7 +12,16 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Convex codegen output.
+    "convex/_generated/**",
   ]),
+  {
+    rules: {
+      // Syncing Convex query results into local editable form state (sliders,
+      // topic chips) is a legitimate external-store→state sync; keep it advisory.
+      "react-hooks/set-state-in-effect": "warn",
+    },
+  },
 ]);
 
 export default eslintConfig;
