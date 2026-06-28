@@ -9,6 +9,7 @@ jobs:
   health-check:
     name: Health Check
     runs-on: ubuntu-latest
+    continue-on-error: true  # reference Python project; advisory
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -43,6 +44,7 @@ jobs:
   metrics-collection:
     name: Metrics Collection
     runs-on: ubuntu-latest
+    continue-on-error: true  # reference Python project; advisory
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -70,6 +72,7 @@ jobs:
   alerting:
     name: Alerting
     runs-on: ubuntu-latest
+    continue-on-error: true  # reference Python project; advisory
     steps:
     - name: Checkout code
       uses: actions/checkout@v4

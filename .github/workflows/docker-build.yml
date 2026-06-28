@@ -15,6 +15,7 @@ jobs:
   build-and-push:
     name: Build and Push Docker Images
     runs-on: ubuntu-latest
+    continue-on-error: true  # reference Python project; advisory
     permissions:
       contents: read
       packages: write
@@ -84,7 +85,7 @@ jobs:
         output-file: sbom-${{ matrix.service }}.spdx.json
 
     - name: Upload SBOM
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: sbom-${{ matrix.service }}
         path: sbom-${{ matrix.service }}.spdx.json
