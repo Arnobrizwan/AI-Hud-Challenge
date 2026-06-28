@@ -74,7 +74,7 @@ export const SEED_SOURCES: SeedSource[] = [
     url: "https://www.reddit.com/r/MachineLearning/.rss",
     topics: ["ml", "ai", "data"],
     weight: 0.7,
-    enabled: true,
+    enabled: false,
   },
   {
     sourceId: "r-localllama",
@@ -83,7 +83,7 @@ export const SEED_SOURCES: SeedSource[] = [
     url: "https://www.reddit.com/r/LocalLLaMA/.rss",
     topics: ["llm", "open-source", "ai"],
     weight: 0.7,
-    enabled: true,
+    enabled: false,
   },
   {
     sourceId: "r-artificial",
@@ -92,7 +92,7 @@ export const SEED_SOURCES: SeedSource[] = [
     url: "https://www.reddit.com/r/artificial/.rss",
     topics: ["ai", "policy"],
     weight: 0.6,
-    enabled: true,
+    enabled: false,
   },
   {
     sourceId: "r-programming",
@@ -101,7 +101,7 @@ export const SEED_SOURCES: SeedSource[] = [
     url: "https://www.reddit.com/r/programming/.rss",
     topics: ["programming", "open-source"],
     weight: 0.6,
-    enabled: true,
+    enabled: false,
   },
   {
     sourceId: "r-startups",
@@ -110,7 +110,7 @@ export const SEED_SOURCES: SeedSource[] = [
     url: "https://www.reddit.com/r/startups/.rss",
     topics: ["startups", "business"],
     weight: 0.55,
-    enabled: true,
+    enabled: false,
   },
 
   // ---- Lab / company blogs (RSS) ----

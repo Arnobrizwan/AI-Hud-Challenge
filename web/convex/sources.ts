@@ -74,15 +74,21 @@ export const seed = mutation({
     for (const s of SEED_SOURCES) {
       const cur = byId.get(s.sourceId);
       if (cur) {
-        // Refresh catalog metadata (e.g. corrected feed URLs) but preserve the
-        // user's enable toggle and the ingest stats.
-        if (cur.url !== s.url || cur.name !== s.name || cur.weight !== s.weight) {
+        // Refresh catalog to the default definition (corrected URLs, enabled
+        // state, weights). seed() is the authoritative "reset to defaults".
+        if (
+          cur.url !== s.url ||
+          cur.name !== s.name ||
+          cur.weight !== s.weight ||
+          cur.enabled !== s.enabled
+        ) {
           await ctx.db.patch(cur._id, {
             url: s.url,
             name: s.name,
             topics: s.topics,
             weight: s.weight,
             kind: s.kind,
+            enabled: s.enabled,
           });
           updated++;
         }

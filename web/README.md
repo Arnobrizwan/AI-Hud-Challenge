@@ -37,10 +37,10 @@ Configured in `convex/seedData.ts`; manage live from the dashboard.
 | **The Rundown AI** | ✅ live | beehiiv RSS |
 | **Latent Space** | ✅ live | RSS (bonus AI newsletter) |
 | OpenAI / DeepMind / Hugging Face blogs, TechCrunch, Ars Technica, The Verge, VentureBeat | ✅ live | RSS |
-| **Subreddits** (MachineLearning, LocalLLaMA, artificial, programming, startups) | ⚠️ partial | Reddit `429`-rate-limits datacenter IPs (Convex/Vercel egress). r/MachineLearning works; the rest are intermittent. **Reliable fix:** add Reddit OAuth app creds (`REDDIT_CLIENT_ID`/`SECRET`) and use the authenticated JSON API. |
-| **X / Twitter** (@OpenAI, @karpathy, @sama) | ⛔ off by default | No free X API; nitter mirrors are mostly dead. Enable by pointing a source at a working RSS-bridge URL, or wire an X API v2 bearer token. |
+| **Subreddits** | ⏸️ disabled by choice | Reddit `429`-blocks datacenter IPs (Convex/Vercel egress), so only ~1/5 worked. Left in the catalog (off); re-enable + add Reddit OAuth (`REDDIT_CLIENT_ID`/`SECRET`) for reliable coverage. |
+| **X / Twitter** | ⏸️ off | No free X API; nitter mirrors are mostly dead. Re-enable by pointing the source at a working RSS-bridge URL or wiring an X API v2 bearer token. |
 
-The feed shows items from the last **72h**, so daily newsletters appear alongside high-frequency sources like HackerNews.
+The live mix is **HackerNews + AI newsletters + tech RSS**. The feed shows items from the last **72h**, so daily newsletters appear alongside high-frequency sources like HackerNews. Subreddit and X connectors are implemented and remain in the catalog (disabled) — flip them on from the dashboard once credentials/a working bridge are available.
 
 ## Architecture
 
