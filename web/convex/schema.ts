@@ -356,6 +356,15 @@ export default defineSchema({
     lastPingAt: v.optional(v.number()),
   }).index("by_sourceId", ["sourceId"]),
 
+  // ---- Roles (operator/admin access control) --------------------------------
+  // A user is an admin if their email is in the ADMIN_EMAILS env allowlist OR
+  // they have a row here. Guests (anonymous) are never admins.
+  userRoles: defineTable({
+    userId: v.id("users"),
+    role: v.literal("admin"),
+    grantedAt: v.number(),
+  }).index("by_user", ["userId"]),
+
   // ---- Gold evaluation set (curated relevance labels) -----------------------
   goldSet: defineTable({
     topic: v.string(),

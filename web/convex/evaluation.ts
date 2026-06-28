@@ -1,6 +1,6 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
-import { getAuthUserId } from "@convex-dev/auth/server";
+import { requireAdmin } from "./authz";
 import { DEFAULT_PREFS } from "./defaults";
 import { effectiveConfig } from "./config";
 import { scoreForUser, topicalMatch, type UserContext } from "../lib/pipeline/rank";
@@ -23,8 +23,7 @@ const WINDOW_MS = 48 * 3600 * 1000;
 export const runEval = mutation({
   args: { k: v.optional(v.number()) },
   handler: async (ctx, { k }) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    const userId = await requireAdmin(ctx);
     const K = k ?? 10;
 
     const cutoff = Date.now() - WINDOW_MS;

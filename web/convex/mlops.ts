@@ -1,6 +1,6 @@
 import { mutation, query, internalMutation, type MutationCtx } from "./_generated/server";
 import { v } from "convex/values";
-import { getAuthUserId } from "@convex-dev/auth/server";
+import { requireAdmin } from "./authz";
 import { DEFAULT_CONFIG } from "./defaults";
 import { assignArm } from "../lib/pipeline/experiment";
 
@@ -50,8 +50,7 @@ export async function performRollback(ctx: MutationCtx, version: number): Promis
 export const snapshotVersion = mutation({
   args: { note: v.optional(v.string()) },
   handler: async (ctx, { note }) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    await requireAdmin(ctx);
     const cfg = await ctx.db.query("pipelineConfig").withIndex("by_key", (q) => q.eq("key", "default")).unique();
     const base = cfg ?? { ...DEFAULT_CONFIG };
     const last = await ctx.db.query("configVersions").withIndex("by_version").order("desc").first();
@@ -82,8 +81,7 @@ export const listVersions = query({
 export const rollbackTo = mutation({
   args: { version: v.number() },
   handler: async (ctx, { version }) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    await requireAdmin(ctx);
     const ok = await performRollback(ctx, version);
     if (!ok) throw new Error("version not found");
     return { rolledBackTo: version };
@@ -112,8 +110,7 @@ export const listAlerts = query({
 export const resolveAlert = mutation({
   args: { id: v.id("alerts") },
   handler: async (ctx, { id }) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    await requireAdmin(ctx);
     await ctx.db.patch(id, { resolved: true });
   },
 });
@@ -194,8 +191,7 @@ export const driftHistory = query({
 export const startCanary = mutation({
   args: { name: v.string(), variantVersion: v.number(), trafficPct: v.number() },
   handler: async (ctx, { name, variantVersion, trafficPct }) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    await requireAdmin(ctx);
     const cfg = await ctx.db.query("pipelineConfig").withIndex("by_key", (q) => q.eq("key", "default")).unique();
     await ctx.db.insert("experiments", {
       name,
@@ -211,8 +207,7 @@ export const startCanary = mutation({
 export const stopCanary = mutation({
   args: { id: v.id("experiments") },
   handler: async (ctx, { id }) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    await requireAdmin(ctx);
     await ctx.db.patch(id, { status: "stopped" });
   },
 });

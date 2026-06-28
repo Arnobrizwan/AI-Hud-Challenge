@@ -9,10 +9,10 @@ import { cn } from "@/lib/utils";
 import { Radar, Bookmark, SlidersHorizontal, Gauge, LogOut, Activity } from "lucide-react";
 
 const NAV = [
-  { href: "/feed", label: "Feed", icon: Radar },
-  { href: "/bookmarks", label: "Saved", icon: Bookmark },
-  { href: "/dashboard", label: "Pipeline", icon: Gauge },
-  { href: "/settings", label: "Config", icon: SlidersHorizontal },
+  { href: "/feed", label: "Feed", icon: Radar, adminOnly: false },
+  { href: "/bookmarks", label: "Saved", icon: Bookmark, adminOnly: false },
+  { href: "/dashboard", label: "Pipeline", icon: Gauge, adminOnly: true },
+  { href: "/settings", label: "Config", icon: SlidersHorizontal, adminOnly: false },
 ];
 
 export function AppFrame({ children }: { children: React.ReactNode }) {
@@ -32,7 +32,7 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
           </span>
           <span className="hud-label !text-[8px] mt-1">HUD</span>
         </Link>
-        {NAV.map((n) => {
+        {NAV.filter((n) => !n.adminOnly || user?.isAdmin).map((n) => {
           const active = pathname.startsWith(n.href);
           return (
             <Link

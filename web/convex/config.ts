@@ -1,7 +1,7 @@
 import { query, mutation, internalQuery, type QueryCtx } from "./_generated/server";
 import { v } from "convex/values";
-import { getAuthUserId } from "@convex-dev/auth/server";
 import { DEFAULT_CONFIG } from "./defaults";
+import { requireAdmin } from "./authz";
 import { assignArm } from "../lib/pipeline/experiment";
 
 /**
@@ -94,9 +94,8 @@ export const updateConfig = mutation({
     maxPerSourcePerScreen: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    // Require an authenticated operator to change ranking config.
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    // Ranking config is global — admins only.
+    await requireAdmin(ctx);
 
     const existing = await ctx.db
       .query("pipelineConfig")

@@ -1,7 +1,6 @@
 import { internalAction, action } from "./_generated/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
-import { getAuthUserId } from "@convex-dev/auth/server";
 
 import { ingestSource } from "../lib/pipeline/ingest";
 import { getRobots, isPathAllowed, type RobotsRules } from "../lib/pipeline/ingest/robots";
@@ -259,12 +258,14 @@ export const runPipeline = internalAction({
   },
 });
 
-/** Public trigger for the dashboard "Run pipeline now" button. */
+/** Admin trigger for the dashboard "Run pipeline now" button. */
 export const triggerRun = action({
   args: {},
   handler: async (ctx): Promise<{ inserted: number; duplicates: number; clusters: number }> => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    // Actions have no db; authorize via an internal query (auth propagates).
+    if (!(await ctx.runQuery(internal.authz.amIAdminInternal, {}))) {
+      throw new Error("Admin access required");
+    }
     return await ctx.runAction(internal.pipeline.runPipeline, { trigger: "manual" });
   },
 });

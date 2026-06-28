@@ -1,6 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
-import { getAuthUserId } from "@convex-dev/auth/server";
+import { requireAdmin } from "./authz";
 
 /**
  * Human-in-the-loop labeling (section 9). Operators label dup-pairs, cluster
@@ -14,8 +14,7 @@ export const submit = mutation({
     label: v.string(),
   },
   handler: async (ctx, a) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    const userId = await requireAdmin(ctx);
     await ctx.db.insert("labels", { ...a, userId, createdAt: Date.now() });
   },
 });

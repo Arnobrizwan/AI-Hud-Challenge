@@ -8,14 +8,38 @@ import { Gauge } from "./Gauge";
 import { OpsPanels } from "./OpsPanels";
 import {
   Play, RefreshCw, Activity, Database, Layers, GitMerge, Loader2,
-  CheckCircle2, AlertTriangle, FlaskConical,
+  CheckCircle2, AlertTriangle, FlaskConical, Lock,
 } from "lucide-react";
 
 const WEIGHT_KEYS = [
   "recency", "sourceWeight", "topicalMatch", "novelty", "velocity", "popularity",
 ] as const;
 
+/** Admin gate: the operator console mutates global state, so it's admins-only. */
 export function DashboardView() {
+  const me = useQuery(api.users.currentUser);
+  if (me === undefined) {
+    return <div className="flex items-center justify-center h-full hud-label">checking access…</div>;
+  }
+  if (!me?.isAdmin) return <Restricted />;
+  return <Console />;
+}
+
+function Restricted() {
+  return (
+    <div className="flex flex-col items-center justify-center h-full text-center gap-3 px-6">
+      <Lock className="w-8 h-8 text-ink-faint" />
+      <h1 className="hud-title text-xl text-ink">Operator console — restricted</h1>
+      <p className="text-ink-dim text-sm max-w-sm">
+        The pipeline console tunes global ranking, sources, and experiments, so
+        it&apos;s limited to admins. Your feed, bookmarks, and config are all on
+        the other tabs.
+      </p>
+    </div>
+  );
+}
+
+function Console() {
   const overview = useQuery(api.dashboard.overview);
   const config = useQuery(api.config.getConfig);
   const sources = useQuery(api.sources.listSources);

@@ -11,6 +11,7 @@
 import type * as account from "../account.js";
 import type * as apiKeys from "../apiKeys.js";
 import type * as auth from "../auth.js";
+import type * as authz from "../authz.js";
 import type * as bookmarks from "../bookmarks.js";
 import type * as config from "../config.js";
 import type * as crons from "../crons.js";
@@ -45,6 +46,7 @@ declare const fullApi: ApiFromModules<{
   account: typeof account;
   apiKeys: typeof apiKeys;
   auth: typeof auth;
+  authz: typeof authz;
   bookmarks: typeof bookmarks;
   config: typeof config;
   crons: typeof crons;

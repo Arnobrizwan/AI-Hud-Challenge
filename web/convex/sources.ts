@@ -1,6 +1,6 @@
 import { query, mutation, internalQuery, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
-import { getAuthUserId } from "@convex-dev/auth/server";
+import { requireAdmin } from "./authz";
 import { SEED_SOURCES } from "./seedData";
 import { SEED_GOLD } from "./goldData";
 import { DEFAULT_CONFIG } from "./defaults";
@@ -26,8 +26,7 @@ export const listSources = query({
 export const toggleSource = mutation({
   args: { sourceId: v.string(), enabled: v.boolean() },
   handler: async (ctx, { sourceId, enabled }) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    await requireAdmin(ctx);
     const row = await ctx.db
       .query("sources")
       .withIndex("by_sourceId", (q) => q.eq("sourceId", sourceId))
@@ -47,8 +46,7 @@ export const upsertSource = mutation({
     enabled: v.boolean(),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    await requireAdmin(ctx);
     const row = await ctx.db
       .query("sources")
       .withIndex("by_sourceId", (q) => q.eq("sourceId", args.sourceId))
@@ -65,8 +63,11 @@ export const upsertSource = mutation({
   },
 });
 
-/** Idempotent: seed the default source catalog + pipeline config if empty. */
-export const seed = mutation({
+/**
+ * Idempotent: seed the default source catalog + pipeline config + gold set.
+ * Internal (admin/CLI only): `npx convex run sources:seed [--prod]`.
+ */
+export const seed = internalMutation({
   args: {},
   handler: async (ctx) => {
     const existing = await ctx.db.query("sources").collect();
