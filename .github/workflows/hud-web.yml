@@ -27,9 +27,8 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: web/package-lock.json
-      - run: npm ci
-      - name: Convex codegen (types)
-        run: npx convex codegen
+      - run: npm install --no-audit --no-fund
+      # convex/_generated is committed, so no deployment is needed to typecheck.
       - name: Lint
         run: npm run lint --if-present
       - name: Production build
@@ -57,7 +56,7 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: web/package-lock.json
-      - run: npm ci
+      - run: npm install --no-audit --no-fund
 
       # Deploy Convex functions to production.
       # Requires repo secret CONVEX_DEPLOY_KEY (Convex dashboard → Settings → Deploy keys).
