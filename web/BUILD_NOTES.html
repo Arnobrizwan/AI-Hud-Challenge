@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>HUD — Build Notes</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      font-size: 11pt;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">HUD — Build Notes</h1>
+</header>
+<h1 id="hud-build-notes">HUD — Build Notes</h1>
+<p><strong>Open HUD Challenge submission · High-Signal Personal News
+Feed</strong> Author: Arnob Rizwan · Stack: Next.js 16 · Convex ·
+TypeScript · Tailwind v4 · Vercel</p>
+<hr />
+<h2 id="what-i-built">What I built</h2>
+<p>A heads-up display for the internet: an <strong>auto-scrolling,
+ranked news feed</strong> that pulls from HackerNews, AI newsletters
+(TLDR AI, AI News/smol.ai, The Rundown), subreddits, and X;
+<strong>dedupes</strong> syndicated copies into events;
+<strong>ranks</strong> each item with a transparent score that
+<strong>blends your focus areas with what’s breaking</strong>; and
+streams it as a sci-fi HUD. It ships with bookmarks that
+<strong>resurface</strong>, <strong>bring-your- own AI key</strong>
+summaries, multi-user accounts, and a live <strong>pipeline-operator
+dashboard</strong> for tuning ranking and watching evaluation
+metrics.</p>
+<p>It delivers <strong>both</strong> challenge tracks in one app: -
+<strong>Developer track</strong>: the fully-functional end-user HUD,
+deployed to Vercel. - <strong>AI-engineer track</strong>: a modular,
+reusable AI/ML pipeline + a management dashboard, documented in
+<code>PIPELINE.md</code>.</p>
+<h2 id="design-decisions-and-why">Design decisions (and why)</h2>
+<ul>
+<li><strong>Self-contained Next.js + Convex over the existing Python
+microservices.</strong> The brief mandates React/Next.js on Vercel.
+Rather than operate 16 Python services, I rebuilt the pipeline as
+<strong>pure-TypeScript stages</strong> orchestrated by Convex actions —
+Vercel-native, one deploy, no cross-service latency. The Python repo
+remains as the AI-engineer reference.</li>
+<li><strong>Convex for state + realtime.</strong> Reactive queries give
+the HUD live updates with zero polling; one system covers DB, auth,
+scheduled functions (cron ingestion), and server functions. Strong
+multi-user isolation is enforced in every function.</li>
+<li><strong>Read-time ranking.</strong> User scores are computed when
+the feed is read, so changing a focus topic, the focus↔︎trending mix, or
+a ranking weight reflects <strong>instantly</strong> — no re-batch.
+Batch-global features (popularity, velocity) are precomputed once.</li>
+<li><strong>Transparency by default.</strong> Every card exposes its
+score breakdown; the dashboard exposes the weights and lets operators
+hot-reload them. Ranking isn’t a black box.</li>
+<li><strong>Graceful AI.</strong> Summaries are extractive by default
+(free, no key). A BYO key upgrades to grounded abstractive summaries
+with guardrails; nothing breaks without one.</li>
+<li><strong>Auto-scroll tuning.</strong> Speed is user-controlled
+(px/sec), pauses on hover/focus, and supports <code>J/K/space</code>. A
+duplicated list gives a seamless loop.</li>
+<li><strong>Popularity metric.</strong> Normalized engagement (HN points
+/ Reddit ups / X likes, log-compressed + min-max) blended with
+cross-source velocity and a source-weight prior.</li>
+</ul>
+<h2 id="how-its-structured">How it’s structured</h2>
+<pre><code>lib/pipeline/   pure stages: ingest · normalize · enrich · dedup(MinHash+LSH) · rank · summarize
+convex/         schema · auth · pipeline orchestrator · crons · feed · feedback · bookmarks · eval · dashboard · notifications
+app/ + components/hud/   landing · auth · feed · bookmarks · settings · dashboard  (HUD design system)</code></pre>
+<p>Pipeline contracts live in <code>lib/pipeline/types.ts</code> so
+stages stay decoupled from the app — the challenge’s
+modularity/reusability requirement.</p>
+<h2 id="what-an-employer-should-know">What an employer should know</h2>
+<ul>
+<li><strong>End-to-end ownership</strong>: data ingestion, NLP-ish
+enrichment, near-duplicate clustering (MinHash/LSH + union-find),
+learning-to-rank-style scoring, evaluation harness (P@K, nDCG, coverage,
+novelty, diversity, dup-F1), realtime UI, auth, encryption (AES-GCM BYO
+keys), CI-clean TypeScript, and a Vercel/Convex deploy.</li>
+<li><strong>Verified working</strong>: built and exercised live
+in-browser — guest auth → ranked feed of real HN/TechCrunch stories →
+dashboard eval run → settings. Production build is clean (TypeScript +
+lint).</li>
+<li><strong>Pragmatic tradeoffs documented</strong>: Reddit/X rate-limit
+handling, the eval’s proxy-relevance when feedback is sparse, and the
+diversity cap that the raw ranker motivates — all surfaced honestly
+rather than hidden.</li>
+</ul>
+<h2 id="resources-used">Resources used</h2>
+<ul>
+<li>Next.js 16 App Router, React 19, Tailwind v4.</li>
+<li>Convex (DB + auth <code>@convex-dev/auth</code> + scheduled
+functions).</li>
+<li><code>fast-xml-parser</code> for runtime-agnostic RSS/Atom parsing
+inside Convex actions.</li>
+<li>HN Algolia API; public RSS/Atom feeds; OpenAI/Anthropic REST for
+optional summaries.</li>
+<li>The challenge brief + the referenced ChatGPT pipeline outline; the
+parent repo’s Python
+<code>ingestion-service</code>/<code>deduplication-service</code> as
+conceptual reference.</li>
+<li>Built with Claude Code.</li>
+</ul>
+<h2 id="run-deploy">Run / deploy</h2>
+<p>See <code>README.md</code>. TL;DR:
+<code>npm i &amp;&amp; npx convex dev &amp;&amp; npm run dev</code>;
+deploy with <code>npx convex deploy</code> + <code>vercel --prod</code>
+(set <code>NEXT_PUBLIC_CONVEX_URL</code>,
+<code>KEY_ENCRYPTION_SECRET</code>, and Convex Auth keys).</p>
+</body>
+</html>
