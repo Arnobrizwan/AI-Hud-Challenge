@@ -5,7 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { cn, timeAgo } from "@/lib/utils";
-import { AlertTriangle, GitBranch, Activity, Tag, FlaskConical, RotateCcw, Camera, Check, X } from "lucide-react";
+import { AlertTriangle, GitBranch, Activity, Tag, FlaskConical, RotateCcw, Camera, Check, X, ShieldCheck, Trash2 } from "lucide-react";
 
 export function OpsPanels() {
   return (
@@ -15,6 +15,7 @@ export function OpsPanels() {
       <ConfigRegistryPanel />
       <ExperimentsPanel />
       <LabelingPanel />
+      <AdminsPanel />
     </div>
   );
 }
@@ -133,6 +134,68 @@ function ExperimentsPanel() {
               <span className={cn("hud-chip", e.status === "running" ? "" : "hud-chip-amber")}>{e.status}</span>
               <span className="text-ink-dim flex-1 truncate">{e.name} · {e.trafficPct}% → v{e.variantVersion}</span>
               {e.status === "running" && <button onClick={() => stop({ id: e._id as Id<"experiments"> })} className="text-ink-faint hover:text-rose"><X className="w-3.5 h-3.5" /></button>}
+            </div>
+          ))}
+        </div>
+      )}
+    </Panel>
+  );
+}
+
+function AdminsPanel() {
+  const admins = useQuery(api.authz.listAdmins);
+  const grant = useMutation(api.authz.grantAdmin);
+  const revoke = useMutation(api.authz.revokeAdmin);
+  const [email, setEmail] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function onGrant() {
+    if (!email.trim()) return;
+    setBusy(true);
+    setErr(null);
+    try {
+      await grant({ email: email.trim() });
+      setEmail("");
+    } catch (e) {
+      setErr((e as Error).message.replace(/^.*Error:\s*/, ""));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Panel icon={ShieldCheck} title="Admins · access control">
+      <div className="flex items-center gap-2 mb-2">
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="grant admin by email…"
+          className="hud-input flex-1 min-w-0"
+        />
+        <button onClick={onGrant} disabled={busy || !email.trim()} className="hud-btn !py-1.5 !px-3">Grant</button>
+      </div>
+      {err && <p className="text-rose text-[10px] mb-2">{err}</p>}
+      <p className="text-[10px] text-ink-faint mb-2">
+        Granted admins (env <span className="text-ink-dim">ADMIN_EMAILS</span> accounts are always admin and not listed here).
+      </p>
+      {(admins ?? []).length === 0 ? (
+        <p className="text-ink-faint text-xs">no granted admins</p>
+      ) : (
+        <div className="space-y-1">
+          {(admins ?? []).map((a) => (
+            <div key={a.userId} className="flex items-center gap-2 text-xs py-1 border-b border-[var(--line)] last:border-0">
+              <span className="hud-chip">admin</span>
+              <span className="text-ink-dim flex-1 truncate">{a.email ?? a.userId}</span>
+              <button
+                onClick={() => a.email && revoke({ email: a.email })}
+                disabled={!a.email}
+                className="text-ink-faint hover:text-rose"
+                title="Revoke"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
             </div>
           ))}
         </div>
