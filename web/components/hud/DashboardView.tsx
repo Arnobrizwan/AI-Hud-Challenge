@@ -5,6 +5,7 @@ import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { cn, timeAgo } from "@/lib/utils";
 import { Gauge } from "./Gauge";
+import { OpsPanels } from "./OpsPanels";
 import {
   Play, RefreshCw, Activity, Database, Layers, GitMerge, Loader2,
   CheckCircle2, AlertTriangle, FlaskConical,
@@ -141,6 +142,9 @@ export function DashboardView() {
             Changes take effect on the next feed read — no redeploy. The feed blends these by your focus↔trending mix.
           </p>
         </section>
+
+        {/* ops: alerts, drift, config registry, A/B canary, labeling */}
+        <OpsPanels />
 
         {/* analytics: top sources + topics */}
         <div className="grid md:grid-cols-2 gap-4">

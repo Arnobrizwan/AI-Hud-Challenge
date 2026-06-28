@@ -165,6 +165,45 @@ export const driftCheck = internalMutation({
   },
 });
 
+export const driftHistory = query({
+  args: {},
+  handler: async (ctx) =>
+    ctx.db.query("driftSnapshots").withIndex("by_createdAt").order("desc").take(12),
+});
+
+// ---- A/B canary on ranking config -----------------------------------------
+
+export const startCanary = mutation({
+  args: { name: v.string(), variantVersion: v.number(), trafficPct: v.number() },
+  handler: async (ctx, { name, variantVersion, trafficPct }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+    const cfg = await ctx.db.query("pipelineConfig").withIndex("by_key", (q) => q.eq("key", "default")).unique();
+    await ctx.db.insert("experiments", {
+      name,
+      status: "running",
+      controlVersion: cfg?.version ?? 0,
+      variantVersion,
+      trafficPct: Math.max(0, Math.min(100, trafficPct)),
+      createdAt: Date.now(),
+    });
+  },
+});
+
+export const stopCanary = mutation({
+  args: { id: v.id("experiments") },
+  handler: async (ctx, { id }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+    await ctx.db.patch(id, { status: "stopped" });
+  },
+});
+
+export const listExperiments = query({
+  args: {},
+  handler: async (ctx) => ctx.db.query("experiments").withIndex("by_status").order("desc").take(10),
+});
+
 /** Auto-downgrade sources that keep failing or get muted a lot (spam plumbing). */
 export const autoDowngradeSources = internalMutation({
   args: {},
