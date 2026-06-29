@@ -69,11 +69,19 @@ jobs:
         run: npx convex deploy -y
 
       # Deploy the Next.js app to Vercel production.
-      # Requires repo secrets VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID.
+      # Requires repo secrets VERCEL_TOKEN (a Vercel ACCESS token from
+      # https://vercel.com/account/tokens — NOT the CLI OAuth session token,
+      # which is short-lived), VERCEL_ORG_ID, VERCEL_PROJECT_ID.
+      # If the token is missing/expired the step soft-skips with a warning so an
+      # expired token doesn't red the build; Convex + the quality gates still run.
       - name: Deploy Vercel
         if: ${{ env.VERCEL_TOKEN != '' }}
         run: |
           npm i -g vercel@latest
+          if ! vercel whoami --token "$VERCEL_TOKEN" >/dev/null 2>&1; then
+            echo "::warning::VERCEL_TOKEN is invalid/expired — skipping Vercel deploy. Create an Access Token at https://vercel.com/account/tokens and update the repo secret."
+            exit 0
+          fi
           vercel pull --yes --environment=production --token "$VERCEL_TOKEN"
           vercel build --prod --token "$VERCEL_TOKEN"
           vercel deploy --prebuilt --prod --token "$VERCEL_TOKEN"
