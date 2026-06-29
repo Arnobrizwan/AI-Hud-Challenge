@@ -120,6 +120,17 @@ curl -s "https://hud-news.vercel.app/api/feed?limit=2" | jq '.items[].title'
 - **Dense embeddings (BYO key)**: if `OPENAI_API_KEY` is set on the Convex
   deployment, item vectors use `text-embedding-3-small`; otherwise the pipeline
   falls back to the local hashing-trick vector (never a hard dependency).
+- **Prompt registry** (`web/lib/pipeline/prompts.ts`): every LLM prompt is
+  versioned, type-specific, and hot-swappable via an `ACTIVE` selector — no
+  hardcoded prompts at call sites.
+- **Cost tracking** (`web/lib/pipeline/cost.ts` + `mlops.costSummary`): a pricing
+  table + token estimators give an estimated USD breakdown (embeddings + summaries)
+  over a recent window for the ops console.
+- **Healthcheck** (`npm run healthcheck`): post-deploy smoke test that hits the
+  live `/api/feed` and fails on non-200, empty, or stale data
+  (`web/scripts/healthcheck.mjs`, logic in `web/lib/health.ts`).
+- **AI-agent rules** (`web/.claude/rules/`): `code-style.md` + `testing.md` capture
+  the architecture/test conventions for AI coding agents.
 
 ## Environment variables
 
@@ -151,8 +162,12 @@ web/
 ├─ app/                       routes: /, /signin, /feed, /bookmarks, /settings, /dashboard
 │  └─ api/                    REST route handlers: /api/feed, /api/cluster, /api/feedback
 ├─ components/hud/            AppFrame, FeedView, NewsCard, Gauge, BreakingTicker, Settings/Bookmarks/Dashboard views
-├─ lib/pipeline/              ingest · normalize · enrich · dedup · rank · summarize · evalMetrics · nerEval (pure TS)
-├─ convex/                    schema, auth, pipeline orchestrator, crons, feed/feedback/bookmarks/eval/mlops/dashboard
+├─ lib/pipeline/              ingest · normalize · enrich · dedup · rank · summarize ·
+│                             prompts (registry) · cost · evalMetrics · nerEval · experiment (pure TS)
+├─ lib/                       api · convexHttp · health (route/script helpers)
+├─ convex/                    schema, auth(+authz RBAC), pipeline orchestrator, crons, feed/feedback/bookmarks/eval/mlops/dashboard
+├─ scripts/                   healthcheck.mjs (post-deploy smoke test)
+├─ .claude/rules/             code-style.md · testing.md (AI-agent context)
 └─ proxy.ts                   Next 16 auth middleware (route gating)
 ```
 

@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { requireAdmin } from "./authz";
 import { DEFAULT_CONFIG } from "./defaults";
 import { assignArm } from "../lib/pipeline/experiment";
+import { estimateTokens, estimateCostUSD } from "../lib/pipeline/cost";
 
 /**
  * Roll the live config back to a saved version and mark it the promoted one in
@@ -105,6 +106,47 @@ export const listAlerts = query({
   args: {},
   handler: async (ctx) =>
     ctx.db.query("alerts").withIndex("by_createdAt").order("desc").take(25),
+});
+
+/**
+ * Estimated AI cost over a recent window (cost-tracking observability).
+ * Sums dense-embedding cost (items with a vector) + abstractive-summary cost
+ * (items with summaryAbstractive). Token counts are approximated from text and
+ * priced via lib/pipeline/cost.ts — values are ESTIMATES, not billed amounts.
+ */
+export const costSummary = query({
+  args: { windowHours: v.optional(v.number()) },
+  handler: async (ctx, { windowHours }) => {
+    const hours = windowHours ?? 48;
+    const cutoff = Date.now() - hours * 3600 * 1000;
+    const items = await ctx.db
+      .query("items")
+      .withIndex("by_publishedAt", (q) => q.gte("publishedAt", cutoff))
+      .take(2000);
+
+    let embCount = 0, embUSD = 0, sumCount = 0, sumUSD = 0;
+    for (const it of items) {
+      if (it.vector && it.vector.length > 0) {
+        embCount++;
+        const inTok = estimateTokens(it.readableText ?? it.summaryExtractive ?? it.title);
+        embUSD += estimateCostUSD("openai", "text-embedding-3-small", { inputTokens: inTok });
+      }
+      if (it.summaryAbstractive) {
+        sumCount++;
+        const inTok = estimateTokens(it.readableText ?? it.summaryExtractive ?? it.title);
+        const outTok = estimateTokens(it.summaryAbstractive);
+        sumUSD += estimateCostUSD("openai", "gpt-4o-mini", { inputTokens: inTok, outputTokens: outTok });
+      }
+    }
+    return {
+      windowHours: hours,
+      items: items.length,
+      embeddings: { count: embCount, usd: embUSD },
+      summaries: { count: sumCount, usd: sumUSD },
+      totalUSD: embUSD + sumUSD,
+      note: "estimated (token≈chars/4, list prices); assumes openai models",
+    };
+  },
 });
 
 export const resolveAlert = mutation({

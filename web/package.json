@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "eval:gate": "vitest run lib/pipeline/__tests__/eval.gate.test.ts"
+    "eval:gate": "vitest run lib/pipeline/__tests__/eval.gate.test.ts",
+    "healthcheck": "node scripts/healthcheck.mjs"
   },
   "dependencies": {
     "@auth/core": "^0.41.1",

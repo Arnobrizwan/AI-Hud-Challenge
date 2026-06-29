@@ -1,4 +1,5 @@
 import { extractiveSummary, denseEmbedding } from "./text";
+import { getPrompt, renderPrompt } from "./prompts";
 
 /**
  * Stage 6 — summarization.
@@ -43,11 +44,8 @@ export async function embedTexts(input: {
   });
 }
 
-const SYSTEM_PROMPT =
-  "You compress a news item into a single, factual teaser of 18-32 words. " +
-  "Rules: use ONLY facts present in the provided text; never speculate or add " +
-  "details; no opinions; no hashtags; no clickbait; preserve named entities and " +
-  "numbers exactly. Output only the teaser sentence.";
+// Prompts live in the versioned registry (prompts.ts) — hot-swappable per id.
+const SYSTEM_PROMPT = getPrompt("summarize.system").text;
 
 export function buildExtractive(title: string, text: string): string {
   const body = text && text.length > 40 ? text : title;
@@ -119,7 +117,7 @@ export interface AbstractiveInput {
 export async function abstractiveSummary(input: AbstractiveInput): Promise<string | null> {
   const model = input.model || DEFAULT_MODELS[input.provider];
   const source = (input.text || "").slice(0, 2000);
-  const prompt = `TITLE: ${input.title}\n\nTEXT:\n${source || input.title}`;
+  const prompt = renderPrompt("summarize.user", { title: input.title, text: source || input.title });
   try {
     const out =
       input.provider === "openai"
